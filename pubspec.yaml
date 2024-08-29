@@ -1,0 +1,44 @@
+##.title
+## ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+##
+## Dart/Flutter (DF) Packages by DevCetra.com & contributors. The use of this
+## source code is governed by an MIT-style license described in the LICENSE
+## file located in this project's root directory.
+##
+## See: https://opensource.org/license/mit
+##
+## ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+##.title~
+
+name: df_di
+description: A lightweight dependency injection solution with Service classes to assist with state management.
+version: 0.1.0
+repository: https://github.com/robmllze/df_di
+funding:
+  - https://www.buymeacoffee.com/robmllze
+topics:
+  - get_it
+  - dependency-injection
+  - services
+  - state
+  - state-management
+
+## -----------------------------------------------------------------------------
+
+environment:
+  sdk: ">=3.5.0 <4.0.0"
+
+## -----------------------------------------------------------------------------
+
+dependencies:
+  df_pod: ^0.11.0
+  meta: ^1.15.0
+  flutter:
+    sdk: flutter
+
+## -----------------------------------------------------------------------------
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
