@@ -10,9 +10,11 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
+import 'dart:async';
+
 import 'package:meta/meta.dart' show internal;
 
-import '../di_key.dart';
+import '/src/_index.g.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -20,13 +22,15 @@ import '../di_key.dart';
 /// callback.
 @internal
 final class Dependency<T> {
-  final T value;
+  final T dependency;
   final DIKey key;
-  final void Function()? unregister;
+  final UnregisterDependencyCallback<T>? unregister;
 
   const Dependency(
-    this.value, {
+    this.dependency, {
     this.key = DIKey.defaultKey,
     this.unregister,
   });
 }
+
+typedef UnregisterDependencyCallback<T> = FutureOr<void> Function(FutureOr<T> dependency);

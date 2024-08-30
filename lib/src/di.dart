@@ -51,19 +51,19 @@ class DI {
   void register<T>(
     FutureOr<T> dependency, {
     DIKey key = DIKey.defaultKey,
-    void Function()? onUnregister,
+    UnregisterDependencyCallback<T>? onUnregister,
   }) {
     if (dependency is T) {
       _register<T>(
         dependency,
         key: key,
-        onUnregister: onUnregister,
+        onUnregister: _unregToDynamic(onUnregister),
       );
     } else {
       _register<Future<T>>(
         dependency,
         key: key,
-        onUnregister: onUnregister,
+        onUnregister: _unregToDynamic(onUnregister),
       );
     }
   }
@@ -79,21 +79,21 @@ class DI {
   /// Throws [DependencyAlreadyRegisteredException] if a dependency with the
   /// same type [T] and [key] already exists.
   void registerLazy<T>(
-    FutureOr<T> Function() instantiator, {
+    _Instantiator<T> instantiator, {
     DIKey key = DIKey.defaultKey,
-    void Function()? onUnregister,
+    UnregisterDependencyCallback<T>? onUnregister,
   }) {
     if (instantiator is T Function()) {
       _register<T Function()>(
         instantiator,
         key: key,
-        onUnregister: onUnregister,
+        onUnregister: _unregToDynamic(onUnregister),
       );
     } else if (instantiator is Future<T> Function()) {
       _register<Future<T> Function()>(
         instantiator,
         key: key,
-        onUnregister: onUnregister,
+        onUnregister: _unregToDynamic(onUnregister),
       );
     }
   }
@@ -101,7 +101,7 @@ class DI {
   void _register<T>(
     T dependency, {
     DIKey key = DIKey.defaultKey,
-    void Function()? onUnregister,
+    UnregisterDependencyCallback<T>? onUnregister,
   }) {
     final existingDependencies = registry.getAllDependenciesOfType<T>();
     final depMap = {for (var dep in existingDependencies) dep.key: dep};
@@ -147,44 +147,72 @@ class DI {
   /// instantiated, it will be instantiated. Subsequent calls  of [get] will
   /// return the already instantiated instance.
   ///
-  /// Throws [DependencyNotFoundException] if the dependency is not found.
+  /// - Throws [DependencyNotFoundException] if the requested dependency cannot be found.
+  /// - Throws [FutureTypeNotAllowedException] if [T] is a [Future]. Use a non-future type instead.
+  /// - Throws [FunctionTypeNotAllowedException] if [T] is a [Function]. Use a non-function type instead.
   FutureOr<T> get<T>([
     DIKey key = DIKey.defaultKey,
   ]) {
     final try1 = registry.getDependency<T>(key);
     if (try1 != null) {
-      final dependency = try1.value;
+      final dependency = try1.dependency;
       return dependency;
     }
 
     final try2 = registry.getDependency<Future<T>>(key);
     if (try2 != null) {
-      final dependency = try2.value;
-      dependency.then((e) {
-        unregister<T>(key);
-        register<T>(e);
+      final dependency = try2.dependency;
+      dependency.then((e) async {
+        await unregister<Future<T>>(key);
+        _register<T>(
+          e,
+          key: key,
+          onUnregister: _unregToDynamic(try2.unregister),
+        );
       });
       return dependency;
     }
 
     final try3 = registry.getDependency<T Function()>(key);
     if (try3 != null) {
-      final instantiator = try3.value;
+      final instantiator = try3.dependency;
       final dependency = instantiator();
-      unregister<T>(key);
-      register<T>(dependency);
+      final unreg = unregister<T Function()>(key);
+      reg() => _register<T>(
+            dependency,
+            key: key,
+            onUnregister: _unregToDynamic(try3.unregister),
+          );
+      if (unreg is Future<void>) {
+        unreg.then((_) => reg());
+      } else {
+        reg();
+      }
       return dependency;
     }
 
     final try4 = registry.getDependency<Future<T> Function()>(key);
     if (try4 != null) {
-      final instantiator = try4.value;
+      final instantiator = try4.dependency;
       final dependency = instantiator();
-      unregister<T>(key);
-      register<T>(dependency);
-      dependency.then((e) {
-        unregister<T>(key);
-        register<T>(e);
+      final unreg = unregister<Future<T> Function()>(key);
+      reg() => register<T>(
+            dependency,
+            key: key,
+            onUnregister: _unregToDynamic(try4.unregister),
+          );
+      if (unreg is Future<void>) {
+        unreg.then((_) => reg());
+      } else {
+        reg();
+      }
+      dependency.then((e) async {
+        await unregister<T>(key);
+        _register<T>(
+          e,
+          key: key,
+          onUnregister: _unregToDynamic(try4.unregister),
+        );
       });
       return dependency;
     }
@@ -195,18 +223,34 @@ class DI {
   /// Unregisters a dependency registered under type [T] and the
   /// specified [key], or under [DIKey.defaultKey] if no key is provided.
   ///
-  /// Throws [DependencyNotFoundException] if the dependency is not found.
-  void unregister<T>([
+  /// - Throws [DependencyNotFoundException] if the dependency is not found.
+  /// - Throws [FutureTypeNotAllowedException] if [T] is a [Future]. Use a non-future type instead.
+  /// - Throws [FunctionTypeNotAllowedException] if [T] is a [Function]. Use a non-function type instead.
+  FutureOr<void> unregister<T>([
     DIKey key = DIKey.defaultKey,
   ]) {
     final a = registry.removeDependency<T>(key);
-    if (a != null) return;
+    if (a != null) return a.unregister?.call(a.dependency);
     final b = registry.removeDependency<Future<T>>(key);
-    if (b != null) return;
+    if (b != null) return b.unregister?.call(b.dependency);
     final c = registry.removeDependency<T Function()>(key);
-    if (c != null) return;
+    if (c != null) return c.unregister?.call(c.dependency);
     final d = registry.removeDependency<Future<T> Function()>(key);
-    if (d != null) return;
+    if (d != null) return d.unregister?.call(d.dependency);
+    throw DependencyNotFoundException(T, key);
+  }
+
+  Dependency<dynamic> getDependency<T>([
+    DIKey key = DIKey.defaultKey,
+  ]) {
+    final a = registry.removeDependency<T>(key);
+    if (a != null) return a;
+    final b = registry.removeDependency<Future<T>>(key);
+    if (b != null) return b;
+    final c = registry.removeDependency<T Function()>(key);
+    if (c != null) return c;
+    final d = registry.removeDependency<Future<T> Function()>(key);
+    if (d != null) return d;
     throw DependencyNotFoundException(T, key);
   }
 
@@ -215,9 +259,49 @@ class DI {
   void clear() {
     for (var depMap in registry.pRegistry.value.values) {
       for (var dependency in depMap.values) {
-        dependency.unregister?.call();
+        dependency.unregister?.call(dependency.dependency);
       }
     }
     registry.clearRegistry();
   }
 }
+
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+/// Exception thrown when attempting to register a dependency that is already registered.
+final class DependencyAlreadyRegisteredException extends DFDIPackageException {
+  DependencyAlreadyRegisteredException(Type type, DIKey key)
+      : super('Dependency of type $type with key $key is already registered.');
+}
+
+/// Exception thrown when a requested dependency is not found.
+final class DependencyNotFoundException extends DFDIPackageException {
+  DependencyNotFoundException(Type type, DIKey key)
+      : super('Dependency of type $type with key "$key" not found.');
+}
+
+final class FutureTypeNotAllowedException extends DFDIPackageException {
+  FutureTypeNotAllowedException(Type type)
+      : super(
+          'Future types like  $type not allowed with "get" or "unregister".',
+        );
+}
+
+final class FunctionTypeNotAllowedException extends DFDIPackageException {
+  FunctionTypeNotAllowedException(Type type)
+      : super(
+          'Function types like $type not allowed with "get" or "unregister".',
+        );
+}
+
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+UnregisterDependencyCallback<dynamic>? _unregToDynamic<T>(UnregisterDependencyCallback<T>? other) {
+  return other != null
+      ? (dynamic dependency) async {
+          await other(dependency as FutureOr<T>);
+        }
+      : null;
+}
+
+typedef _Instantiator<T> = FutureOr<T> Function();

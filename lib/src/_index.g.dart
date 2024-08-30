@@ -10,8 +10,9 @@
 // --- PUBLIC FILES ---
 export 'di.dart';
 export 'di_key.dart';
-export 'exceptions/exceptions.dart';
 export 'exceptions/df_di_package_exception.dart';
+export 'services/service.dart';
+export 'services/disposable_service.dart';
 
 // --- PRIVATE FILES (EXCLUDED) ---
 // export '_index.g.dart';
