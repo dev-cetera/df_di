@@ -32,7 +32,6 @@ environment:
 
 dependencies:
   df_pod: ^0.11.2
-  df_cleanup: ^0.1.5
   meta: ^1.15.0
   flutter:
     sdk: flutter

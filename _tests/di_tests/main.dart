@@ -64,28 +64,10 @@ void main() async {
 class Service extends DisposableService {
   Service.initService() : super.initService();
 
+  final P<String> pTest = Pod('test');
 
-  late final P<String> pTest;
   @override
-  disposables() {
-    return [
-      pTest = Pod('test'),
-    ];
+  void onDispose() {
+    pTest.asPodDisposable().dispose();
   }
-
-  @override
-  FutureOr<void> onInitService() {
-    //  pTest = willDispose(
-    //     Pod('test'),
-    //     onBeforeDispose: (e) {
-    //       print('Grrrrr');
-    //     },
-    //   );
-    return super.onInitService();
-  }
-
-  @override
-  void onDispose() {}
-  
-  
 }

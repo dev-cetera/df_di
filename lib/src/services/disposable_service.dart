@@ -12,8 +12,6 @@
 
 import 'dart:async';
 
-import 'package:df_cleanup/df_cleanup.dart';
-import 'package:df_cleanup/src/_utils/future_or_manager.dart';
 import 'package:df_pod/df_pod.dart';
 import 'package:meta/meta.dart';
 
@@ -23,8 +21,7 @@ import '/src/_utils/_index.g.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 /// An abstract class representing a service that can be initialized and disposed.
-abstract class DisposableService
-    with DisposablesMixin, CancelablesMixin, ClosablesMixin, StopablesMixin {
+abstract class DisposableService {
   /// Creates an uninitialized instance of the service.
   /// Must call [initService] before using this service.
   DisposableService();
@@ -42,19 +39,17 @@ abstract class DisposableService
 
   /// A flag indicating whether the service has been initialized.
   /// Initially `false`, becomes `true` after [initService] is called.
-  P<bool> get pInitialized => _pInitialized;
-
-  final _pInitialized = RootPod(false);
+  P<bool> pInitialized = RootPod(false);
 
   /// Initializes the service. Sets [pInitialized] to `true` and completes
   /// [initialized]. This method must be called before interacting with the
   /// service.
   @nonVirtual
   FutureOr<void> initService() async {
-    if (_pInitialized.value) {
+    if (pInitialized.value) {
       throw ServiceAlreadyInitializedException();
     }
-    _pInitialized.set(true);
+    pInitialized.asRootPod().set(true);
     _initializedCompleter.complete();
     return onInitService();
   }
@@ -66,22 +61,6 @@ abstract class DisposableService
   @protected
   FutureOr<void> onInitService() {}
 
-  @visibleForOverriding
-  @override
-  Iterable<dynamic> cancelables() => [];
-
-  @visibleForOverriding
-  @override
-  Iterable<dynamic> disposables() => [];
-
-  @visibleForOverriding
-  @override
-  Iterable<dynamic> closables() => [];
-
-  @visibleForOverriding
-  @override
-  Iterable<dynamic> stopables() => [];
-
   /// Disposes of the service, making it unusable and ready for garbage collection.
   /// This method should be called when the service is no longer needed.
   ///
@@ -92,22 +71,14 @@ abstract class DisposableService
   @protected
   @nonVirtual
   FutureOr<void> dispose() {
-    final fom = FutureOrManager();
-    if (_pInitialized.isDisposed) {
+    if (pInitialized.asPodDisposable().isDisposed) {
       throw ServiceAlreadyDisposedException();
     }
-    if (!_pInitialized.value) {
+    if (!pInitialized.value) {
       throw ServiceNotYetInitializedException();
     }
-    fom.addAll([
-      stopAllStopables(),
-      cancelAllCancelables(),
-      closeAllClosables(),
-      disposeAllDisposables(),
-      onDispose(),
-    ]);
 
-    return fom.complete();
+    return onDispose();
   }
 
   /// Called immediately after [dispose] to perform any necessary cleanup.

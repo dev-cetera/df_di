@@ -154,7 +154,7 @@ class DI {
     DIKey key = DIKey.defaultKey,
     UnregisterDependencyCallback<dynamic>? onUnregister,
   }) {
-    // Can't I just do _register<FutureOr<T>> or better yet, _register<T>???
+    // TODO: Can't I just get away with this method and just do _register<FutureOr<T>> or better yet, _register<T>???
     //  _register<T>(
     //   dependency,
     //   key: key,

@@ -32,6 +32,7 @@ abstract base class StreamingDisposableService<T> extends DisposableService {
 
   void onError(Object? e, FutureOr<void> Function() dispose);
 
+
   @override
   FutureOr<void> onInitService() async {
     _streamController = StreamController<T>.broadcast();
