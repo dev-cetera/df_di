@@ -1,4 +1,5 @@
 import 'package:df_di/df_di.dart';
+import 'package:df_pod/df_pod.dart';
 import 'package:flutter/foundation.dart';
 
 void main() async {
@@ -23,24 +24,43 @@ void main() async {
     //   print('Expected: DependencyNotFoundException thrown');
     // }
 
-    final helloAfter3SecondsA =
-        Future.delayed(const Duration(seconds: 3), () => 'Hello after 3 seconds!');
+    // var i = 0;
+    // di.register(i);
+    // i++;
+    // print(di.get<int>()); // prints 0
+    // di.unregister<int>();
+    // di.register(Singleton<int>(() => ++i));
+    // print(di.get<int>()); // prints 2
+    // print(di.get<int>()); // prints 2 again
+    // di.unregister<int>();
+    // di.register(Factory<int>(() => ++i));
+    // print(di.get<int>()); // prints 3
+    // print(di.get<int>()); // prints 4
+    // print(di.get<int>()); // prints 5
 
-    di.register<String>(
-      helloAfter3SecondsA,
-      onUnregister: (message) async {
-        final m = await message;
-        print('Unregister: $message');
-      },
-    );
-    print('Unregistering...');
-    await di.unregister<String>();
-    print('UNREG!!!');
+    //await di.unregister<String>();
+    //print('UNREG!!!');
 
     // final helloAfter3SecondsB = di.get<Future<String>>();
     // print('Expected _Future<String>: $helloAfter3SecondsB');
 
     // final helloAfter3SecondsC = await di.get<String>();
     // print('Expected "Hello after 3 seconds!": $helloAfter3SecondsC');
+
+    di.registerSingletonService(
+      () => Future.delayed(const Duration(seconds: 3), () => Service.initService()),
+    );
+
+    final service = await di.get<Service>();
+
+    service.dispose();
+
+    print(service);
   }
+}
+
+class Service extends DisposableService {
+  late final P<String> pTest = willDispose(Pod('test'));
+
+  Service.initService() : super.initService();
 }

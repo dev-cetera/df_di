@@ -8,16 +8,13 @@
 //.title~
 
 // --- PUBLIC FILES ---
-export 'di.dart';
-export 'di_key.dart';
-export 'df_di_package_exception.dart';
-export 'services/streaming_disposable_service.dart';
-export 'services/disposable_service.dart';
+export 'inst.dart';
+export 'dependency.dart';
+export 'completer_or.dart';
+export 'type_safe_registry.dart';
 
 // --- PRIVATE FILES (EXCLUDED) ---
 // export '_index.g.dart';
-// export '_utils/dependency.dart';
-// export '_utils/type_safe_registry.dart';
 
 // --- GENERATED FILES (EXCLUDED) ---
 // None found.

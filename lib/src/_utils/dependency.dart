@@ -18,18 +18,18 @@ import '/src/_index.g.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-/// A class representing a registered dependency with an optional [unregister]
+/// A class representing a registered dependency with an optional [onUnregister]
 /// callback.
 @internal
 final class Dependency<T> {
   final T dependency;
   final DIKey key;
-  final UnregisterDependencyCallback<T>? unregister;
+  final UnregisterDependencyCallback<dynamic>? onUnregister;
 
   const Dependency(
     this.dependency, {
-    this.key = DIKey.defaultKey,
-    this.unregister,
+    required this.key,
+    required this.onUnregister,
   });
 }
 
