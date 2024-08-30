@@ -24,8 +24,6 @@ abstract base class StreamingDisposableService<T> extends DisposableService {
 
   StreamingDisposableService();
 
-  StreamingDisposableService.initService() : super.initService();
-
   @protected
   Stream<T>? get stream => this._streamController?.stream;
 
@@ -34,10 +32,8 @@ abstract base class StreamingDisposableService<T> extends DisposableService {
 
   void onError(Object? e, FutureOr<void> Function() dispose);
 
-  @nonVirtual
   @override
-  // ignore: invalid_override_of_non_virtual_member
-  FutureOr<void> initService() async {
+  FutureOr<void> onInitService() async {
     _streamController = StreamController<T>.broadcast();
     _streamSubscription = provideInputStream().listen(
       pushToStream,
@@ -46,7 +42,6 @@ abstract base class StreamingDisposableService<T> extends DisposableService {
       },
       cancelOnError: false,
     );
-    await super.initService();
   }
 
   /// Pushes [data] to this [stream] and calls [onPushToStream].
@@ -62,9 +57,8 @@ abstract base class StreamingDisposableService<T> extends DisposableService {
   void onPushToStream(T data);
 
   @override
-  Future<void> dispose() async {
+  FutureOr<void> onDispose() async {
     await _streamSubscription?.cancel();
     await _streamController?.close();
-    await super.dispose();
   }
 }

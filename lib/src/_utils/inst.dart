@@ -14,9 +14,9 @@ import 'dart:async';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-base class _Inst<T> {
+class Inst<T> {
   /// Creates a new inst.
-  const _Inst(this.constructor);
+  const Inst(this.constructor);
 
   /// Creates a new object of type T.
   final InstConstructor<T> constructor;
@@ -31,7 +31,7 @@ base class _Inst<T> {
 }
 
 /// A singleton interface that also reports the type of the created objects.
-final class SingletonInst<T> extends _Inst<T> {
+class SingletonInst<T> extends Inst<T> {
   /// Creates a new singleton.
   const SingletonInst(super.constructor);
 
@@ -44,7 +44,7 @@ final class SingletonInst<T> extends _Inst<T> {
 typedef Singleton<T> = SingletonInst<T>;
 
 /// A factory interface that also reports the type of the created objects.
-final class FactoryInst<T> extends _Inst<T> {
+class FactoryInst<T> extends Inst<T> {
   /// Creates a new factory.
   const FactoryInst(super.constructor);
 

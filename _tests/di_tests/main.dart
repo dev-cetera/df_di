@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:df_di/df_di.dart';
 import 'package:df_pod/df_pod.dart';
 import 'package:flutter/foundation.dart';
@@ -48,19 +50,42 @@ void main() async {
     // print('Expected "Hello after 3 seconds!": $helloAfter3SecondsC');
 
     di.registerSingletonService(
-      () => Future.delayed(const Duration(seconds: 3), () => Service.initService()),
+      () => Future.delayed(const Duration(seconds: 2), () => Service.initService()),
     );
 
     final service = await di.get<Service>();
 
-    service.dispose();
+    di.unregister<Service>();
 
-    print(service);
+    //print(service);
   }
 }
 
 class Service extends DisposableService {
-  late final P<String> pTest = willDispose(Pod('test'));
-
   Service.initService() : super.initService();
+
+
+  late final P<String> pTest;
+  @override
+  disposables() {
+    return [
+      pTest = Pod('test'),
+    ];
+  }
+
+  @override
+  FutureOr<void> onInitService() {
+    //  pTest = willDispose(
+    //     Pod('test'),
+    //     onBeforeDispose: (e) {
+    //       print('Grrrrr');
+    //     },
+    //   );
+    return super.onInitService();
+  }
+
+  @override
+  void onDispose() {}
+  
+  
 }

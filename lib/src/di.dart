@@ -37,7 +37,7 @@ class DI {
     register(
       SingletonInst<T>(constructor),
       key: key,
-      onUnregister: onUnregister != null ? (e) => onUnregister(e as FutureOr<T>) : null,
+      onUnregister: _toDynamic<T>(onUnregister),
     );
   }
 
@@ -49,8 +49,20 @@ class DI {
     register(
       FactoryInst<T>(constructor),
       key: key,
-      onUnregister: onUnregister != null ? (e) => onUnregister(e as FutureOr<T>) : null,
+      onUnregister: _toDynamic<T>(onUnregister),
     );
+  }
+
+  UnregisterDependencyCallback<dynamic>? _toDynamic<T>(
+    UnregisterDependencyCallback<T>? onUnregister,
+  ) {
+    return onUnregister != null
+        ? (dynamic e) {
+            if (e is T) {
+              onUnregister(e);
+            }
+          }
+        : null;
   }
 
   void registerSingletonService<T extends DisposableService>(
@@ -79,8 +91,10 @@ class DI {
     FutureOr<void> internal(T service) {
       final initialized = service.initialized;
       if (initialized is Future<void>) {
+        // ignore: invalid_use_of_protected_member
         return initialized.then((_) => service.dispose());
       } else {
+        // ignore: invalid_use_of_protected_member
         return service.dispose();
       }
     }
@@ -140,6 +154,12 @@ class DI {
     DIKey key = DIKey.defaultKey,
     UnregisterDependencyCallback<dynamic>? onUnregister,
   }) {
+    // Can't I just do _register<FutureOr<T>> or better yet, _register<T>???
+    //  _register<T>(
+    //   dependency,
+    //   key: key,
+    //   onUnregister: onUnregister,
+    // );
     if (dependency is T) {
       _register<T>(
         dependency,
@@ -208,6 +228,7 @@ class DI {
   FutureOr<T> get<T>([
     DIKey key = DIKey.defaultKey,
   ]) {
+    // Sync types.
     {
       final res = registry.getDependency<T>(key);
       if (res != null) {
@@ -215,22 +236,23 @@ class DI {
         return dep;
       }
     }
+    // Async types.
     {
       final res = registry.getDependency<Future<T>>(key);
       if (res != null) {
         final futureDep = res.dependency;
-        futureDep.then((dep) async {
+        return futureDep.then((dep) async {
           await unregister<Future<T>>(key);
-          _register<T>(
+          register<T>(
             dep,
             key: key,
             onUnregister: res.onUnregister,
           );
+          return dep;
         });
-        return futureDep;
       }
     }
-
+    // Singleton types.
     {
       final res = registry.getDependency<SingletonInst<T>>(key);
       if (res != null) {
@@ -249,7 +271,7 @@ class DI {
         }
       }
     }
-
+    // Factory types.
     {
       final res = registry.getDependency<FactoryInst<T>>(key);
       if (res != null) {
@@ -271,8 +293,8 @@ class DI {
     for (final dep in [
       registry.removeDependency<T>(key),
       registry.removeDependency<Future<T>>(key),
-      registry.removeDependency<T Function()>(key),
-      registry.removeDependency<Future<T> Function()>(key),
+      registry.removeDependency<SingletonInst<T>>(key),
+      registry.removeDependency<FactoryInst<T> Function()>(key),
     ]) {
       if (dep == null) continue;
       final dependency = dep.dependency;

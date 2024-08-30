@@ -13,6 +13,7 @@
 import 'dart:async';
 
 import 'package:df_cleanup/df_cleanup.dart';
+import 'package:df_cleanup/src/_utils/future_or_manager.dart';
 import 'package:df_pod/df_pod.dart';
 import 'package:meta/meta.dart';
 
@@ -22,79 +23,98 @@ import '/src/_utils/_index.g.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 /// An abstract class representing a service that can be initialized and disposed.
-abstract class DisposableService extends _DisposableService with WillDisposeMixin {
+abstract class DisposableService
+    with DisposablesMixin, CancelablesMixin, ClosablesMixin, StopablesMixin {
   /// Creates an uninitialized instance of the service.
   /// Must call [initService] before using this service.
   DisposableService();
 
   /// Creates and initializes an instance of the service.
   /// The service cannot be re-initialized once initialized.
-  DisposableService.initService() : super.initService();
-}
+  DisposableService.initService() {
+    initService();
+  }
 
-// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-
-abstract class _DisposableService with DisposeMixin {
   final _initializedCompleter = CompleterOr<void>();
 
   /// A future that completes when the service has been initialized via [initService].
   FutureOr<void> get initialized => _initializedCompleter.futureOr;
 
-  final _pInitialized = RootPod(false);
-
   /// A flag indicating whether the service has been initialized.
   /// Initially `false`, becomes `true` after [initService] is called.
   P<bool> get pInitialized => _pInitialized;
 
-  _DisposableService();
-
-  _DisposableService.initService() {
-    initService();
-  }
+  final _pInitialized = RootPod(false);
 
   /// Initializes the service. Sets [pInitialized] to `true` and completes
-  /// [initialized]. This method must be called before interacting with the service.
+  /// [initialized]. This method must be called before interacting with the
+  /// service.
   @nonVirtual
   FutureOr<void> initService() async {
-    _checkAlreadyDisposed();
     if (_pInitialized.value) {
       throw ServiceAlreadyInitializedException();
     }
-    await onBeforeInitService();
-    await _pInitialized.set(true);
+    _pInitialized.set(true);
     _initializedCompleter.complete();
+    return onInitService();
   }
 
-  /// Called before [initService] to perform any necessary initialization.
+  /// Called immediately after [initService] to perform any necessary
+  /// initialization.
+  ///
   /// This method should not be called directly.
   @protected
-  FutureOr<void> onBeforeInitService() {}
+  FutureOr<void> onInitService() {}
+
+  @visibleForOverriding
+  @override
+  Iterable<dynamic> cancelables() => [];
+
+  @visibleForOverriding
+  @override
+  Iterable<dynamic> disposables() => [];
+
+  @visibleForOverriding
+  @override
+  Iterable<dynamic> closables() => [];
+
+  @visibleForOverriding
+  @override
+  Iterable<dynamic> stopables() => [];
 
   /// Disposes of the service, making it unusable and ready for garbage collection.
   /// This method should be called when the service is no longer needed.
-  /// Prefer using [DI.registerSingletonService] or [DI.registerFactoryService]
-  /// for automatic disposal during [DI.unregister].
-  @nonVirtual
-  @override
-  FutureOr<void> dispose() async {
-    if (_pInitialized.value && !_pInitialized.isDisposed) {
-      await onBeforeDispose();
-      _pInitialized.dispose();
-    } else {
-      throw ServiceNotYetInitializedException();
-    }
-  }
-
-  /// Called before [dispose] to perform any necessary cleanup.
-  /// This method should not be called directly.
+  ///
+  /// Do not call this method directly. Use [DI.registerSingletonService] or
+  /// [DI.registerFactoryService] which will automatically call this methid
+  /// on [DI.unregister].
+  ///
   @protected
-  FutureOr<void> onBeforeDispose() {}
-
-  void _checkAlreadyDisposed() {
+  @nonVirtual
+  FutureOr<void> dispose() {
+    final fom = FutureOrManager();
     if (_pInitialized.isDisposed) {
       throw ServiceAlreadyDisposedException();
     }
+    if (!_pInitialized.value) {
+      throw ServiceNotYetInitializedException();
+    }
+    fom.addAll([
+      stopAllStopables(),
+      cancelAllCancelables(),
+      closeAllClosables(),
+      disposeAllDisposables(),
+      onDispose(),
+    ]);
+
+    return fom.complete();
   }
+
+  /// Called immediately after [dispose] to perform any necessary cleanup.
+  ///
+  /// This method should not be called directly.
+  @protected
+  FutureOr<void> onDispose() {}
 }
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
