@@ -56,7 +56,7 @@ di.register<double>(Future.value(3.0));
 di.unregister<String>(); // Throws an error because there is no dependency registered under type "String".
 ```
 
-### Getting a dependency:
+### Getting a Dependency:
 
 ```dart
 // Getting a dependency under type "int" and defaultKey.
@@ -94,7 +94,6 @@ class FooBarService extends DisposableService {
 ### Registering and Using a Singleton Service:
 
 ```dart
-
 // Register FooBarService as a lazy singleton.
 di.registerSingletonService(FooBarService.new);
 
@@ -107,12 +106,12 @@ print(fooBarService1 == fooBarService2); // prints true
 print(fooBarService.vFooBar.value); // prints "FooBar"
 ```
 
-### Creating a Sync Service.
+### Creating a Sync Service:
 
 ```dart
-
 di.registerSingletonService(SyncServiceExmple.new);
 print(di.get<SyncServiceExmple>() is Future); // false
+print(di.getSync<SyncServiceExmple>());  // use getSync/getSyncOrNull if you expect a sync
 
 class SyncServiceExmple extends DisposableService {
   @override
@@ -123,12 +122,12 @@ class SyncServiceExmple extends DisposableService {
 }
 ```
 
-### Creating an Async Service.
+### Creating an Async Service:
 
 ```dart
-
-di.registerSingletonService(SyncServiceExmple.new);
-print(di.get<SyncServiceExmple>() is Future); // true
+di.registerSingletonService(AsyncServiceExample.new);
+print(di.get<AsyncServiceExample>() is Future); // true
+print(di.getAsync<SyncServiceExmple>()); // use getAsync/getAsyncOrNull if you expect an async
 
 class AsyncServiceExample extends DisposableService {
   @override
@@ -142,6 +141,15 @@ class AsyncServiceExample extends DisposableService {
   Future<void> onDispose() async {}
 }
 ```
+
+
+### Getting the State of the DI instance:
+
+```dart
+// Print the current state of di to understand what's registered.
+print(di.registry.state);
+```
+
 
 ## Installation
 

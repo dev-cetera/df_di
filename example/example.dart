@@ -13,7 +13,6 @@
 import 'dart:async';
 
 import 'package:df_di/df_di.dart';
-import 'package:df_type/df_type.dart';
 import 'package:flutter/foundation.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
@@ -21,23 +20,30 @@ import 'package:flutter/foundation.dart';
 void main() async {
   if (kDebugMode) {
     // Print the current state of di to understand what's registered.
-    // print(di.registry.state); // We have nothing registered at this point.
+    print(di.registry.state); // We have nothing registered at this point.
 
-    // // Register FooBarService as a lazy singleton.
-    // di.registerSingletonService(FooBarService.new);
-    // print(di.registry.state); // Now we have a SingletonInst<FooBarService> registered.
+    // Register FooBarService as a lazy singleton.
+    di.registerSingletonService(FooBarService.new);
+    print(di.registry.state); // Now we have a SingletonInst<FooBarService> registered.
 
-    // final fooBarService1 = await di.get<FooBarService>();
-    // print(di.registry
-    //     .state); // SingletonInst<FooBarService> is gone, now we have a FooBarService registered.
+    final fooBarService1 = await di.get<FooBarService>();
+    print(di.registry
+        .state); // SingletonInst<FooBarService> is gone, now we have a FooBarService registered.
 
-    // final fooBarService2 = di<FooBarService>();
-    // final fooBarService3 = di<FooBarService>();
-    // print(fooBarService1 == fooBarService2); // same instance, prints true
-    // print(fooBarService2 == fooBarService3); // same instance, prints true
+    final fooBarService2 = di<FooBarService>();
+    final fooBarService3 = di<FooBarService>();
+    print(fooBarService1 == fooBarService2); // same instance, prints true
+    print(fooBarService2 == fooBarService3); // same instance, prints true
+
+    // Sync vs. Async.
 
     di.registerSingletonService(SyncServiceExmple.new);
-    print(di.get<SyncServiceExmple>());
+    print(di.get<SyncServiceExmple>() is Future); // false
+    print(di.getSync<SyncServiceExmple>());  // use getSync/getSyncOrNull if you expect a sync
+
+    di.registerSingletonService(AsyncServiceExample.new);
+    print(di.get<AsyncServiceExample>() is Future); // true
+    print(di.getAsync<SyncServiceExmple>()); // use getAsync/getAsyncOrNull if you expect an async
   }
 }
 

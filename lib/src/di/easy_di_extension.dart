@@ -139,6 +139,20 @@ extension EasyDIExtension on DI {
     return value;
   }
 
+  /// Gets via [getAsync] using [T] and [key].
+  ///
+  /// Returns the dependency as [Future] or `null` upon any error, including but
+  /// not limited to [TypeError] and [DependencyNotFoundException].
+  Future<T>? getAsyncOrNull<T>({
+    DIKey key = DIKey.defaultKey,
+  }) {
+    try {
+      return getAsync<T>(key: key);
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// Gets via [get] using [T] and [key], then and casts the result to [Future]
   /// of [T].
   ///
