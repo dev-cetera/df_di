@@ -13,65 +13,72 @@
 import 'dart:async';
 
 import 'package:df_pod/df_pod.dart';
+import 'package:df_type/df_type.dart' show CompleterOr;
 import 'package:meta/meta.dart';
 
 import '/src/_index.g.dart';
-import '/src/_utils/_index.g.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-/// An abstract class representing a service that can be initialized and disposed.
+/// An abstract service class with initialization and disposal management,
+/// designed to be used with [DI].
 abstract class DisposableService {
-  /// Creates an uninitialized instance of the service.
-  /// Must call [initService] before using this service.
+  /// Creates an uninitialized instance. Must call [initService]
+  /// before using this service.
   DisposableService();
 
-  /// Creates and initializes an instance of the service.
-  /// The service cannot be re-initialized once initialized.
+  /// Creates an initialized instance via [initService].
   DisposableService.initService() {
     initService();
   }
 
   final _initializedCompleter = CompleterOr<void>();
 
-  /// A future that completes when the service has been initialized via [initService].
+  /// Completes after initialized via [initService].
   FutureOr<void> get initialized => _initializedCompleter.futureOr;
 
-  /// A flag indicating whether the service has been initialized.
-  /// Initially `false`, becomes `true` after [initService] is called.
-  P<bool> pInitialized = RootPod(false);
+  /// Initially `false` and becomes `true` after [initService] is called.
+  PodListenable<bool> get pInitialized => _pInitialized;
+  final _pInitialized = RootPod(false);
 
-  /// Initializes the service. Sets [pInitialized] to `true` and completes
-  /// [initialized]. This method must be called before interacting with the
+  /// Initializes this service. Sets [pInitialized] to `true`, completes
+  /// [initialized], and then calls [onInitService].
+  ///
+  /// This method must be called before interacting with the
   /// service.
+  ///
+  /// Do not override this method. Instead, override [onInitService].
   @nonVirtual
-  FutureOr<void> initService() async {
-    if (pInitialized.value) {
+  FutureOr<void> initService() {
+    if (_pInitialized.value) {
       throw ServiceAlreadyInitializedException();
     }
-    pInitialized.asRootPod().set(true);
+    _pInitialized.set(true);
     _initializedCompleter.complete();
     return onInitService();
   }
 
-  /// Called immediately after [initService] to perform any necessary
-  /// initialization.
+  /// Override to define any necessary initialization to be called immediately
+  /// after [initService].
   ///
   /// This method should not be called directly.
   @protected
-  FutureOr<void> onInitService() {}
+  FutureOr<void> onInitService();
 
-  /// Disposes of the service, making it unusable and ready for garbage collection.
-  /// This method should be called when the service is no longer needed.
+  /// Disposes of this service, making it unusable and ready for garbage
+  /// collection. Calls [onDispose].
+  ///
+  /// This method must be called when the service is no longer needed.
+  ///
+  /// Do not override this method. Instead, override [onDispose].
   ///
   /// Do not call this method directly. Use [DI.registerSingletonService] or
   /// [DI.registerFactoryService] which will automatically call this methid
   /// on [DI.unregister].
-  ///
   @protected
   @nonVirtual
   FutureOr<void> dispose() {
-    if (pInitialized.asPodDisposable().isDisposed) {
+    if (_pInitialized.isDisposed) {
       throw ServiceAlreadyDisposedException();
     }
     if (!pInitialized.value) {
@@ -81,7 +88,8 @@ abstract class DisposableService {
     return onDispose();
   }
 
-  /// Called immediately after [dispose] to perform any necessary cleanup.
+  /// Override to define any necessary disposal to be called immediately
+  /// after [dispose].
   ///
   /// This method should not be called directly.
   @protected

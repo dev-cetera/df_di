@@ -12,8 +12,10 @@
 
 import 'dart:async';
 
-import '_index.g.dart';
-import '_utils/_index.g.dart';
+import 'package:df_type/df_type.dart';
+
+import '../_index.g.dart';
+import '../_utils/_index.g.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -25,87 +27,6 @@ DI get di => DI.global;
 /// A simple Dependencu Injection (DI) class for managing dependencies across
 /// an application.
 class DI {
-  //
-  //
-  //
-
-  void registerSingleton<T>(
-    InstConstructor<T> constructor, {
-    DIKey key = DIKey.defaultKey,
-    UnregisterDependencyCallback<T>? onUnregister,
-  }) {
-    register(
-      SingletonInst<T>(constructor),
-      key: key,
-      onUnregister: _toDynamic<T>(onUnregister),
-    );
-  }
-
-  void registerFactory<T>(
-    InstConstructor<T> constructor, {
-    DIKey key = DIKey.defaultKey,
-    UnregisterDependencyCallback<T>? onUnregister,
-  }) {
-    register(
-      FactoryInst<T>(constructor),
-      key: key,
-      onUnregister: _toDynamic<T>(onUnregister),
-    );
-  }
-
-  UnregisterDependencyCallback<dynamic>? _toDynamic<T>(
-    UnregisterDependencyCallback<T>? onUnregister,
-  ) {
-    return onUnregister != null
-        ? (dynamic e) {
-            if (e is T) {
-              onUnregister(e);
-            }
-          }
-        : null;
-  }
-
-  void registerSingletonService<T extends DisposableService>(
-    InstConstructor<T> constructor, {
-    DIKey key = DIKey.defaultKey,
-  }) {
-    registerSingleton(
-      constructor,
-      key: key,
-      onUnregister: _serviceDisposer,
-    );
-  }
-
-  void registerFactoryService<T extends DisposableService>(
-    T Function() constructor, {
-    DIKey key = DIKey.defaultKey,
-  }) {
-    registerFactory(
-      constructor,
-      key: key,
-      onUnregister: _serviceDisposer,
-    );
-  }
-
-  static FutureOr<void> _serviceDisposer<T extends DisposableService>(FutureOr<T> service) {
-    FutureOr<void> internal(T service) {
-      final initialized = service.initialized;
-      if (initialized is Future<void>) {
-        // ignore: invalid_use_of_protected_member
-        return initialized.then((_) => service.dispose());
-      } else {
-        // ignore: invalid_use_of_protected_member
-        return service.dispose();
-      }
-    }
-
-    if (service is T) {
-      return internal(service);
-    } else {
-      return service.then(internal);
-    }
-  }
-
   /// Dependency registry.
   final registry = TypeSafeRegistry();
 
@@ -152,14 +73,8 @@ class DI {
   void register<T>(
     FutureOr<T> dependency, {
     DIKey key = DIKey.defaultKey,
-    UnregisterDependencyCallback<dynamic>? onUnregister,
+    OnUnregisterCallback<dynamic>? onUnregister,
   }) {
-    // TODO: Can't I just get away with this method and just do _register<FutureOr<T>> or better yet, _register<T>???
-    //  _register<T>(
-    //   dependency,
-    //   key: key,
-    //   onUnregister: onUnregister,
-    // );
     if (dependency is T) {
       _register<T>(
         dependency,
@@ -178,7 +93,7 @@ class DI {
   void _register<T>(
     T dependency, {
     DIKey key = DIKey.defaultKey,
-    UnregisterDependencyCallback<dynamic>? onUnregister,
+    OnUnregisterCallback<dynamic>? onUnregister,
   }) {
     final existingDependencies = registry.getAllDependenciesOfType<T>();
     final depMap = {for (var dep in existingDependencies) dep.key: dep};
@@ -197,26 +112,6 @@ class DI {
     registry.setDependency<T>(key, newDependency);
   }
 
-  /// A shorthand for [get], allowing you to retrieve a dependency using call
-  /// syntax.
-  T call<T>([
-    DIKey key = DIKey.defaultKey,
-  ]) {
-    return get<T>() as T;
-  }
-
-  /// Calls [get] and returns the instance of type [T] if found, otherwise
-  /// returns `null`.
-  T? getOrNull<T>([
-    DIKey key = DIKey.defaultKey,
-  ]) {
-    try {
-      return get<T>(key) as T;
-    } on DependencyNotFoundException {
-      return null;
-    }
-  }
-
   /// Gets a dependency as a [Future] or [T], registered under type [T] and the
   /// specified [key], or under [DIKey.defaultKey] if no key is provided.
   ///
@@ -225,58 +120,62 @@ class DI {
   /// return the already instantiated instance.
   ///
   /// - Throws [DependencyNotFoundException] if the requested dependency cannot be found.
-  FutureOr<T> get<T>([
+  FutureOr<T> get<T>({
     DIKey key = DIKey.defaultKey,
-  ]) {
+  }) {
     // Sync types.
     {
-      final res = registry.getDependency<T>(key);
-      if (res != null) {
-        final dep = res.dependency;
+      final raw = registry.getDependency<T>(key);
+      if (raw != null) {
+        final dep = raw.dependency;
         return dep;
       }
     }
     // Async types.
     {
-      final res = registry.getDependency<Future<T>>(key);
-      if (res != null) {
-        final futureDep = res.dependency;
-        return futureDep.then((dep) async {
-          await unregister<Future<T>>(key);
-          register<T>(
-            dep,
-            key: key,
-            onUnregister: res.onUnregister,
-          );
-          return dep;
-        });
+      final raw = registry.getDependency<Future<T>>(key);
+      if (raw != null) {
+        final dep = raw.dependency;
+        final foc = FutureOrController<void>()
+          ..addAll([
+            () => unregister<Future<T>>(key),
+            () => dep.then(
+                  (syncDep) => register<T>(
+                    syncDep,
+                    key: key,
+                    onUnregister: raw.onUnregister,
+                  ),
+                ),
+          ]);
+        final res = foc.completeWithResults((_) => dep);
+        return res;
       }
     }
     // Singleton types.
     {
-      final res = registry.getDependency<SingletonInst<T>>(key);
-      if (res != null) {
-        final dep = res.dependency.constructor();
-        final a = unregister<SingletonInst<T>>(key);
-        b() => register<T>(
-              dep,
-              key: key,
-              onUnregister: res.onUnregister,
-            );
-        if (a is Future<void>) {
-          return a.then((_) => b()).then((_) => get<T>(key));
-        } else {
-          b();
-          return get<T>(key);
-        }
+      final raw = registry.getDependency<SingletonInst<T>>(key);
+      if (raw != null) {
+        final dep = raw.dependency;
+        final foc = FutureOrController<void>()
+          ..addAll([
+            () => unregister<SingletonInst<T>>(key),
+            () => register<T>(
+                  dep.constructor(),
+                  key: key,
+                  onUnregister: raw.onUnregister,
+                ),
+          ]);
+        final res = foc.completeWithResults((_) => get<T>(key: key));
+        return res;
       }
     }
     // Factory types.
     {
-      final res = registry.getDependency<FactoryInst<T>>(key);
-      if (res != null) {
-        final dep = res.dependency.constructor();
-        return dep;
+      final raw = registry.getDependency<FactoryInst<T>>(key);
+      if (raw != null) {
+        final dep = raw.dependency;
+        final res = dep.constructor();
+        return res;
       }
     }
 
@@ -298,8 +197,7 @@ class DI {
     ]) {
       if (dep == null) continue;
       final dependency = dep.dependency;
-      dep.onUnregister?.call(dependency);
-      return null;
+      return dep.onUnregister?.call(dependency);
     }
     throw DependencyNotFoundException(T, key);
   }

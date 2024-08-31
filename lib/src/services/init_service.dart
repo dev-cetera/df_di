@@ -12,28 +12,25 @@
 
 import 'dart:async';
 
-import 'package:meta/meta.dart' show internal;
+import 'package:df_type/df_type.dart' show FutureOrController;
 
 import '/src/_index.g.dart';
+import '/src/_utils/inst.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-/// A class representing a registered dependency with an optional [onUnregister]
-/// callback.
-@internal
-final class Dependency<T> {
-  final T dependency;
-  final DIKey key;
-  final OnUnregisterCallback<dynamic>? onUnregister;
+/// Returns a function that constructs and initializes an instance of the service [T].
+InstConstructor<T> initService<T extends DisposableService>(Constructor<T> constructor) {
+  FutureOr<T> construct(Constructor<T> constructor)  {
+    final instance = constructor();
+    final foc = FutureOrController<void>();
+    foc.add(instance.initService);
+    final res = foc.completeWithResults((_) => instance);
+    return res;
+  }
 
-  const Dependency(
-    this.dependency, {
-    required this.key,
-    required this.onUnregister,
-  });
-
-  @override
-  String toString() => 'Dependency<$T> ($hashCode)';
+  return () => construct(constructor);
 }
 
-typedef OnUnregisterCallback<T> = FutureOr<void> Function(FutureOr<T> dependency);
+/// A type alias for a function that returns an instance of type `T`.
+typedef Constructor<T> = T Function();

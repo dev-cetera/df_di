@@ -30,6 +30,8 @@ class Inst<T> {
   }
 }
 
+typedef InstConstructor<T> = FutureOr<T> Function();
+
 /// A singleton interface that also reports the type of the created objects.
 class SingletonInst<T> extends Inst<T> {
   /// Creates a new singleton.
@@ -41,6 +43,7 @@ class SingletonInst<T> extends Inst<T> {
   }
 }
 
+/// Shorthand for [Singleton].
 typedef Singleton<T> = SingletonInst<T>;
 
 /// A factory interface that also reports the type of the created objects.
@@ -54,6 +57,5 @@ class FactoryInst<T> extends Inst<T> {
   }
 }
 
+/// Shorthand for [FactoryInst].
 typedef Factory<T> = FactoryInst<T>;
-
-typedef InstConstructor<T> = FutureOr<T> Function();

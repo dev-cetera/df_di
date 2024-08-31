@@ -1,0 +1,43 @@
+// Copy these Visual Studio Code snippets to your own snippets file to use them in your project.
+{
+    "ignore": {
+        "prefix": "df: Ignore",
+        "body": ["df"],
+    },
+
+    "new_service_class": {
+        "prefix": "df: New FooBarService",
+        "body": [
+            "/// A new service class that extends [DisposableService].",
+            "///",
+            "/// - Register via `di.initSingletonService(${1:FooBarService}.new);`",
+            "/// - Get via `di.get<FooBarService>();`",
+            "/// - Unregister via `di.unregister<${1}>();`",
+            "class ${1:FooBarService} extends DisposableService {",
+            "  /// Gets [_pFooBar] as a [PodListenable] to discourage tampering with [Pod].",
+            "  PodListenable<String?> get pFooBar => _pFooBar;",
+            "  final _pFooBar = Pod<String?>(null);",
+            "",
+            "  @override",
+            "  FutureOr<void> onInitService() {",
+            "    _pFooBar.set('FooBar');",
+            "  }",
+            "",
+            "  @override",
+            "  FutureOr<void> onDispose() {",
+            "    _pFooBar.dispose();",
+            "  }",
+            "}",
+            "",
+        ],
+    },
+    "new_service_pod": {
+        "prefix": "df: New Pod for a service",
+        "body": [
+            "P<${1:dynamic}> get p${2:Test} => _p${2};",
+            "// TODO: Remember to call _p${2}.dispose() within onDispose().",
+            "final _p${2} = Pod<${1}>(${3:null});",
+            "",
+        ],
+    }
+}

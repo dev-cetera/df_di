@@ -10,7 +10,6 @@
 // --- PUBLIC FILES ---
 export 'inst.dart';
 export 'dependency.dart';
-export 'completer_or.dart';
 export 'type_safe_registry.dart';
 
 // --- PRIVATE FILES (EXCLUDED) ---

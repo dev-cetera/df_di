@@ -22,4 +22,7 @@ class DIKey extends ValueKey<String> {
   static const defaultKey = DIKey('default');
 
   const DIKey(super.value);
+
+  @override
+  String toString() => 'DIKey("$value")';
 }

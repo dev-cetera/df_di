@@ -11,11 +11,137 @@ Dart & Flutter Packages by DevCetra.com & contributors.
 
 ## Summary
 
-A lightweight dependency injection solution with Service classes to assist with state management. For a full feature set, please refer to the [API reference](https://pub.dev/documentation/df_di/).
+A flexible dependency injection (DI) package with Service classes to assist with state management. This package does not aim to replace existing DI solutions like [get_it](https://pub.dev/packages/get_it) but offers an alternative that integrates seamlessly with the other [DF packages](https://pub.dev/publishers/devcetra.com/packages).
 
-## Usage Example
+## Features
 
-<!-- TODO: Write usage example here -->
+- Extensive use of `FutureOr`, making it easy to work with synchronous and asynchronous dependencies.
+- Register dependencies under a type and key, allowing for multiple dependencies of the same type.
+- Lazy singleton and factory dependency registration.
+- Abstract Service classes that integrate seamlessly.
+- Well written comments for easy understanding.
+
+For a full feature set, please refer to the [API reference](https://pub.dev/documentation/df_di/).
+
+## Quickstart
+
+### Creating a DI instance:
+
+```dart
+// Access the global DI instance from anywhere in your app.
+di;
+DI.global;
+
+// Or create a local DI instance.
+final local = DI.newInstance();
+```
+
+### Registering a Dependency:
+
+```dart
+// Register a dependency under type "int" and defaultKey.
+di.register<int>(1);
+print(DIKey.defaultKey);
+
+// Register a dependency under type "int" also but with a different key.
+di.register(2, key: const DIKey('second'));
+
+// Register a Future.
+di.register<double>(Future.value(3.0));
+```
+
+### Unregistering a Dependency:
+
+```dart
+di.unregister<String>(); // Throws an error because there is no dependency registered under type "String".
+```
+
+### Getting a dependency:
+
+```dart
+// Getting a dependency under type "int" and defaultKey.
+print(di<int>()); // prints 1
+
+// Register a dependency under type "int" also but with a different key.
+print(di.get<int>(const DIKey('second'))); // prints 2
+
+print(await di.get<double>()); // prints 3.0.
+```
+
+### Creating a new Service:
+
+```dart
+class FooBarService extends DisposableService {
+  // Provide Points of Data (PODs) for the UI to consume, like ValueNotifiers or Streams.
+  ValueListenable<String?> get vFooBar => _vFooBar;
+  final _vFooBar = ValueNotifier<String?>(null);
+
+  @override
+  FutureOr<void> onInitService() async {
+    _vFooBar.value = 'FooBar';
+    // Put initialization logic here, like starting Streams. Update the PODs as
+    // needed to notify the UI of changes.
+  }
+
+  @override
+  FutureOr<void> onDispose() {
+    _vFooBar.dispose();
+    // Put cleanup logic here, like disposing resources and canceling Streams.
+  }
+}
+```
+
+### Registering and Using a Singleton Service:
+
+```dart
+
+// Register FooBarService as a lazy singleton.
+di.registerSingletonService(FooBarService.new);
+
+// Initialize the service, get it, and use it.
+final fooBarService1 = await di.get<FooBarService>();
+final fooBarService2 = di.get<FooBarService>();
+print(fooBarService1 == fooBarService2); // prints true
+
+
+print(fooBarService.vFooBar.value); // prints "FooBar"
+```
+
+### Creating a Sync Service.
+
+```dart
+
+di.registerSingletonService(SyncServiceExmple.new);
+print(di.get<SyncServiceExmple>() is Future); // false
+
+class SyncServiceExmple extends DisposableService {
+  @override
+  void onInitService() {}
+
+  @override
+  void onDispose() {}
+}
+```
+
+### Creating an Async Service.
+
+```dart
+
+di.registerSingletonService(SyncServiceExmple.new);
+print(di.get<SyncServiceExmple>() is Future); // true
+
+class AsyncServiceExample extends DisposableService {
+  @override
+  Future<void> onInitService() async {
+    await Future<void>.delayed(
+      const Duration(seconds: 3),
+    );
+  }
+
+  @override
+  Future<void> onDispose() async {}
+}
+```
 
 ## Installation
 

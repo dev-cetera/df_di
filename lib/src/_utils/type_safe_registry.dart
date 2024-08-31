@@ -30,9 +30,14 @@ final class TypeSafeRegistry {
   //
 
   /// Dependencies, organized by their type.
-  final _pRegistry = Pod<Map<Type, DependencyMap<dynamic>>>({});
+  final _pRegistry = Pod<TypeSafeRegistryMap>({});
 
-  P<Map<Type, DependencyMap<dynamic>>> get pRegistry => _pRegistry;
+  PodListenable<TypeSafeRegistryMap> get pRegistry => _pRegistry;
+
+  /// A snapshot describing the current state of the dependencies.
+  TypeSafeRegistryMap get state =>
+      Map<Type, Map<DIKey, Dependency<dynamic>>>.unmodifiable(_pRegistry.value)
+          .map((k, v) => MapEntry(k, Map.unmodifiable(v)));
 
   TypeSafeRegistry();
 
@@ -120,5 +125,8 @@ final class TypeSafeRegistry {
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-/// Type alias for a map of dependencies, keyed by [DIKey].
+/// A map of [Dependency], grouped by [DIKey].
 typedef DependencyMap<T> = Map<DIKey, Dependency<T>>;
+
+/// A map of [Dependency], grouped by [Type] and [DIKey].
+typedef TypeSafeRegistryMap = Map<Type, DependencyMap<dynamic>>;
