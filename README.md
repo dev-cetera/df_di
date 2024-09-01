@@ -11,12 +11,12 @@ Dart & Flutter Packages by DevCetra.com & contributors.
 
 ## Summary
 
-A flexible dependency injection (DI) package with Service classes to assist with state management. This package does not aim to replace existing DI solutions like [get_it](https://pub.dev/packages/get_it) but offers an alternative that integrates seamlessly with the other [DF packages](https://pub.dev/publishers/devcetra.com/packages).
+A flexible dependency injection (DI) package with Service classes to assist with state management. This package aims to offer an alternative to [get_it](https://pub.dev/packages/get_it) that integrates seamlessly with the other [DF packages](https://pub.dev/publishers/devcetra.com/packages).
 
 ## Features
 
 - Extensive use of `FutureOr`, making it easy to work with synchronous and asynchronous dependencies.
-- Register dependencies under a type and key, allowing for multiple dependencies of the same type.
+- Register dependencies under a "type" and "key", allowing for multiple dependencies of the same type.
 - Lazy singleton and factory dependency registration.
 - Abstract Service classes that integrate seamlessly.
 - Well written comments for easy understanding.

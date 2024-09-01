@@ -12,7 +12,8 @@
 
 import 'dart:async';
 
-import 'package:df_type/df_type.dart' show ThenOrOnFutureOrX;
+import 'package:df_type/df_type.dart' show FutureOrController, ThenOrOnFutureOrX;
+import 'package:meta/meta.dart';
 
 import '/src/_index.g.dart';
 import '/src/utils/_dependency.dart';
@@ -57,7 +58,8 @@ extension DIExtras on DI {
     DIKey key = DIKey.defaultKey,
     OnUnregisterCallback<T>? onUnregister,
   }) {
-    register2(
+    // ignore: invalid_use_of_protected_member
+    registerWithEventualType(
       SingletonInst<T>(constructor),
       key: key,
       onUnregister: onUnregister,
@@ -101,7 +103,8 @@ extension DIExtras on DI {
     DIKey key = DIKey.defaultKey,
     OnUnregisterCallback<T>? onUnregister,
   }) {
-    register2(
+    // ignore: invalid_use_of_protected_member
+    registerWithEventualType(
       FactoryInst<T>(constructor),
       key: key,
       onUnregister: onUnregister,
@@ -180,5 +183,61 @@ extension DIExtras on DI {
   }) async {
     final value = await get<T>(key: key);
     return value;
+  }
+
+  /// Gets the registration [Type] of the current dependency that can be
+  /// fetched with type [T] and [key].
+  ///
+  /// Useful for debugging.
+  @visibleForTesting
+  Type registrationType<T>({
+    DIKey key = DIKey.defaultKey,
+  }) {
+    final dep = _getDependency<T>(key);
+    return dep.registrationType;
+  }
+
+  /// Gets the registration index of the current dependency that can be
+  /// fetched with type [T] and [key].
+  ///
+  /// Useful for debugging.
+  @visibleForTesting
+  int registrationIndex<T>({
+    DIKey key = DIKey.defaultKey,
+  }) {
+    final dep = _getDependency<T>(key);
+    return dep.registrationIndex;
+  }
+
+  Dependency<dynamic> _getDependency<T>(DIKey key) {
+    final dependencies = registry.getDependenciesOfTypes(
+      supportedAssociatedTypes<T>(),
+      key,
+    );
+    if (dependencies.isEmpty) {
+      throw DependencyNotFoundException(T, key);
+    } else {
+      final dep = dependencies.first;
+      return dep;
+    }
+  }
+
+  /// Unregisters all dependencies in the reverse order of their registration,
+  /// effectively resetting this instance of [DI].
+  FutureOr<void> unregisterAll([void Function(Dependency<dynamic> dep)? callback]) {
+    final foc = FutureOrController<void>();
+    final dependencies = registry.pRegistry.value.values
+        .fold(<Dependency<dynamic>>[], (buffer, e) => buffer..addAll(e.values));
+    dependencies.sort((a, b) => b.registrationIndex.compareTo(a.registrationIndex));
+    for (final dep in dependencies) {
+      final a = dep.onUnregister;
+      final b = callback;
+      foc.addAll([
+        if (a != null) (_) => a(dep.value),
+        if (b != null) (_) => b(dep),
+      ]);
+    }
+    foc.add((_) => registry.clearRegistry());
+    return foc.complete();
   }
 }

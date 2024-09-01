@@ -26,10 +26,10 @@ DI get di => DI.global;
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-/// A simple Dependencu Injection (DI) class for managing dependencies across
-/// an application.
+/// A flexible and extensive Dependency Injection (DI) class for managing
+/// dependencies across an application.
 class DI {
-  /// Dependency registry.
+  /// A type-safe registry that stores all dependencies.
   final registry = TypeSafeRegistry();
 
   /// Default global instance of the DI class.
@@ -77,24 +77,25 @@ class DI {
     DIKey key = DIKey.defaultKey,
     OnUnregisterCallback<T>? onUnregister,
   }) {
-    return register2<T, T>(
+    return registerWithEventualType<T, T>(
       value,
       key: key,
       onUnregister: onUnregister,
     );
   }
 
-  void register2<T, U>(
+  @protected
+  void registerWithEventualType<T, ET>(
     FutureOr<T> value, {
     DIKey key = DIKey.defaultKey,
-    OnUnregisterCallback<U>? onUnregister,
+    OnUnregisterCallback<ET>? onUnregister,
   }) {
     if (value is T) {
       registerExactType<T>(
         dependency: Dependency(
           value: value,
           registrationIndex: _registrationCount++,
-          onUnregister: (e) => onUnregister?.call(e as U),
+          onUnregister: (e) => onUnregister?.call(e as ET),
         ),
       );
     } else {
@@ -102,13 +103,17 @@ class DI {
         dependency: Dependency(
           value: value,
           registrationIndex: _registrationCount++,
-          onUnregister: (e) => onUnregister?.call(e as U),
+          onUnregister: (e) => onUnregister?.call(e as ET),
         ),
       );
     }
   }
 
-  /// Tracks the registration count, assigning a unique index number to each registration.
+  /// The number of dependencies registered in this instance.
+  int get length => _registrationCount;
+
+  /// Tracks the registration count, assigning a unique index number to each
+  /// registration.
   var _registrationCount = 0;
 
   @protected
@@ -129,14 +134,19 @@ class DI {
     registry.setDependency<T>(key, dependency);
   }
 
-  /// Gets a dependency as a [Future] or [T], registered under type [T] and the
-  /// specified [key], or under [DIKey.defaultKey] if no key is provided.
+  /// Gets a dependency as either a [Future] or an instance of [T] registered
+  /// under the type [T] and the specified [key], or under [DIKey.defaultKey]
+  /// if no key is provided.
   ///
-  /// If the dependency was registered lazily via [registerSingleton] and is not
-  /// yet instantiated, it will be instantiated. Subsequent calls  of [get] will
-  /// return the already instantiated instance.
+  /// If the dependency was registered as a lazy singleton via [registerSingleton]
+  /// and hasn't been instantiated yet, it will be instantiated on the first call.
+  /// Subsequent calls to [get] will return the already instantiated instance.
   ///
-  /// - Throws [DependencyNotFoundException] if the requested dependency cannot be found.
+  /// If the dependency was registered via [registerFactory], a new instance
+  /// will be created and returned with each call to [get].
+  ///
+  /// - Throws [DependencyNotFoundException] if the requested dependency cannot
+  /// be found.
   FutureOr<T> get<T>({
     DIKey key = DIKey.defaultKey,
   }) {
@@ -144,16 +154,15 @@ class DI {
     {
       final dep = registry.getDependency<T>(key);
       if (dep != null) {
-        final value = dep.value;
-        return value;
+        final res = dep.value;
+        return res;
       }
     }
     // Factory types.
     {
-      final dep = registry.getDependency<FactoryInst<T>>(key);
-      if (dep != null) {
-        final value = dep.value.constructor();
-        return value;
+      final res = _getFactoryOrNull<T>(key);
+      if (res != null) {
+        return res;
       }
     }
     // Async types.
@@ -197,6 +206,31 @@ class DI {
     throw DependencyNotFoundException(T, key);
   }
 
+  /// Gets a dependency registered via [registerFactory] as either a
+  /// [Future] or an instance of [T] under the specified [key], or under
+  /// [DIKey.defaultKey] if no key is provided.
+  ///
+  /// This method returns a new instance of the dependency each time it is
+  /// called.
+  ///
+  /// - Throws [DependencyNotFoundException] if no factory is found for the
+  ///   requested type [T] and [key].
+  FutureOr<T> getFactory<T>({
+    DIKey key = DIKey.defaultKey,
+  }) {
+    final result = _getFactoryOrNull<T>(key);
+    if (result == null) {
+      throw DependencyNotFoundException(T, key);
+    }
+    return result;
+  }
+
+  FutureOr<T>? _getFactoryOrNull<T>(DIKey key) {
+    final dep = registry.getDependency<FactoryInst<T>>(key);
+    final result = dep?.value.constructor();
+    return result;
+  }
+
   /// Unregisters a dependency registered under type [T] and the
   /// specified [key], or under [DIKey.defaultKey] if no key is provided.
   ///
@@ -219,62 +253,6 @@ class DI {
       final dep = dependencies.first;
       return dep;
     }
-  }
-
-  /// Gets the registration [Type] of the current dependency that can be
-  /// fetched with type [T] and [key].
-  ///
-  /// Useful for debugging.
-  @visibleForTesting
-  Type registrationType<T>({
-    DIKey key = DIKey.defaultKey,
-  }) {
-    final dep = _getDependency<T>(key);
-    return dep.registrationType;
-  }
-
-  /// Gets the registration index of the current dependency that can be
-  /// fetched with type [T] and [key].
-  ///
-  /// Useful for debugging.
-  @visibleForTesting
-  int registrationIndex<T>({
-    DIKey key = DIKey.defaultKey,
-  }) {
-    final dep = _getDependency<T>(key);
-    return dep.registrationIndex;
-  }
-
-  Dependency<dynamic> _getDependency<T>(DIKey key) {
-    final dependencies = registry.getDependenciesOfTypes(
-      supportedAssociatedTypes<T>(),
-      key,
-    );
-    if (dependencies.isEmpty) {
-      throw DependencyNotFoundException(T, key);
-    } else {
-      final dep = dependencies.first;
-      return dep;
-    }
-  }
-
-  /// Unregisters all dependencies in the reverse order of their registration,
-  /// effectively resetting this instance of [DI].
-  FutureOr<void> unregisterAll([void Function(Dependency<dynamic> dep)? callback]) {
-    final foc = FutureOrController<void>();
-    final dependencies = registry.pRegistry.value.values
-        .fold(<Dependency<dynamic>>[], (buffer, e) => buffer..addAll(e.values));
-    dependencies.sort((a, b) => b.registrationIndex.compareTo(a.registrationIndex));
-    for (final dep in dependencies) {
-      final a = dep.onUnregister;
-      final b = callback;
-      foc.addAll([
-        if (a != null) (_) => a(dep.value),
-        if (b != null) (_) => b(dep),
-      ]);
-    }
-    foc.add((_) => registry.clearRegistry());
-    return foc.complete();
   }
 }
 
