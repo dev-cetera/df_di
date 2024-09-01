@@ -8,19 +8,18 @@
 //.title~
 
 // --- PUBLIC FILES ---
-export 'df_di_package_exception.dart';
-export 'di/easy_di_extension.dart';
 export 'di/di.dart';
-export 'di/di_key.dart';
-export 'services/streaming_disposable_service.dart';
-export 'services/disposable_service.dart';
+export 'di/di_extras.dart';
+export 'utils/inst.dart';
+export 'utils/di_key.dart';
+export 'utils/df_di_package_exception.dart';
+export 'services/streaming_service.dart';
+export 'services/service.dart';
 
 // --- PRIVATE FILES (EXCLUDED) ---
 // export '_index.g.dart';
-// export '_utils/inst.dart';
-// export '_utils/dependency.dart';
-// export '_utils/_index.g.dart';
-// export '_utils/type_safe_registry.dart';
+// export 'utils/_dependency.dart';
+// export 'utils/_type_safe_registry.dart';
 
 // --- GENERATED FILES (EXCLUDED) ---
 // None found.

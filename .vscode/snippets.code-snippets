@@ -8,12 +8,12 @@
     "new_service_class": {
         "prefix": "df: New FooBarService",
         "body": [
-            "/// A new service class that extends [DisposableService].",
+            "/// A new service class that extends [Service].",
             "///",
             "/// - Register via `di.initSingletonService(${1:FooBarService}.new);`",
             "/// - Get via `di.get<FooBarService>();`",
             "/// - Unregister via `di.unregister<${1}>();`",
-            "class ${1:FooBarService} extends DisposableService {",
+            "class ${1:FooBarService} extends Service {",
             "  /// Gets [_pFooBar] as a [PodListenable] to discourage tampering with [Pod].",
             "  PodListenable<String?> get pFooBar => _pFooBar;",
             "  final _pFooBar = Pod<String?>(null);",

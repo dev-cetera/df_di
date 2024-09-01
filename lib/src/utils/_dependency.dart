@@ -22,18 +22,37 @@ import '/src/_index.g.dart';
 /// callback.
 @internal
 final class Dependency<T> {
-  final T dependency;
+  final T value;
+  final Type type;
+  final Type registrationType;
+  final int registrationIndex;
   final DIKey key;
   final OnUnregisterCallback<dynamic>? onUnregister;
 
-  const Dependency(
-    this.dependency, {
-    required this.key,
+  const Dependency({
+    required this.value,
+    required this.registrationIndex,
+    Type? registrationType,
+    this.key = DIKey.defaultKey,
     required this.onUnregister,
-  });
+  })  : type = T,
+        registrationType = registrationType ?? T;
+
+  /// Creates a new dependency of type [N] from the current one but with
+  /// a [newValue].
+  Dependency<N> reassignValue<N>(N newValue) {
+    return Dependency<N>(
+      value: newValue,
+      registrationIndex: registrationIndex,
+      registrationType: registrationType,
+      key: key,
+      onUnregister: onUnregister,
+    );
+  }
 
   @override
   String toString() => 'Dependency<$T> ($hashCode)';
 }
 
-typedef OnUnregisterCallback<T> = FutureOr<void> Function(FutureOr<T> dependency);
+@internal
+typedef OnUnregisterCallback<T> = FutureOr<void> Function(T value);

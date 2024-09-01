@@ -26,7 +26,7 @@ class Inst<T> {
 
   @override
   String toString() {
-    return '_Inst(type: $type)';
+    return 'Inst(type: $type)';
   }
 }
 

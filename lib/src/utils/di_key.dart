@@ -10,26 +10,19 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-/// An exception only thrown by the `df_di` package.
-abstract base class DFDIPackageException implements Exception {
-  //
-  //
-  //
+import 'package:flutter/foundation.dart' show ValueKey;
 
-  final String message;
+import '/src/_index.g.dart';
 
-  //
-  //
-  //
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-  DFDIPackageException(this.message);
+/// A [ValueKey] to identify dependencies within [DI].
+class DIKey extends ValueKey<String> {
+  /// Default key to use when no specific key is provided.
+  static const defaultKey = DIKey('default');
 
-  //
-  //
-  //
+  const DIKey(super.value);
 
   @override
-  String toString() {
-    return '[$runtimeType] $message';
-  }
+  String toString() => '$DIKey("$value")';
 }

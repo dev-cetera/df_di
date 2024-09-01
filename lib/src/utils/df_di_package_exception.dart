@@ -10,19 +10,15 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-import 'package:flutter/foundation.dart' show ValueKey;
+/// An exception only thrown by the `df_di` package.
+abstract base class DFDIPackageException implements Exception {
+ /// The error [message] to display for this exception.
+  final String message;
 
-import 'di.dart';
-
-// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-
-/// A [ValueKey] to identify dependencies within [DI].
-class DIKey extends ValueKey<String> {
-  /// Default key to use when no specific key is provided.
-  static const defaultKey = DIKey('default');
-
-  const DIKey(super.value);
+  DFDIPackageException(this.message);
 
   @override
-  String toString() => 'DIKey("$value")';
+  String toString() {
+    return '[$runtimeType] $message';
+  }
 }

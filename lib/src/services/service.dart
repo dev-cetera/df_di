@@ -20,17 +20,17 @@ import '/src/_index.g.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-/// An abstract service class with initialization and disposal management,
-/// designed to be used with [DI].
-abstract class DisposableService {
+/// A base class for services that require initialization and disposal management.
+///
+/// This class is intended to be used within a Dependency Injection [DI] system.
+///
+/// It provides a standardized structure for managing the lifecycle of services,
+/// ensuring they are properly initialized when needed and disposed of when no
+/// longer in use.
+abstract base class Service {
   /// Creates an uninitialized instance. Must call [initService]
   /// before using this service.
-  DisposableService();
-
-  /// Creates an initialized instance via [initService].
-  DisposableService.initService() {
-    initService();
-  }
+  Service();
 
   final _initializedCompleter = CompleterOr<void>();
 

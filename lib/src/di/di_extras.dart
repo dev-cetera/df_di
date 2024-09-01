@@ -14,13 +14,13 @@ import 'dart:async';
 
 import 'package:df_type/df_type.dart' show ThenOrOnFutureOrX;
 
-import '../_index.g.dart';
-import '../_utils/_index.g.dart';
+import '/src/_index.g.dart';
+import '/src/utils/_dependency.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-extension EasyDIExtension on DI {
-  /// Registers a [DisposableService] as a singleton. When [get] is first called
+extension DIExtras on DI {
+  /// Registers a [Service] as a singleton. When [get] is first called
   /// with [T] and [key], [DI] creates, initializes, and returns a new instance
   /// of [T]. All subsequent calls to [get] return the same instance.
   ///
@@ -31,14 +31,15 @@ extension EasyDIExtension on DI {
   /// final fooBarService2 = di.get<FooBarService>();
   /// print(fooBarService1 == fooBarService2); // true
   /// ```
-  void registerSingletonService<T extends DisposableService>(
+  void registerSingletonService<T extends Service>(
     Constructor<T> constructor, {
     DIKey key = DIKey.defaultKey,
   }) {
     registerSingleton(
-      () => constructor().thenOr((inst) => inst.initService().thenOr((_) => inst)),
+      () => constructor().thenOr((e) => e.initService().thenOr((_) => e)),
       key: key,
-      onUnregister: _onUnregisterService,
+      // ignore: invalid_use_of_protected_member
+      onUnregister: (e) => e.thenOr((e) => e.initialized.thenOr((_) => e.dispose())),
     );
   }
 
@@ -56,14 +57,14 @@ extension EasyDIExtension on DI {
     DIKey key = DIKey.defaultKey,
     OnUnregisterCallback<T>? onUnregister,
   }) {
-    register(
+    register2(
       SingletonInst<T>(constructor),
       key: key,
-      onUnregister: _dynamicOnUnregister<T>(onUnregister),
+      onUnregister: onUnregister,
     );
   }
 
-  /// Registers a [DisposableService] as a factory. Each time [get] is called
+  /// Registers a [Service] as a factory. Each time [get] is called
   /// with T] and [key], [DI] creates, initializes, and returns a new instance
   /// of [T].
   ///
@@ -74,14 +75,15 @@ extension EasyDIExtension on DI {
   /// final fooBarService2 = di.get<FooBarService>();
   /// print(fooBarService1 == fooBarService2); // false
   /// ```
-  void registerFactoryService<T extends DisposableService>(
+  void registerFactoryService<T extends Service>(
     Constructor<T> constructor, {
     DIKey key = DIKey.defaultKey,
   }) {
     registerFactory(
-      () => constructor().thenOr((inst) => inst.initService().thenOr((_) => inst)),
+      () => constructor().thenOr((e) => e.initService().thenOr((_) => e)),
       key: key,
-      onUnregister: _onUnregisterService,
+      // ignore: invalid_use_of_protected_member
+      onUnregister: (e) => e.thenOr((e) => e.initialized.thenOr((_) => e.dispose())),
     );
   }
 
@@ -99,10 +101,10 @@ extension EasyDIExtension on DI {
     DIKey key = DIKey.defaultKey,
     OnUnregisterCallback<T>? onUnregister,
   }) {
-    register(
+    register2(
       FactoryInst<T>(constructor),
       key: key,
-      onUnregister: _dynamicOnUnregister<T>(onUnregister),
+      onUnregister: onUnregister,
     );
   }
 
@@ -114,10 +116,29 @@ extension EasyDIExtension on DI {
     return getSync<T>(key: key);
   }
 
-  /// Gets via [getSync] using [T] and [key].
-  ///
-  /// Returns the dependency as [T] or `null` upon any error, including but not
-  /// limited to [TypeError] and [DependencyNotFoundException].
+  /// Checks if a dependency is registered under [T] and [key].
+  bool isRegistered<T>({
+    DIKey key = DIKey.defaultKey,
+  }) {
+    final registered = getAsyncOrNull<T>() != null;
+    return registered;
+  }
+
+  /// Gets via [get] using [T] and [key] or `null` upon any error,
+  /// including but not limited to [DependencyNotFoundException].
+  FutureOr<T>? getOrNull<T>({
+    DIKey key = DIKey.defaultKey,
+  }) {
+    try {
+      return get<T>(key: key);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Gets via [getSync] using [T] and [key] or `null` upon any error,
+  /// including but not limited to [TypeError] and
+  /// [DependencyNotFoundException].
   T? getSyncOrNull<T>({
     DIKey key = DIKey.defaultKey,
   }) {
@@ -141,10 +162,7 @@ extension EasyDIExtension on DI {
     return value;
   }
 
-  /// Gets via [getAsync] using [T] and [key].
-  ///
-  /// Returns the dependency as [Future] or `null` upon any error, including but
-  /// not limited to [TypeError] and [DependencyNotFoundException].
+  /// Gets via [getAsync] using [T] and [key] or `null` upon any error.
   Future<T>? getAsyncOrNull<T>({
     DIKey key = DIKey.defaultKey,
   }) {
@@ -157,48 +175,10 @@ extension EasyDIExtension on DI {
 
   /// Gets via [get] using [T] and [key], then and casts the result to [Future]
   /// of [T].
-  ///
-  /// Throws [TypeError] if this result is not a [Future].
   Future<T> getAsync<T>({
     DIKey key = DIKey.defaultKey,
   }) async {
     final value = await get<T>(key: key);
-    if (value is! Future<T>) {
-      throw TypeError();
-    }
     return value;
-  }
-}
-
-// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-
-OnUnregisterCallback<dynamic>? _dynamicOnUnregister<T>(
-  OnUnregisterCallback<T>? onUnregister,
-) {
-  return onUnregister != null
-      ? (dynamic e) {
-          if (e is T) {
-            return onUnregister(e);
-          }
-        }
-      : null;
-}
-
-FutureOr<void> _onUnregisterService<T extends DisposableService>(FutureOr<T> service) {
-  FutureOr<void> internal(T service) {
-    final initialized = service.initialized;
-    if (initialized is Future<void>) {
-      // ignore: invalid_use_of_protected_member
-      return initialized.then((_) => service.dispose());
-    } else {
-      // ignore: invalid_use_of_protected_member
-      return service.dispose();
-    }
-  }
-
-  if (service is T) {
-    return internal(service);
-  } else {
-    return service.then(internal);
   }
 }

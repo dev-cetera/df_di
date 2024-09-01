@@ -13,48 +13,76 @@
 import 'dart:async';
 
 import 'package:df_di/df_di.dart';
+import 'package:df_type/df_type.dart';
 import 'package:flutter/foundation.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 void main() async {
   if (kDebugMode) {
-    // Print the current state of di to understand what's registered.
-    print(di.registry.state); // We have nothing registered at this point.
+    // Print the current state of di to understand what's registed.
+    print(di.registry.state); // Nothing registered at this point.
 
     // Register FooBarService as a lazy singleton.
     di.registerSingletonService(FooBarService.new);
-    print(di.registry.state); // Now we have a SingletonInst<FooBarService> registered.
+    // Now we have a SingletonInst<FooBarService> registered.
+    print(di.registry.state);
 
     final fooBarService1 = await di.get<FooBarService>();
-    print(di.registry
-        .state); // SingletonInst<FooBarService> is gone, now we have a FooBarService registered.
+
+    // SingletonInst<FooBarService> is gone, now we have a FooBarService registered.
+    print(di.registry.state);
 
     final fooBarService2 = di<FooBarService>();
     final fooBarService3 = di<FooBarService>();
-    print(fooBarService1 == fooBarService2); // same instance, prints true
-    print(fooBarService2 == fooBarService3); // same instance, prints true
 
-    // Sync vs. Async.
+    // Same instances, prints true.
+    print(fooBarService1 == fooBarService2);
+    print(fooBarService2 == fooBarService3);
 
     di.registerSingletonService(SyncServiceExmple.new);
     print(di.get<SyncServiceExmple>() is Future); // false
-    print(di.getSync<SyncServiceExmple>()); // use getSync/getSyncOrNull if you expect a sync
+    // Use getSync/getSyncOrNull if you expect a sync.
+    print(di.getSync<SyncServiceExmple>());
 
     di.registerSingletonService(AsyncServiceExample.new);
-    print(di.registry.state); // We have nothing registered at this point.
-    print(di.get<AsyncServiceExample>() is Future); // true
-    print(di.registry.state); // We have nothing registered at this point.
-    print(di.get<AsyncServiceExample>()); // use getAsync/getAsyncOrNull if you expect an async
+    print(di.registry.state);
+
+    // Use getAsync/getAsyncOrNull if you expect an async.
+    print(di.getAsync<AsyncServiceExample>());
+    print(di.registry.state);
+
+    di.registerSingletonService(CountingService.new);
+    final coutingService = di.get<CountingService>();
+    print(coutingService);
+
+    Future.delayed(
+      const Duration(seconds: 5),
+      () async {
+        di.unregisterAll(
+          (e) {
+            if (kDebugMode) {
+              print(e);
+            }
+          },
+        ).thenOr((_) {
+          if (kDebugMode) {
+            print('Disposed all!');
+          }
+        });
+      },
+    );
   }
 }
 
-/// A new service class that extends [DisposableService].
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+/// A new service class that extends [Service].
 ///
 /// - Register via `di.initSingletonService(FooBarService.new);`
 /// - Get via `di.get<FooBarService>();`
 /// - Unregister via `di.unregister<FooBarService>();`
-class FooBarService extends DisposableService {
+final class FooBarService extends Service {
   /// Gets [_vFooBar] as a [ValueListenable] to discourage tampering with [ValueNotifier].
   ValueListenable<String?> get vFooBar => _vFooBar;
   final _vFooBar = ValueNotifier<String?>(null);
@@ -66,12 +94,44 @@ class FooBarService extends DisposableService {
 
   @override
   FutureOr<void> onDispose() {
+    if (kDebugMode) {
+      print('Disposed $CountingService');
+    }
     _vFooBar.dispose();
   }
 }
 
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+final class CountingService extends StreamingService<int> {
+  @override
+  Stream<int> provideInputStream() async* {
+    for (var n = 0; n < 100; n++) {
+      await Future<void>.delayed(const Duration(seconds: 1));
+      yield n;
+    }
+  }
+
+  @override
+  void onPushToStream(int data) {
+    if (kDebugMode) {
+      print('[CountingService]: $data');
+    }
+  }
+
+  @override
+  FutureOr<void> onDispose() {
+    if (kDebugMode) {
+      print('Disposed $CountingService');
+    }
+    return super.onDispose();
+  }
+}
+
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
 // An example of a service that DI will treat as sync.
-class SyncServiceExmple extends DisposableService {
+final class SyncServiceExmple extends Service {
   @override
   void onInitService() {}
 
@@ -79,8 +139,10 @@ class SyncServiceExmple extends DisposableService {
   void onDispose() {}
 }
 
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
 // An example of a service that DI will treat as async.
-class AsyncServiceExample extends DisposableService {
+final class AsyncServiceExample extends Service {
   @override
   Future<void> onInitService() async {
     await Future<void>.delayed(

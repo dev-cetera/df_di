@@ -15,7 +15,7 @@ import 'package:df_pod/df_pod.dart';
 
 import '/src/_index.g.dart';
 
-import 'dependency.dart';
+import '_dependency.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -41,11 +41,22 @@ final class TypeSafeRegistry {
 
   TypeSafeRegistry();
 
-  /// Retrieves a dependency of type [T] with the specified [key].
-  ///
-  /// Returns the dependency of type [T] if found, otherwise returns `null`.
+  /// Returns the dependency of type [T] with the specified [key] if it
+  /// exists, or `null`.
   Dependency<T>? getDependency<T>(DIKey key) {
-    return _pRegistry.value[T]?[key] as Dependency<T>?;
+    return getDependencyOfType(T, key) as Dependency<T>?;
+  }
+
+  /// Returns all dependencies of [types] and [key].
+  Iterable<Dependency<dynamic>> getDependenciesOfTypes(
+    List<Type> types,
+    DIKey key,
+  ) {
+    return types.map((type) => getDependencyOfType(type, key)).nonNulls;
+  }
+
+  Dependency<dynamic>? getDependencyOfType(Type type, DIKey key) {
+    return _pRegistry.value[type]?[key];
   }
 
   /// Adds or updates a dependency of type [T] with the specified [key].
@@ -53,22 +64,38 @@ final class TypeSafeRegistry {
   /// If a dependency with the same type [T] and [key] already exists, it will
   /// be overwritten.
   void setDependency<T>(DIKey key, Dependency<T> dependency) {
-    final deps = getDependencyMap<T>() ?? <DIKey, Dependency<T>>{};
-    deps[key] = dependency;
-    setDependencyMap<T>(deps);
+    setDependencyOfType(T, key, dependency);
   }
 
-  /// Removes a dependency of type [T] with the specified [key].
-  ///
-  /// Returns the removed dependency if it existed, otherwise returns `null`.
+  void setDependencyOfType(Type type, DIKey key, Dependency<dynamic> dependency) {
+    final deps = getDependencyMapOfType(type) ?? <DIKey, Dependency<dynamic>>{};
+    deps[key] = dependency;
+    setDependencyMapOfType(type, deps);
+  }
+
+  /// Removes a dependency of type [T] with the specified [key] then returns
+  /// the removed dependency if it existed, or `null`.
   Dependency<T>? removeDependency<T>(DIKey key) {
-    final typeMap = getDependencyMap<T>();
+    return removeDependencyOfType(T, key) as Dependency<T>?;
+  }
+
+  /// Removes all dependencies of [types] and [key] and returns the removed
+  /// dependencies.
+  Iterable<Dependency<dynamic>> removeDependenciesOfTypes(
+    List<Type> types,
+    DIKey key,
+  ) {
+    return types.map((type) => removeDependencyOfType(type, key)).nonNulls;
+  }
+
+  Dependency<dynamic>? removeDependencyOfType(Type type, DIKey key) {
+    final typeMap = getDependencyMapOfType(type);
     if (typeMap != null) {
       final removed = typeMap.remove(key);
       if (typeMap.isEmpty) {
-        removeDependencyMap<T>();
+        removeDependencyMapOfType(type);
       } else {
-        setDependencyMap<T>(typeMap);
+        setDependencyMapOfType(type, typeMap);
       }
       return removed;
     }
@@ -79,15 +106,23 @@ final class TypeSafeRegistry {
   ///
   /// Returns `true` if the dependency exists, otherwise `false`.
   bool containsDependency<T>(DIKey key) {
-    return getDependencyMap<T>()?.containsKey(key) ?? false;
+    return containsDependencyOfType(T, key);
+  }
+
+  bool containsDependencyOfType(Type type, DIKey key) {
+    return getDependencyMapOfType(type)?.containsKey(key) ?? false;
   }
 
   /// Retrieves all dependencies of type [T].
   ///
   /// Returns an iterable of all registered dependencies of type [T]. If none
   /// exist, an empty iterable is returned.
-  Iterable<Dependency<dynamic>> getAllDependenciesOfType<T>() {
-    return getDependencyMap<T>()?.values ?? const Iterable.empty();
+  Iterable<Dependency<dynamic>> getAllDependencies<T>() {
+    return getAllDependenciesOfType(T);
+  }
+
+  Iterable<Dependency<dynamic>> getAllDependenciesOfType(Type type) {
+    return getDependencyMapOfType(type)?.values ?? const Iterable.empty();
   }
 
   /// Sets the map of dependencies for type [T].
@@ -95,7 +130,11 @@ final class TypeSafeRegistry {
   /// This method is used internally to update the stored dependencies for a
   /// specific type [T].
   void setDependencyMap<T>(DependencyMap<T> deps) {
-    _pRegistry.update((e) => e..[T] = deps);
+    setDependencyMapOfType(T, deps);
+  }
+
+  void setDependencyMapOfType<T>(Type type, DependencyMap<T> deps) {
+    _pRegistry.update((e) => e..[type] = deps);
   }
 
   /// Retrieves the map of dependencies for type [T].
@@ -103,7 +142,11 @@ final class TypeSafeRegistry {
   /// Returns the map of dependencies for the specified type [T], or `null` if
   /// no dependencies of this type are registered.
   DependencyMap<T>? getDependencyMap<T>() {
-    return _pRegistry.value[T] as DependencyMap<T>?;
+    return getDependencyMapOfType(T) as DependencyMap<T>?;
+  }
+
+  DependencyMap<dynamic>? getDependencyMapOfType(Type type) {
+    return _pRegistry.value[type];
   }
 
   /// Removes the entire map of dependencies for type [T].
@@ -111,7 +154,11 @@ final class TypeSafeRegistry {
   /// This method is used internally to remove all dependencies of a specific
   /// type [T].
   void removeDependencyMap<T>() {
-    _pRegistry.update((e) => e..remove(T));
+    removeDependencyMapOfType(T);
+  }
+
+  void removeDependencyMapOfType(Type type) {
+    _pRegistry.update((e) => e..remove(type));
   }
 
   /// Clears all registered dependencies.
