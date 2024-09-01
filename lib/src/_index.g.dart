@@ -9,7 +9,7 @@
 
 // --- PUBLIC FILES ---
 export 'di/di.dart';
-export 'di/di_extras.dart';
+export 'di/fancy_di.dart';
 export 'utils/inst.dart';
 export 'utils/di_key.dart';
 export 'utils/df_di_package_exception.dart';

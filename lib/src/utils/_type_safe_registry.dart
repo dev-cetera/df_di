@@ -156,7 +156,7 @@ final class TypeSafeRegistry {
   void removeDependencyMap<T>() {
     removeDependencyMapOfType(T);
   }
-
+  
   void removeDependencyMapOfType(Type type) {
     _pRegistry.update((e) => e..remove(type));
   }

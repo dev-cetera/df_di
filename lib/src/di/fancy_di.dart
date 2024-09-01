@@ -20,7 +20,7 @@ import '/src/utils/_dependency.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-extension DIExtras on DI {
+extension FancyDI on DI {
   /// Registers a [Service] as a singleton. When [get] is first called
   /// with [T] and [key], [DI] creates, initializes, and returns a new instance
   /// of [T]. All subsequent calls to [get] return the same instance.
@@ -41,28 +41,6 @@ extension DIExtras on DI {
       key: key,
       // ignore: invalid_use_of_protected_member
       onUnregister: (e) => e.thenOr((e) => e.initialized.thenOr((_) => e.dispose())),
-    );
-  }
-
-  /// Registers a singleton instance of [T] with the given [constructor]. When [get]
-  /// is called with [T] and [key], the same instance will be returned.
-  ///
-  /// ```dart
-  /// di.registerSingleton(FooBarService.new);
-  /// final fooBarService1 = di.get<FooBarService>();
-  /// final fooBarService2 = di.get<FooBarService>();
-  /// print(fooBarService1 == fooBarService2); // true
-  /// ```
-  void registerSingleton<T>(
-    InstConstructor<T> constructor, {
-    DIKey key = DIKey.defaultKey,
-    OnUnregisterCallback<T>? onUnregister,
-  }) {
-    // ignore: invalid_use_of_protected_member
-    registerWithEventualType(
-      SingletonInst<T>(constructor),
-      key: key,
-      onUnregister: onUnregister,
     );
   }
 
@@ -89,42 +67,12 @@ extension DIExtras on DI {
     );
   }
 
-  /// Registers a factory that creates a new instance of [T] each time [get] is
-  /// called with [T] and [key].
-  ///
-  /// ```dart
-  /// di.registerFactory(FooBarService.new);
-  /// final fooBarService1 = di.get<FooBarService>();
-  /// final fooBarService2 = di.get<FooBarService>();
-  /// print(fooBarService1 == fooBarService2); // false
-  /// ```
-  void registerFactory<T>(
-    InstConstructor<T> constructor, {
-    DIKey key = DIKey.defaultKey,
-    OnUnregisterCallback<T>? onUnregister,
-  }) {
-    // ignore: invalid_use_of_protected_member
-    registerWithEventualType(
-      FactoryInst<T>(constructor),
-      key: key,
-      onUnregister: onUnregister,
-    );
-  }
-
   /// A shorthand for [getAsync], allowing retrieval of a dependency using
   /// call syntax.
   T call<T>({
     DIKey key = DIKey.defaultKey,
   }) {
     return getSync<T>(key: key);
-  }
-
-  /// Checks if a dependency is registered under [T] and [key].
-  bool isRegistered<T>({
-    DIKey key = DIKey.defaultKey,
-  }) {
-    final registered = getAsyncOrNull<T>() != null;
-    return registered;
   }
 
   /// Gets via [get] using [T] and [key] or `null` upon any error,
@@ -163,6 +111,14 @@ extension DIExtras on DI {
       throw TypeError();
     }
     return value;
+  }
+
+  /// Checks if a dependency is registered under [T] and [key].
+  bool isRegistered<T>({
+    DIKey key = DIKey.defaultKey,
+  }) {
+    final registered = getAsyncOrNull<T>() != null;
+    return registered;
   }
 
   /// Gets via [getAsync] using [T] and [key] or `null` upon any error.
@@ -210,6 +166,7 @@ extension DIExtras on DI {
   }
 
   Dependency<dynamic> _getDependency<T>(DIKey key) {
+    // ignore: invalid_use_of_protected_member
     final dependencies = registry.getDependenciesOfTypes(
       supportedAssociatedTypes<T>(),
       key,
@@ -226,6 +183,7 @@ extension DIExtras on DI {
   /// effectively resetting this instance of [DI].
   FutureOr<void> unregisterAll([void Function(Dependency<dynamic> dep)? callback]) {
     final foc = FutureOrController<void>();
+    // ignore: invalid_use_of_protected_member
     final dependencies = registry.pRegistry.value.values
         .fold(<Dependency<dynamic>>[], (buffer, e) => buffer..addAll(e.values));
     dependencies.sort((a, b) => b.registrationIndex.compareTo(a.registrationIndex));
@@ -237,6 +195,7 @@ extension DIExtras on DI {
         if (b != null) (_) => b(dep),
       ]);
     }
+    // ignore: invalid_use_of_protected_member
     foc.add((_) => registry.clearRegistry());
     return foc.complete();
   }

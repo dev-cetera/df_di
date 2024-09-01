@@ -30,6 +30,7 @@ DI get di => DI.global;
 /// dependencies across an application.
 class DI {
   /// A type-safe registry that stores all dependencies.
+  @protected
   final registry = TypeSafeRegistry();
 
   /// Default global instance of the DI class.
@@ -38,6 +39,50 @@ class DI {
   /// Creates a new instance of the DI class. Prefer using [global], unless
   /// there's a specific need for a separate instance.
   DI.newInstance();
+
+  /// Registers a singleton instance of [T] with the given [constructor]. When [get]
+  /// is called with [T] and [key], the same instance will be returned.
+  ///
+  /// ```dart
+  /// di.registerSingleton(FooBarService.new);
+  /// final fooBarService1 = di.get<FooBarService>();
+  /// final fooBarService2 = di.get<FooBarService>();
+  /// print(fooBarService1 == fooBarService2); // true
+  /// ```
+  void registerSingleton<T>(
+    InstConstructor<T> constructor, {
+    DIKey key = DIKey.defaultKey,
+    OnUnregisterCallback<T>? onUnregister,
+  }) {
+    // ignore: invalid_use_of_protected_member
+    registerWithEventualType(
+      SingletonInst<T>(constructor),
+      key: key,
+      onUnregister: onUnregister,
+    );
+  }
+
+  /// Registers a factory that creates a new instance of [T] each time [get] is
+  /// called with [T] and [key].
+  ///
+  /// ```dart
+  /// di.registerFactory(FooBarService.new);
+  /// final fooBarService1 = di.get<FooBarService>();
+  /// final fooBarService2 = di.get<FooBarService>();
+  /// print(fooBarService1 == fooBarService2); // false
+  /// ```
+  void registerFactory<T>(
+    InstConstructor<T> constructor, {
+    DIKey key = DIKey.defaultKey,
+    OnUnregisterCallback<T>? onUnregister,
+  }) {
+    // ignore: invalid_use_of_protected_member
+    registerWithEventualType(
+      FactoryInst<T>(constructor),
+      key: key,
+      onUnregister: onUnregister,
+    );
+  }
 
   /// Registers the [value] under type [T] and the specified [key], or
   /// under [DIKey.defaultKey] if no key is provided.
