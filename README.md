@@ -16,7 +16,7 @@ This package offers a powerful and versatile dependency injection system along w
 ## Features
 
 - Robust support for `FutureOr`, facilitating seamless handling of both synchronous and asynchronous dependencies and callbacks.
-- Ability to register dependencies using both “type” and “key”, enabling the management of multiple dependencies of the same type.dependencies of the same type.
+- Ability to register dependencies using both “type” and “key”, enabling the management of multiple dependencies of the same type.
 - Supports standard features like factory dependencies and lazy initialization for singleton dependencies.
 - Abstract service classes that integrate effortlessly with your application.
 - Clear and comprehensive documentation for easy understanding.
@@ -37,7 +37,7 @@ DI.global;
 final local = DI.newInstance();
 ```
 
-### Registering a Dependency:
+### Registering Dependencies:
 
 ```dart
 // Register a dependency under type "int" and defaultKey.
@@ -49,31 +49,45 @@ di.register(2, key: const DIKey('second'));
 
 // Register a Future.
 di.register<double>(Future.value(3.0));
+
+int counter = 0;
+di.registerSingleton<int>(() => ++counter), key: const DIKey('singleton-counter')); 
+di.registerFactory<int>(() async => ++counter, key: const DIKey('factory-counter')); 
 ```
 
-### Unregistering a Dependency:
+### Unregistering Dependencies:
 
 ```dart
-di.unregister<String>(); // Throws an error because there is no dependency registered under type "String".
+// Throws an error because there is no dependency registered under type "String".
+FutureOr<void> futureOr = di.unregister<String>();
+
+// Unregister all dependencies in the reverse order of their registration, effectively resetting the instance di.
+futureOr = di.unregisteAll();
 ```
 
-### Getting a Dependency:
+### Getting Dependencies:
 
 ```dart
 // Getting a dependency under type "int" and defaultKey.
-print(di<int>()); // prints 1
+FutureOr<void> futureOr = di<int>();
+print(futureOr); // prints 1
 
 // Register a dependency under type "int" also but with a different key.
 print(di.get<int>(const DIKey('second'))); // prints 2
 
 print(await di.get<double>()); // prints 3.0.
+
+print(await di.getFactory<double>(ey: const DIKey('factory-counter'))); // prints 1.
+print(await di.getFactory<double>(ey: const DIKey('factory-counter'))); // prints 2.
+print(await di.get<double>(ey: const DIKey('factory-counter'))); // prints 3.
+print(await di.get<double>(ey: const DIKey('factory-counter'))); // prints 4.
 ```
 
-### Creating a new Service:
+### Creating a new Singleton Service:
 
 ```dart
 final class FooBarService extends Service {
-  // Provide Points of Data (PODs) for the UI to consume, like ValueNotifiers or Streams.
+  // Provide objects that the UI can consume, like ValueNotifiers or Streams, etc.
   ValueListenable<String?> get vFooBar => _vFooBar;
   final _vFooBar = ValueNotifier<String?>(null);
 
@@ -84,6 +98,7 @@ final class FooBarService extends Service {
     // needed to notify the UI of changes.
   }
 
+  // Always called when unregistering a service.
   @override
   FutureOr<void> onDispose() {
     _vFooBar.dispose();
@@ -92,7 +107,7 @@ final class FooBarService extends Service {
 }
 ```
 
-### Registering and Using a Singleton Service:
+### Registering and Using Singleton Services:
 
 ```dart
 // Register FooBarService as a lazy singleton.
@@ -103,33 +118,39 @@ final fooBarService1 = await di.get<FooBarService>();
 final fooBarService2 = di.get<FooBarService>();
 print(fooBarService1 == fooBarService2); // prints true
 
-
 print(fooBarService.vFooBar.value); // prints "FooBar"
 ```
 
 ### Creating a Sync Service:
 
-```dart
-di.registerSingletonService(SyncServiceExmple.new);
-print(di.get<SyncServiceExmple>() is Future); // false
-print(di.getSync<SyncServiceExmple>());  // use getSync/getSyncOrNull if you expect a sync
+Notice how no onInitService isn't a Future. This means that DI will treat it as sync.
 
+```dart
 final class SyncServiceExmple extends Service {
   @override
   void onInitService() {}
 
+  // Always called when unregistering a service.
   @override
   void onDispose() {}
 }
+
+di.registerSingletonService(SyncServiceExmple.new);
+
+// Use get that returns FutureOr<T> if you don't know what to expect.
+print(await di.get<SyncServiceExmple>() is Future); // false
+
+// Use call/getSync/getSyncOrNull if you expect a sync.
+print(di<SyncServiceExmple>());
+print(di.getSync<SyncServiceExmple>());
+print(di.getSyncOrNull<SyncServiceExmple>());
 ```
 
 ### Creating an Async Service:
 
-```dart
-di.registerSingletonService(AsyncServiceExample.new);
-print(di.get<AsyncServiceExample>() is Future); // true
-print(di.getAsync<SyncServiceExmple>()); // use getAsync/getAsyncOrNull if you expect an async
+Notice how no onInitService is Future. This means that DI will treat it as async.
 
+```dart
 final class AsyncServiceExample extends Service {
   @override
   Future<void> onInitService() async {
@@ -138,16 +159,38 @@ final class AsyncServiceExample extends Service {
     );
   }
 
+  // Always called when unregistering a service.
   @override
   Future<void> onDispose() async {}
 }
+
+di.registerSingletonService(AsyncServiceExample.new);
+
+// Use get that returns FutureOr<T> if you don't know what to expect.
+print(await di.get<AsyncServiceExample>() is Future); // true
+
+ // Use getAsync or getAsyncOrNull if you expect an async.
+print(await di.getAsync<AsyncServiceExample>());
+print(await di.getAsyncOrNull<AsyncServiceExample>());
 ```
 
-### Getting the State of the DI instance:
+### Getting the State for Debugging:
 
 ```dart
 // Print the current state of di to understand what's registered.
 print(di.registry.state);
+
+// Check if there's a dependency under "int" and DIKey.defaultKey.
+print(di.isRegistered<int>());
+print(di.registry.getDependency<T>() != null);
+
+// Check how the dependency under "String" and DIKey.defaultKey got initially registered. 
+di.registerFactory<String>(() => 'Hello World'); 
+print(di<String>()); // prints "Hello World".
+print(registrationType<String>()); // prints" FactoryInst<String>"
+
+// Print the registration index of dependency under "int" and DIKey.defaultKey.
+print(di.registrationIndex<int>());
 ```
 
 ## Installation

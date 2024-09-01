@@ -42,7 +42,7 @@ void main() async {
     print(fooBarService2 == fooBarService3);
 
     di.registerSingletonService(SyncServiceExmple.new);
-    print(di.get<SyncServiceExmple>() is Future); // false
+    print(await di.get<SyncServiceExmple>() is Future); // false
     // Use getSync/getSyncOrNull if you expect a sync.
     print(di.getSync<SyncServiceExmple>());
 
@@ -59,7 +59,7 @@ void main() async {
 
     Future.delayed(
       const Duration(seconds: 5),
-      () async {
+      () {
         di.unregisterAll(
           (e) {
             if (kDebugMode) {
@@ -67,6 +67,8 @@ void main() async {
             }
           },
         ).thenOr((_) {
+          // Completes when all dependencies are unregistered and removed
+          // from di.
           if (kDebugMode) {
             print('Disposed all!');
           }
