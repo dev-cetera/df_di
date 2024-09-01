@@ -12,7 +12,8 @@
 
 import 'dart:async';
 
-import 'package:df_type/df_type.dart' show FutureOrController, ThenOrOnFutureOrX;
+import 'package:df_type/df_type.dart'
+    show FutureOrController, ThenOrOnFutureOrX;
 import 'package:meta/meta.dart';
 
 import '/src/_index.g.dart';
@@ -40,7 +41,8 @@ extension FancyDI on DI {
       () => constructor().thenOr((e) => e.initService().thenOr((_) => e)),
       key: key,
       // ignore: invalid_use_of_protected_member
-      onUnregister: (e) => e.thenOr((e) => e.initialized.thenOr((_) => e.dispose())),
+      onUnregister: (e) =>
+          e.thenOr((e) => e.initialized.thenOr((_) => e.dispose())),
     );
   }
 
@@ -63,7 +65,8 @@ extension FancyDI on DI {
       () => constructor().thenOr((e) => e.initService().thenOr((_) => e)),
       key: key,
       // ignore: invalid_use_of_protected_member
-      onUnregister: (e) => e.thenOr((e) => e.initialized.thenOr((_) => e.dispose())),
+      onUnregister: (e) =>
+          e.thenOr((e) => e.initialized.thenOr((_) => e.dispose())),
     );
   }
 
@@ -181,12 +184,14 @@ extension FancyDI on DI {
 
   /// Unregisters all dependencies in the reverse order of their registration,
   /// effectively resetting this instance of [DI].
-  FutureOr<void> unregisterAll([void Function(Dependency<dynamic> dep)? callback]) {
+  FutureOr<void> unregisterAll(
+      [void Function(Dependency<dynamic> dep)? callback,]) {
     final foc = FutureOrController<void>();
     // ignore: invalid_use_of_protected_member
     final dependencies = registry.pRegistry.value.values
         .fold(<Dependency<dynamic>>[], (buffer, e) => buffer..addAll(e.values));
-    dependencies.sort((a, b) => b.registrationIndex.compareTo(a.registrationIndex));
+    dependencies
+        .sort((a, b) => b.registrationIndex.compareTo(a.registrationIndex));
     for (final dep in dependencies) {
       final a = dep.onUnregister;
       final b = callback;

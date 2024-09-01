@@ -67,7 +67,8 @@ final class TypeSafeRegistry {
     setDependencyOfType(T, key, dependency);
   }
 
-  void setDependencyOfType(Type type, DIKey key, Dependency<dynamic> dependency) {
+  void setDependencyOfType(
+      Type type, DIKey key, Dependency<dynamic> dependency,) {
     final deps = getDependencyMapOfType(type) ?? <DIKey, Dependency<dynamic>>{};
     deps[key] = dependency;
     setDependencyMapOfType(type, deps);
@@ -156,7 +157,7 @@ final class TypeSafeRegistry {
   void removeDependencyMap<T>() {
     removeDependencyMapOfType(T);
   }
-  
+
   void removeDependencyMapOfType(Type type) {
     _pRegistry.update((e) => e..remove(type));
   }

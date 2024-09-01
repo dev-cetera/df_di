@@ -171,7 +171,8 @@ class DI {
 
     // Check if the dependency is already registered.
     final key = dependency.key;
-    if (!suppressDependencyAlreadyRegisteredException && depMap.containsKey(key)) {
+    if (!suppressDependencyAlreadyRegisteredException &&
+        depMap.containsKey(key)) {
       throw DependencyAlreadyRegisteredException(T, key);
     }
 
@@ -323,4 +324,3 @@ List<Type> supportedAssociatedTypes<T>() {
     FactoryInst<T>,
   ];
 }
-

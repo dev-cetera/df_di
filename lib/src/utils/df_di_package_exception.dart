@@ -12,7 +12,7 @@
 
 /// An exception only thrown by the `df_di` package.
 abstract base class DFDIPackageException implements Exception {
- /// The error [message] to display for this exception.
+  /// The error [message] to display for this exception.
   final String message;
 
   DFDIPackageException(this.message);
