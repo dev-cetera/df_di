@@ -17,7 +17,7 @@ repository: https://github.com/robmllze/df_di
 funding:
   - https://www.buymeacoffee.com/robmllze
 topics:
-  - get_it
+  - get-it
   - dependency-injection
   - services
   - state
