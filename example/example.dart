@@ -15,7 +15,6 @@
 import 'dart:async';
 
 import 'package:df_di/df_di.dart';
-import 'package:df_type/df_type.dart';
 import 'package:flutter/foundation.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░

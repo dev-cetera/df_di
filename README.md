@@ -1,4 +1,4 @@
-# Dart Package Template
+# DF - DI (Dependency Injection)
 
 <a href="https://www.buymeacoffee.com/robmllze" target="_blank"><img align="right" src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
 
@@ -11,15 +11,16 @@ Dart & Flutter Packages by DevCetra.com & contributors.
 
 ## Summary
 
-A flexible dependency injection (DI) package with Service classes to assist with state management. This package aims to offer an alternative to [get_it](https://pub.dev/packages/get_it) that integrates seamlessly with the other [DF packages](https://pub.dev/publishers/devcetra.com/packages).
+This package offers a powerful and versatile dependency injection system along with service classes for easy state management.
 
 ## Features
 
-- Extensive use of `FutureOr`, making it easy to work with synchronous and asynchronous dependencies.
-- Register dependencies under a "type" and "key", allowing for multiple dependencies of the same type.
-- Lazy singleton and factory dependency registration.
-- Abstract Service classes that integrate seamlessly.
-- Well written comments for easy understanding.
+- Robust support for `FutureOr`, facilitating seamless handling of both synchronous and asynchronous dependencies and callbacks.
+- Ability to register dependencies using both “type” and “key”, enabling the management of multiple dependencies of the same type.dependencies of the same type.
+- Supports standard features like factory dependencies and lazy initialization for singleton dependencies.
+- Abstract service classes that integrate effortlessly with your application.
+- Clear and comprehensive documentation for easy understanding.
+- Code snippets for Visual Studio Code [here](https://raw.githubusercontent.com/robmllze/df_di/main/.vscode/snippets.code-snippets).
 
 For a full feature set, please refer to the [API reference](https://pub.dev/documentation/df_di/).
 
@@ -142,14 +143,12 @@ class AsyncServiceExample extends DisposableService {
 }
 ```
 
-
 ### Getting the State of the DI instance:
 
 ```dart
 // Print the current state of di to understand what's registered.
 print(di.registry.state);
 ```
-
 
 ## Installation
 

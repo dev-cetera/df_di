@@ -11,7 +11,7 @@
 ##.title~
 
 name: df_di
-description: A flexible dependency injection (DI) package with Service classes to assist with state management.
+description: A powerful and versatile dependency injection (DI) system with service classes for easy state management.
 version: 0.1.0
 repository: https://github.com/robmllze/df_di
 funding:

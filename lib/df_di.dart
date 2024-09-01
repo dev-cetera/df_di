@@ -10,7 +10,10 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-/// A lightweight dependency injection solution with Service classes to assist with state management.
+/// A powerful and versatile dependency injection (DI) system with service classes for easy state management.
 library;
 
 export 'src/_index.g.dart';
+
+export 'package:df_pod/df_pod.dart';
+export 'package:df_type/df_type.dart';
