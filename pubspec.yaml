@@ -12,7 +12,7 @@
 
 name: df_di
 description: A powerful and versatile dependency injection (DI) system with service classes for easy state management.
-version: 0.1.0
+version: 0.1.0+1
 repository: https://github.com/robmllze/df_di
 funding:
   - https://www.buymeacoffee.com/robmllze

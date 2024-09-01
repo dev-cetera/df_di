@@ -72,7 +72,7 @@ print(await di.get<double>()); // prints 3.0.
 ### Creating a new Service:
 
 ```dart
-class FooBarService extends DisposableService {
+final class FooBarService extends Service {
   // Provide Points of Data (PODs) for the UI to consume, like ValueNotifiers or Streams.
   ValueListenable<String?> get vFooBar => _vFooBar;
   final _vFooBar = ValueNotifier<String?>(null);
@@ -114,7 +114,7 @@ di.registerSingletonService(SyncServiceExmple.new);
 print(di.get<SyncServiceExmple>() is Future); // false
 print(di.getSync<SyncServiceExmple>());  // use getSync/getSyncOrNull if you expect a sync
 
-class SyncServiceExmple extends DisposableService {
+final class SyncServiceExmple extends Service {
   @override
   void onInitService() {}
 
@@ -130,7 +130,7 @@ di.registerSingletonService(AsyncServiceExample.new);
 print(di.get<AsyncServiceExample>() is Future); // true
 print(di.getAsync<SyncServiceExmple>()); // use getAsync/getAsyncOrNull if you expect an async
 
-class AsyncServiceExample extends DisposableService {
+final class AsyncServiceExample extends Service {
   @override
   Future<void> onInitService() async {
     await Future<void>.delayed(
