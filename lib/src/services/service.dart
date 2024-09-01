@@ -102,19 +102,22 @@ abstract base class Service {
 final class ServiceAlreadyDisposedException extends DFDIPackageException {
   ServiceAlreadyDisposedException()
       : super(
-            'Cannot interact with a DisposableService that has already been disposed.',);
+          'Cannot interact with a DisposableService that has already been disposed.',
+        );
 }
 
 /// Exception thrown when attempting to initialize a service that has already been initialized.
 final class ServiceAlreadyInitializedException extends DFDIPackageException {
   ServiceAlreadyInitializedException()
       : super(
-            'Cannot initialize a DisposableService that has already been initialized.',);
+          'Cannot initialize a DisposableService that has already been initialized.',
+        );
 }
 
 /// Exception thrown when attempting to dispose a service that has not been initialized.
 final class ServiceNotYetInitializedException extends DFDIPackageException {
   ServiceNotYetInitializedException()
       : super(
-            'Cannot dispose a DisposableService that has not yet been initialized.',);
+          'Cannot dispose a DisposableService that has not yet been initialized.',
+        );
 }

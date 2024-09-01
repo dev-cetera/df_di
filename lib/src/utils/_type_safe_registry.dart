@@ -68,7 +68,10 @@ final class TypeSafeRegistry {
   }
 
   void setDependencyOfType(
-      Type type, DIKey key, Dependency<dynamic> dependency,) {
+    Type type,
+    DIKey key,
+    Dependency<dynamic> dependency,
+  ) {
     final deps = getDependencyMapOfType(type) ?? <DIKey, Dependency<dynamic>>{};
     deps[key] = dependency;
     setDependencyMapOfType(type, deps);

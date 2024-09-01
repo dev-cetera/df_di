@@ -12,7 +12,8 @@
 
 import 'dart:async';
 
-import 'package:df_type/df_type.dart' show FutureOrController, ThenOrOnFutureOrX;
+import 'package:df_type/df_type.dart'
+    show FutureOrController, ThenOrOnFutureOrX;
 import 'package:meta/meta.dart';
 
 import '/src/_index.g.dart';
@@ -200,7 +201,8 @@ extension FancyDI on DI {
     // ignore: invalid_use_of_protected_member
     final dependencies = registry.pRegistry.value.values
         .fold(<Dependency<dynamic>>[], (buffer, e) => buffer..addAll(e.values));
-    dependencies.sort((a, b) => b.registrationIndex.compareTo(a.registrationIndex));
+    dependencies
+        .sort((a, b) => b.registrationIndex.compareTo(a.registrationIndex));
     for (final dep in dependencies) {
       final a = dep.onUnregister;
       final b = callback;
