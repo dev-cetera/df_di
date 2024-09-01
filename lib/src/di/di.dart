@@ -73,33 +73,35 @@ class DI {
   void register<T>(
     FutureOr<T> dependency, {
     DIKey key = DIKey.defaultKey,
-    OnUnregisterCallback<dynamic>? onUnregister,
+    OnUnregisterCallback<T>? onUnregister,
   }) {
+    final onUnregisterT = onUnregister != null ? (dynamic e) => onUnregister(e as T) : null;
     if (dependency is T) {
-      _register<T>(
+      _registerExactType<T>(
         dependency,
         key: key,
-        onUnregister: onUnregister,
+        onUnregister: onUnregisterT,
       );
     } else {
-      _register<Future<T>>(
+      _registerExactType<Future<T>>(
         dependency,
         key: key,
-        onUnregister: onUnregister,
+        onUnregister: onUnregisterT,
       );
     }
   }
 
-  void _register<T>(
+  void _registerExactType<T>(
     T dependency, {
     DIKey key = DIKey.defaultKey,
     OnUnregisterCallback<dynamic>? onUnregister,
+    bool suppressDependencyAlreadyRegisteredException = false,
   }) {
     final existingDependencies = registry.getAllDependenciesOfType<T>();
     final depMap = {for (var dep in existingDependencies) dep.key: dep};
 
     // Check if the dependency is already registered.
-    if (depMap.containsKey(key)) {
+    if (!suppressDependencyAlreadyRegisteredException && depMap.containsKey(key)) {
       throw DependencyAlreadyRegisteredException(T, key);
     }
 
@@ -115,8 +117,8 @@ class DI {
   /// Gets a dependency as a [Future] or [T], registered under type [T] and the
   /// specified [key], or under [DIKey.defaultKey] if no key is provided.
   ///
-  /// If the dependency was registered lazily via [registerLazy] and is not yet
-  /// instantiated, it will be instantiated. Subsequent calls  of [get] will
+  /// If the dependency was registered lazily via [registerSingleton] and is not
+  /// yet instantiated, it will be instantiated. Subsequent calls  of [get] will
   /// return the already instantiated instance.
   ///
   /// - Throws [DependencyNotFoundException] if the requested dependency cannot be found.
@@ -136,19 +138,18 @@ class DI {
       final raw = registry.getDependency<Future<T>>(key);
       if (raw != null) {
         final dep = raw.dependency;
-        final foc = FutureOrController<void>()
-          ..addAll([
-            () => unregister<Future<T>>(key),
-            () => dep.then(
-                  (syncDep) => register<T>(
-                    syncDep,
-                    key: key,
-                    onUnregister: raw.onUnregister,
-                  ),
-                ),
-          ]);
-        final res = foc.completeWithResults((_) => dep);
-        return res;
+        return dep.thenOr((dep) {
+          _registerExactType<T>(
+            dep,
+            key: key,
+            onUnregister: raw.onUnregister,
+            suppressDependencyAlreadyRegisteredException: true,
+          );
+          return dep;
+        }).thenOr((dep) {
+          registry.removeDependency<Future<T>>(key);
+          return dep;
+        });
       }
     }
     // Singleton types.
@@ -156,17 +157,20 @@ class DI {
       final raw = registry.getDependency<SingletonInst<T>>(key);
       if (raw != null) {
         final dep = raw.dependency;
-        final foc = FutureOrController<void>()
-          ..addAll([
-            () => unregister<SingletonInst<T>>(key),
-            () => register<T>(
-                  dep.constructor(),
-                  key: key,
-                  onUnregister: raw.onUnregister,
-                ),
-          ]);
-        final res = foc.completeWithResults((_) => get<T>(key: key));
-        return res;
+        return dep.thenOr((dep) {
+          return dep.constructor();
+        }).thenOr((dep) {
+          return _registerExactType<T>(
+            dep,
+            key: key,
+            onUnregister: raw.onUnregister,
+            suppressDependencyAlreadyRegisteredException: true,
+          );
+        }).thenOr((_) {
+          return registry.removeDependency<SingletonInst<T>>(key);
+        }).thenOr((_) {
+          return get<T>(key: key);
+        });
       }
     }
     // Factory types.

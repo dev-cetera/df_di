@@ -39,11 +39,13 @@ void main() async {
 
     di.registerSingletonService(SyncServiceExmple.new);
     print(di.get<SyncServiceExmple>() is Future); // false
-    print(di.getSync<SyncServiceExmple>());  // use getSync/getSyncOrNull if you expect a sync
+    print(di.getSync<SyncServiceExmple>()); // use getSync/getSyncOrNull if you expect a sync
 
     di.registerSingletonService(AsyncServiceExample.new);
+    print(di.registry.state); // We have nothing registered at this point.
     print(di.get<AsyncServiceExample>() is Future); // true
-    print(di.getAsync<SyncServiceExmple>()); // use getAsync/getAsyncOrNull if you expect an async
+    print(di.registry.state); // We have nothing registered at this point.
+    print(di.get<AsyncServiceExample>()); // use getAsync/getAsyncOrNull if you expect an async
   }
 }
 

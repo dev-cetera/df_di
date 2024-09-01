@@ -59,3 +59,6 @@ class FactoryInst<T> extends Inst<T> {
 
 /// Shorthand for [FactoryInst].
 typedef Factory<T> = FactoryInst<T>;
+
+/// A type alias for a function that returns an instance of type `T`.
+typedef Constructor<T> = T Function();

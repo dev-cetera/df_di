@@ -14,7 +14,6 @@ export 'di/di.dart';
 export 'di/di_key.dart';
 export 'services/streaming_disposable_service.dart';
 export 'services/disposable_service.dart';
-export 'services/init_service.dart';
 
 // --- PRIVATE FILES (EXCLUDED) ---
 // export '_index.g.dart';

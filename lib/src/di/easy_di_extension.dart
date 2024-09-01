@@ -12,6 +12,8 @@
 
 import 'dart:async';
 
+import 'package:df_type/df_type.dart' show ThenOrOnFutureOrX;
+
 import '../_index.g.dart';
 import '../_utils/_index.g.dart';
 
@@ -34,7 +36,7 @@ extension EasyDIExtension on DI {
     DIKey key = DIKey.defaultKey,
   }) {
     registerSingleton(
-      initService(constructor),
+      () => constructor().thenOr((inst) => inst.initService().thenOr((_) => inst)),
       key: key,
       onUnregister: _onUnregisterService,
     );
@@ -77,7 +79,7 @@ extension EasyDIExtension on DI {
     DIKey key = DIKey.defaultKey,
   }) {
     registerFactory(
-      initService(constructor),
+      () => constructor().thenOr((inst) => inst.initService().thenOr((_) => inst)),
       key: key,
       onUnregister: _onUnregisterService,
     );
