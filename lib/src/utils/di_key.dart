@@ -10,19 +10,8 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-import 'package:flutter/foundation.dart' show ValueKey;
-
-import '/src/_index.g.dart';
-
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-/// A [ValueKey] to identify dependencies within [DI].
-class DIKey extends ValueKey<String> {
-  /// Default key to use when no specific key is provided.
-  static const defaultKey = DIKey('default');
+typedef DIKey = Object;
 
-  const DIKey(super.value);
-
-  @override
-  String toString() => '$DIKey("$value")';
-}
+const DEFAULT_KEY = 'default';

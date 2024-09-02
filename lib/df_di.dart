@@ -15,5 +15,4 @@ library;
 
 export 'src/_index.g.dart';
 
-export 'package:df_pod/df_pod.dart';
 export 'package:df_type/df_type.dart';

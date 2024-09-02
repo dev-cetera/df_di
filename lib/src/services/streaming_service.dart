@@ -9,7 +9,6 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 
 import 'dart:async';
-import 'package:flutter/foundation.dart' show debugPrint, kDebugMode;
 import 'package:meta/meta.dart';
 import '/src/_index.g.dart';
 
@@ -41,9 +40,7 @@ abstract base class StreamingService<T> extends Service {
   /// Override this method to handle any errors that occur within the stream.
   /// The [dispose] callback allows for immediate cleanup if necessary.
   void onError(Object? e, FutureOr<void> Function() dispose) {
-    if (kDebugMode) {
-      debugPrint('[$runtimeType] $e');
-    }
+    print('[$runtimeType] $e');
   }
 
   /// Initializes the service by setting up the stream controller and starting

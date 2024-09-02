@@ -21,7 +21,7 @@ import '/src/_index.g.dart';
 /// A class representing a registered dependency with an optional [onUnregister]
 /// callback.
 @internal
-final class Dependency<T> {
+final class Dependency<T extends Object> {
   final T value;
   final Type type;
   final Type registrationType;
@@ -33,14 +33,14 @@ final class Dependency<T> {
     required this.value,
     required this.registrationIndex,
     Type? registrationType,
-    this.key = DIKey.defaultKey,
+    this.key = DEFAULT_KEY,
     required this.onUnregister,
   })  : type = T,
         registrationType = registrationType ?? T;
 
   /// Creates a new dependency of type [N] from the current one but with
   /// a [newValue].
-  Dependency<N> reassignValue<N>(N newValue) {
+  Dependency<N> reassignValue<N extends Object>(N newValue) {
     return Dependency<N>(
       value: newValue,
       registrationIndex: registrationIndex,
@@ -53,6 +53,8 @@ final class Dependency<T> {
   @override
   String toString() => 'Dependency<$T> ($hashCode)';
 }
+
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 @internal
 typedef OnUnregisterCallback<T> = FutureOr<void> Function(T value);

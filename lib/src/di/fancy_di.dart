@@ -12,8 +12,7 @@
 
 import 'dart:async';
 
-import 'package:df_type/df_type.dart'
-    show FutureOrController, ThenOrOnFutureOrX;
+import 'package:df_type/df_type.dart' show FutureOrController, ThenOrOnFutureOrX;
 import 'package:meta/meta.dart';
 
 import '/src/_index.g.dart';
@@ -35,7 +34,7 @@ extension FancyDI on DI {
   /// ```
   void registerSingletonService<T extends Service>(
     Constructor<T> constructor, {
-    DIKey key = DIKey.defaultKey,
+    DIKey key = DEFAULT_KEY,
   }) {
     registerSingleton(
       () => constructor().thenOr((e) => e.initService().thenOr((_) => e)),
@@ -64,7 +63,7 @@ extension FancyDI on DI {
   /// ```
   void registerFactoryService<T extends Service>(
     Constructor<T> constructor, {
-    DIKey key = DIKey.defaultKey,
+    DIKey key = DEFAULT_KEY,
   }) {
     registerFactory(
       () => constructor().thenOr((e) => e.initService().thenOr((_) => e)),
@@ -80,18 +79,18 @@ extension FancyDI on DI {
     );
   }
 
-  /// A shorthand for [getAsync], allowing retrieval of a dependency using
+  /// A shorthand for [getSync], allowing retrieval of a dependency using
   /// call syntax.
-  T call<T>({
-    DIKey key = DIKey.defaultKey,
+  T call<T extends Object>({
+    DIKey key = DEFAULT_KEY,
   }) {
     return getSync<T>(key: key);
   }
 
   /// Gets via [get] using [T] and [key] or `null` upon any error,
   /// including but not limited to [DependencyNotFoundException].
-  FutureOr<T>? getOrNull<T>({
-    DIKey key = DIKey.defaultKey,
+  FutureOr<T>? getOrNull<T extends Object>({
+    DIKey key = DEFAULT_KEY,
   }) {
     try {
       return get<T>(key: key);
@@ -103,8 +102,8 @@ extension FancyDI on DI {
   /// Gets via [getSync] using [T] and [key] or `null` upon any error,
   /// including but not limited to [TypeError] and
   /// [DependencyNotFoundException].
-  T? getSyncOrNull<T>({
-    DIKey key = DIKey.defaultKey,
+  T? getSyncOrNull<T extends Object>({
+    DIKey key = DEFAULT_KEY,
   }) {
     try {
       return getSync<T>(key: key);
@@ -116,8 +115,8 @@ extension FancyDI on DI {
   /// Gets via [get] using [T] and [key], then and casts the result to [T].
   ///
   /// Throws [TypeError] if this result is a [Future].
-  T getSync<T>({
-    DIKey key = DIKey.defaultKey,
+  T getSync<T extends Object>({
+    DIKey key = DEFAULT_KEY,
   }) {
     final value = get<T>(key: key);
     if (value is Future<T>) {
@@ -127,16 +126,16 @@ extension FancyDI on DI {
   }
 
   /// Checks if a dependency is registered under [T] and [key].
-  bool isRegistered<T>({
-    DIKey key = DIKey.defaultKey,
+  bool isRegistered<T extends Object>({
+    DIKey key = DEFAULT_KEY,
   }) {
     final registered = getAsyncOrNull<T>() != null;
     return registered;
   }
 
   /// Gets via [getAsync] using [T] and [key] or `null` upon any error.
-  Future<T>? getAsyncOrNull<T>({
-    DIKey key = DIKey.defaultKey,
+  Future<T>? getAsyncOrNull<T extends Object>({
+    DIKey key = DEFAULT_KEY,
   }) {
     try {
       return getAsync<T>(key: key);
@@ -147,8 +146,8 @@ extension FancyDI on DI {
 
   /// Gets via [get] using [T] and [key], then and casts the result to [Future]
   /// of [T].
-  Future<T> getAsync<T>({
-    DIKey key = DIKey.defaultKey,
+  Future<T> getAsync<T extends Object>({
+    DIKey key = DEFAULT_KEY,
   }) async {
     final value = await get<T>(key: key);
     return value;
@@ -159,8 +158,8 @@ extension FancyDI on DI {
   ///
   /// Useful for debugging.
   @visibleForTesting
-  Type registrationType<T>({
-    DIKey key = DIKey.defaultKey,
+  Type registrationType<T extends Object>({
+    DIKey key = DEFAULT_KEY,
   }) {
     final dep = _getDependency<T>(key);
     return dep.registrationType;
@@ -171,14 +170,14 @@ extension FancyDI on DI {
   ///
   /// Useful for debugging.
   @visibleForTesting
-  int registrationIndex<T>({
-    DIKey key = DIKey.defaultKey,
+  int registrationIndex<T extends Object>({
+    DIKey key = DEFAULT_KEY,
   }) {
     final dep = _getDependency<T>(key);
     return dep.registrationIndex;
   }
 
-  Dependency<dynamic> _getDependency<T>(DIKey key) {
+  Dependency<Object> _getDependency<T extends Object>(DIKey key) {
     // ignore: invalid_use_of_protected_member
     final dependencies = registry.getDependenciesOfTypes(
       supportedAssociatedTypes<T>(),
@@ -195,14 +194,14 @@ extension FancyDI on DI {
   /// Unregisters all dependencies in the reverse order of their registration,
   /// effectively resetting this instance of [DI].
   FutureOr<void> unregisterAll([
-    void Function(Dependency<dynamic> dep)? callback,
+    void Function(Dependency<Object> dep)? callback,
   ]) {
     final foc = FutureOrController<void>();
-    // ignore: invalid_use_of_protected_member
-    final dependencies = registry.pRegistry.value.values
-        .fold(<Dependency<dynamic>>[], (buffer, e) => buffer..addAll(e.values));
-    dependencies
-        .sort((a, b) => b.registrationIndex.compareTo(a.registrationIndex));
+
+    final dependencies =
+        // ignore: invalid_use_of_protected_member
+        registry.state.values.fold(<Dependency<Object>>[], (buffer, e) => buffer..addAll(e.values));
+    dependencies.sort((a, b) => b.registrationIndex.compareTo(a.registrationIndex));
     for (final dep in dependencies) {
       final a = dep.onUnregister;
       final b = callback;

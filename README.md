@@ -42,7 +42,7 @@ final local = DI.newInstance();
 ```dart
 // Register a dependency under type "int" and defaultKey.
 di.register<int>(1);
-print(DIKey.defaultKey);
+print(DEFAULT_KEY);
 
 // Register a dependency under type "int" also but with a different key.
 di.register(2, key: const DIKey('second'));
@@ -51,8 +51,8 @@ di.register(2, key: const DIKey('second'));
 di.register<double>(Future.value(3.0));
 
 int counter = 0;
-di.registerSingleton<int>(() => ++counter), key: const DIKey('singleton-counter')); 
-di.registerFactory<int>(() async => ++counter, key: const DIKey('factory-counter')); 
+di.registerSingleton<int>(() => ++counter), key: const DIKey('singleton-counter'));
+di.registerFactory<int>(() async => ++counter, key: const DIKey('factory-counter'));
 ```
 
 ### Unregistering Dependencies:
@@ -62,7 +62,7 @@ di.registerFactory<int>(() async => ++counter, key: const DIKey('factory-counter
 FutureOr<void> futureOr = di.unregister<String>();
 
 // Unregister all dependencies in the reverse order of their registration, effectively resetting the instance di.
-futureOr = di.unregisteAll();
+futureOr = di.unregisterAll();
 ```
 
 ### Getting Dependencies:
@@ -77,10 +77,10 @@ print(di.get<int>(const DIKey('second'))); // prints 2
 
 print(await di.get<double>()); // prints 3.0.
 
-print(await di.getFactory<double>(ey: const DIKey('factory-counter'))); // prints 1.
-print(await di.getFactory<double>(ey: const DIKey('factory-counter'))); // prints 2.
-print(await di.get<double>(ey: const DIKey('factory-counter'))); // prints 3.
-print(await di.get<double>(ey: const DIKey('factory-counter'))); // prints 4.
+print(await di.getFactory<double>(key: const DIKey('factory-counter'))); // prints 1.
+print(await di.getFactory<double>(key: const DIKey('factory-counter'))); // prints 2.
+print(await di.get<double>(key: const DIKey('factory-counter'))); // prints 3.
+print(await di.get<double>(key: const DIKey('factory-counter'))); // prints 4.
 ```
 
 ### Creating a new Singleton Service:
@@ -94,8 +94,7 @@ final class FooBarService extends Service {
   @override
   FutureOr<void> onInitService() async {
     _vFooBar.value = 'FooBar';
-    // Put initialization logic here, like starting Streams. Update the PODs as
-    // needed to notify the UI of changes.
+    // Put initialization logic here, like starting Streams.
   }
 
   // Always called when unregistering a service.
@@ -123,7 +122,7 @@ print(fooBarService.vFooBar.value); // prints "FooBar"
 
 ### Creating a Sync Service:
 
-Notice how no onInitService isn't a Future. This means that DI will treat it as sync.
+Notice how onInitService isn't a Future. This means that DI will treat it as sync.
 
 ```dart
 final class SyncServiceExmple extends Service {
@@ -148,7 +147,7 @@ print(di.getSyncOrNull<SyncServiceExmple>());
 
 ### Creating an Async Service:
 
-Notice how no onInitService is Future. This means that DI will treat it as async.
+Notice how onInitService is a Future. This means that DI will treat it as async.
 
 ```dart
 final class AsyncServiceExample extends Service {
@@ -180,16 +179,16 @@ print(await di.getAsyncOrNull<AsyncServiceExample>());
 // Print the current state of di to understand what's registered.
 print(di.registry.state);
 
-// Check if there's a dependency under "int" and DIKey.defaultKey.
+// Check if there's a dependency under "int" and DEFAULT_KEY.
 print(di.isRegistered<int>());
 print(di.registry.getDependency<T>() != null);
 
-// Check how the dependency under "String" and DIKey.defaultKey got initially registered. 
-di.registerFactory<String>(() => 'Hello World'); 
+// Check how the dependency under "String" and DEFAULT_KEY got initially registered.
+di.registerFactory<String>(() => 'Hello World');
 print(di<String>()); // prints "Hello World".
 print(registrationType<String>()); // prints" FactoryInst<String>"
 
-// Print the registration index of dependency under "int" and DIKey.defaultKey.
+// Print the registration index of dependency under "int" and DEFAULT_KEY.
 print(di.registrationIndex<int>());
 ```
 

@@ -39,5 +39,12 @@
             "final _p${2} = Pod<${1}>(${3:null});",
             "",
         ],
+    },
+    // Snippets for optimization:
+    "prefer_inline": {
+        "prefix": "df: Prefer Inline",
+        "body": [
+            "@pragma('vm:prefer-inline')",
+        ],
     }
 }

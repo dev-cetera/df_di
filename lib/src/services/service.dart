@@ -12,8 +12,7 @@
 
 import 'dart:async';
 
-import 'package:df_pod/df_pod.dart';
-import 'package:df_type/df_type.dart' show CompleterOr;
+import 'package:df_type/df_type.dart' show CompleterOr, ThenOrOnFutureOrX;
 import 'package:meta/meta.dart';
 
 import '/src/_index.g.dart';
@@ -32,17 +31,14 @@ abstract base class Service {
   /// before using this service.
   Service();
 
-  final _initializedCompleter = CompleterOr<void>();
+  final _initialized = CompleterOr<void>();
 
   /// Completes after initialized via [initService].
-  FutureOr<void> get initialized => _initializedCompleter.futureOr;
+  @pragma('vm:prefer-inline')
+  FutureOr<void> get initialized => _initialized.futureOr;
 
-  /// Initially `false` and becomes `true` after [initService] is called.
-  PodListenable<bool> get pInitialized => _pInitialized;
-  final _pInitialized = RootPod(false);
-
-  /// Initializes this service. Sets [pInitialized] to `true`, completes
-  /// [initialized], and then calls [onInitService].
+  /// Initializes this service. Completes [initialized], and then calls
+  /// [onInitService].
   ///
   /// This method must be called before interacting with the
   /// service.
@@ -50,11 +46,10 @@ abstract base class Service {
   /// Do not override this method. Instead, override [onInitService].
   @nonVirtual
   FutureOr<void> initService() {
-    if (_pInitialized.value) {
+    if (_initialized.isCompleted) {
       throw ServiceAlreadyInitializedException();
     }
-    _pInitialized.set(true);
-    _initializedCompleter.complete();
+    _initialized.complete();
     return onInitService();
   }
 
@@ -78,15 +73,21 @@ abstract base class Service {
   @protected
   @nonVirtual
   FutureOr<void> dispose() {
-    if (_pInitialized.isDisposed) {
+    if (_disposed) {
       throw ServiceAlreadyDisposedException();
     }
-    if (!pInitialized.value) {
+    if (!_initialized.isCompleted) {
       throw ServiceNotYetInitializedException();
     }
 
-    return onDispose();
+    return onDispose().thenOr((_) => _disposed = true);
   }
+
+  /// Whether the service has been disposed.
+  @pragma('vm:prefer-inline')
+  bool get disposed => _disposed;
+
+  bool _disposed = false;
 
   /// Override to define any necessary disposal to be called immediately
   /// after [dispose].

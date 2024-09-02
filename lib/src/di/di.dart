@@ -17,12 +17,7 @@ import 'package:meta/meta.dart';
 
 import '/src/_index.g.dart';
 import '/src/utils/_dependency.dart';
-import '/src/utils/_type_safe_registry.dart';
-
-// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-
-/// Shorthand for [DI.global].
-DI get di => DI.global;
+import '../utils/_type_safe_registry/type_safe_registry.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -34,11 +29,11 @@ class DI {
   final registry = TypeSafeRegistry();
 
   /// Default global instance of the DI class.
-  static final DI global = DI.newInstance();
+  static final DI global = DI();
 
   /// Creates a new instance of the DI class. Prefer using [global], unless
   /// there's a specific need for a separate instance.
-  DI.newInstance();
+  DI();
 
   /// Registers a singleton instance of [T] with the given [constructor]. When [get]
   /// is called with [T] and [key], the same instance will be returned.
@@ -51,7 +46,7 @@ class DI {
   /// ```
   void registerSingleton<T>(
     InstConstructor<T> constructor, {
-    DIKey key = DIKey.defaultKey,
+    DIKey key = DEFAULT_KEY,
     OnUnregisterCallback<T>? onUnregister,
   }) {
     // ignore: invalid_use_of_protected_member
@@ -73,7 +68,7 @@ class DI {
   /// ```
   void registerFactory<T>(
     InstConstructor<T> constructor, {
-    DIKey key = DIKey.defaultKey,
+    DIKey key = DEFAULT_KEY,
     OnUnregisterCallback<T>? onUnregister,
   }) {
     // ignore: invalid_use_of_protected_member
@@ -85,7 +80,7 @@ class DI {
   }
 
   /// Registers the [value] under type [T] and the specified [key], or
-  /// under [DIKey.defaultKey] if no key is provided.
+  /// under [DEFAULT_KEY] if no key is provided.
   ///
   /// Optionally provide an [onUnregister] callback to be called on [unregister].
   ///
@@ -117,12 +112,12 @@ class DI {
   ///  print(di.get<int>()); // prints 4
   ///  print(di.get<int>()); // prints 5
   /// ```
-  void register<T>(
+  void register<T extends Object>(
     FutureOr<T> value, {
-    DIKey key = DIKey.defaultKey,
+    DIKey key = DEFAULT_KEY,
     OnUnregisterCallback<T>? onUnregister,
   }) {
-    return registerWithEventualType<T, T>(
+    return registerWithEventualType(
       value,
       key: key,
       onUnregister: onUnregister,
@@ -130,17 +125,17 @@ class DI {
   }
 
   @protected
-  void registerWithEventualType<T, ET>(
+  void registerWithEventualType<T extends Object, E extends Object>(
     FutureOr<T> value, {
-    DIKey key = DIKey.defaultKey,
-    OnUnregisterCallback<ET>? onUnregister,
+    DIKey key = DEFAULT_KEY,
+    OnUnregisterCallback<E>? onUnregister,
   }) {
     if (value is T) {
       registerExactType<T>(
         dependency: Dependency(
           value: value,
           registrationIndex: _registrationCount++,
-          onUnregister: (e) => onUnregister?.call(e as ET),
+          onUnregister: (e) => onUnregister?.call(e as E),
         ),
       );
     } else {
@@ -148,7 +143,7 @@ class DI {
         dependency: Dependency(
           value: value,
           registrationIndex: _registrationCount++,
-          onUnregister: (e) => onUnregister?.call(e as ET),
+          onUnregister: (e) => onUnregister?.call(e as E),
         ),
       );
     }
@@ -162,7 +157,7 @@ class DI {
   var _registrationCount = 0;
 
   @protected
-  void registerExactType<T>({
+  void registerExactType<T extends Object>({
     required Dependency<T> dependency,
     bool suppressDependencyAlreadyRegisteredException = false,
   }) {
@@ -171,8 +166,7 @@ class DI {
 
     // Check if the dependency is already registered.
     final key = dependency.key;
-    if (!suppressDependencyAlreadyRegisteredException &&
-        depMap.containsKey(key)) {
+    if (!suppressDependencyAlreadyRegisteredException && depMap.containsKey(key)) {
       throw DependencyAlreadyRegisteredException(T, key);
     }
 
@@ -181,7 +175,7 @@ class DI {
   }
 
   /// Gets a dependency as either a [Future] or an instance of [T] registered
-  /// under the type [T] and the specified [key], or under [DIKey.defaultKey]
+  /// under the type [T] and the specified [key], or under [DEFAULT_KEY]
   /// if no key is provided.
   ///
   /// If the dependency was registered as a lazy singleton via [registerSingleton]
@@ -193,8 +187,8 @@ class DI {
   ///
   /// - Throws [DependencyNotFoundException] if the requested dependency cannot
   /// be found.
-  FutureOr<T> get<T>({
-    DIKey key = DIKey.defaultKey,
+  FutureOr<T> get<T extends Object>({
+    DIKey key = DEFAULT_KEY,
   }) {
     // Sync types.
     {
@@ -254,7 +248,7 @@ class DI {
 
   /// Gets a dependency registered via [registerFactory] as either a
   /// [Future] or an instance of [T] under the specified [key], or under
-  /// [DIKey.defaultKey] if no key is provided.
+  /// [DEFAULT_KEY] if no key is provided.
   ///
   /// This method returns a new instance of the dependency each time it is
   /// called.
@@ -262,7 +256,7 @@ class DI {
   /// - Throws [DependencyNotFoundException] if no factory is found for the
   ///   requested type [T] and [key].
   FutureOr<T> getFactory<T>({
-    DIKey key = DIKey.defaultKey,
+    DIKey key = DEFAULT_KEY,
   }) {
     final result = _getFactoryOrNull<T>(key);
     if (result == null) {
@@ -278,17 +272,17 @@ class DI {
   }
 
   /// Unregisters a dependency registered under type [T] and the
-  /// specified [key], or under [DIKey.defaultKey] if no key is provided.
+  /// specified [key], or under [DEFAULT_KEY] if no key is provided.
   ///
   /// - Throws [DependencyNotFoundException] if the dependency is not found.
   FutureOr<void> unregister<T>({
-    DIKey key = DIKey.defaultKey,
+    DIKey key = DEFAULT_KEY,
   }) {
     final dep = _removeDependency<T>(key);
     dep.onUnregister?.call(dep);
   }
 
-  Dependency<dynamic> _removeDependency<T>(DIKey key) {
+  Dependency<Object> _removeDependency<T>(DIKey key) {
     final dependencies = registry.removeDependenciesOfTypes(
       supportedAssociatedTypes<T>(),
       key,
