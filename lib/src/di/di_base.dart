@@ -187,7 +187,18 @@ abstract base class DIBase {
     Identifier key = Identifier.defaultId,
   });
 
+  // TODO:
+  FutureOr<Object> getByRuntimeType(
+    Type runtimeType, {
+    Identifier key = Identifier.defaultId,
+  }) {
+    return getByExactType(
+      type: Identifier.typeId(runtimeType),
+    );
+  }
+
   // ...
+  @protected
   FutureOr<Object> getByExactType({
     required Identifier type,
     Identifier key = Identifier.defaultId,

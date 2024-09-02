@@ -55,7 +55,7 @@ void main() async {
 
   di.registerLazySingletonService(CountingService.new);
   print(di.registry.state);
-  final coutingService = di.get<Service>();
+  final coutingService = di.get<CountingService>();
   print(di.registry.state);
   print(coutingService);
   //di.unregister<CountingService>();

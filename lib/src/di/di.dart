@@ -33,8 +33,11 @@ base class DI extends DIBase {
   @protected
   final registry = TypeSafeRegistry();
 
-  /// Default global instance of the DI class.
+  /// Default global scope.
   static final DI global = DI();
+
+  /// Default session scope.
+  static final DI session = DI();
 
   /// The number of dependencies registered in this instance.
   int get length => _registrationCount;
