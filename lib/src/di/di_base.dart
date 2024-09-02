@@ -31,7 +31,7 @@ abstract base class DIBase {
   /// final fooBarService2 = di.get<FooBarService>();
   /// print(fooBarService1 == fooBarService2); // true
   /// ```
-  void registerSingletonService<T extends Service>(
+  void registerLazySingletonService<T extends Service>(
     Constructor<T> constructor, {
     Identifier key = Identifier.defaultId,
   });
@@ -62,7 +62,7 @@ abstract base class DIBase {
   /// print(fooBarService1 == fooBarService2); // true
   /// ```
   @pragma('vm:prefer-inline')
-  void registerSingleton<T extends Object>(
+  void registerLazySingleton<T extends Object>(
     InstConstructor<T> constructor, {
     Identifier key = Identifier.defaultId,
     OnUnregisterCallback<T>? onUnregister,
@@ -174,7 +174,7 @@ abstract base class DIBase {
   /// under the type [T] and the specified [key], or under [Identifier.defaultId]
   /// if no key is provided.
   ///
-  /// If the dependency was registered as a lazy singleton via [registerSingleton]
+  /// If the dependency was registered as a lazy singleton via [registerLazySingleton]
   /// and hasn't been instantiated yet, it will be instantiated on the first call.
   /// Subsequent calls to [get] will return the already instantiated instance.
   ///

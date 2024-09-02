@@ -67,7 +67,7 @@ abstract base class Service {
   ///
   /// Do not override this method. Instead, override [onDispose].
   ///
-  /// Do not call this method directly. Use [DI.registerSingletonService] or
+  /// Do not call this method directly. Use [DI.registerLazySingletonService] or
   /// [DI.registerFactoryService] which will automatically call this methid
   /// on [DI.unregister].
   @protected

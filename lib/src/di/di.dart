@@ -52,11 +52,11 @@ base class DI extends DIBase {
   //
 
   @override
-  void registerSingletonService<T extends Service>(
+  void registerLazySingletonService<T extends Service>(
     Constructor<T> constructor, {
     Identifier key = Identifier.defaultId,
   }) {
-    registerSingleton(
+    registerLazySingleton(
       () => constructor().thenOr((e) => e.initService().thenOr((_) => e)),
       key: key,
       onUnregister: (e) {

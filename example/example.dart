@@ -21,63 +21,59 @@ import 'package:df_di/df_di.dart';
 void main() async {
   final di = DI.global;
 
-  di.registerSingleton(CountingService.new);
+  // Print the current state of di to understand what's registed.
+  print(di.registry.state); // Nothing registered at this point.
+
+  // Register FooBarService as a lazy singleton.
+  di.registerLazySingletonService(FooBarService.new);
+  // Now we have a SingletonInst<FooBarService> registered.
   print(di.registry.state);
-  final coutingService = di.get<CountingService>();
 
-  // // Print the current state of di to understand what's registed.
-  // print(di.registry.state); // Nothing registered at this point.
+  final fooBarService1 = await di.get<FooBarService>();
 
-  // // Register FooBarService as a lazy singleton.
-  // di.registerSingletonService(FooBarService.new);
-  // // Now we have a SingletonInst<FooBarService> registered.
-  // print(di.registry.state);
+  // SingletonInst<FooBarService> is gone, now we have a FooBarService registered.
+  print(di.registry.state);
 
-  // final fooBarService1 = await di.get<FooBarService>();
+  final fooBarService2 = di<FooBarService>();
+  final fooBarService3 = di<FooBarService>();
 
-  // // SingletonInst<FooBarService> is gone, now we have a FooBarService registered.
-  // print(di.registry.state);
+  // Same instances, prints true.
+  print(fooBarService1 == fooBarService2);
+  print(fooBarService2 == fooBarService3);
 
-  // final fooBarService2 = di<FooBarService>();
-  // final fooBarService3 = di<FooBarService>();
+  di.registerLazySingletonService(SyncServiceExmple.new);
+  print(await di.get<SyncServiceExmple>() is Future); // false
+  // Use getSync/getSyncOrNull if you expect a sync.
+  print(di.getSync<SyncServiceExmple>());
 
-  // // Same instances, prints true.
-  // print(fooBarService1 == fooBarService2);
-  // print(fooBarService2 == fooBarService3);
+  di.registerLazySingletonService(AsyncServiceExample.new);
+  print(di.registry.state);
 
-  // di.registerSingletonService(SyncServiceExmple.new);
-  // print(await di.get<SyncServiceExmple>() is Future); // false
-  // // Use getSync/getSyncOrNull if you expect a sync.
-  // print(di.getSync<SyncServiceExmple>());
+  // Use getAsync/getAsyncOrNull if you expect an async.
+  print(di.getAsync<AsyncServiceExample>());
+  print(di.registry.state);
 
-  // di.registerSingletonService(AsyncServiceExample.new);
-  // print(di.registry.state);
+  di.registerLazySingletonService(CountingService.new);
+  print(di.registry.state);
+  final coutingService = di.get<Service>();
+  print(di.registry.state);
+  print(coutingService);
+  //di.unregister<CountingService>();
 
-  // // Use getAsync/getAsyncOrNull if you expect an async.
-  // print(di.getAsync<AsyncServiceExample>());
-  // print(di.registry.state);
-
-  // di.registerSingleton(CountingService.new);
-  // print(di.registry.state);
-  // final coutingService = di.get<CountingService>();
-  // print(di.registry.state);
-  // print(coutingService);
-  // //di.unregister<CountingService>();
-
-  // Future.delayed(
-  //   const Duration(seconds: 5),
-  //   () {
-  //     di.unregisterAll(
-  //       onUnregister: (dep) {
-  //         print(dep);
-  //       },
-  //     ).thenOr((_) {
-  //       // Completes when all dependencies are unregistered and removed
-  //       // from di.
-  //       print('Disposed all!');
-  //     });
-  //   },
-  // );
+  Future.delayed(
+    const Duration(seconds: 5),
+    () {
+      di.unregisterAll(
+        onUnregister: (dep) {
+          print(dep);
+        },
+      ).thenOr((_) {
+        // Completes when all dependencies are unregistered and removed
+        // from di.
+        print('Disposed all!');
+      });
+    },
+  );
 }
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
