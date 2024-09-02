@@ -12,9 +12,11 @@
 
 import 'dart:async';
 
+import 'di_key.dart';
+
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-class Inst<T> {
+class Inst<T extends Object> {
   /// Creates a new inst.
   const Inst(this.constructor);
 
@@ -22,7 +24,7 @@ class Inst<T> {
   final InstConstructor<T> constructor;
 
   /// The type of the objects created by this inst.
-  Type get type => T;
+  DIKey get type => Key.type(T);
 
   @override
   String toString() {
@@ -30,29 +32,38 @@ class Inst<T> {
   }
 }
 
-typedef InstConstructor<T> = FutureOr<T> Function();
+typedef InstConstructor<T extends Object> = FutureOr<T> Function();
 
-class FutureInst<T> extends Inst<T> {
+class FutureInst<T extends Object> extends Inst<T> {
   const FutureInst(super.constructor);
 }
 
 /// A singleton interface that also reports the type of the created objects.
-class SingletonInst<T> extends Inst<T> {
+class SingletonInst<T extends Object> extends Inst<T> {
   /// Creates a new singleton.
   const SingletonInst(super.constructor);
 }
 
 /// Shorthand for [Singleton].
-typedef Singleton<T> = SingletonInst<T>;
+typedef Singleton<T extends Object> = SingletonInst<T>;
 
 /// A factory interface that also reports the type of the created objects.
-class FactoryInst<T> extends Inst<T> {
+class FactoryInst<T extends Object> extends Inst<T> {
   /// Creates a new factory.
   const FactoryInst(super.constructor);
 }
 
 /// Shorthand for [FactoryInst].
-typedef Factory<T> = FactoryInst<T>;
+typedef Factory<T extends Object> = FactoryInst<T>;
 
 /// A type alias for a function that returns an instance of type `T`.
 typedef Constructor<T> = T Function();
+
+Iterable<DIKey> supportedAssociatedTypes<T extends Object>() {
+  return [
+    T,
+    FutureInst<T>,
+    SingletonInst<T>,
+    FactoryInst<T>,
+  ].map((e) => Key.type(T));
+}

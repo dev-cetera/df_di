@@ -153,7 +153,7 @@ extension FancyDI on DI {
     return value;
   }
 
-  /// Gets the registration [Type] of the current dependency that can be
+  /// Gets the registration [DIKey] of the current dependency that can be
   /// fetched with type [T] and [key].
   ///
   /// Useful for debugging.

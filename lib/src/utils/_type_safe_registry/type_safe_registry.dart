@@ -36,12 +36,12 @@ final class TypeSafeRegistry extends TypeSafeRegistryBase {
   void Function(TypeSafeRegistryMap state) onUpdate = (_) {};
 
   /// A snapshot describing the current state of the dependencies.
-  TypeSafeRegistryMap get state => Map<Type, Map<DIKey, Dependency<Object>>>.unmodifiable(_state)
+  TypeSafeRegistryMap get state => Map<DIKey, Map<DIKey, Dependency<Object>>>.unmodifiable(_state)
       .map((k, v) => MapEntry(k, Map.unmodifiable(v)));
 
   @override
   @pragma('vm:prefer-inline')
-  Dependency<Object>? getDependencyOfType(Type type, DIKey key) => _state[type]?[key];
+  Dependency<Object>? getDependencyOfType(DIKey type, DIKey key) => _state[type]?[key];
 
   @override
   Iterable<Dependency<Object>> getDependenciesWithKey(DIKey key) {
@@ -52,7 +52,7 @@ final class TypeSafeRegistry extends TypeSafeRegistryBase {
 
   @override
   void setDependencyOfType(
-    Type type,
+    DIKey type,
     DIKey key,
     Dependency<Object> dep,
   ) {
@@ -64,7 +64,7 @@ final class TypeSafeRegistry extends TypeSafeRegistryBase {
   }
 
   @override
-  Dependency<Object>? removeDependencyOfType(Type type, DIKey key) {
+  Dependency<Object>? removeDependencyOfType(DIKey type, DIKey key) {
     final depMap = getDependencyMapOfType(type);
     if (depMap != null) {
       final dep = depMap.remove(key);
@@ -79,7 +79,7 @@ final class TypeSafeRegistry extends TypeSafeRegistryBase {
   }
 
   @override
-  void setDependencyMapOfType<T extends Object>(Type type, DependencyMap<T> deps) {
+  void setDependencyMapOfType<T extends Object>(DIKey type, DependencyMap<T> deps) {
     final prev = _state[type];
     final equals = const MapEquality<DIKey, Dependency<Object>>().equals(prev, deps);
     if (!equals) {
@@ -90,11 +90,11 @@ final class TypeSafeRegistry extends TypeSafeRegistryBase {
 
   @override
   @pragma('vm:prefer-inline')
-  DependencyMap<Object>? getDependencyMapOfType(Type type) => _state[type];
+  DependencyMap<Object>? getDependencyMapOfType(DIKey type) => _state[type];
 
   @override
   @pragma('vm:prefer-inline')
-  void removeDependencyMapOfType(Type type) {
+  void removeDependencyMapOfType(DIKey type) {
     _state.remove(type);
     onUpdate(_state);
   }

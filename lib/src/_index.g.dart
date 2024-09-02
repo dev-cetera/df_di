@@ -19,7 +19,9 @@ export 'services/streaming_service.dart';
 // --- PRIVATE FILES (EXCLUDED) ---
 // export '_index.g.dart';
 // export 'utils/_dependency.dart';
-// export 'utils/_type_safe_registry.dart';
+// export 'utils/_construct_generic_type_string.dart';
+// export 'utils/_type_safe_registry/type_safe_registry.dart';
+// export 'utils/_type_safe_registry/type_safe_registry_base.dart';
 
 // --- GENERATED FILES (EXCLUDED) ---
 // None found.

@@ -17,7 +17,7 @@ import 'package:meta/meta.dart';
 
 import '/src/_index.g.dart';
 import '/src/utils/_dependency.dart';
-import '../utils/_type_safe_registry/type_safe_registry.dart';
+import '/src/utils/_type_safe_registry/type_safe_registry.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -132,7 +132,7 @@ class DI {
   }) {
     if (value is T) {
       registerExactType(
-        type: T,
+        type: Key.type(T),
         dependency: Dependency(
           value: value,
           registrationIndex: _registrationCount++,
@@ -141,7 +141,7 @@ class DI {
       );
     } else {
       registerExactType(
-        type: FutureInst<T>,
+        type: Key.type(FutureInst<T>),
         dependency: Dependency(
           value: FutureInst<T>(() => value),
           registrationIndex: _registrationCount++,
@@ -160,7 +160,7 @@ class DI {
 
   @protected
   void registerExactType({
-    required Type type,
+    required DIKey type,
     required Dependency<Object> dependency,
     bool suppressDependencyAlreadyRegisteredException = false,
   }) {
@@ -190,12 +190,17 @@ class DI {
   ///
   /// - Throws [DependencyNotFoundException] if the requested dependency cannot
   /// be found.
+
   FutureOr<T> get<T extends Object>({
     DIKey key = DEFAULT_KEY,
   }) {
+    return getByType(Key.type(T), key).thenOr((e) => e as T);
+  }
+
+  FutureOr<Object> getByType(DIKey type, DIKey key) {
     // Sync types.
     {
-      final dep = registry.getDependencyOfType(T, key)?.cast<FutureOr<T>>();
+      final dep = registry.getDependencyOfType(type, key);
       if (dep != null) {
         final res = dep.value;
         return res;
@@ -203,49 +208,52 @@ class DI {
     }
     // Factory types.
     {
-      final res = _getFactoryOrNull<T>(key);
+      final genericType = Key.genericType<FactoryInst>([type]);
+      final res = _getFactoryOfTypeOrNull(genericType, key);
       if (res != null) {
         return res;
       }
     }
-    // Async types.
+    // Future types.
     {
-      final res = _inst<T, FutureInst<T>>(key);
+      final genericType = Key.genericType<FutureInst>([type]);
+      final res = _inst(type, genericType, key);
       if (res != null) {
         return res;
       }
     }
     // Singleton types.
     {
-      final res = _inst<T, SingletonInst<T>>(key);
+       final genericType = Key.genericType<SingletonInst>([type]);
+      final res = _inst(type, genericType, key);
       if (res != null) {
         return res;
       }
     }
 
-    throw DependencyNotFoundException(T, key);
+    throw DependencyNotFoundException(type, key);
   }
 
   //
   //
   //
 
-  FutureOr<T>? _inst<T extends Object, TInst extends Inst<T>>(DIKey key) {
-    final dep = registry.getDependencyOfType(TInst, key)?.cast<TInst>();
-    if (dep is Dependency<TInst>) {
+  FutureOr<Object>? _inst(DIKey type, DIKey genericType, DIKey key) {
+    final dep = registry.getDependencyOfType(genericType, key);
+    if (dep != null) {
       final value = dep.value;
       return value.thenOr((value) {
-        return value.constructor();
+        return (value as Inst).constructor();
       }).thenOr((newValue) {
         return registerExactType(
-          type: T,
+          type: type,
           dependency: dep.reassign(newValue),
           suppressDependencyAlreadyRegisteredException: true,
         );
       }).thenOr((_) {
-        return registry.removeDependencyOfType(TInst, key);
+        return registry.removeDependencyOfType(genericType, key);
       }).thenOr((_) {
-        return get<T>(key: key);
+        return getByType(type, key);
       });
     }
     return null;
@@ -260,19 +268,26 @@ class DI {
   ///
   /// - Throws [DependencyNotFoundException] if no factory is found for the
   ///   requested type [T] and [key].
-  FutureOr<T> getFactory<T>({
+  FutureOr<T> getFactory<T extends Object>({
     DIKey key = DEFAULT_KEY,
   }) {
-    final result = _getFactoryOrNull<T>(key);
+    return getFactoryOfType(Key.type(T), key) as FutureOr<T>;
+  }
+
+  FutureOr<Object> getFactoryOfType(
+    DIKey factoryType,
+    DIKey key,
+  ) {
+    final result = _getFactoryOfTypeOrNull(factoryType, key);
     if (result == null) {
-      throw DependencyNotFoundException(T, key);
+      throw DependencyNotFoundException(Object, key);
     }
     return result;
   }
 
-  FutureOr<T>? _getFactoryOrNull<T>(DIKey key) {
-    final dep = registry.getDependency<FactoryInst<T>>(key);
-    final result = dep?.value.constructor();
+  FutureOr<Object>? _getFactoryOfTypeOrNull(DIKey genericType, DIKey key) {
+    final dep = registry.getDependencyOfType(genericType, key);
+    final result = (dep?.value as FactoryInst?)?.constructor();
     return result;
   }
 
@@ -280,14 +295,14 @@ class DI {
   /// specified [key], or under [DEFAULT_KEY] if no key is provided.
   ///
   /// - Throws [DependencyNotFoundException] if the dependency is not found.
-  FutureOr<void> unregister<T>({
+  FutureOr<void> unregister<T extends Object>({
     DIKey key = DEFAULT_KEY,
   }) {
     final dep = _removeDependency<T>(key);
     dep.onUnregister?.call(dep);
   }
 
-  Dependency<Object> _removeDependency<T>(DIKey key) {
+  Dependency<Object> _removeDependency<T extends Object>(DIKey key) {
     final dependencies = registry.removeDependenciesOfTypes(
       supportedAssociatedTypes<T>(),
       key,
@@ -305,21 +320,12 @@ class DI {
 
 /// Exception thrown when attempting to register a dependency that is already registered.
 final class DependencyAlreadyRegisteredException extends DFDIPackageException {
-  DependencyAlreadyRegisteredException(Type type, DIKey key)
+  DependencyAlreadyRegisteredException(Object type, DIKey key)
       : super('Dependency of type $type with key $key is already registered.');
 }
 
 /// Exception thrown when a requested dependency is not found.
 final class DependencyNotFoundException extends DFDIPackageException {
-  DependencyNotFoundException(Type type, DIKey key)
+  DependencyNotFoundException(Object type, DIKey key)
       : super('Dependency of type $type with key "$key" not found.');
-}
-
-List<Type> supportedAssociatedTypes<T>() {
-  return [
-    T,
-    FutureInst<T>,
-    SingletonInst<T>,
-    FactoryInst<T>,
-  ];
 }

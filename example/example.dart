@@ -52,8 +52,10 @@ void main() async {
   print(di.getAsync<AsyncServiceExample>());
   print(di.registry.state);
 
-  di.registerSingletonService(CountingService.new);
+  di.registerFactoryService(CountingService.new);
+  print(di.registry.state);
   final coutingService = di.get<CountingService>();
+  print(di.registry.state);
   print(coutingService);
 
   Future.delayed(
