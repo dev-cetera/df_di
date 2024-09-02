@@ -42,7 +42,7 @@ final local = DI.newInstance();
 ```dart
 // Register a dependency under type "int" and defaultKey.
 di.register<int>(1);
-print(DEFAULT_KEY);
+print(Identifier.defaultId);
 
 // Register a dependency under type "int" also but with a different key.
 di.register(2, key: const DIKey('second'));
@@ -179,16 +179,16 @@ print(await di.getAsyncOrNull<AsyncServiceExample>());
 // Print the current state of di to understand what's registered.
 print(di.registry.state);
 
-// Check if there's a dependency under "int" and DEFAULT_KEY.
+// Check if there's a dependency under "int" and Identifier.defaultId.
 print(di.isRegistered<int>());
 print(di.registry.getDependency<T>() != null);
 
-// Check how the dependency under "String" and DEFAULT_KEY got initially registered.
+// Check how the dependency under "String" and Identifier.defaultId got initially registered.
 di.registerFactory<String>(() => 'Hello World');
 print(di<String>()); // prints "Hello World".
 print(registrationType<String>()); // prints" FactoryInst<String>"
 
-// Print the registration index of dependency under "int" and DEFAULT_KEY.
+// Print the registration index of dependency under "int" and Identifier.defaultId.
 print(di.registrationIndex<int>());
 ```
 

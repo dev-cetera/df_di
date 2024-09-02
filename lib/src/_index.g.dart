@@ -9,9 +9,8 @@
 
 // --- PUBLIC FILES ---
 export 'di/di.dart';
-export 'di/fancy_di.dart';
 export 'utils/inst.dart';
-export 'utils/di_key.dart';
+export 'utils/identifier.dart';
 export 'utils/df_di_package_exception.dart';
 export 'services/service.dart';
 export 'services/streaming_service.dart';

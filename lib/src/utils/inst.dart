@@ -12,7 +12,7 @@
 
 import 'dart:async';
 
-import 'di_key.dart';
+import 'identifier.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -24,7 +24,7 @@ class Inst<T extends Object> {
   final InstConstructor<T> constructor;
 
   /// The type of the objects created by this inst.
-  DIKey get type => Key.type(T);
+  Identifier get type => Identifier.typeId(T);
 
   @override
   String toString() {
@@ -36,6 +36,8 @@ typedef InstConstructor<T extends Object> = FutureOr<T> Function();
 
 class FutureInst<T extends Object> extends Inst<T> {
   const FutureInst(super.constructor);
+
+  factory FutureInst.value(FutureOr<T> value) => FutureInst<T>(() => value);
 }
 
 /// A singleton interface that also reports the type of the created objects.
@@ -58,12 +60,3 @@ typedef Factory<T extends Object> = FactoryInst<T>;
 
 /// A type alias for a function that returns an instance of type `T`.
 typedef Constructor<T> = T Function();
-
-Iterable<DIKey> supportedAssociatedTypes<T extends Object>() {
-  return [
-    T,
-    FutureInst<T>,
-    SingletonInst<T>,
-    FactoryInst<T>,
-  ].map((e) => Key.type(T));
-}

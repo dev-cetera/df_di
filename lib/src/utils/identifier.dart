@@ -12,16 +12,16 @@
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-typedef DIKey = Key;
-
-class Key<T extends Object> {
+class Identifier<T extends Object> {
   final T value;
 
-  const Key(this.value);
+  const Identifier(this.value);
 
-  static Key<String> type(Object object) {
-    final value = object.toString();
-    return Key<String>(value);
+  static const defaultId = Identifier(0);
+
+  static Identifier<Type> typeId(Type object) {
+    final value = object;
+    return Identifier<Type>(value);
   }
 
   /// Constructs a generic type string using the base type [T] and the provided
@@ -33,20 +33,19 @@ class Key<T extends Object> {
   /// print(_constructGenericType<Map>(['String', 'int'])); // Map<String, int>
   /// print(_constructGenericType<Tuple3>(['A', 'B', 'C'])); // Tuple3<A, B, C>
   /// ```
-
-  static Key<String> genericType<T>(List<Key<Object>> subTypes) {
+  static Identifier<String> genericTypeId<T>(List<Identifier<Object>> subTypes) {
     final typeString = '$T';
     final n = typeString.indexOf('<');
     final base = typeString.substring(0, n == -1 ? typeString.length : n);
     final subTypeString = subTypes.join(', ');
     final value = '$base<$subTypeString>';
-    return Key(value);
+    return Identifier(value);
   }
 
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    if (other is! Key<T>) return false;
+    if (other is! Identifier<T>) return false;
     return other.value == value;
   }
 
@@ -56,7 +55,3 @@ class Key<T extends Object> {
   @override
   String toString() => value.toString();
 }
-
-const DEFAULT_KEY = Key(0);
-
-int typeHash(Type type) => Object.hash(Type, type.toString());

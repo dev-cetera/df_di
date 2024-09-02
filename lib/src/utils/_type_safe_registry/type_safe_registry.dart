@@ -36,26 +36,34 @@ final class TypeSafeRegistry extends TypeSafeRegistryBase {
   void Function(TypeSafeRegistryMap state) onUpdate = (_) {};
 
   /// A snapshot describing the current state of the dependencies.
-  TypeSafeRegistryMap get state => Map<DIKey, Map<DIKey, Dependency<Object>>>.unmodifiable(_state)
-      .map((k, v) => MapEntry(k, Map.unmodifiable(v)));
+  TypeSafeRegistryMap get state =>
+      Map<Identifier, Map<Identifier, Dependency<Object>>>.unmodifiable(_state)
+          .map((k, v) => MapEntry(k, Map.unmodifiable(v)));
 
   @override
   @pragma('vm:prefer-inline')
-  Dependency<Object>? getDependencyOfType(DIKey type, DIKey key) => _state[type]?[key];
+  Dependency<Object>? getDependencyByExactType({
+    required Identifier type,
+    required Identifier key,
+  }) {
+    return _state[type]?[key];
+  }
 
   @override
-  Iterable<Dependency<Object>> getDependenciesWithKey(DIKey key) {
+  Iterable<Dependency<Object>> getDependenciesByKey({
+    required Identifier key,
+  }) {
     return _state.entries
         .expand((entry) => entry.value.values.where((dependency) => dependency.key == key))
         .cast<Dependency<Object>>();
   }
 
   @override
-  void setDependencyOfType(
-    DIKey type,
-    DIKey key,
-    Dependency<Object> dep,
-  ) {
+  void setDependencyByExactType({
+    required Identifier type,
+    required Identifier key,
+    required Dependency<Object> dep,
+  }) {
     final prev = _state[type]?[key];
     if (prev != dep) {
       (_state[type] ??= {})[key] = dep;
@@ -64,14 +72,20 @@ final class TypeSafeRegistry extends TypeSafeRegistryBase {
   }
 
   @override
-  Dependency<Object>? removeDependencyOfType(DIKey type, DIKey key) {
-    final depMap = getDependencyMapOfType(type);
-    if (depMap != null) {
-      final dep = depMap.remove(key);
-      if (depMap.isEmpty) {
-        removeDependencyMapOfType(type);
+  Dependency<Object>? removeDependencyByExactType({
+    required Identifier type,
+    required Identifier key,
+  }) {
+    final value = getDependencyMapByExactType(type: type);
+    if (value != null) {
+      final dep = value.remove(key);
+      if (value.isEmpty) {
+        removeDependencyMapByExactType(type: type);
       } else {
-        setDependencyMapOfType(type, depMap);
+        setDependencyMapByExactType(
+          type: type,
+          value: value,
+        );
       }
       return dep;
     }
@@ -79,22 +93,34 @@ final class TypeSafeRegistry extends TypeSafeRegistryBase {
   }
 
   @override
-  void setDependencyMapOfType<T extends Object>(DIKey type, DependencyMap<T> deps) {
+  void setDependencyMapByExactType({
+    required Identifier type,
+    required DependencyMap value,
+  }) {
     final prev = _state[type];
-    final equals = const MapEquality<DIKey, Dependency<Object>>().equals(prev, deps);
+    final equals = const MapEquality<Identifier, Dependency<Object>>().equals(prev, value);
     if (!equals) {
-      _state[type] = deps;
+      _state[type] = value;
       onUpdate(_state);
     }
   }
 
   @override
   @pragma('vm:prefer-inline')
-  DependencyMap<Object>? getDependencyMapOfType(DIKey type) => _state[type];
+  DependencyMap<Object>? getDependencyMapByExactType({
+    required Identifier type,
+  }) {
+    return _state[type];
+  }
+
+  @override
+  void removeDependencyMap<T extends Object>();
 
   @override
   @pragma('vm:prefer-inline')
-  void removeDependencyMapOfType(DIKey type) {
+  void removeDependencyMapByExactType({
+    required Identifier type,
+  }) {
     _state.remove(type);
     onUpdate(_state);
   }
@@ -102,4 +128,16 @@ final class TypeSafeRegistry extends TypeSafeRegistryBase {
   @override
   @pragma('vm:prefer-inline')
   void clearRegistry() => _state.clear();
+
+  @override
+  MapEntry<Identifier, DependencyMap<T>>? getDepMapEntry<T extends Object>() {
+    final entry = _state.entries.where((e) => e.key.value is T).firstOrNull;
+    if (entry != null) {
+      return MapEntry(
+        entry.key,
+        entry.value.cast(),
+      );
+    }
+    return null;
+  }
 }

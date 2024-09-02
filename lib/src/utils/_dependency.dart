@@ -24,17 +24,17 @@ import '/src/_index.g.dart';
 final class Dependency<T extends Object> {
   final T value;
   final Type type;
-  final DIKey key;
+  final Identifier key;
   final Type registrationType;
   final int registrationIndex;
 
-  final OnUnregisterCallback<dynamic>? onUnregister;
+  final OnUnregisterCallback<Object>? onUnregister;
 
   Dependency({
     required this.value,
     required this.registrationIndex,
     Type? registrationType,
-    this.key = DEFAULT_KEY,
+    this.key = Identifier.defaultId,
     required this.onUnregister,
   })  : type = value.runtimeType,
         registrationType = registrationType ?? value.runtimeType;
@@ -70,4 +70,4 @@ final class Dependency<T extends Object> {
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 @internal
-typedef OnUnregisterCallback<T> = FutureOr<void> Function(T value);
+typedef OnUnregisterCallback<T extends Object> = FutureOr<void> Function(T value);
