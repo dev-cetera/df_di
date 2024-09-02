@@ -32,10 +32,10 @@ environment:
 
 dependencies:
   df_type: ^0.5.1
-  collection: ^1.19.0
+  collection: ^1.18.0
   meta: ^1.15.0
 
 ## -----------------------------------------------------------------------------
 
 dev_dependencies:
-  ints: ^4.0.0
+  lints: ^4.0.0

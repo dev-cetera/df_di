@@ -49,6 +49,8 @@ abstract base class TypeSafeRegistryBase {
     Dependency<Object> dep,
   );
 
+  Iterable<Dependency<Object>> getDependenciesWithKey(DIKey key);
+
   /// Removes a dependency of type [T] with the specified [key] then returns
   /// the removed dependency if it existed, or `null`.
   Dependency<T>? removeDependency<T extends Object>(DIKey key) =>

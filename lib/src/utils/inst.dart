@@ -26,21 +26,20 @@ class Inst<T> {
 
   @override
   String toString() {
-    return 'Inst(type: $type)';
+    return '$runtimeType(type: $T)';
   }
 }
 
 typedef InstConstructor<T> = FutureOr<T> Function();
 
+class FutureInst<T> extends Inst<T> {
+  const FutureInst(super.constructor);
+}
+
 /// A singleton interface that also reports the type of the created objects.
 class SingletonInst<T> extends Inst<T> {
   /// Creates a new singleton.
   const SingletonInst(super.constructor);
-
-  @override
-  String toString() {
-    return 'SingletonInst(type: $type)';
-  }
 }
 
 /// Shorthand for [Singleton].
@@ -50,11 +49,6 @@ typedef Singleton<T> = SingletonInst<T>;
 class FactoryInst<T> extends Inst<T> {
   /// Creates a new factory.
   const FactoryInst(super.constructor);
-
-  @override
-  String toString() {
-    return 'FactoryInst(type: $type)';
-  }
 }
 
 /// Shorthand for [FactoryInst].

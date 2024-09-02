@@ -24,24 +24,25 @@ import '/src/_index.g.dart';
 final class Dependency<T extends Object> {
   final T value;
   final Type type;
+  final DIKey key;
   final Type registrationType;
   final int registrationIndex;
-  final DIKey key;
+
   final OnUnregisterCallback<dynamic>? onUnregister;
 
-  const Dependency({
+  Dependency({
     required this.value,
     required this.registrationIndex,
     Type? registrationType,
     this.key = DEFAULT_KEY,
     required this.onUnregister,
-  })  : type = T,
-        registrationType = registrationType ?? T;
+  })  : type = value.runtimeType,
+        registrationType = registrationType ?? value.runtimeType;
 
-  /// Creates a new dependency of type [N] from the current one but with
+  /// Creates a new dependency of type [R] from the current one but with
   /// a [newValue].
-  Dependency<N> reassignValue<N extends Object>(N newValue) {
-    return Dependency<N>(
+  Dependency<R> reassign<R extends Object>(R newValue) {
+    return Dependency<R>(
       value: newValue,
       registrationIndex: registrationIndex,
       registrationType: registrationType,
@@ -50,8 +51,20 @@ final class Dependency<T extends Object> {
     );
   }
 
+  Dependency<R> cast<R extends Object>() => reassign(value as R);
+
   @override
-  String toString() => 'Dependency<$T> ($hashCode)';
+  String toString() => 'Dependency<$type> | Dependency<$registrationType> #$registrationIndex';
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! Dependency) return false;
+    return registrationIndex == other.registrationIndex && type == other.type;
+  }
+
+  @override
+  int get hashCode => Object.hash(registrationIndex, type);
 }
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░

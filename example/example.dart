@@ -82,7 +82,7 @@ void main() async {
 /// - Unregister via `di.unregister<FooBarService>();`
 final class FooBarService extends Service {
   @override
-  FutureOr<void> onInitService() async {}
+  void onInitService() async {}
 
   @override
   FutureOr<void> onDispose() {

@@ -44,7 +44,7 @@ class DI {
   /// final fooBarService2 = di.get<FooBarService>();
   /// print(fooBarService1 == fooBarService2); // true
   /// ```
-  void registerSingleton<T>(
+  void registerSingleton<T extends Object>(
     InstConstructor<T> constructor, {
     DIKey key = DEFAULT_KEY,
     OnUnregisterCallback<T>? onUnregister,
@@ -66,7 +66,7 @@ class DI {
   /// final fooBarService2 = di.get<FooBarService>();
   /// print(fooBarService1 == fooBarService2); // false
   /// ```
-  void registerFactory<T>(
+  void registerFactory<T extends Object>(
     InstConstructor<T> constructor, {
     DIKey key = DEFAULT_KEY,
     OnUnregisterCallback<T>? onUnregister,
@@ -131,7 +131,8 @@ class DI {
     OnUnregisterCallback<E>? onUnregister,
   }) {
     if (value is T) {
-      registerExactType<T>(
+      registerExactType(
+        type: T,
         dependency: Dependency(
           value: value,
           registrationIndex: _registrationCount++,
@@ -139,9 +140,10 @@ class DI {
         ),
       );
     } else {
-      registerExactType<Future<T>>(
+      registerExactType(
+        type: FutureInst<T>,
         dependency: Dependency(
-          value: value,
+          value: FutureInst<T>(() => value),
           registrationIndex: _registrationCount++,
           onUnregister: (e) => onUnregister?.call(e as E),
         ),
@@ -157,21 +159,22 @@ class DI {
   var _registrationCount = 0;
 
   @protected
-  void registerExactType<T extends Object>({
-    required Dependency<T> dependency,
+  void registerExactType({
+    required Type type,
+    required Dependency<Object> dependency,
     bool suppressDependencyAlreadyRegisteredException = false,
   }) {
-    final existingDependencies = registry.getAllDependencies<T>();
+    final existingDependencies = registry.getAllDependenciesOfType(type);
     final depMap = {for (var dep in existingDependencies) dep.key: dep};
 
     // Check if the dependency is already registered.
     final key = dependency.key;
     if (!suppressDependencyAlreadyRegisteredException && depMap.containsKey(key)) {
-      throw DependencyAlreadyRegisteredException(T, key);
+      throw DependencyAlreadyRegisteredException(type, key);
     }
 
     // Store the dependency in the type map.
-    registry.setDependency<T>(key, dependency);
+    registry.setDependencyOfType(type, key, dependency);
   }
 
   /// Gets a dependency as either a [Future] or an instance of [T] registered
@@ -192,7 +195,7 @@ class DI {
   }) {
     // Sync types.
     {
-      final dep = registry.getDependency<T>(key);
+      final dep = registry.getDependencyOfType(T, key)?.cast<FutureOr<T>>();
       if (dep != null) {
         final res = dep.value;
         return res;
@@ -207,43 +210,45 @@ class DI {
     }
     // Async types.
     {
-      final dep = registry.getDependency<Future<T>>(key);
-      if (dep != null) {
-        final value = dep.value;
-        return value.thenOr((newValue) {
-          registerExactType<T>(
-            dependency: dep.reassignValue(newValue),
-            suppressDependencyAlreadyRegisteredException: true,
-          );
-          return newValue;
-        }).thenOr((_) {
-          registry.removeDependency<Future<T>>(key);
-        }).thenOr((_) {
-          return get<T>(key: key);
-        });
+      final res = _inst<T, FutureInst<T>>(key);
+      if (res != null) {
+        return res;
       }
     }
     // Singleton types.
     {
-      final dep = registry.getDependency<SingletonInst<T>>(key);
-      if (dep != null) {
-        final value = dep.value;
-        return value.thenOr((value) {
-          return value.constructor();
-        }).thenOr((newValue) {
-          return registerExactType<T>(
-            dependency: dep.reassignValue(newValue),
-            suppressDependencyAlreadyRegisteredException: true,
-          );
-        }).thenOr((_) {
-          return registry.removeDependency<SingletonInst<T>>(key);
-        }).thenOr((_) {
-          return get<T>(key: key);
-        });
+      final res = _inst<T, SingletonInst<T>>(key);
+      if (res != null) {
+        return res;
       }
     }
 
     throw DependencyNotFoundException(T, key);
+  }
+
+  //
+  //
+  //
+
+  FutureOr<T>? _inst<T extends Object, TInst extends Inst<T>>(DIKey key) {
+    final dep = registry.getDependencyOfType(TInst, key)?.cast<TInst>();
+    if (dep is Dependency<TInst>) {
+      final value = dep.value;
+      return value.thenOr((value) {
+        return value.constructor();
+      }).thenOr((newValue) {
+        return registerExactType(
+          type: T,
+          dependency: dep.reassign(newValue),
+          suppressDependencyAlreadyRegisteredException: true,
+        );
+      }).thenOr((_) {
+        return registry.removeDependencyOfType(TInst, key);
+      }).thenOr((_) {
+        return get<T>(key: key);
+      });
+    }
+    return null;
   }
 
   /// Gets a dependency registered via [registerFactory] as either a
@@ -313,7 +318,7 @@ final class DependencyNotFoundException extends DFDIPackageException {
 List<Type> supportedAssociatedTypes<T>() {
   return [
     T,
-    Future<T>,
+    FutureInst<T>,
     SingletonInst<T>,
     FactoryInst<T>,
   ];

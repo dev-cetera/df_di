@@ -44,6 +44,13 @@ final class TypeSafeRegistry extends TypeSafeRegistryBase {
   Dependency<Object>? getDependencyOfType(Type type, DIKey key) => _state[type]?[key];
 
   @override
+  Iterable<Dependency<Object>> getDependenciesWithKey(DIKey key) {
+    return _state.entries
+        .expand((entry) => entry.value.values.where((dependency) => dependency.key == key))
+        .cast<Dependency<Object>>();
+  }
+
+  @override
   void setDependencyOfType(
     Type type,
     DIKey key,
@@ -51,7 +58,7 @@ final class TypeSafeRegistry extends TypeSafeRegistryBase {
   ) {
     final prev = _state[type]?[key];
     if (prev != dep) {
-      _state[type]?[key] = dep;
+      (_state[type] ??= {})[key] = dep;
       onUpdate(_state);
     }
   }
