@@ -52,8 +52,8 @@ abstract base class DIBase {
     Identifier key = Identifier.defaultId,
   });
 
-  /// Registers a singleton instance of [T] with the given [constructor]. When [get]
-  /// is called with [T] and [key], the same instance will be returned.
+  /// Registers a singleton instance of [T] with the given [constructor]. When
+  /// [get] is called with [T] and [key], the same instance will be returned.
   ///
   /// ```dart
   /// di.registerSingleton(FooBarService.new);
@@ -87,7 +87,6 @@ abstract base class DIBase {
   void registerFactory<T extends Object>(
     InstConstructor<T> constructor, {
     Identifier key = Identifier.defaultId,
-    //OnUnregisterCallback<T>? onUnregister,
   }) {
     registerOr(
       FactoryInst<T>(constructor),

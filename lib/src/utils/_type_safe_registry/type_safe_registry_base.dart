@@ -26,44 +26,33 @@ abstract base class TypeSafeRegistryBase {
   Dependency<T>? getDependency<T extends Object>({
     required Identifier key,
   }) {
-    final entry = getDepMapEntry<T>();
-    if (entry != null) {
-      final type = entry.key;
-      return getDependencyByExactType(
-        type: type,
-        key: key,
-      ) as Dependency<T>?;
-    }
-    return null;
+    final deps = getDependenciesByKey(key: key);
+    return deps.where((e) => e.value is T).firstOrNull?.cast();
   }
 
   Dependency<Object>? getDependencyByExactType({
     required Identifier type,
     required Identifier key,
-  });
+  }) {
+    final deps = getDependenciesByKey(key: key);
+    return deps.where((e) => Identifier.typeId(e.type) == type.value).firstOrNull?.cast();
+  }
 
   /// Adds or updates a dependency of type [T] with the specified [key].
   ///
   /// If a dependency with the same type [T] and [key] already exists, it will
   /// be overwritten.
   void setDependency<T extends Object>({
-    required Identifier key,
     required Dependency<T> dep,
   }) {
-    final entry = getDepMapEntry<T>();
-    if (entry != null) {
-      final type = entry.key;
-      setDependencyByExactType(
-        key: key,
-        type: type,
-        dep: dep,
-      );
-    }
+    setDependencyByExactType(
+      type: Identifier.typeId(T),
+      dep: dep,
+    );
   }
 
   void setDependencyByExactType({
     required Identifier type,
-    required Identifier key,
     required Dependency<Object> dep,
   });
 
@@ -76,11 +65,10 @@ abstract base class TypeSafeRegistryBase {
   Dependency<T>? removeDependency<T extends Object>({
     required Identifier key,
   }) {
-    final entry = getDepMapEntry<T>();
-    if (entry != null) {
-      final type = entry.key;
+    final dep = getDependency<T>(key: key);
+    if (dep != null) {
       return removeDependencyByExactType(
-        type: type,
+        type: Identifier.typeId(dep.type),
         key: key,
       ) as Dependency<T>?;
     }
@@ -92,22 +80,13 @@ abstract base class TypeSafeRegistryBase {
     required Identifier key,
   });
 
-  /// Checks if a dependency of type [T] with the specified [key] exists.
-  ///
-  /// Returns `true` if the dependency exists, otherwise `false`.
-  @pragma('vm:prefer-inline')
-  bool containsDependency<T extends Object>({
-    required Identifier key,
-  }) {
-    return getDependencyMap<T>()?.containsKey(key) ?? false;
-  }
 
   @pragma('vm:prefer-inline')
   bool containsDependencyByExactType({
     required Identifier type,
     required Identifier key,
   }) {
-    return getDependencyMapByExactType(type: type)?.containsKey(key) ?? false;
+    return getDependencyMapByKey(key: key)?.containsKey(type) ?? false;
   }
 
   /// Retrieves all dependencies of type [T].
@@ -115,67 +94,28 @@ abstract base class TypeSafeRegistryBase {
   /// Returns an iterable of all registered dependencies of type [T]. If none
   /// exist, an empty iterable is returned.
   @pragma('vm:prefer-inline')
-  Iterable<Dependency<Object>> getAllDependencies<T extends Object>() {
-    return getDependencyMap<T>()?.values ?? const Iterable.empty();
-  }
+  // Iterable<Dependency<Object>> getAllDependencies<T extends Object>() {
+  //   return getDependencyMap<T>()?.values ?? const Iterable.empty();
+  // }
 
   @pragma('vm:prefer-inline')
-  Iterable<Dependency<Object>> getAllDependenciesByExactType({
-    required Identifier type,
+  Iterable<Dependency<Object>> getAllDependenciesByKey({
+    required Identifier key,
   }) {
-    return getDependencyMapByExactType(type: type)?.values ?? const Iterable.empty();
+    return getDependencyMapByKey(key: key)?.values ?? const Iterable.empty();
   }
 
-  /// Sets the map of dependencies for type [T].
-  ///
-  /// This method is used internally to update the stored dependencies for a
-  /// specific type [T].
-  void setDependencyMap<T extends Object>({
-    required DependencyMap value,
-  }) {
-    final entry = getDepMapEntry<T>();
-    if (entry != null) {
-      final type = entry.key;
-      setDependencyMapByExactType(
-        type: type,
-        value: value,
-      );
-    }
-  }
-
-  /// ...
-  void setDependencyMapByExactType({
-    required Identifier type,
+  /// Sets the map of dependencies for a given [key].
+  void setDependencyMapByKey({
+    required Identifier key,
     required DependencyMap value,
   });
 
-  /// Retrieves the map of dependencies for type [T].
-  ///
-  /// Returns the map of dependencies for the specified type [T], or `null` if
-  /// no dependencies of this type are registered.
-  DependencyMap<T>? getDependencyMap<T extends Object>() {
-    final entry = getDepMapEntry<T>();
-    if (entry != null) {
-      return getDependencyMapByExactType(type: entry.key)?.cast();
-    }
-    return null;
-  }
 
   /// ...
-  DependencyMap<Object>? getDependencyMapByExactType({
-    required Identifier type,
+  DependencyMap<Object>? getDependencyMapByKey({
+    required Identifier key,
   });
-
-  /// Removes the entire map of dependencies for type [T].
-  ///
-  /// This method is used internally to remove all dependencies of a specific
-  /// type [T].
-  void removeDependencyMap<T extends Object>() {
-    final entry = getDepMapEntry<T>();
-    if (entry != null) {
-      removeDependencyMapByExactType(type: entry.key);
-    }
-  }
 
   /// ...
   void removeDependencyMapByExactType({
@@ -187,9 +127,6 @@ abstract base class TypeSafeRegistryBase {
   /// This method removes all entries from the registry, effectively resetting
   /// it.
   void clearRegistry();
-
-  /// ...
-  MapEntry<Identifier, DependencyMap<T>>? getDepMapEntry<T extends Object>();
 }
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░

@@ -21,12 +21,9 @@ import 'package:df_di/df_di.dart';
 void main() async {
   final di = DI.global;
 
-
-  di.registerSingletonService(CountingService.new);
+  di.registerSingleton(CountingService.new);
   print(di.registry.state);
-  di.get<CountingService>();
-  print(di.registry.state);
-  // di.unregister<CountingService>();
+  final coutingService = di.get<CountingService>();
 
   // // Print the current state of di to understand what's registed.
   // print(di.registry.state); // Nothing registered at this point.
@@ -60,19 +57,19 @@ void main() async {
   // print(di.getAsync<AsyncServiceExample>());
   // print(di.registry.state);
 
-  // di.registerFactoryService(CountingService.new);
+  // di.registerSingleton(CountingService.new);
   // print(di.registry.state);
   // final coutingService = di.get<CountingService>();
   // print(di.registry.state);
   // print(coutingService);
-  // di.unregister<CountingService>();
+  // //di.unregister<CountingService>();
 
   // Future.delayed(
   //   const Duration(seconds: 5),
   //   () {
   //     di.unregisterAll(
-  //       (e) {
-  //         print(e);
+  //       onUnregister: (dep) {
+  //         print(dep);
   //       },
   //     ).thenOr((_) {
   //       // Completes when all dependencies are unregistered and removed

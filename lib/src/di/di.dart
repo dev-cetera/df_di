@@ -101,14 +101,16 @@ base class DI extends DIBase {
         dependency: Dependency(
           value: value,
           registrationIndex: _registrationCount++,
+          key: key,
           onUnregister: onUnregister != null ? (e) => e is R ? onUnregister(e) : null : null,
         ),
       );
     } else {
       reg<FutureInst<T>>(
         dependency: Dependency(
-          value: FutureInst.value(value),
+          value: FutureInst(() => value),
           registrationIndex: _registrationCount++,
+          key: key,
           onUnregister: onUnregister != null ? (e) => e is R ? onUnregister(e) : null : null,
         ),
       );
@@ -128,6 +130,7 @@ base class DI extends DIBase {
         dependency: Dependency(
           value: value,
           registrationIndex: _registrationCount++,
+          key: key,
           onUnregister: onUnregister != null ? (e) => e is R ? onUnregister(e) : null : null,
         ),
       );
@@ -135,8 +138,9 @@ base class DI extends DIBase {
       regByExactType(
         type: Identifier.typeId(FutureInst<T>),
         dependency: Dependency(
-          value: FutureInst.value(value),
+          value: FutureInst(() => value),
           registrationIndex: _registrationCount++,
+          key: key,
           onUnregister: onUnregister != null ? (e) => e is R ? onUnregister(e) : null : null,
         ),
       );
@@ -174,7 +178,7 @@ base class DI extends DIBase {
 
     // Future types.
     {
-      final res = _inst<T>(
+      final res = _inst<T, FutureInst<T>>(
         key: key,
       );
       if (res != null) {
@@ -183,7 +187,7 @@ base class DI extends DIBase {
     }
     // Singleton types.
     {
-      final res = _inst<T>(
+      final res = _inst<T, SingletonInst<T>>(
         key: key,
       );
       if (res != null) {
@@ -197,23 +201,23 @@ base class DI extends DIBase {
     );
   }
 
-  FutureOr<T>? _inst<T extends Object>({
+  FutureOr<T>? _inst<T extends Object, TInst extends Inst<T>>({
     required Identifier key,
   }) {
-    final dep = registry.getDependency<T>(
+    final dep = registry.getDependency<TInst>(
       key: key,
     );
     if (dep != null) {
       final value = dep.value;
       return value.thenOr((value) {
-        return (value as Inst<T>).constructor();
+        return value.constructor();
       }).thenOr((newValue) {
         return reg<T>(
           dependency: dep.reassign(newValue),
           suppressDependencyAlreadyRegisteredException: true,
         );
       }).thenOr((_) {
-        return registry.removeDependency<T>(
+        return registry.removeDependency<TInst>(
           key: key,
         );
       }).thenOr((_) {
@@ -231,19 +235,17 @@ base class DI extends DIBase {
     required Dependency<T> dependency,
     bool suppressDependencyAlreadyRegisteredException = false,
   }) {
-    final existingDependencies = registry.getAllDependencies<T>();
-    final depMap = {for (var dep in existingDependencies) dep.key: dep};
-    // Check if the dependency is already registered.
-    final key = dependency.key;
-    if (!suppressDependencyAlreadyRegisteredException && depMap.containsKey(key)) {
+    final dep = registry.getDependency<T>(
+      key: dependency.key,
+    );
+    if (!suppressDependencyAlreadyRegisteredException && dep != null) {
       throw DependencyAlreadyRegisteredException(
         type: T,
-        key: key,
+        key: dependency.key,
       );
     }
     // Store the dependency in the type map.
     registry.setDependency<T>(
-      key: key,
       dep: dependency,
     );
   }
@@ -353,22 +355,19 @@ base class DI extends DIBase {
     required Dependency<Object> dependency,
     bool suppressDependencyAlreadyRegisteredException = false,
   }) {
-    final existingDependencies = registry.getAllDependenciesByExactType(type: type);
-    final depMap = {for (var dep in existingDependencies) dep.key: dep};
-
-    // Check if the dependency is already registered.
-    final key = dependency.key;
-    if (!suppressDependencyAlreadyRegisteredException && depMap.containsKey(key)) {
+    final dep = registry.getDependencyByExactType(
+      type: type,
+      key: dependency.key,
+    );
+    if (!suppressDependencyAlreadyRegisteredException && dep != null) {
       throw DependencyAlreadyRegisteredException(
         type: type,
-        key: key,
+        key: dependency.key,
       );
     }
-
     // Store the dependency in the type map.
     registry.setDependencyByExactType(
       type: type,
-      key: key,
       dep: dependency,
     );
   }

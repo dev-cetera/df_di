@@ -34,7 +34,7 @@ final class Dependency<T extends Object> {
     required this.value,
     required this.registrationIndex,
     Type? registrationType,
-    this.key = Identifier.defaultId,
+    required this.key,
     required this.onUnregister,
   })  : type = value.runtimeType,
         registrationType = registrationType ?? value.runtimeType;
