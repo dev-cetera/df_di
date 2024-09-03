@@ -25,11 +25,13 @@ abstract base class TypeSafeRegistryBase {
   /// the specified [group].
   ///
   /// Returns `null` if no matching dependency is found.
-  Dependency<T>? getDependencyOrNull<T extends Object>({
+  Dependency<Object>? getDependencyOrNull<T extends Object>({
     required Descriptor group,
   }) {
     final deps = getDependenciesByKey(group: group);
-    return deps.where((e) => e.value is T).firstOrNull?.cast();
+    return deps.where((e) {
+      return e.value is T;
+    }).firstOrNull;
   }
 
   /// Retrieves the dependency of the exact [type] associated with the

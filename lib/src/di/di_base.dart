@@ -70,7 +70,7 @@ abstract base class DIBase {
   /// final fooBarService2 = di.get<FooBarService>();
   /// print(fooBarService1 == fooBarService2); // false
   /// ```
-  void registerFactoryService<T extends Service>(
+  void registerFactoryService<T extends Service, P extends Object>(
     Constructor<T> constructor, {
     Descriptor? group,
   });
@@ -80,8 +80,8 @@ abstract base class DIBase {
     Descriptor? group,
     Descriptor? childGroup,
   }) {
-    registerLazySingleton(
-      () => DI(focusGroup: childGroup, parent: this),
+    registerLazySingleton<DI, Object>(
+      (_) => DI(focusGroup: childGroup, parent: this),
       group: group,
       onUnregister: (e) => e.unregisterAll(),
     );
@@ -103,13 +103,13 @@ abstract base class DIBase {
   /// print(fooBarService1 == fooBarService2); // true
   /// ```
   @pragma('vm:prefer-inline')
-  void registerLazySingleton<T extends Object>(
-    InstConstructor<T> constructor, {
+  void registerLazySingleton<T extends Object, P extends Object>(
+    InstConstructor<T, P> constructor, {
     Descriptor? group,
     OnUnregisterCallback<T>? onUnregister,
   }) {
     registerOr(
-      SingletonInst<T>(constructor),
+      SingletonInst<T, P>(constructor),
       group: group,
       onUnregister: onUnregister,
     );
@@ -125,12 +125,12 @@ abstract base class DIBase {
   /// print(fooBarService1 == fooBarService2); // false
   /// ```
   @pragma('vm:prefer-inline')
-  void registerFactory<T extends Object>(
-    InstConstructor<T> constructor, {
+  void registerFactory<T extends Object, P extends Object>(
+    InstConstructor<T, P> constructor, {
     Descriptor? group,
   }) {
     registerOr(
-      FactoryInst<T>(constructor),
+      FactoryInst<T, P>(constructor),
       group: group,
     );
   }
@@ -283,11 +283,12 @@ abstract base class DIBase {
   ///
   /// - Throws [DependencyNotFoundException] if no factory is found for the
   ///   requested type [T] and [group].
-  FutureOr<T> getFactory<T extends Object>({
+  FutureOr<T> getFactory<T extends Object, P extends Object>(
+    P params, {
     Descriptor? group,
   }) {
     final focusGroup = preferFocusGroup(group);
-    final result = getFactoryOrNull<T>(group: focusGroup);
+    final result = getFactoryOrNull<T, P>(params, group: focusGroup);
     if (result == null) {
       throw DependencyNotFoundException(
         type: T,
@@ -299,19 +300,22 @@ abstract base class DIBase {
 
   /// ...
   @protected
-  FutureOr<T>? getFactoryOrNull<T extends Object>({
+  FutureOr<T>? getFactoryOrNull<T extends Object, P extends Object>(
+    P params, {
     Descriptor? group,
   });
 
   /// ...
   @protected
-  FutureOr<Object> getFactoryOfExactType(
-    Descriptor type,
+  FutureOr<Object> getFactoryOfExactType({
+    required Descriptor type,
+    required Object params,
     Descriptor? group,
-  ) {
+  }) {
     final focusGroup = preferFocusGroup(group);
     final result = getFactoryOfExactTypeOrNull(
       type: type,
+      params: params,
       group: focusGroup,
     );
     if (result == null) {
@@ -327,6 +331,7 @@ abstract base class DIBase {
   @protected
   FutureOr<Object>? getFactoryOfExactTypeOrNull({
     required Descriptor type,
+    required Object params,
     Descriptor? group,
   });
 
@@ -340,6 +345,7 @@ abstract base class DIBase {
   }) {
     return unregisterOfExactType(
       type: Descriptor.type(T),
+      paramsType: Descriptor.type(Object),
       group: group,
     );
   }
@@ -349,10 +355,12 @@ abstract base class DIBase {
   @pragma('vm:prefer-inline')
   FutureOr<void> unregisterOfExactType({
     required Descriptor type,
+    required Descriptor paramsType,
     Descriptor? group,
   }) {
     final dep = removeDependencyOfExactType(
       type: type,
+      paramsType: paramsType,
       group: group,
     );
     return dep.onUnregister?.call(dep.value);
@@ -371,6 +379,7 @@ abstract base class DIBase {
   }) {
     return removeDependencyOfExactType(
       type: Descriptor.type(T),
+      paramsType: Descriptor.type(Object),
       group: group,
     );
   }
@@ -379,6 +388,7 @@ abstract base class DIBase {
   @protected
   Dependency<Object> removeDependencyOfExactType({
     required Descriptor type,
+    required Descriptor paramsType,
     Descriptor? group,
   });
 
@@ -399,6 +409,7 @@ abstract base class DIBase {
     final focusGroup = preferFocusGroup(group);
     final registered = isRegisteredOfExactType(
       type: Descriptor.type(T),
+      paramsType: Descriptor.type(Object),
       group: focusGroup,
     );
     if (registered) {
@@ -416,6 +427,7 @@ abstract base class DIBase {
     final focusGroup = preferFocusGroup(group);
     final registered = isRegisteredOfExactType(
       type: Descriptor.type(T),
+      paramsType: Descriptor.type(Object),
       group: focusGroup,
     );
     if (registered) {
@@ -446,6 +458,7 @@ abstract base class DIBase {
     final focusGroup = preferFocusGroup(group);
     final registered = isRegisteredOfExactType(
       type: Descriptor.type(T),
+      paramsType: Descriptor.type(Object),
       group: focusGroup,
     );
     if (registered) {
@@ -508,10 +521,12 @@ abstract base class DIBase {
   @protected
   bool isRegisteredOfExactType({
     required Descriptor type,
+    required Descriptor paramsType,
     required Descriptor group,
   }) {
     final dep = getDependencyOfExactTypeOrNull(
       type: type,
+      paramsType: paramsType,
       group: group,
     );
     final registered = dep != null;
@@ -541,10 +556,12 @@ abstract base class DIBase {
   @protected
   Dependency<Object> getDependencyOfExactType({
     required Descriptor type,
+    required Descriptor paramsType,
     required Descriptor group,
   }) {
     final dep = getDependencyOfExactTypeOrNull(
       type: type,
+      paramsType: paramsType,
       group: group,
     );
     if (dep == null) {
@@ -566,6 +583,7 @@ abstract base class DIBase {
   @protected
   Dependency<Object>? getDependencyOfExactTypeOrNull({
     required Descriptor type,
+    required Descriptor paramsType,
     Descriptor? group,
   });
 }

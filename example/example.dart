@@ -73,6 +73,8 @@ void main() async {
   );
 }
 
+typedef Params = ({String name, int age});
+
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 /// A new service class that extends [Service].
@@ -80,9 +82,9 @@ void main() async {
 /// - Register via `di.initSingletonService(FooBarService.new);`
 /// - Get via `di.get<FooBarService>();`
 /// - Unregister via `di.unregister<FooBarService>();`
-final class FooBarService extends Service {
+final class FooBarService extends Service<Object> {
   @override
-  void onInitService() async {}
+  void onInitService(_) async {}
 
   @override
   FutureOr<void> onDispose() {
@@ -92,7 +94,7 @@ final class FooBarService extends Service {
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-final class CountingService extends StreamingService<int> {
+final class CountingService extends StreamingService<int, Object> {
   @override
   Stream<int> provideInputStream() async* {
     for (var n = 0; n < 100; n++) {
@@ -116,9 +118,9 @@ final class CountingService extends StreamingService<int> {
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 // An example of a service that DI will treat as sync.
-final class SyncServiceExmple extends Service {
+final class SyncServiceExmple extends Service<Object> {
   @override
-  void onInitService() {}
+  void onInitService(_) {}
 
   @override
   Future<void> onDispose() async {}
@@ -127,9 +129,9 @@ final class SyncServiceExmple extends Service {
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 // An example of a service that DI will treat as async.
-final class AsyncServiceExample extends Service {
+final class AsyncServiceExample extends Service<Object> {
   @override
-  Future<void> onInitService() async {
+  Future<void> onInitService(_) async {
     await Future<void>.delayed(
       const Duration(seconds: 3),
     );

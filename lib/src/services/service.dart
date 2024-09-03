@@ -26,7 +26,7 @@ import '/src/_index.g.dart';
 /// It provides a standardized structure for managing the lifecycle of services,
 /// ensuring they are properly initialized when needed and disposed of when no
 /// longer in use.
-abstract base class Service {
+abstract base class Service<TParams extends Object> {
   /// Creates an uninitialized instance. Must call [initService]
   /// before using this service.
   Service();
@@ -45,12 +45,12 @@ abstract base class Service {
   ///
   /// Do not override this method. Instead, override [onInitService].
   @nonVirtual
-  FutureOr<void> initService() {
+  FutureOr<void> initService(TParams? params) {
     if (_initialized.isCompleted) {
       throw ServiceAlreadyInitializedException();
     }
     _initialized.complete();
-    return onInitService();
+    return onInitService(params);
   }
 
   /// Override to define any necessary initialization to be called immediately
@@ -58,7 +58,7 @@ abstract base class Service {
   ///
   /// This method should not be called directly.
   @protected
-  FutureOr<void> onInitService();
+  FutureOr<void> onInitService(TParams? params);
 
   /// Disposes of this service, making it unusable and ready for garbage
   /// collection. Calls [onDispose].

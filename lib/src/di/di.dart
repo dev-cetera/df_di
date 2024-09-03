@@ -87,7 +87,7 @@ base class DI extends DIBase {
     Descriptor? group,
   }) {
     registerLazySingleton(
-      () => constructor().thenOr((e) => e.initService().thenOr((_) => e)),
+      (params) => constructor().thenOr((e) => e.initService(params).thenOr((_) => e)),
       group: group,
       onUnregister: (e) {
         return e.thenOr((e) {
@@ -105,12 +105,12 @@ base class DI extends DIBase {
   //
 
   @override
-  void registerFactoryService<T extends Service>(
+  void registerFactoryService<T extends Service, P extends Object>(
     Constructor<T> constructor, {
     Descriptor? group,
   }) {
-    registerFactory(
-      () => constructor().thenOr((e) => e.initService().thenOr((_) => e)),
+    registerFactory<T, P>(
+      (params) => constructor().thenOr((e) => e.initService(params).thenOr((_) => e)),
       group: group,
     );
   }
@@ -139,9 +139,9 @@ base class DI extends DIBase {
         ),
       );
     } else {
-      reg<FutureInst<T>>(
+      reg<FutureInst<T, Object>>(
         dependency: Dependency(
-          value: FutureInst(() => value),
+          value: FutureInst<T, Object>((_) => value),
           registrationIndex: _registrationCount++,
           group: focusGroup,
           onUnregister: onUnregister != null ? (e) => e is R ? onUnregister(e) : null : null,
@@ -173,9 +173,9 @@ base class DI extends DIBase {
       );
     } else {
       regOfExactType(
-        type: Descriptor.type(FutureInst<T>),
+        type: Descriptor.type(FutureInst<T, Object>),
         dependency: Dependency(
-          value: FutureInst(() => value),
+          value: FutureInst<T, Object>((_) => value),
           registrationIndex: _registrationCount++,
           group: focusGroup,
           onUnregister: onUnregister != null ? (e) => e is R ? onUnregister(e) : null : null,
@@ -220,12 +220,12 @@ base class DI extends DIBase {
         group: group,
       );
       if (dep != null) {
-        return dep;
+        return dep.cast();
       }
     }
     // Future types.
     {
-      final res = _inst<T, FutureInst<T>>(
+      final res = _inst<T, FutureInst<T, Object>>(
         di: di,
         group: group,
       );
@@ -235,7 +235,7 @@ base class DI extends DIBase {
     }
     // Singleton types.
     {
-      final res = _inst<T, SingletonInst<T>>(
+      final res = _inst<T, SingletonInst<T, Object>>(
         di: di,
         group: group,
       );
@@ -246,7 +246,7 @@ base class DI extends DIBase {
     return null;
   }
 
-  static FutureOr<Dependency<T>>? _inst<T extends Object, TInst extends Inst<T>>({
+  static FutureOr<Dependency<T>>? _inst<T extends Object, TInst extends Inst<T, Object>>({
     required DI di,
     required Descriptor group,
   }) {
@@ -254,9 +254,9 @@ base class DI extends DIBase {
       group: group,
     );
     if (dep != null) {
-      final value = dep.value;
+      final value = (dep.value as TInst).cast<T, Object>();
       return value.thenOr((value) {
-        return value.constructor();
+        return value.constructor(-1);
       }).thenOr((newValue) {
         return di.reg<T>(
           dependency: dep.reassign(newValue),
@@ -381,7 +381,7 @@ base class DI extends DIBase {
     if (dep != null) {
       final value = dep.value;
       return value.thenOr((value) {
-        return (value as Inst).constructor();
+        return (value as Inst).constructor(-1);
       }).thenOr((newValue) {
         return di.regOfExactType(
           type: type,
@@ -434,26 +434,30 @@ base class DI extends DIBase {
 
   @protected
   @override
-  FutureOr<T>? getFactoryOrNull<T extends Object>({
+  FutureOr<T>? getFactoryOrNull<T extends Object, P extends Object>(
+    P params, {
     Descriptor? group,
   }) {
     return _execOrNull(
-      (di) => _getFactoryOrNull<T>(
+      (di) => _getFactoryOrNull<T, P>(
         di: di,
+        params: params,
         group: group,
       ),
     );
   }
 
-  static FutureOr<T>? _getFactoryOrNull<T extends Object>({
+  static FutureOr<T>? _getFactoryOrNull<T extends Object, P extends Object>({
     required DI di,
+    required P params,
     Descriptor? group,
   }) {
     final focusGroup = di.preferFocusGroup(group);
-    final dep = di.registry.getDependencyOrNull<T>(
+    final dep = di.registry.getDependencyOrNull<FactoryInst<T, P>>(
       group: focusGroup,
     );
-    final result = (dep?.value as FactoryInst<T>?)?.constructor();
+    final casted = (dep?.value as FactoryInst?)?.cast<T, P>();
+    final result = casted?.constructor(params);
     return result;
   }
 
@@ -461,11 +465,13 @@ base class DI extends DIBase {
   @override
   FutureOr<Object>? getFactoryOfExactTypeOrNull({
     required Descriptor type,
+    required Object params,
     Descriptor? group,
   }) {
     return _execOrNull(
       (di) => _getFactoryOfExactTypeOrNull(
         di: di,
+        params: params,
         type: type,
         group: group,
       ),
@@ -474,6 +480,7 @@ base class DI extends DIBase {
 
   static FutureOr<Object>? _getFactoryOfExactTypeOrNull({
     required DI di,
+    required Object params,
     required Descriptor type,
     Descriptor? group,
   }) {
@@ -482,7 +489,7 @@ base class DI extends DIBase {
       type: type,
       group: focusGroup,
     );
-    final result = (dep?.value as FactoryInst?)?.constructor();
+    final result = (dep?.value as FactoryInst?)?.constructor(params);
     return result;
   }
 
@@ -498,9 +505,9 @@ base class DI extends DIBase {
     final focusGroup = preferFocusGroup(group);
     final removers = [
       () => registry.removeDependency<T>(group: focusGroup),
-      () => registry.removeDependency<FutureInst<T>>(group: focusGroup),
-      () => registry.removeDependency<SingletonInst<T>>(group: focusGroup),
-      () => registry.removeDependency<FactoryInst<T>>(group: focusGroup),
+      () => registry.removeDependency<FutureInst<T, Object>>(group: focusGroup),
+      () => registry.removeDependency<SingletonInst<T, Object>>(group: focusGroup),
+      () => registry.removeDependency<FactoryInst<T, Object>>(group: focusGroup),
     ];
     for (final remover in removers) {
       final dep = remover();
@@ -518,10 +525,11 @@ base class DI extends DIBase {
   @override
   Dependency<Object> removeDependencyOfExactType({
     required Descriptor type,
+    required Descriptor paramsType,
     Descriptor? group,
   }) {
     final focusGroup = preferFocusGroup(group);
-    final removers = _associatedTypes(type: type).map(
+    final removers = _associatedTypes(type: type, paramsType: paramsType).map(
       (type) => () => registry.removeDependencyOfExactType(
             type: type,
             group: focusGroup,
@@ -563,9 +571,9 @@ base class DI extends DIBase {
     final focusGroup = di.preferFocusGroup(group);
     final getters = [
       () => di.registry.getDependencyOrNull<T>(group: focusGroup),
-      () => di.registry.getDependencyOrNull<FutureInst<T>>(group: focusGroup),
-      () => di.registry.getDependencyOrNull<SingletonInst<T>>(group: focusGroup),
-      () => di.registry.getDependencyOrNull<FactoryInst<T>>(group: focusGroup),
+      () => di.registry.getDependencyOrNull<FutureInst<T, Object>>(group: focusGroup),
+      () => di.registry.getDependencyOrNull<SingletonInst<T, Object>>(group: focusGroup),
+      () => di.registry.getDependencyOrNull<FactoryInst<T, Object>>(group: focusGroup),
     ];
     for (final getter in getters) {
       final dep = getter();
@@ -580,12 +588,14 @@ base class DI extends DIBase {
   @override
   Dependency<Object>? getDependencyOfExactTypeOrNull({
     required Descriptor type,
+    required Descriptor paramsType,
     Descriptor? group,
   }) {
     return _execOrNull(
       (di) => _getDependencyOfExactTypeOrNull(
         di: di,
         type: type,
+        paramsType: paramsType,
         group: group,
       ),
     );
@@ -594,10 +604,11 @@ base class DI extends DIBase {
   static Dependency<Object>? _getDependencyOfExactTypeOrNull({
     required DI di,
     required Descriptor type,
+    required Descriptor paramsType,
     required Descriptor? group,
   }) {
     final focusGroup = di.preferFocusGroup(group);
-    final getters = _associatedTypes(type: type).map(
+    final getters = _associatedTypes(type: type, paramsType: paramsType).map(
       (type) => () => di.registry.getDependencyOfExactTypeOrNull(
             type: type,
             group: focusGroup,
@@ -651,11 +662,12 @@ base class DI extends DIBase {
 
 Iterable<Descriptor> _associatedTypes({
   required Descriptor type,
+  required Descriptor paramsType,
 }) {
   return [
     type,
-    Descriptor.genericType<FutureInst>([type]),
-    Descriptor.genericType<SingletonInst>([type]),
-    Descriptor.genericType<FactoryInst>([type]),
+    Descriptor.genericType<FutureInst>([type, paramsType]),
+    Descriptor.genericType<SingletonInst>([type, paramsType]),
+    Descriptor.genericType<FactoryInst>([type, paramsType]),
   ];
 }
