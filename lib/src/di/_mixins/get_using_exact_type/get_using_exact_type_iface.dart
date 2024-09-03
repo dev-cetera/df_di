@@ -22,12 +22,12 @@ import '/src/_index.g.dart';
 abstract interface class GetUsingExactTypeIface {
   @protected
   FutureOr<Object> getUsingExactType({
-    required Descriptor type,
-    Descriptor? group,
+    required Id type,
+    Id? group,
   });
 
   FutureOr<Object> getUsingRuntimeType(
     Type type, {
-    Descriptor? group,
+    Id? group,
   });
 }

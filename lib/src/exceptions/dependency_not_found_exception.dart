@@ -19,6 +19,6 @@ import 'df_di_package_exception.dart';
 final class DependencyNotFoundException extends DFDIPackageException {
   DependencyNotFoundException({
     required Object type,
-    required Descriptor group,
+    required Id group,
   }) : super('Dependency of type $type in group "$group" not found.');
 }

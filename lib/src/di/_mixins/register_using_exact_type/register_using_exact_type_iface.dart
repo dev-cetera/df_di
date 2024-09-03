@@ -24,8 +24,8 @@ abstract interface class RegisterUsingExactTypeIface {
   @protected
   void registerUsingExactTypeOr(
     FutureOr<Object> value, {
-    required Descriptor type,
-    Descriptor? group,
+    required Id type,
+    Id? group,
     OnUnregisterCallback<Object>? onUnregister,
   });
 }

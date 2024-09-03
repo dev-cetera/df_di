@@ -44,7 +44,7 @@ base mixin RegisterDependencyImpl on DIBase implements RegisterDependencyIface {
 
   @override
   void registerDependencyUsingExactType({
-    required Descriptor type,
+    required Id type,
     required Dependency<Object> dependency,
     bool suppressDependencyAlreadyRegisteredException = false,
   }) {
@@ -74,7 +74,7 @@ base mixin RegisterDependencyImpl on DIBase implements RegisterDependencyIface {
   }) {
     registerDependencyUsingExactType(
       dependency: dependency,
-      type: Descriptor.type(type),
+      type: TypeId(type),
       suppressDependencyAlreadyRegisteredException: suppressDependencyAlreadyRegisteredException,
     );
   }

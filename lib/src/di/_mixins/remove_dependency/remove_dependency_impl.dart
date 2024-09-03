@@ -23,7 +23,7 @@ import '../../../_dependency.dart';
 base mixin RemoveDependencyImpl on DIBase implements RemoveDependencyIface {
   @override
   Dependency<Object> removeDependency<T extends Object>({
-    Descriptor? group,
+    Id? group,
   }) {
     final focusGroup = preferFocusGroup(group);
     final removers = [
@@ -46,16 +46,16 @@ base mixin RemoveDependencyImpl on DIBase implements RemoveDependencyIface {
 
   @override
   Dependency<Object> removeDependencyUsingExactType({
-    required Descriptor type,
-    required Descriptor paramsType,
-    Descriptor? group,
+    required Id type,
+    required Id paramsType,
+    Id? group,
   }) {
     final focusGroup = preferFocusGroup(group);
     final removers = [
       type,
-      Descriptor.genericType<FutureInst>([type, paramsType]),
-      Descriptor.genericType<SingletonInst>([type, paramsType]),
-      Descriptor.genericType<FactoryInst>([type, paramsType]),
+      GenericTypeId<FutureInst>([type, paramsType]),
+      GenericTypeId<SingletonInst>([type, paramsType]),
+      GenericTypeId<FactoryInst>([type, paramsType]),
     ].map(
       (type) => () => registry.removeDependencyUsingExactType(
             type: type,
@@ -78,12 +78,12 @@ base mixin RemoveDependencyImpl on DIBase implements RemoveDependencyIface {
   @pragma('vm:prefer-inline')
   Dependency<Object> removeDependencyOfRuntimeType({
     required Type type,
-    required Descriptor paramsType,
-    Descriptor? group,
+    required Id paramsType,
+    Id? group,
   }) {
     return removeDependencyUsingExactType(
-      type: Descriptor.type(type),
-      paramsType: Descriptor.type(Object),
+      type: TypeId(type),
+      paramsType: TypeId(Object),
       group: group,
     );
   }

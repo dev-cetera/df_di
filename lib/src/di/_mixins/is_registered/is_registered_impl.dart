@@ -22,7 +22,7 @@ import '../../_di_base.dart';
 base mixin IsRegisteredImpl on DIBase implements IsRegisteredIface {
   @override
   bool isRegistered<T extends Object>({
-    Descriptor? group,
+    Id? group,
   }) {
     final dep = getDependencyOrNull<T>(
       group: group,
@@ -33,9 +33,9 @@ base mixin IsRegisteredImpl on DIBase implements IsRegisteredIface {
 
   @override
   bool isRegisteredUsingExactType({
-    required Descriptor type,
-    required Descriptor paramsType,
-    required Descriptor group,
+    required Id type,
+    required Id paramsType,
+    required Id group,
   }) {
     final dep = getDependencyUsingExactTypeOrNull(
       type: type,
@@ -49,11 +49,11 @@ base mixin IsRegisteredImpl on DIBase implements IsRegisteredIface {
   @override
   bool isRegisteredAsRuntimeType({
     required Type type,
-    required Descriptor paramsType,
-    required Descriptor group,
+    required Id paramsType,
+    required Id group,
   }) {
     return isRegisteredUsingExactType(
-      type: Descriptor.type(type),
+      type: TypeId(type),
       paramsType: paramsType,
       group: group,
     );

@@ -22,22 +22,22 @@ abstract interface class RemoveDependencyIface {
   /// ...
   @protected
   Dependency<Object> removeDependency<T extends Object>({
-    Descriptor? group,
+    Id? group,
   });
 
   /// ...
   @protected
   Dependency<Object> removeDependencyUsingExactType({
-    required Descriptor type,
-    required Descriptor paramsType,
-    Descriptor? group,
+    required Id type,
+    required Id paramsType,
+    Id? group,
   });
 
   /// ...
   @protected
   Dependency<Object> removeDependencyOfRuntimeType({
     required Type type,
-    required Descriptor paramsType,
-    Descriptor? group,
+    required Id paramsType,
+    Id? group,
   });
 }

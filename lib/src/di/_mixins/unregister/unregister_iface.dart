@@ -28,22 +28,22 @@ abstract interface class UnregisterIface {
   });
 
   /// Unregisters a dependency registered under type [T] and the
-  /// specified [group], or under [Descriptor.defaultId] if no group is provided.
+  /// specified [group], or under [Id.defaultId] if no group is provided.
   ///
   /// - Throws [DependencyNotFoundException] if the dependency is not found.
   FutureOr<void> unregister<T extends Object>({
-    Descriptor? group,
+    Id? group,
   });
 
   FutureOr<void> unregisterUsingExactType({
-    required Descriptor type,
-    required Descriptor paramsType,
-    Descriptor? group,
+    required Id type,
+    required Id paramsType,
+    Id? group,
   });
 
   FutureOr<void> unregisterUsingRuntimeType({
     required Type type,
-    required Descriptor paramsType,
-    Descriptor? group,
+    required Id paramsType,
+    Id? group,
   });
 }

@@ -19,11 +19,11 @@ import '/src/_index.g.dart';
 @internal
 abstract interface class ChildIface {
   void registerChild({
-    Descriptor? group,
-    Descriptor? childGroup,
+    Id? group,
+    Id? childGroup,
   });
 
-  DI getChild({Descriptor? group});
+  DI getChild({Id? group});
 
-  void unregisterChild({Descriptor? group});
+  void unregisterChild({Id? group});
 }

@@ -23,8 +23,8 @@ base mixin ChildImpl on DIBase implements ChildIface {
   @override
   @pragma('vm:prefer-inline')
   void registerChild({
-    Descriptor? group,
-    Descriptor? childGroup,
+    Id? group,
+    Id? childGroup,
   }) {
     registerLazySingleton<DI>(
       (_) => DI(focusGroup: childGroup, parent: this),
@@ -35,9 +35,9 @@ base mixin ChildImpl on DIBase implements ChildIface {
 
   @override
   @pragma('vm:prefer-inline')
-  DI getChild({Descriptor? group}) => getSync<DI>(group: group);
+  DI getChild({Id? group}) => getSync<DI>(group: group);
 
   @override
   @pragma('vm:prefer-inline')
-  void unregisterChild({Descriptor? group}) => unregister<DI>(group: group);
+  void unregisterChild({Id? group}) => unregister<DI>(group: group);
 }

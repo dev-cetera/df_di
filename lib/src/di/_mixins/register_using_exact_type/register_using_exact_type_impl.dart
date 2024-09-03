@@ -25,8 +25,8 @@ import '../../_di_base.dart';
 base mixin RegisterUsingExactTypeImpl on DIBase implements RegisterUsingExactTypeIface {
   void _register(
     FutureOr<Object> value, {
-    required Descriptor type,
-    Descriptor? group,
+    required Id type,
+    Id? group,
     OnUnregisterCallback<Object>? onUnregister,
     GetDependencyCondition? condition,
   }) {

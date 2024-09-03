@@ -22,13 +22,13 @@ import '../../_di_base.dart';
 base mixin FocusGroupImpl on DIBase implements FocusGroupIface {
   @override
   @pragma('vm:prefer-inline')
-  void setFocusGroup(Descriptor group) => focusGroup = group;
+  void setFocusGroup(Id group) => focusGroup = group;
 
   @override
   @pragma('vm:prefer-inline')
-  Descriptor getFocusGroup() => focusGroup;
+  Id getFocusGroup() => focusGroup;
 
   @override
   @pragma('vm:prefer-inline')
-  Descriptor preferFocusGroup(Descriptor? group) => group ?? focusGroup;
+  Id preferFocusGroup(Id? group) => group ?? focusGroup;
 }

@@ -25,7 +25,7 @@ import '/src/_index.g.dart';
 final class Dependency<T extends Object> {
   final T value;
   final Type type;
-  final Descriptor group;
+  final Id group;
   final Type registrationType;
   final int registrationIndex;
   final GetDependencyCondition? condition;

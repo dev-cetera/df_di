@@ -23,42 +23,42 @@ abstract interface class GetIface {
   /// A shorthand for [getSync], allowing retrieval of a dependency using
   /// call syntax.
   T call<T extends Object>({
-    Descriptor? group,
+    Id? group,
   });
 
   /// Gets via [getSync] using [T] and [group] or `null` upon any error,
   /// including but not limited to [TypeError] and
   /// [DependencyNotFoundException].
   T? getSyncOrNull<T extends Object>({
-    Descriptor? group,
+    Id? group,
   });
 
   /// Gets via [get] using [T] and [group], then and casts the result to [T].
   ///
   /// Throws [TypeError] if this result is a [Future].
   T getSync<T extends Object>({
-    Descriptor? group,
+    Id? group,
   });
 
   /// Gets via [getAsync] using [T] and [group] or `null` upon any error.
   Future<T>? getAsyncOrNull<T extends Object>({
-    Descriptor? group,
+    Id? group,
   });
 
   /// Gets via [get] using [T] and [group], then and casts the result to [Future]
   /// of [T].
   Future<T> getAsync<T extends Object>({
-    Descriptor? group,
+    Id? group,
   });
 
   /// Gets via [get] using [T] and [group] or `null` upon any error,
   /// including but not limited to [DependencyNotFoundException].
   FutureOr<T?> getOrNull<T extends Object>({
-    Descriptor? group,
+    Id? group,
   });
 
   /// Gets a dependency as either a [Future] or an instance of [T] registered
-  /// under the type [T] and the specified [group], or under [Descriptor.defaultId]
+  /// under the type [T] and the specified [group], or under [Id.defaultId]
   /// if no group is provided.
   ///
   /// If the dependency was registered as a lazy singleton via [registerLazySingleton]
@@ -71,6 +71,6 @@ abstract interface class GetIface {
   /// - Throws [DependencyNotFoundException] if the requested dependency cannot
   /// be found.
   FutureOr<T> get<T extends Object>({
-    Descriptor? group,
+    Id? group,
   });
 }

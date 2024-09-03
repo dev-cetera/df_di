@@ -19,6 +19,6 @@ import 'df_di_package_exception.dart';
 final class DependencyAlreadyRegisteredException extends DFDIPackageException {
   DependencyAlreadyRegisteredException({
     required Object type,
-    required Descriptor group,
+    required Id group,
   }) : super('Dependency of type $type in group $group is already registered.');
 }

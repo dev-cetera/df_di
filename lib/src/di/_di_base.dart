@@ -59,10 +59,10 @@ abstract base class DIBase
   final DIBase? parent;
 
   DIBase({
-    Descriptor? focusGroup = Descriptor.defaultGroup,
+    Id? focusGroup = Id.defaultGroup,
     this.parent,
-  }) : focusGroup = focusGroup ?? Descriptor.defaultGroup;
+  }) : focusGroup = focusGroup ?? Id.defaultGroup;
 
   @override
-  Descriptor focusGroup;
+  Id focusGroup;
 }

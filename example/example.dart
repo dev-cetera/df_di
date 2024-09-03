@@ -52,7 +52,7 @@ void main() async {
 
   di.registerLazySingletonService(CountingService.new);
   print(di.registry.state);
-  final coutingService = di.getUsingExactType(type: Descriptor.type(CountingService));
+  final coutingService = di.getUsingExactType(type: TypeId(CountingService));
   print(di.registry.state);
   print(coutingService);
 

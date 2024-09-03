@@ -29,14 +29,14 @@ base mixin GetImpl on DIBase implements GetIface {
   @override
   @pragma('vm:prefer-inline')
   T call<T extends Object>({
-    Descriptor? group,
+    Id? group,
   }) {
     return getSync<T>(group: group);
   }
 
   @override
   T? getSyncOrNull<T extends Object>({
-    Descriptor? group,
+    Id? group,
   }) {
     final focusGroup = preferFocusGroup(group);
     final registered = isRegistered<T>(
@@ -52,7 +52,7 @@ base mixin GetImpl on DIBase implements GetIface {
 
   @override
   T getSync<T extends Object>({
-    Descriptor? group,
+    Id? group,
   }) {
     final value = get<T>(group: group);
     if (value is Future<T>) {
@@ -63,7 +63,7 @@ base mixin GetImpl on DIBase implements GetIface {
 
   @override
   Future<T>? getAsyncOrNull<T extends Object>({
-    Descriptor? group,
+    Id? group,
   }) {
     final focusGroup = preferFocusGroup(group);
     final registered = isRegistered<T>(
@@ -79,7 +79,7 @@ base mixin GetImpl on DIBase implements GetIface {
 
   @override
   Future<T> getAsync<T extends Object>({
-    Descriptor? group,
+    Id? group,
   }) async {
     final value = await get<T>(group: group);
     return value;
@@ -87,7 +87,7 @@ base mixin GetImpl on DIBase implements GetIface {
 
   @override
   FutureOr<T?> getOrNull<T extends Object>({
-    Descriptor? group,
+    Id? group,
   }) {
     final focusGroup = preferFocusGroup(group);
     final registered = isRegistered<T>(
@@ -101,7 +101,7 @@ base mixin GetImpl on DIBase implements GetIface {
 
   @override
   FutureOr<T> get<T extends Object>({
-    Descriptor? group,
+    Id? group,
   }) {
     final dep = _get<T>(group: group);
     return dep.thenOr((dep) {
@@ -116,7 +116,7 @@ base mixin GetImpl on DIBase implements GetIface {
 
   @protected
   FutureOr<Dependency<T>> _get<T extends Object>({
-    Descriptor? group,
+    Id? group,
   }) {
     final focusGroup = preferFocusGroup(group);
     final result = getFirstNonNull(
@@ -139,7 +139,7 @@ base mixin GetImpl on DIBase implements GetIface {
 
 FutureOr<Dependency<T>>? _getInternal<T extends Object>({
   required DI di,
-  required Descriptor group,
+  required Id group,
 }) {
   // Sync types.
   {
@@ -175,7 +175,7 @@ FutureOr<Dependency<T>>? _getInternal<T extends Object>({
 
 FutureOr<Dependency<T>>? _inst<T extends Object, TInst extends Inst<T, Object>>({
   required DI di,
-  required Descriptor group,
+  required Id group,
 }) {
   final dep = di.registry.getDependencyOrNull<TInst>(
     group: group,

@@ -28,7 +28,7 @@ base mixin RegisterImpl on DIBase implements RegisterIface {
   @override
   void register<T extends Object>(
     FutureOr<T> value, {
-    Descriptor? group,
+    Id? group,
     OnUnregisterCallback<T>? onUnregister,
   }) {
     _register(
@@ -41,7 +41,7 @@ base mixin RegisterImpl on DIBase implements RegisterIface {
   @override
   void registerLazySingletonService<T extends Service<Object>>(
     Constructor<T> constructor, {
-    Descriptor? group,
+    Id? group,
   }) {
     registerLazySingleton(
       (params) => constructor().thenOr((e) => e.initService(params).thenOr((_) => e)),
@@ -60,7 +60,7 @@ base mixin RegisterImpl on DIBase implements RegisterIface {
   @override
   void registerFactoryService<T extends Service<P>, P extends Object>(
     Constructor<T> constructor, {
-    Descriptor? group,
+    Id? group,
   }) {
     registerFactory<T, P>(
       (params) => constructor().thenOr((e) => e.initService(params).thenOr((_) => e)),
@@ -72,7 +72,7 @@ base mixin RegisterImpl on DIBase implements RegisterIface {
   @pragma('vm:prefer-inline')
   void registerLazySingleton<T extends Object>(
     InstConstructor<T, Object> constructor, {
-    Descriptor? group,
+    Id? group,
     OnUnregisterCallback<T>? onUnregister,
   }) {
     _register(
@@ -86,7 +86,7 @@ base mixin RegisterImpl on DIBase implements RegisterIface {
   @pragma('vm:prefer-inline')
   void registerFactory<T extends Object, P extends Object>(
     InstConstructor<T, P> constructor, {
-    Descriptor? group,
+    Id? group,
   }) {
     _register(
       FactoryInst<T, P>(constructor),
@@ -96,7 +96,7 @@ base mixin RegisterImpl on DIBase implements RegisterIface {
 
   void _register<T extends Object, R extends Object>(
     FutureOr<T> value, {
-    Descriptor? group,
+    Id? group,
     OnUnregisterCallback<R>? onUnregister,
     GetDependencyCondition? condition,
   }) {

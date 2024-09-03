@@ -25,7 +25,7 @@ import '../../../_dependency.dart';
 base mixin GetDependencyImpl on DIBase implements GetDependencyIface {
   @override
   Dependency<Object> getDependency<T extends Object>({
-    Descriptor? group,
+    Id? group,
   }) {
     final focusGroup = preferFocusGroup(group);
     final dep = getDependencyOrNull<T>(
@@ -43,9 +43,9 @@ base mixin GetDependencyImpl on DIBase implements GetDependencyIface {
 
   @override
   Dependency<Object> getDependencyUsingExactType({
-    required Descriptor type,
-    required Descriptor paramsType,
-    required Descriptor group,
+    required Id type,
+    required Id paramsType,
+    required Id group,
   }) {
     final dep = getDependencyUsingExactTypeOrNull(
       type: type,
@@ -64,7 +64,7 @@ base mixin GetDependencyImpl on DIBase implements GetDependencyIface {
 
   @override
   Dependency<Object>? getDependencyOrNull<T extends Object>({
-    Descriptor? group,
+    Id? group,
   }) {
     return getFirstNonNull(
       child: this,
@@ -78,9 +78,9 @@ base mixin GetDependencyImpl on DIBase implements GetDependencyIface {
 
   @override
   Dependency<Object>? getDependencyUsingExactTypeOrNull({
-    required Descriptor type,
-    required Descriptor paramsType,
-    Descriptor? group,
+    required Id type,
+    required Id paramsType,
+    Id? group,
   }) {
     return getFirstNonNull(
       child: this,
@@ -98,11 +98,11 @@ base mixin GetDependencyImpl on DIBase implements GetDependencyIface {
   @pragma('vm:prefer-inline')
   Dependency<Object> getDependencyUsingRuntimeType({
     required Type type,
-    required Descriptor paramsType,
-    required Descriptor group,
+    required Id paramsType,
+    required Id group,
   }) {
     return getDependencyUsingExactType(
-      type: Descriptor.type(type),
+      type: TypeId(type),
       paramsType: paramsType,
       group: group,
     );
@@ -112,11 +112,11 @@ base mixin GetDependencyImpl on DIBase implements GetDependencyIface {
   @override
   Dependency<Object>? getDependencyUsingRuntimeTypeOrNull({
     required Type type,
-    required Descriptor paramsType,
-    Descriptor? group,
+    required Id paramsType,
+    Id? group,
   }) {
     return getDependencyUsingExactTypeOrNull(
-      type: Descriptor.type(type),
+      type: TypeId(type),
       paramsType: paramsType,
       group: group,
     );
@@ -125,7 +125,7 @@ base mixin GetDependencyImpl on DIBase implements GetDependencyIface {
 
 Dependency<Object>? _getDependencyOrNull<T extends Object>({
   required DI di,
-  required Descriptor? group,
+  required Id? group,
 }) {
   final focusGroup = di.preferFocusGroup(group);
   final getters = [
@@ -145,16 +145,16 @@ Dependency<Object>? _getDependencyOrNull<T extends Object>({
 
 Dependency<Object>? _getDependencyUsingExactTypeOrNull({
   required DI di,
-  required Descriptor type,
-  required Descriptor paramsType,
-  required Descriptor? group,
+  required Id type,
+  required Id paramsType,
+  required Id? group,
 }) {
   final focusGroup = di.preferFocusGroup(group);
   final getters = [
     type,
-    Descriptor.genericType<FutureInst>([type, paramsType]),
-    Descriptor.genericType<SingletonInst>([type, paramsType]),
-    Descriptor.genericType<FactoryInst>([type, paramsType]),
+    GenericTypeId<FutureInst>([type, paramsType]),
+    GenericTypeId<SingletonInst>([type, paramsType]),
+    GenericTypeId<FactoryInst>([type, paramsType]),
   ].map(
     (type) => () => di.registry.getDependencyUsingExactTypeOrNull(
           type: type,

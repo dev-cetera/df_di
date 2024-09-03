@@ -28,8 +28,8 @@ import '../../../_dependency.dart';
 base mixin GetUsingExactTypeImpl on DIBase implements GetUsingExactTypeIface {
   @override
   FutureOr<Object> getUsingExactType({
-    required Descriptor type,
-    Descriptor? group,
+    required Id type,
+    Id? group,
   }) {
     final dep = _get(type: type, group: group);
     return dep.thenOr((dep) {
@@ -45,18 +45,18 @@ base mixin GetUsingExactTypeImpl on DIBase implements GetUsingExactTypeIface {
   @override
   FutureOr<Object> getUsingRuntimeType(
     Type type, {
-    Descriptor? group,
+    Id? group,
   }) {
     return getUsingExactType(
-      type: Descriptor.type(type),
+      type: TypeId(type),
       group: group,
     );
   }
 
   @protected
   FutureOr<Dependency<Object>> _get({
-    required Descriptor type,
-    Descriptor? group,
+    required Id type,
+    Id? group,
   }) {
     final focusGroup = preferFocusGroup(group);
     final result = getFirstNonNull(
@@ -82,8 +82,8 @@ base mixin GetUsingExactTypeImpl on DIBase implements GetUsingExactTypeIface {
 
 FutureOr<Dependency<Object>>? _getInternal({
   required DI di,
-  required Descriptor type,
-  required Descriptor group,
+  required Id type,
+  required Id group,
 }) {
   // Sync types.
   {
@@ -97,7 +97,7 @@ FutureOr<Dependency<Object>>? _getInternal({
   }
   // Future types.
   {
-    final genericType = Descriptor.genericType<FutureInst>([type, Descriptor.type(Object)]);
+    final genericType = GenericTypeId<FutureInst>([type, TypeId(Object)]);
     final res = _inst(
       di: di,
       type: type,
@@ -110,7 +110,7 @@ FutureOr<Dependency<Object>>? _getInternal({
   }
   // Singleton types.
   {
-    final genericType = Descriptor.genericType<SingletonInst>([type, Descriptor.type(Object)]);
+    final genericType = GenericTypeId<SingletonInst>([type, TypeId(Object)]);
     final res = _inst(
       di: di,
       type: type,
@@ -128,9 +128,9 @@ FutureOr<Dependency<Object>>? _getInternal({
 
 FutureOr<Dependency<Object>>? _inst({
   required DI di,
-  required Descriptor type,
-  required Descriptor genericType,
-  required Descriptor group,
+  required Id type,
+  required Id genericType,
+  required Id group,
 }) {
   final dep = di.registry.getDependencyUsingExactTypeOrNull(
     type: genericType,

@@ -27,7 +27,7 @@ base mixin GetFactoryImpl on DIBase implements GetFactoryIface {
   @override
   FutureOr<T> getFactory<T extends Object, P extends Object>(
     P params, {
-    Descriptor? group,
+    Id? group,
   }) {
     final focusGroup = preferFocusGroup(group);
     final result = getFactoryOrNull<T, P>(params, group: focusGroup);
@@ -43,7 +43,7 @@ base mixin GetFactoryImpl on DIBase implements GetFactoryIface {
   @override
   FutureOr<T>? getFactoryOrNull<T extends Object, P extends Object>(
     P params, {
-    Descriptor? group,
+    Id? group,
   }) {
     return getFirstNonNull(
       child: this,
@@ -58,9 +58,9 @@ base mixin GetFactoryImpl on DIBase implements GetFactoryIface {
 
   @override
   FutureOr<Object> getFactoryUsingExactType({
-    required Descriptor type,
+    required Id type,
     required Object params,
-    Descriptor? group,
+    Id? group,
   }) {
     final focusGroup = preferFocusGroup(group);
     final result = getFactoryUsingExactTypeOrNull(
@@ -82,19 +82,19 @@ base mixin GetFactoryImpl on DIBase implements GetFactoryIface {
   FutureOr<Object> getFactoryUsingRuntimeType({
     required Type type,
     required Object params,
-    Descriptor? group,
+    Id? group,
   }) {
     return getFactoryUsingExactType(
-      type: Descriptor.type(type),
+      type: TypeId(type),
       params: params,
     );
   }
 
   @override
   FutureOr<Object>? getFactoryUsingExactTypeOrNull({
-    required Descriptor type,
+    required Id type,
     required Object params,
-    Descriptor? group,
+    Id? group,
   }) {
     return getFirstNonNull(
       child: this,
@@ -113,10 +113,10 @@ base mixin GetFactoryImpl on DIBase implements GetFactoryIface {
   FutureOr<Object>? getFactoryUsingRuntimeTypeOrNull({
     required Type type,
     required Object params,
-    Descriptor? group,
+    Id? group,
   }) {
     return getFactoryUsingExactTypeOrNull(
-      type: Descriptor.type(type),
+      type: TypeId(type),
       params: params,
     );
   }
@@ -125,7 +125,7 @@ base mixin GetFactoryImpl on DIBase implements GetFactoryIface {
 FutureOr<T>? _getFactoryOrNull<T extends Object, P extends Object>({
   required DI di,
   required P params,
-  Descriptor? group,
+  Id? group,
 }) {
   final focusGroup = di.preferFocusGroup(group);
   final dep = di.registry.getDependencyOrNull<FactoryInst<T, P>>(
@@ -139,8 +139,8 @@ FutureOr<T>? _getFactoryOrNull<T extends Object, P extends Object>({
 FutureOr<Object>? _getFactoryUsingExactTypeOrNull({
   required DI di,
   required Object params,
-  required Descriptor type,
-  Descriptor? group,
+  required Id type,
+  Id? group,
 }) {
   final focusGroup = di.preferFocusGroup(group);
   final dep = di.registry.getDependencyUsingExactTypeOrNull(

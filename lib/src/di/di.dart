@@ -50,23 +50,23 @@ base class DI extends DIBase
   /// Default app group.
   static final app = DI.instantiate(
     onInstantiate: (di) {
-      di.registerChild(group: Descriptor.globalGroup);
-      di.registerChild(group: Descriptor.sessionGroup);
-      di.registerChild(group: Descriptor.devGroup);
-      di.registerChild(group: Descriptor.prodGroup);
-      di.registerChild(group: Descriptor.testGroup);
+      di.registerChild(group: Id.globalGroup);
+      di.registerChild(group: Id.sessionGroup);
+      di.registerChild(group: Id.devGroup);
+      di.registerChild(group: Id.prodGroup);
+      di.registerChild(group: Id.testGroup);
     },
   );
 
   /// Default global group.
-  static DI get global => app.getChild(group: Descriptor.globalGroup);
-  static DI get session => app.getChild(group: Descriptor.sessionGroup);
-  static DI get dev => app.getChild(group: Descriptor.devGroup);
-  static DI get prod => app.getChild(group: Descriptor.prodGroup);
-  static DI get test => app.getChild(group: Descriptor.testGroup);
+  static DI get global => app.getChild(group: Id.globalGroup);
+  static DI get session => app.getChild(group: Id.sessionGroup);
+  static DI get dev => app.getChild(group: Id.devGroup);
+  static DI get prod => app.getChild(group: Id.prodGroup);
+  static DI get test => app.getChild(group: Id.testGroup);
 
   factory DI.instantiate({
-    Descriptor<Object>? focusGroup = Descriptor.defaultGroup,
+    Id<Object>? focusGroup = Id.defaultGroup,
     DI? parent,
     void Function(DI di)? onInstantiate,
   }) {
@@ -78,5 +78,3 @@ base class DI extends DIBase
     return instance;
   }
 }
-
-

@@ -26,7 +26,7 @@ class Inst<T extends Object, P extends Object> {
   final InstConstructor<T, P> constructor;
 
   /// The type of the objects created by this inst.
-  Descriptor get type => Descriptor.type(T);
+  Id get type => TypeId(T);
 
   @override
   String toString() {

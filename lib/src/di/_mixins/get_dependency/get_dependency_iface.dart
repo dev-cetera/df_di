@@ -21,39 +21,39 @@ import '../../../_dependency.dart';
 abstract interface class GetDependencyIface {
   @protected
   Dependency<Object> getDependency<T extends Object>({
-    Descriptor? group,
+    Id? group,
   });
 
   @protected
   Dependency<Object> getDependencyUsingExactType({
-    required Descriptor type,
-    required Descriptor paramsType,
-    required Descriptor group,
+    required Id type,
+    required Id paramsType,
+    required Id group,
   });
 
   @protected
   Dependency<Object>? getDependencyOrNull<T extends Object>({
-    Descriptor? group,
+    Id? group,
   });
 
   @protected
   Dependency<Object>? getDependencyUsingExactTypeOrNull({
-    required Descriptor type,
-    required Descriptor paramsType,
-    Descriptor? group,
+    required Id type,
+    required Id paramsType,
+    Id? group,
   });
 
   @protected
   Dependency<Object> getDependencyUsingRuntimeType({
     required Type type,
-    required Descriptor paramsType,
-    required Descriptor group,
+    required Id paramsType,
+    required Id group,
   });
 
   @protected
   Dependency<Object>? getDependencyUsingRuntimeTypeOrNull({
     required Type type,
-    required Descriptor paramsType,
-    Descriptor? group,
+    required Id paramsType,
+    Id? group,
   });
 }

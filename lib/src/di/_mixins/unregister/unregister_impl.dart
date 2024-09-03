@@ -46,20 +46,20 @@ base mixin UnregisterImpl on DIBase implements UnregisterIface {
 
   @override
   FutureOr<void> unregister<T extends Object>({
-    Descriptor? group,
+    Id? group,
   }) {
     return unregisterUsingExactType(
-      type: Descriptor.type(T),
-      paramsType: Descriptor.type(Object),
+      type: TypeId(T),
+      paramsType: TypeId(Object),
       group: group,
     );
   }
 
   @override
   FutureOr<void> unregisterUsingExactType({
-    required Descriptor type,
-    required Descriptor paramsType,
-    Descriptor? group,
+    required Id type,
+    required Id paramsType,
+    Id? group,
   }) {
     final dep = removeDependencyUsingExactType(
       type: type,
@@ -72,11 +72,11 @@ base mixin UnregisterImpl on DIBase implements UnregisterIface {
   @override
   FutureOr<void> unregisterUsingRuntimeType({
     required Type type,
-    required Descriptor paramsType,
-    Descriptor? group,
+    required Id paramsType,
+    Id? group,
   }) {
     return unregisterUsingExactType(
-      type: Descriptor.type(type),
+      type: TypeId(type),
       paramsType: paramsType,
       group: group,
     );

@@ -26,7 +26,7 @@ abstract base class TypeSafeRegistryBase {
   ///
   /// Returns `null` if no matching dependency is found.
   Dependency<Object>? getDependencyOrNull<T extends Object>({
-    required Descriptor group,
+    required Id group,
   }) {
     final deps = getDependenciesByKey(group: group);
     return deps.where((e) {
@@ -39,16 +39,16 @@ abstract base class TypeSafeRegistryBase {
   ///
   /// Returns `null` if no matching dependency is found.
   Dependency<Object>? getDependencyUsingExactTypeOrNull({
-    required Descriptor type,
-    required Descriptor group,
+    required Id type,
+    required Id group,
   }) {
     final deps = getDependenciesByKey(group: group);
-    return deps.where((e) => Descriptor.type(e.type) == type).firstOrNull?.cast();
+    return deps.where((e) => TypeId(e.type) == type).firstOrNull?.cast();
   }
 
   /// Retrieves all dependencies associated with the specified [group].
   Iterable<Dependency<Object>> getDependenciesByKey({
-    required Descriptor group,
+    required Id group,
   });
 
   //
@@ -61,7 +61,7 @@ abstract base class TypeSafeRegistryBase {
     required Dependency<T> value,
   }) {
     setDependencyUsingExactType(
-      type: Descriptor.type(T),
+      type: TypeId(T),
       value: value,
     );
   }
@@ -69,7 +69,7 @@ abstract base class TypeSafeRegistryBase {
   /// Adds or overwrites the dependency of the exact [type] with the specified
   /// [value].
   void setDependencyUsingExactType({
-    required Descriptor type,
+    required Id type,
     required Dependency<Object> value,
   });
 
@@ -82,12 +82,12 @@ abstract base class TypeSafeRegistryBase {
   ///
   /// Returns the removed value, or `null` if it does not exist.
   Dependency<T>? removeDependency<T extends Object>({
-    required Descriptor group,
+    required Id group,
   }) {
     final dep = getDependencyOrNull<T>(group: group);
     if (dep != null) {
       final removed = removeDependencyUsingExactType(
-        type: Descriptor.type(dep.type),
+        type: TypeId(dep.type),
         group: group,
       );
       return removed?.cast();
@@ -100,8 +100,8 @@ abstract base class TypeSafeRegistryBase {
   ///
   /// Returns the removed value, or `null` if it does not exist.
   Dependency<Object>? removeDependencyUsingExactType({
-    required Descriptor type,
-    required Descriptor group,
+    required Id type,
+    required Id group,
   });
 
   //
@@ -110,8 +110,8 @@ abstract base class TypeSafeRegistryBase {
 
   @pragma('vm:prefer-inline')
   bool containsDependencyUsingExactType({
-    required Descriptor type,
-    required Descriptor group,
+    required Id type,
+    required Id group,
   }) {
     return getDependencyUsingExactTypeOrNull(type: type, group: group) != null;
   }
@@ -127,25 +127,25 @@ abstract base class TypeSafeRegistryBase {
 
   @pragma('vm:prefer-inline')
   Iterable<Dependency<Object>> getAllDependenciesByKey({
-    required Descriptor group,
+    required Id group,
   }) {
     return getDependencyMapByKey(group: group)?.values ?? const Iterable.empty();
   }
 
   /// Sets the map of dependencies for a given [group].
   void setDependencyMapByKey({
-    required Descriptor group,
+    required Id group,
     required DependencyMap value,
   });
 
   /// ...
   DependencyMap<Object>? getDependencyMapByKey({
-    required Descriptor group,
+    required Id group,
   });
 
   /// ...
   void removeDependencyMapUsingExactType({
-    required Descriptor type,
+    required Id type,
   });
 
   /// Clears all registered dependencies.
@@ -157,8 +157,8 @@ abstract base class TypeSafeRegistryBase {
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-/// A map of [Dependency], grouped by [Descriptor].
-typedef DependencyMap<T extends Object> = Map<Descriptor, Dependency<T>>;
+/// A map of [Dependency], grouped by [Id].
+typedef DependencyMap<T extends Object> = Map<Id, Dependency<T>>;
 
-/// A map of [Dependency], grouped by [Descriptor] and [Descriptor].
-typedef TypeSafeRegistryMap = Map<Descriptor, DependencyMap<Object>>;
+/// A map of [Dependency], grouped by [Id] and [Id].
+typedef TypeSafeRegistryMap = Map<Id, DependencyMap<Object>>;
