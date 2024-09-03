@@ -50,6 +50,12 @@ base class DI extends DIBase {
   /// there's a specific need for a separate instance.
   DI({super.focusGroup});
 
+  @protected
+  DI.internal({
+    super.focusGroup,
+    super.parent,
+  });
+
   //
   //
   //
@@ -98,6 +104,7 @@ base class DI extends DIBase {
     FutureOr<T> value, {
     Identifier? group,
     OnUnregisterCallback<R>? onUnregister,
+    GetDependencyCondition? condition,
   }) {
     final focusGroup = preferFocusGroup(group);
     if (value is T) {
@@ -107,6 +114,7 @@ base class DI extends DIBase {
           registrationIndex: _registrationCount++,
           group: focusGroup,
           onUnregister: onUnregister != null ? (e) => e is R ? onUnregister(e) : null : null,
+          condition: condition,
         ),
       );
     } else {
@@ -116,6 +124,7 @@ base class DI extends DIBase {
           registrationIndex: _registrationCount++,
           group: focusGroup,
           onUnregister: onUnregister != null ? (e) => e is R ? onUnregister(e) : null : null,
+          condition: condition,
         ),
       );
     }
@@ -127,6 +136,7 @@ base class DI extends DIBase {
     FutureOr<T> value, {
     Identifier? group,
     OnUnregisterCallback<R>? onUnregister,
+    GetDependencyCondition? condition,
   }) {
     final focusGroup = preferFocusGroup(group);
     if (value is T) {
@@ -137,6 +147,7 @@ base class DI extends DIBase {
           registrationIndex: _registrationCount++,
           group: focusGroup,
           onUnregister: onUnregister != null ? (e) => e is R ? onUnregister(e) : null : null,
+          condition: condition,
         ),
       );
     } else {
@@ -147,6 +158,7 @@ base class DI extends DIBase {
           registrationIndex: _registrationCount++,
           group: focusGroup,
           onUnregister: onUnregister != null ? (e) => e is R ? onUnregister(e) : null : null,
+          condition: condition,
         ),
       );
     }
@@ -158,34 +170,43 @@ base class DI extends DIBase {
 
   @protected
   @override
-  FutureOr<T> get<T extends Object>({
+  FutureOr<Dependency<T>> getInternal<T extends Object>({
     Identifier? group,
   }) {
     final focusGroup = preferFocusGroup(group);
+    final result = _execOrNull(
+      (di) => _getInternal<T>(
+        di: di,
+        group: focusGroup,
+      ),
+    );
+    if (result == null) {
+      throw DependencyNotFoundException(
+        type: T,
+        group: focusGroup,
+      );
+    }
+    return result;
+  }
+
+  static FutureOr<Dependency<T>> _getInternal<T extends Object>({
+    required DI di,
+    required Identifier group,
+  }) {
     // Sync types.
     {
-      final dep = registry.getDependencyOrNull<T>(
-        group: focusGroup,
+      final dep = di.registry.getDependencyOrNull<T>(
+        group: group,
       );
       if (dep != null) {
-        final res = dep.value;
-        return res;
+        return dep;
       }
     }
-    // Factory types.
-    {
-      final res = getFactoryOrNull<T>(
-        group: focusGroup,
-      );
-      if (res != null) {
-        return res;
-      }
-    }
-
     // Future types.
     {
       final res = _inst<T, FutureInst<T>>(
-        group: focusGroup,
+        di: di,
+        group: group,
       );
       if (res != null) {
         return res;
@@ -194,7 +215,8 @@ base class DI extends DIBase {
     // Singleton types.
     {
       final res = _inst<T, SingletonInst<T>>(
-        group: focusGroup,
+        di: di,
+        group: group,
       );
       if (res != null) {
         return res;
@@ -203,33 +225,33 @@ base class DI extends DIBase {
 
     throw DependencyNotFoundException(
       type: T,
-      group: focusGroup,
+      group: group,
     );
   }
 
-  FutureOr<T>? _inst<T extends Object, TInst extends Inst<T>>({
-    Identifier? group,
+  static FutureOr<Dependency<T>>? _inst<T extends Object, TInst extends Inst<T>>({
+    required DI di,
+    required Identifier group,
   }) {
-    final focusGroup = preferFocusGroup(group);
-    final dep = registry.getDependencyOrNull<TInst>(
-      group: focusGroup,
+    final dep = di.registry.getDependencyOrNull<TInst>(
+      group: group,
     );
     if (dep != null) {
       final value = dep.value;
       return value.thenOr((value) {
         return value.constructor();
       }).thenOr((newValue) {
-        return reg<T>(
+        return di.reg<T>(
           dependency: dep.reassign(newValue),
           suppressDependencyAlreadyRegisteredException: true,
         );
       }).thenOr((_) {
-        return registry.removeDependency<TInst>(
-          group: focusGroup,
+        return di.registry.removeDependency<TInst>(
+          group: group,
         );
       }).thenOr((_) {
-        return get<T>(
-          group: focusGroup,
+        return di.getInternal<T>(
+          group: group,
         );
       });
     }
@@ -264,41 +286,50 @@ base class DI extends DIBase {
 
   @protected
   @override
-  FutureOr<Object> getOfExactType({
+  FutureOr<Dependency<Object>> getOfExactTypeInternal({
     required Identifier type,
     Identifier? group,
   }) {
     final focusGroup = preferFocusGroup(group);
-    // Sync types.
-    {
-      final dep = registry.getDependencyOfExactTypeOrNull(
+    final result = _execOrNull(
+      (di) => _getOfExactTypeInternal(
+        di: di,
+        type: type,
+        group: focusGroup,
+      ),
+    );
+    if (result == null) {
+      throw DependencyNotFoundException(
         type: type,
         group: focusGroup,
       );
-      if (dep != null) {
-        final res = dep.value;
-        return res;
-      }
     }
-    // Factory types.
-    {
-      final genericType = Identifier.genericTypeId<FactoryInst>([type]);
-      final res = getFactoryOfExactTypeOrNull(
-        type: genericType,
-        group: focusGroup,
-      );
-      if (res != null) {
-        return res;
-      }
-    }
+    return result;
+  }
 
+  static FutureOr<Dependency<Object>>? _getOfExactTypeInternal({
+    required DI di,
+    required Identifier type,
+    required Identifier group,
+  }) {
+    // Sync types.
+    {
+      final dep = di.registry.getDependencyOfExactTypeOrNull(
+        type: type,
+        group: group,
+      );
+      if (dep != null) {
+        return dep;
+      }
+    }
     // Future types.
     {
       final genericType = Identifier.genericTypeId<FutureInst>([type]);
       final res = _instExactType(
+        di: di,
         type: type,
         genericType: genericType,
-        group: focusGroup,
+        group: group,
       );
       if (res != null) {
         return res;
@@ -308,50 +339,47 @@ base class DI extends DIBase {
     {
       final genericType = Identifier.genericTypeId<SingletonInst>([type]);
       final res = _instExactType(
+        di: di,
         type: type,
         genericType: genericType,
-        group: focusGroup,
+        group: group,
       );
       if (res != null) {
         return res;
       }
     }
-
-    throw DependencyNotFoundException(
-      type: type,
-      group: focusGroup,
-    );
+    return null;
   }
 
-  FutureOr<Object>? _instExactType({
+  static FutureOr<Dependency<Object>>? _instExactType({
+    required DI di,
     required Identifier type,
     required Identifier genericType,
-    Identifier? group,
+    required Identifier group,
   }) {
-    final focusGroup = preferFocusGroup(group);
-    final dep = registry.getDependencyOfExactTypeOrNull(
+    final dep = di.registry.getDependencyOfExactTypeOrNull(
       type: genericType,
-      group: focusGroup,
+      group: group,
     );
     if (dep != null) {
       final value = dep.value;
       return value.thenOr((value) {
         return (value as Inst).constructor();
       }).thenOr((newValue) {
-        return regOfExactType(
+        return di.regOfExactType(
           type: type,
           dependency: dep.reassign(newValue),
           suppressDependencyAlreadyRegisteredException: true,
         );
       }).thenOr((_) {
-        return registry.removeDependencyOfExactType(
+        return di.registry.removeDependencyOfExactType(
           type: genericType,
-          group: focusGroup,
+          group: group,
         );
       }).thenOr((_) {
-        return getOfExactType(
+        return di.getOfExactTypeInternal(
           type: type,
-          group: focusGroup,
+          group: group,
         );
       });
     }
@@ -392,8 +420,20 @@ base class DI extends DIBase {
   FutureOr<T>? getFactoryOrNull<T extends Object>({
     Identifier? group,
   }) {
-    final focusGroup = preferFocusGroup(group);
-    final dep = registry.getDependencyOrNull<T>(
+    return _execOrNull(
+      (di) => _getFactoryOrNull<T>(
+        di: di,
+        group: group,
+      ),
+    );
+  }
+
+  static FutureOr<T>? _getFactoryOrNull<T extends Object>({
+    required DI di,
+    Identifier? group,
+  }) {
+    final focusGroup = di.preferFocusGroup(group);
+    final dep = di.registry.getDependencyOrNull<T>(
       group: focusGroup,
     );
     final result = (dep?.value as FactoryInst<T>?)?.constructor();
@@ -406,8 +446,22 @@ base class DI extends DIBase {
     required Identifier type,
     Identifier? group,
   }) {
-    final focusGroup = preferFocusGroup(group);
-    final dep = registry.getDependencyOfExactTypeOrNull(
+    return _execOrNull(
+      (di) => _getFactoryOfExactTypeOrNull(
+        di: di,
+        type: type,
+        group: group,
+      ),
+    );
+  }
+
+  static FutureOr<Object>? _getFactoryOfExactTypeOrNull({
+    required DI di,
+    required Identifier type,
+    Identifier? group,
+  }) {
+    final focusGroup = di.preferFocusGroup(group);
+    final dep = di.registry.getDependencyOfExactTypeOrNull(
       type: type,
       group: focusGroup,
     );
@@ -477,12 +531,24 @@ base class DI extends DIBase {
   Dependency<Object>? getDependencyOrNull<T extends Object>({
     Identifier? group,
   }) {
-    final focusGroup = preferFocusGroup(group);
+    return _execOrNull(
+      (di) => _getDependencyOrNull<T>(
+        di: di,
+        group: group,
+      ),
+    );
+  }
+
+  static Dependency<Object>? _getDependencyOrNull<T extends Object>({
+    required DI di,
+    required Identifier? group,
+  }) {
+    final focusGroup = di.preferFocusGroup(group);
     final getters = [
-      () => registry.getDependencyOrNull<T>(group: focusGroup),
-      () => registry.getDependencyOrNull<FutureInst<T>>(group: focusGroup),
-      () => registry.getDependencyOrNull<SingletonInst<T>>(group: focusGroup),
-      () => registry.getDependencyOrNull<FactoryInst<T>>(group: focusGroup),
+      () => di.registry.getDependencyOrNull<T>(group: focusGroup),
+      () => di.registry.getDependencyOrNull<FutureInst<T>>(group: focusGroup),
+      () => di.registry.getDependencyOrNull<SingletonInst<T>>(group: focusGroup),
+      () => di.registry.getDependencyOrNull<FactoryInst<T>>(group: focusGroup),
     ];
     for (final getter in getters) {
       final dep = getter();
@@ -499,9 +565,23 @@ base class DI extends DIBase {
     required Identifier type,
     Identifier? group,
   }) {
-    final focusGroup = preferFocusGroup(group);
+    return _execOrNull(
+      (di) => _getDependencyOfExactTypeOrNull(
+        di: di,
+        type: type,
+        group: group,
+      ),
+    );
+  }
+
+  static Dependency<Object>? _getDependencyOfExactTypeOrNull({
+    required DI di,
+    required Identifier type,
+    required Identifier? group,
+  }) {
+    final focusGroup = di.preferFocusGroup(group);
     final getters = _associatedTypes(type: type).map(
-      (type) => () => registry.getDependencyOfExactTypeOrNull(
+      (type) => () => di.registry.getDependencyOfExactTypeOrNull(
             type: type,
             group: focusGroup,
           ),
@@ -510,6 +590,16 @@ base class DI extends DIBase {
       final dep = getter();
       if (dep != null) {
         return dep;
+      }
+    }
+    return null;
+  }
+
+  E? _execOrNull<E>(E? Function(DI di) tester) {
+    for (final di in [this, parent as DI].nonNulls) {
+      final test = tester(di);
+      if (test != null) {
+        return test;
       }
     }
     return null;

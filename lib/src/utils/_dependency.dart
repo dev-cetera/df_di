@@ -27,6 +27,7 @@ final class Dependency<T extends Object> {
   final Identifier group;
   final Type registrationType;
   final int registrationIndex;
+  final bool Function(DIBase di)? condition;
 
   final OnUnregisterCallback<Object>? onUnregister;
 
@@ -36,6 +37,7 @@ final class Dependency<T extends Object> {
     Type? registrationType,
     required this.group,
     required this.onUnregister,
+    required this.condition,
   })  : type = value.runtimeType,
         registrationType = registrationType ?? value.runtimeType;
 
@@ -48,6 +50,7 @@ final class Dependency<T extends Object> {
       registrationType: registrationType,
       group: group,
       onUnregister: onUnregister,
+      condition: condition,
     );
   }
 
@@ -72,3 +75,6 @@ final class Dependency<T extends Object> {
 
 @internal
 typedef OnUnregisterCallback<T extends Object> = FutureOr<void> Function(T value);
+
+@internal
+typedef GetDependencyCondition = bool Function(DIBase current);

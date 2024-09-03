@@ -17,7 +17,7 @@ class Identifier<T extends Object> {
 
   const Identifier(this.value);
 
-  static const defaultId1 = Identifier(0);
+  static const defaultGroup = Identifier('DEFAULT_GROUP');
 
   static Identifier<Type> typeId(Type object) {
     final value = object;

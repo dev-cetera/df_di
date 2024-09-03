@@ -12,6 +12,7 @@
 
 import 'dart:async';
 
+import 'package:df_type/df_type.dart';
 import 'package:meta/meta.dart';
 
 import '/src/_index.g.dart';
@@ -23,6 +24,8 @@ abstract base class DIBase {
   //
   //
   //
+
+  final DIBase? parent;
 
   Identifier _focusGroup;
 
@@ -37,7 +40,8 @@ abstract base class DIBase {
     return group ?? _focusGroup;
   }
 
-  DIBase({Identifier focusGroup = const Identifier('default')}) : _focusGroup = focusGroup;
+  DIBase({Identifier? focusGroup = Identifier.defaultGroup, this.parent})
+      : _focusGroup = focusGroup ?? Identifier.defaultGroup;
 
   /// Registers a [Service] as a singleton. When [get] is first called
   /// with [T] and [group], [DI] creates, initializes, and returns a new instance
@@ -70,6 +74,20 @@ abstract base class DIBase {
     Constructor<T> constructor, {
     Identifier? group,
   });
+
+  @pragma('vm:prefer-inline')
+  void registerLazyChild({
+    Identifier? group,
+    Identifier? childGroup,
+  }) {
+    registerLazySingleton(
+      () => DI.internal(focusGroup: childGroup, parent: this),
+      onUnregister: (e) => e.unregisterAll(),
+    );
+  }
+
+  @pragma('vm:prefer-inline')
+  DI getChild({Identifier? group}) => getSync<DI>(group: group);
 
   /// Registers a singleton instance of [T] with the given [constructor]. When
   /// [get] is called with [T] and [group], the same instance will be returned.
@@ -204,6 +222,20 @@ abstract base class DIBase {
   /// be found.
   FutureOr<T> get<T extends Object>({
     Identifier? group,
+  }) {
+    final dep = getInternal<T>(group: group);
+    return dep.thenOr((dep) {
+      if (dep.condition?.call(this) ?? true) {
+        return dep.value;
+      } else {
+        // TODO: Need a specific error.
+        throw Error();
+      }
+    });
+  }
+
+  FutureOr<Dependency<T>> getInternal<T extends Object>({
+    Identifier? group,
   });
 
   // TODO:
@@ -219,6 +251,21 @@ abstract base class DIBase {
   // ...
   @protected
   FutureOr<Object> getOfExactType({
+    required Identifier type,
+    Identifier? group,
+  }) {
+    final dep = getOfExactTypeInternal(type: type, group: group);
+    return dep.thenOr((dep) {
+      if (dep.condition?.call(this) ?? true) {
+        return dep.value;
+      } else {
+        // TODO: Need a specific error.
+        throw Error();
+      }
+    });
+  }
+
+  FutureOr<Dependency<Object>> getOfExactTypeInternal({
     required Identifier type,
     Identifier? group,
   });
