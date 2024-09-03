@@ -45,7 +45,7 @@ final class TypeSafeRegistry extends TypeSafeRegistryBase {
 
   @override
   @pragma('vm:prefer-inline')
-  Dependency<Object>? getDependencyOfExactTypeOrNull({
+  Dependency<Object>? getDependencyUsingExactTypeOrNull({
     required Descriptor type,
     required Descriptor group,
   }) {
@@ -62,7 +62,7 @@ final class TypeSafeRegistry extends TypeSafeRegistryBase {
   }
 
   @override
-  void setDependencyOfExactType({
+  void setDependencyUsingExactType({
     required Descriptor type,
     required Dependency<Object> value,
   }) {
@@ -75,7 +75,7 @@ final class TypeSafeRegistry extends TypeSafeRegistryBase {
   }
 
   @override
-  Dependency<Object>? removeDependencyOfExactType({
+  Dependency<Object>? removeDependencyUsingExactType({
     required Descriptor group,
     required Descriptor type,
   }) {
@@ -83,7 +83,7 @@ final class TypeSafeRegistry extends TypeSafeRegistryBase {
     if (value != null) {
       final dep = value.remove(type);
       if (value.isEmpty) {
-        removeDependencyMapOfExactType(type: type);
+        removeDependencyMapUsingExactType(type: type);
       } else {
         setDependencyMapByKey(
           group: group,
@@ -118,7 +118,7 @@ final class TypeSafeRegistry extends TypeSafeRegistryBase {
 
   @override
   @pragma('vm:prefer-inline')
-  void removeDependencyMapOfExactType({
+  void removeDependencyMapUsingExactType({
     required Descriptor type,
   }) {
     _state.remove(type);

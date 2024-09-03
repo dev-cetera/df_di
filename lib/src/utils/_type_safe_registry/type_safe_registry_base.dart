@@ -38,7 +38,7 @@ abstract base class TypeSafeRegistryBase {
   /// specified [group].
   ///
   /// Returns `null` if no matching dependency is found.
-  Dependency<Object>? getDependencyOfExactTypeOrNull({
+  Dependency<Object>? getDependencyUsingExactTypeOrNull({
     required Descriptor type,
     required Descriptor group,
   }) {
@@ -60,7 +60,7 @@ abstract base class TypeSafeRegistryBase {
   void setDependency<T extends Object>({
     required Dependency<T> value,
   }) {
-    setDependencyOfExactType(
+    setDependencyUsingExactType(
       type: Descriptor.type(T),
       value: value,
     );
@@ -68,7 +68,7 @@ abstract base class TypeSafeRegistryBase {
 
   /// Adds or overwrites the dependency of the exact [type] with the specified
   /// [value].
-  void setDependencyOfExactType({
+  void setDependencyUsingExactType({
     required Descriptor type,
     required Dependency<Object> value,
   });
@@ -86,7 +86,7 @@ abstract base class TypeSafeRegistryBase {
   }) {
     final dep = getDependencyOrNull<T>(group: group);
     if (dep != null) {
-      final removed = removeDependencyOfExactType(
+      final removed = removeDependencyUsingExactType(
         type: Descriptor.type(dep.type),
         group: group,
       );
@@ -99,7 +99,7 @@ abstract base class TypeSafeRegistryBase {
   /// the specified [group] if it exists.
   ///
   /// Returns the removed value, or `null` if it does not exist.
-  Dependency<Object>? removeDependencyOfExactType({
+  Dependency<Object>? removeDependencyUsingExactType({
     required Descriptor type,
     required Descriptor group,
   });
@@ -109,11 +109,11 @@ abstract base class TypeSafeRegistryBase {
   //
 
   @pragma('vm:prefer-inline')
-  bool containsDependencyOfExactType({
+  bool containsDependencyUsingExactType({
     required Descriptor type,
     required Descriptor group,
   }) {
-    return getDependencyOfExactTypeOrNull(type: type, group: group) != null;
+    return getDependencyUsingExactTypeOrNull(type: type, group: group) != null;
   }
 
   /// Retrieves all dependencies of type [T].
@@ -144,7 +144,7 @@ abstract base class TypeSafeRegistryBase {
   });
 
   /// ...
-  void removeDependencyMapOfExactType({
+  void removeDependencyMapUsingExactType({
     required Descriptor type,
   });
 
