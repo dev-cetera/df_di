@@ -10,62 +10,11 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-import 'package:meta/meta.dart';
-
-import '../utils/_type_safe_registry/type_safe_registry.dart';
 import '/src/_index.g.dart';
-import '_di_parts/_index.g.dart';
+import '_di_parts1/_index.g.dart';
+import '_di_inter.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-
-abstract base class DIBase
-    implements
-        ChildInter,
-        DebugInter,
-        FocusGroupInter,
-        GetDependencyInter,
-        GetFactoryInter,
-        GetInter,
-        GetUsingExactTypeInter,
-        IsRegisteredInter,
-        RegisterDependencyInter,
-        RegisterInter,
-        RemoveDependencyInter,
-        UnregisterInter {
-  /// A type-safe registry that stores all dependencies.
-  @protected
-  final registry = TypeSafeRegistry();
-
-  /// Tracks the registration count, assigning a unique index number to each
-  /// registration.
-  @protected
-  var registrationCount = 0;
-
-  @protected
-  E? getFirstNonNull<E>({
-    required DIBase? child,
-    required DIBase? parent,
-    required E? Function(DI di) test,
-  }) {
-    for (final di in [child, parent].nonNulls) {
-      final result = test(di as DI);
-      if (result != null) {
-        return result;
-      }
-    }
-    return null;
-  }
-
-  final DIBase? parent;
-
-  DIBase({
-    Descriptor? focusGroup = Descriptor.defaultGroup,
-    this.parent,
-  }) : focusGroup = focusGroup ?? Descriptor.defaultGroup;
-
-  @override
-  Descriptor focusGroup;
-}
 
 /// A flexible and extensive Dependency Injection (DI) class for managing
 /// dependencies across an application.

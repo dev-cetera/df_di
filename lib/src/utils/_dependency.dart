@@ -14,6 +14,7 @@ import 'dart:async';
 
 import 'package:meta/meta.dart' show internal;
 
+import '../di/_di_inter.dart';
 import '/src/_index.g.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
