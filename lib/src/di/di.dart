@@ -10,40 +10,90 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-import 'dart:async';
-
-import 'package:df_type/df_type.dart';
 import 'package:meta/meta.dart';
 
+import '../utils/_type_safe_registry/type_safe_registry.dart';
 import '/src/_index.g.dart';
-import '/src/utils/_dependency.dart';
 import '_di_parts/_index.g.dart';
-import '_di_parts/debug/debug_impl.dart';
-import '_di_parts/get/get_impl.dart';
-import '_di_parts/get_dependency/get_dependency_impl.dart';
-import '_di_parts/get_factory/get_factory_impl.dart';
-import '_di_parts/get_using_exact_type/get_using_exact_type_impl.dart';
-import '_di_parts/is_registered/is_registered_impl.dart';
-import '_di_parts/register_dependency/register_dependency_impl.dart';
-import '_di_parts/remove_dependency/remove_dependency_impl.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+abstract base class DIBase
+    implements
+        ChildInter,
+        DebugInter,
+        FocusGroupInter,
+        GetDependencyInter,
+        GetFactoryInter,
+        GetInter,
+        GetUsingExactTypeInter,
+        IsRegisteredInter,
+        RegisterDependencyInter,
+        RegisterInter,
+        RemoveDependencyInter,
+        UnregisterInter {
+  /// A type-safe registry that stores all dependencies.
+  @protected
+  final registry = TypeSafeRegistry();
+
+  /// Tracks the registration count, assigning a unique index number to each
+  /// registration.
+  @protected
+  var registrationCount = 0;
+
+  @protected
+  E? getFirstNonNull<E>({
+    required DIBase? child,
+    required DIBase? parent,
+    required E? Function(DI di) test,
+  }) {
+    for (final di in [child, parent].nonNulls) {
+      final result = test(di as DI);
+      if (result != null) {
+        return result;
+      }
+    }
+    return null;
+  }
+
+  final DIBase? parent;
+
+  DIBase({
+    Descriptor? focusGroup = Descriptor.defaultGroup,
+    this.parent,
+  }) : focusGroup = focusGroup ?? Descriptor.defaultGroup;
+
+  @override
+  Descriptor focusGroup;
+}
 
 /// A flexible and extensive Dependency Injection (DI) class for managing
 /// dependencies across an application.
 base class DI extends DIBase
     with
         ChildImpl,
-        FocusGroupImpl,
-        UnregisterImpl,
         DebugImpl,
+        FocusGroupImpl,
         GetDependencyImpl,
-        RemoveDependencyImpl,
-        IsRegisteredImpl,
         GetFactoryImpl,
         GetImpl,
         GetUsingExactTypeImpl,
-        RegisterDependencyImpl {
+        IsRegisteredImpl,
+        RegisterDependencyImpl,
+        RegisterImpl,
+        RemoveDependencyImpl,
+        UnregisterImpl {
+  /// The number of dependencies registered in this instance.
+  int get length => registrationCount;
+
+  /// Creates a new instance of the DI class. Prefer using [global], unless
+  /// there's a specific need for a separate instance.
+
+  DI({
+    super.focusGroup,
+    super.parent,
+  });
+
   //
   //
   //
@@ -66,23 +116,9 @@ base class DI extends DIBase
   static DI get prod => app.getChild(group: Descriptor.prodGroup);
   static DI get test => app.getChild(group: Descriptor.testGroup);
 
-  /// The number of dependencies registered in this instance.
-  int get length => _registrationCount;
-
-  /// Tracks the registration count, assigning a unique index number to each
-  /// registration.
-  var _registrationCount = 0;
-
-  /// Creates a new instance of the DI class. Prefer using [global], unless
-  /// there's a specific need for a separate instance.
-  DI({
-    super.focusGroup,
-    @protected super.parent,
-  });
-
   factory DI.instantiate({
     Descriptor<Object>? focusGroup = Descriptor.defaultGroup,
-    DIBase? parent,
+    DI? parent,
     void Function(DI di)? onInstantiate,
   }) {
     final instance = DI(
@@ -92,116 +128,22 @@ base class DI extends DIBase
     onInstantiate?.call(instance);
     return instance;
   }
+}
 
-  //
-  //
-  //
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-  @override
-  void registerLazySingletonService<T extends Service>(
-    Constructor<T> constructor, {
-    Descriptor? group,
-  }) {
-    registerLazySingleton(
-      (params) => constructor().thenOr((e) => e.initService(params).thenOr((_) => e)),
-      group: group,
-      onUnregister: (e) {
-        return e.thenOr((e) {
-          return e.initialized.thenOr((_) {
-            // ignore: invalid_use_of_protected_member
-            return e.dispose();
-          });
-        });
-      },
-    );
-  }
+/// Exception thrown when attempting to register a dependency that is already registered.
+final class DependencyAlreadyRegisteredException extends DFDIPackageException {
+  DependencyAlreadyRegisteredException({
+    required Object type,
+    required Descriptor group,
+  }) : super('Dependency of type $type in group $group is already registered.');
+}
 
-  //
-  //
-  //
-
-  @override
-  void registerFactoryService<T extends Service, P extends Object>(
-    Constructor<T> constructor, {
-    Descriptor? group,
-  }) {
-    registerFactory<T, P>(
-      (params) => constructor().thenOr((e) => e.initService(params).thenOr((_) => e)),
-      group: group,
-    );
-  }
-
-  //
-  //
-  //
-
-  @protected
-  @override
-  void registerOr<T extends Object, R extends Object>(
-    FutureOr<T> value, {
-    Descriptor? group,
-    OnUnregisterCallback<R>? onUnregister,
-    GetDependencyCondition? condition,
-  }) {
-    final focusGroup = preferFocusGroup(group);
-    if (value is T) {
-      registerDependency<T>(
-        dependency: Dependency(
-          value: value,
-          registrationIndex: _registrationCount++,
-          group: focusGroup,
-          onUnregister: onUnregister != null ? (e) => e is R ? onUnregister(e) : null : null,
-          condition: condition,
-        ),
-      );
-    } else {
-      registerDependency<FutureInst<T, Object>>(
-        dependency: Dependency(
-          value: FutureInst<T, Object>((_) => value),
-          registrationIndex: _registrationCount++,
-          group: focusGroup,
-          onUnregister: onUnregister != null ? (e) => e is R ? onUnregister(e) : null : null,
-          condition: condition,
-        ),
-      );
-    }
-  }
-
-  @protected
-  @override
-  void registerUsingExactTypeOr<T extends Object, R extends Object>(
-    FutureOr<T> value, {
-    Descriptor? group,
-    OnUnregisterCallback<R>? onUnregister,
-    GetDependencyCondition? condition,
-  }) {
-    final focusGroup = preferFocusGroup(group);
-    if (value is T) {
-      registerDependencyUsingExactType(
-        type: Descriptor.type(T),
-        dependency: Dependency(
-          value: value,
-          registrationIndex: _registrationCount++,
-          group: focusGroup,
-          onUnregister: onUnregister != null ? (e) => e is R ? onUnregister(e) : null : null,
-          condition: condition,
-        ),
-      );
-    } else {
-      registerDependencyUsingExactType(
-        type: Descriptor.type(FutureInst<T, Object>),
-        dependency: Dependency(
-          value: FutureInst<T, Object>((_) => value),
-          registrationIndex: _registrationCount++,
-          group: focusGroup,
-          onUnregister: onUnregister != null ? (e) => e is R ? onUnregister(e) : null : null,
-          condition: condition,
-        ),
-      );
-    }
-  }
-
-  //
-  //
-  //
+/// Exception thrown when a requested dependency is not found.
+final class DependencyNotFoundException extends DFDIPackageException {
+  DependencyNotFoundException({
+    required Object type,
+    required Descriptor group,
+  }) : super('Dependency of type $type in group "$group" not found.');
 }

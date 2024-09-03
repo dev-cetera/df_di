@@ -10,24 +10,22 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
+import 'dart:async';
+
 import 'package:meta/meta.dart';
 
-import '../_index.g.dart';
+import '../../../utils/_dependency.dart';
 import '/src/_index.g.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 @internal
-base mixin FocusGroupImpl on DIBase implements FocusGroupInter {
-  @override
-  @pragma('vm:prefer-inline')
-  void setFocusGroup(Descriptor group) => focusGroup = group;
-
-  @override
-  @pragma('vm:prefer-inline')
-  Descriptor getFocusGroup() => focusGroup;
-
-  @override
-  @pragma('vm:prefer-inline')
-  Descriptor preferFocusGroup(Descriptor? group) => group ?? focusGroup;
+abstract interface class RegisterUsingExactTypeInter {
+  @protected
+  void registerUsingExactTypeOr(
+    FutureOr<Object> value, {
+    required Descriptor type,
+    Descriptor? group,
+    OnUnregisterCallback<Object>? onUnregister,
+  });
 }

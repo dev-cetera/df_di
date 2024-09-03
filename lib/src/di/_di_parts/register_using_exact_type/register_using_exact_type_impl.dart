@@ -10,24 +10,35 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
+import 'dart:async';
+
+import '/src/utils/_dependency.dart';
 import 'package:meta/meta.dart';
 
-import '../_index.g.dart';
 import '/src/_index.g.dart';
+import 'register_using_exact_type_inter.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 @internal
-base mixin FocusGroupImpl on DIBase implements FocusGroupInter {
-  @override
-  @pragma('vm:prefer-inline')
-  void setFocusGroup(Descriptor group) => focusGroup = group;
-
-  @override
-  @pragma('vm:prefer-inline')
-  Descriptor getFocusGroup() => focusGroup;
-
-  @override
-  @pragma('vm:prefer-inline')
-  Descriptor preferFocusGroup(Descriptor? group) => group ?? focusGroup;
+base mixin RegisterUsingExactTypeImpl on DIBase implements RegisterUsingExactTypeInter {
+  void _register(
+    FutureOr<Object> value, {
+    required Descriptor type,
+    Descriptor? group,
+    OnUnregisterCallback<Object>? onUnregister,
+    GetDependencyCondition? condition,
+  }) {
+    final focusGroup = preferFocusGroup(group);
+    registerDependencyUsingExactType(
+      type: type,
+      dependency: Dependency(
+        value: value,
+        registrationIndex: registrationCount++,
+        group: focusGroup,
+        onUnregister: onUnregister,
+        condition: condition,
+      ),
+    );
+  }
 }

@@ -8,9 +8,32 @@
 //.title~
 
 // --- PUBLIC FILES ---
-export 'focus_group/focus_group_impl.dart';
+export 'register_using_exact_type/register_using_exact_type_inter.dart';
+export 'register_using_exact_type/register_using_exact_type_impl.dart';
+export 'get_factory/get_factory_inter.dart';
+export 'get_factory/get_factory_impl.dart';
+export 'get/get_impl.dart';
+export 'get/get_inter.dart';
 export 'unregister/unregister_impl.dart';
+export 'unregister/unregister_inter.dart';
+export 'remove_dependency/remove_dependency_inter.dart';
+export 'remove_dependency/remove_dependency_impl.dart';
+export 'register/register_impl.dart';
+export 'register/register_inter.dart';
+export 'is_registered/is_registered_inter.dart';
+export 'is_registered/is_registered_impl.dart';
+export 'focus_group/focus_group_inter.dart';
+export 'focus_group/focus_group_impl.dart';
+export 'register_dependency/register_dependency_impl.dart';
+export 'register_dependency/register_dependency_inter.dart';
+export 'get_using_exact_type/get_using_exact_type_inter.dart';
+export 'get_using_exact_type/get_using_exact_type_impl.dart';
+export 'get_dependency/get_dependency_impl.dart';
+export 'get_dependency/get_dependency_inter.dart';
 export 'child/child_impl.dart';
+export 'child/child_inter.dart';
+export 'debug/debug_impl.dart';
+export 'debug/debug_inter.dart';
 
 // --- PRIVATE FILES (EXCLUDED) ---
 // export '_index.g.dart';

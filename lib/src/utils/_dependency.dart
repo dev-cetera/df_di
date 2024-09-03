@@ -27,7 +27,7 @@ final class Dependency<T extends Object> {
   final Descriptor group;
   final Type registrationType;
   final int registrationIndex;
-  final bool Function(DIBase di)? condition;
+  final GetDependencyCondition? condition;
 
   final OnUnregisterCallback<Object>? onUnregister;
 
