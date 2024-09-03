@@ -45,7 +45,7 @@ abstract base class Service<TParams extends Object> {
   ///
   /// Do not override this method. Instead, override [onInitService].
   @nonVirtual
-  FutureOr<void> initService(TParams? params) {
+  FutureOr<void> initService(TParams params) {
     if (_initialized.isCompleted) {
       throw ServiceAlreadyInitializedException();
     }
@@ -58,7 +58,7 @@ abstract base class Service<TParams extends Object> {
   ///
   /// This method should not be called directly.
   @protected
-  FutureOr<void> onInitService(TParams? params);
+  FutureOr<void> onInitService(TParams params);
 
   /// Disposes of this service, making it unusable and ready for garbage
   /// collection. Calls [onDispose].

@@ -11,8 +11,8 @@
 //.title~
 
 import '/src/_index.g.dart';
-import '_di_parts1/_index.g.dart';
-import '_di_inter.dart';
+import '_mixins/_index.g.dart';
+import '_di_base.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 

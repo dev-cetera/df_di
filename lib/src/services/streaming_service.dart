@@ -47,7 +47,7 @@ abstract base class StreamingService<TData extends Object, TParams extends Objec
   /// Initializes the service by setting up the stream controller and starting
   /// to listen to the input stream.
   @override
-  void onInitService(TParams? params) {
+  void onInitService(TParams params) {
     _streamController = StreamController<TData>.broadcast();
     _streamSubscription = provideInputStream().listen(
       pushToStream,
