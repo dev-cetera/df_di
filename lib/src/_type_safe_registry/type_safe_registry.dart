@@ -49,6 +49,8 @@ final class TypeSafeRegistry extends TypeSafeRegistryBase {
     required Descriptor type,
     required Descriptor group,
   }) {
+    final first = _state[group]?.entries.firstOrNull?.key;
+    print('${first.runtimeType} -- ${type.runtimeType}: ${first == type}');
     return _state[group]?[type];
   }
 

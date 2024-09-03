@@ -47,15 +47,17 @@ class Descriptor<T extends Object> {
     return Descriptor(value);
   }
 
+  // Two Descriptors are equal if ther hashCodes are equal.
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    if (other is! Descriptor<T>) return false;
-    return other.value == value;
+    if (other is! Descriptor) return false;
+    return other.hashCode == hashCode;
   }
 
+  // Ensure [Descriptor] is identified by its String representation in Map keys.
   @override
-  int get hashCode => value.hashCode;
+  int get hashCode => value.toString().hashCode;
 
   @override
   String toString() => value.toString();

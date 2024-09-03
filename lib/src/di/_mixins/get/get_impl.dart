@@ -122,7 +122,7 @@ base mixin GetImpl on DIBase implements GetIface {
     final result = getFirstNonNull(
       child: this,
       parent: parent,
-      test: (di) => _getIfacenal<T>(
+      test: (di) => _getInternal<T>(
         di: di,
         group: focusGroup,
       ),
@@ -137,7 +137,7 @@ base mixin GetImpl on DIBase implements GetIface {
   }
 }
 
-FutureOr<Dependency<T>>? _getIfacenal<T extends Object>({
+FutureOr<Dependency<T>>? _getInternal<T extends Object>({
   required DI di,
   required Descriptor group,
 }) {

@@ -48,7 +48,7 @@ base mixin GetUsingExactTypeImpl on DIBase implements GetUsingExactTypeIface {
     Descriptor? group,
   }) {
     return getUsingExactType(
-      type: Descriptor.type(runtimeType),
+      type: Descriptor.type(type),
       group: group,
     );
   }
@@ -62,7 +62,7 @@ base mixin GetUsingExactTypeImpl on DIBase implements GetUsingExactTypeIface {
     final result = getFirstNonNull(
       child: this,
       parent: parent,
-      test: (di) => _getIfacenal(
+      test: (di) => _getInternal(
         di: di,
         type: type,
         group: focusGroup,
@@ -80,7 +80,7 @@ base mixin GetUsingExactTypeImpl on DIBase implements GetUsingExactTypeIface {
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-FutureOr<Dependency<Object>>? _getIfacenal({
+FutureOr<Dependency<Object>>? _getInternal({
   required DI di,
   required Descriptor type,
   required Descriptor group,
@@ -97,7 +97,7 @@ FutureOr<Dependency<Object>>? _getIfacenal({
   }
   // Future types.
   {
-    final genericType = Descriptor.genericType<FutureInst>([type]);
+    final genericType = Descriptor.genericType<FutureInst>([type, Descriptor.type(Object)]);
     final res = _inst(
       di: di,
       type: type,
@@ -110,7 +110,7 @@ FutureOr<Dependency<Object>>? _getIfacenal({
   }
   // Singleton types.
   {
-    final genericType = Descriptor.genericType<SingletonInst>([type]);
+    final genericType = Descriptor.genericType<SingletonInst>([type, Descriptor.type(Object)]);
     final res = _inst(
       di: di,
       type: type,
