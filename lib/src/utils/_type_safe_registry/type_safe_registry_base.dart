@@ -21,72 +21,97 @@ abstract base class TypeSafeRegistryBase {
   //
   //
 
-  /// Returns the dependency of type [T] with the specified [key] if it
-  /// exists, or `null`.
-  Dependency<T>? getDependency<T extends Object>({
-    required Identifier key,
+  /// Retrieves the dependency of type [T] or any subtype associated with
+  /// the specified [group].
+  ///
+  /// Returns `null` if no matching dependency is found.
+  Dependency<T>? getDependencyOrNull<T extends Object>({
+    required Identifier group,
   }) {
-    final deps = getDependenciesByKey(key: key);
+    final deps = getDependenciesByKey(group: group);
     return deps.where((e) => e.value is T).firstOrNull?.cast();
   }
 
-  Dependency<Object>? getDependencyByExactType({
+  /// Retrieves the dependency of the exact [type] associated with the
+  /// specified [group].
+  ///
+  /// Returns `null` if no matching dependency is found.
+  Dependency<Object>? getDependencyOfExactTypeOrNull({
     required Identifier type,
-    required Identifier key,
+    required Identifier group,
   }) {
-    final deps = getDependenciesByKey(key: key);
+    final deps = getDependenciesByKey(group: group);
     return deps.where((e) => Identifier.typeId(e.type) == type.value).firstOrNull?.cast();
   }
 
-  /// Adds or updates a dependency of type [T] with the specified [key].
-  ///
-  /// If a dependency with the same type [T] and [key] already exists, it will
-  /// be overwritten.
+  /// Retrieves all dependencies associated with the specified [group].
+  Iterable<Dependency<Object>> getDependenciesByKey({
+    required Identifier group,
+  });
+
+  //
+  //
+  //
+
+  /// Adds or overwrites the dependency of type [T] with the specified [value].
+  @pragma('vm:prefer-inline')
   void setDependency<T extends Object>({
-    required Dependency<T> dep,
+    required Dependency<T> value,
   }) {
-    setDependencyByExactType(
+    setDependencyOfExactType(
       type: Identifier.typeId(T),
-      dep: dep,
+      value: value,
     );
   }
 
-  void setDependencyByExactType({
+  /// Adds or overwrites the dependency of the exact [type] with the specified
+  /// [value].
+  void setDependencyOfExactType({
     required Identifier type,
-    required Dependency<Object> dep,
+    required Dependency<Object> value,
   });
 
-  Iterable<Dependency<Object>> getDependenciesByKey({
-    required Identifier key,
-  });
+  //
+  //
+  //
 
-  /// Removes a dependency of type [T] with the specified [key] then returns
-  /// the removed dependency if it existed, or `null`.
+  /// Removes the dependency of type [T] or any subtype associated with the
+  /// specified [group] if it exists.
+  ///
+  /// Returns the removed value, or `null` if it does not exist.
   Dependency<T>? removeDependency<T extends Object>({
-    required Identifier key,
+    required Identifier group,
   }) {
-    final dep = getDependency<T>(key: key);
+    final dep = getDependencyOrNull<T>(group: group);
     if (dep != null) {
-      return removeDependencyByExactType(
+      final removed = removeDependencyOfExactType(
         type: Identifier.typeId(dep.type),
-        key: key,
-      ) as Dependency<T>?;
+        group: group,
+      );
+      return removed?.cast();
     }
     return null;
   }
 
-  Dependency<Object>? removeDependencyByExactType({
+  /// Removes the dependency of the exact [type] or any subtype associated with
+  /// the specified [group] if it exists.
+  ///
+  /// Returns the removed value, or `null` if it does not exist.
+  Dependency<Object>? removeDependencyOfExactType({
     required Identifier type,
-    required Identifier key,
+    required Identifier group,
   });
 
+  //
+  //
+  //
 
   @pragma('vm:prefer-inline')
-  bool containsDependencyByExactType({
+  bool containsDependencyOfExactType({
     required Identifier type,
-    required Identifier key,
+    required Identifier group,
   }) {
-    return getDependencyMapByKey(key: key)?.containsKey(type) ?? false;
+    return getDependencyOfExactTypeOrNull(type: type, group: group) != null;
   }
 
   /// Retrieves all dependencies of type [T].
@@ -100,25 +125,24 @@ abstract base class TypeSafeRegistryBase {
 
   @pragma('vm:prefer-inline')
   Iterable<Dependency<Object>> getAllDependenciesByKey({
-    required Identifier key,
+    required Identifier group,
   }) {
-    return getDependencyMapByKey(key: key)?.values ?? const Iterable.empty();
+    return getDependencyMapByKey(group: group)?.values ?? const Iterable.empty();
   }
 
-  /// Sets the map of dependencies for a given [key].
+  /// Sets the map of dependencies for a given [group].
   void setDependencyMapByKey({
-    required Identifier key,
+    required Identifier group,
     required DependencyMap value,
   });
 
-
   /// ...
   DependencyMap<Object>? getDependencyMapByKey({
-    required Identifier key,
+    required Identifier group,
   });
 
   /// ...
-  void removeDependencyMapByExactType({
+  void removeDependencyMapOfExactType({
     required Identifier type,
   });
 

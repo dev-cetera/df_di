@@ -16,7 +16,7 @@ This package offers a powerful and versatile dependency injection system along w
 ## Features
 
 - Robust support for `FutureOr`, facilitating seamless handling of both synchronous and asynchronous dependencies and callbacks.
-- Ability to register dependencies using both “type” and “key”, enabling the management of multiple dependencies of the same type.
+- Ability to register dependencies using both “type” and “group”, enabling the management of multiple dependencies of the same type.
 - Supports standard features like factory dependencies and lazy initialization for singleton dependencies.
 - Abstract service classes that integrate effortlessly with your application.
 - Clear and comprehensive documentation for easy understanding.
@@ -44,15 +44,15 @@ final local = DI.newInstance();
 di.register<int>(1);
 print(Identifier.defaultId);
 
-// Register a dependency under type "int" also but with a different key.
-di.register(2, key: const DIKey('second'));
+// Register a dependency under type "int" also but with a different group.
+di.register(2, group: const DIKey('second'));
 
 // Register a Future.
 di.register<double>(Future.value(3.0));
 
 int counter = 0;
-di.registerSingleton<int>(() => ++counter), key: const DIKey('singleton-counter'));
-di.registerFactory<int>(() async => ++counter, key: const DIKey('factory-counter'));
+di.registerSingleton<int>(() => ++counter), group: const DIKey('singleton-counter'));
+di.registerFactory<int>(() async => ++counter, group: const DIKey('factory-counter'));
 ```
 
 ### Unregistering Dependencies:
@@ -72,15 +72,15 @@ futureOr = di.unregisterAll();
 FutureOr<void> futureOr = di<int>();
 print(futureOr); // prints 1
 
-// Register a dependency under type "int" also but with a different key.
+// Register a dependency under type "int" also but with a different group.
 print(di.get<int>(const DIKey('second'))); // prints 2
 
 print(await di.get<double>()); // prints 3.0.
 
-print(await di.getFactory<double>(key: const DIKey('factory-counter'))); // prints 1.
-print(await di.getFactory<double>(key: const DIKey('factory-counter'))); // prints 2.
-print(await di.get<double>(key: const DIKey('factory-counter'))); // prints 3.
-print(await di.get<double>(key: const DIKey('factory-counter'))); // prints 4.
+print(await di.getFactory<double>(group: const DIKey('factory-counter'))); // prints 1.
+print(await di.getFactory<double>(group: const DIKey('factory-counter'))); // prints 2.
+print(await di.get<double>(group: const DIKey('factory-counter'))); // prints 3.
+print(await di.get<double>(group: const DIKey('factory-counter'))); // prints 4.
 ```
 
 ### Creating a new Singleton Service:
@@ -208,7 +208,7 @@ This is an open-source project, and we warmly welcome contributions from everyon
 - **Share your ideas:** Every perspective matters, and your ideas can spark innovation.
 - **Report bugs:** Help us identify and fix issues to make the project more robust.
 - **Suggest improvements or new features:** Your ideas can help shape the future of the project.
-- **Help clarify documentation:** Good documentation is key to accessibility. You can make it easier for others to get started by improving or expanding our documentation.
+- **Help clarify documentation:** Good documentation is group to accessibility. You can make it easier for others to get started by improving or expanding our documentation.
 - **Write articles:** Share your knowledge by writing tutorials, guides, or blog posts about your experiences with the project. It's a great way to contribute and help others learn.
 
 No matter how you choose to contribute, your involvement is greatly appreciated and valued!

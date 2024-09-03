@@ -24,7 +24,7 @@ import '/src/_index.g.dart';
 final class Dependency<T extends Object> {
   final T value;
   final Type type;
-  final Identifier key;
+  final Identifier group;
   final Type registrationType;
   final int registrationIndex;
 
@@ -34,7 +34,7 @@ final class Dependency<T extends Object> {
     required this.value,
     required this.registrationIndex,
     Type? registrationType,
-    required this.key,
+    required this.group,
     required this.onUnregister,
   })  : type = value.runtimeType,
         registrationType = registrationType ?? value.runtimeType;
@@ -46,11 +46,12 @@ final class Dependency<T extends Object> {
       value: newValue,
       registrationIndex: registrationIndex,
       registrationType: registrationType,
-      key: key,
+      group: group,
       onUnregister: onUnregister,
     );
   }
 
+  /// Casts the current dependency to one of type [R].
   Dependency<R> cast<R extends Object>() => reassign(value as R);
 
   @override
@@ -64,7 +65,7 @@ final class Dependency<T extends Object> {
   }
 
   @override
-  int get hashCode => Object.hash(registrationIndex, type);
+  int get hashCode => Object.hash(registrationIndex, value);
 }
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░

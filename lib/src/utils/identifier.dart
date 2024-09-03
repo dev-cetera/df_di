@@ -17,7 +17,7 @@ class Identifier<T extends Object> {
 
   const Identifier(this.value);
 
-  static const defaultId = Identifier(0);
+  static const defaultId1 = Identifier(0);
 
   static Identifier<Type> typeId(Type object) {
     final value = object;
@@ -33,7 +33,7 @@ class Identifier<T extends Object> {
   /// print(_constructGenericType<Map>(['String', 'int'])); // Map<String, int>
   /// print(_constructGenericType<Tuple3>(['A', 'B', 'C'])); // Tuple3<A, B, C>
   /// ```
-  static Identifier<String> genericTypeId<T>(List<Identifier<Object>> subTypes) {
+  static Identifier<String> genericTypeId<T>(List<Identifier> subTypes) {
     final typeString = '$T';
     final n = typeString.indexOf('<');
     final base = typeString.substring(0, n == -1 ? typeString.length : n);

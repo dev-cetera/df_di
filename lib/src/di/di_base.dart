@@ -20,8 +20,27 @@ import '/src/utils/_dependency.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 abstract base class DIBase {
+  //
+  //
+  //
+
+  Identifier _focusGroup;
+
+  void setFocusGroup(Identifier group) {
+    _focusGroup = group;
+  }
+
+  Identifier getFocusGroup() => _focusGroup;
+
+  @protected
+  Identifier preferFocusGroup(Identifier? group) {
+    return group ?? _focusGroup;
+  }
+
+  DIBase({Identifier focusGroup = const Identifier('default')}) : _focusGroup = focusGroup;
+
   /// Registers a [Service] as a singleton. When [get] is first called
-  /// with [T] and [key], [DI] creates, initializes, and returns a new instance
+  /// with [T] and [group], [DI] creates, initializes, and returns a new instance
   /// of [T]. All subsequent calls to [get] return the same instance.
   ///
   /// ```dart
@@ -33,11 +52,11 @@ abstract base class DIBase {
   /// ```
   void registerLazySingletonService<T extends Service>(
     Constructor<T> constructor, {
-    Identifier key = Identifier.defaultId,
+    Identifier? group,
   });
 
   /// Registers a [Service] as a factory. Each time [get] is called
-  /// with T] and [key], [DI] creates, initializes, and returns a new instance
+  /// with T] and [group], [DI] creates, initializes, and returns a new instance
   /// of [T].
   ///
   /// ```dart
@@ -49,11 +68,11 @@ abstract base class DIBase {
   /// ```
   void registerFactoryService<T extends Service>(
     Constructor<T> constructor, {
-    Identifier key = Identifier.defaultId,
+    Identifier? group,
   });
 
   /// Registers a singleton instance of [T] with the given [constructor]. When
-  /// [get] is called with [T] and [key], the same instance will be returned.
+  /// [get] is called with [T] and [group], the same instance will be returned.
   ///
   /// ```dart
   /// di.registerSingleton(FooBarService.new);
@@ -64,18 +83,18 @@ abstract base class DIBase {
   @pragma('vm:prefer-inline')
   void registerLazySingleton<T extends Object>(
     InstConstructor<T> constructor, {
-    Identifier key = Identifier.defaultId,
+    Identifier? group,
     OnUnregisterCallback<T>? onUnregister,
   }) {
     registerOr(
       SingletonInst<T>(constructor),
-      key: key,
+      group: group,
       onUnregister: onUnregister,
     );
   }
 
   /// Registers a factory that creates a new instance of [T] each time [get] is
-  /// called with [T] and [key].
+  /// called with [T] and [group].
   ///
   /// ```dart
   /// di.registerFactory(FooBarService.new);
@@ -86,21 +105,21 @@ abstract base class DIBase {
   @pragma('vm:prefer-inline')
   void registerFactory<T extends Object>(
     InstConstructor<T> constructor, {
-    Identifier key = Identifier.defaultId,
+    Identifier? group,
   }) {
     registerOr(
       FactoryInst<T>(constructor),
-      key: key,
+      group: group,
     );
   }
 
-  /// Registers the [value] under type [T] and the specified [key], or
-  /// under [Identifier.defaultId] if no key is provided.
+  /// Registers the [value] under type [T] and the specified [group], or
+  /// under [Identifier.defaultId] if no group is provided.
   ///
   /// Optionally provide an [onUnregister] callback to be called on [unregister].
   ///
   /// Throws [DependencyAlreadyRegisteredException] if a dependency with the
-  /// same type [T] and [key] already exists.
+  /// same type [T] and [group] already exists.
   ///
   /// Consider passing [FactoryInst] or [SingletonInst] as the [value]. These
   /// types trigger a special behavious witin this class:
@@ -129,12 +148,12 @@ abstract base class DIBase {
   /// ```
   void register<T extends Object>(
     FutureOr<T> value, {
-    Identifier key = Identifier.defaultId,
+    Identifier? group,
     OnUnregisterCallback<T>? onUnregister,
   }) {
     registerOr(
       value,
-      key: key,
+      group: group,
       onUnregister: onUnregister,
     );
   }
@@ -143,15 +162,15 @@ abstract base class DIBase {
   @protected
   void registerOr<T extends Object, R extends Object>(
     FutureOr<T> value, {
-    Identifier key = Identifier.defaultId,
+    Identifier? group,
     OnUnregisterCallback<R>? onUnregister,
   });
 
   /// ...
   @protected
-  void registerByExactTypeOr<T extends Object, E extends Object>(
+  void registerOfExactTypeOr<T extends Object, E extends Object>(
     FutureOr<T> value, {
-    Identifier key = Identifier.defaultId,
+    Identifier? group,
     OnUnregisterCallback<E>? onUnregister,
   });
 
@@ -164,15 +183,15 @@ abstract base class DIBase {
 
   /// ...
   @protected
-  void regByExactType({
+  void regOfExactType({
     required Identifier type,
     required Dependency<Object> dependency,
     bool suppressDependencyAlreadyRegisteredException = false,
   });
 
   /// Gets a dependency as either a [Future] or an instance of [T] registered
-  /// under the type [T] and the specified [key], or under [Identifier.defaultId]
-  /// if no key is provided.
+  /// under the type [T] and the specified [group], or under [Identifier.defaultId]
+  /// if no group is provided.
   ///
   /// If the dependency was registered as a lazy singleton via [registerLazySingleton]
   /// and hasn't been instantiated yet, it will be instantiated on the first call.
@@ -184,43 +203,44 @@ abstract base class DIBase {
   /// - Throws [DependencyNotFoundException] if the requested dependency cannot
   /// be found.
   FutureOr<T> get<T extends Object>({
-    Identifier key = Identifier.defaultId,
+    Identifier? group,
   });
 
   // TODO:
   FutureOr<Object> getByRuntimeType(
     Type runtimeType, {
-    Identifier key = Identifier.defaultId,
+    Identifier? group,
   }) {
-    return getByExactType(
+    return getOfExactType(
       type: Identifier.typeId(runtimeType),
     );
   }
 
   // ...
   @protected
-  FutureOr<Object> getByExactType({
+  FutureOr<Object> getOfExactType({
     required Identifier type,
-    Identifier key = Identifier.defaultId,
+    Identifier? group,
   });
 
   /// Gets a dependency registered via [registerFactory] as either a
-  /// [Future] or an instance of [T] under the specified [key], or under
-  /// [Identifier.defaultId] if no key is provided.
+  /// [Future] or an instance of [T] under the specified [group], or under
+  /// [Identifier.defaultId] if no group is provided.
   ///
   /// This method returns a new instance of the dependency each time it is
   /// called.
   ///
   /// - Throws [DependencyNotFoundException] if no factory is found for the
-  ///   requested type [T] and [key].
+  ///   requested type [T] and [group].
   FutureOr<T> getFactory<T extends Object>({
-    Identifier key = Identifier.defaultId,
+    Identifier? group,
   }) {
-    final result = getFactoryOrNull<T>(key: key);
+    final focusGroup = preferFocusGroup(group);
+    final result = getFactoryOrNull<T>(group: focusGroup);
     if (result == null) {
       throw DependencyNotFoundException(
         type: T,
-        key: key,
+        group: focusGroup,
       );
     }
     return result;
@@ -229,23 +249,24 @@ abstract base class DIBase {
   /// ...
   @protected
   FutureOr<T>? getFactoryOrNull<T extends Object>({
-    Identifier key = Identifier.defaultId,
+    Identifier? group,
   });
 
   /// ...
   @protected
-  FutureOr<Object> getFactoryByExactType(
+  FutureOr<Object> getFactoryOfExactType(
     Identifier type,
-    Identifier key,
+    Identifier? group,
   ) {
-    final result = getFactoryByExactTypeOrNull(
+    final focusGroup = preferFocusGroup(group);
+    final result = getFactoryOfExactTypeOrNull(
       type: type,
-      key: key,
+      group: focusGroup,
     );
     if (result == null) {
       throw DependencyNotFoundException(
         type: Object,
-        key: key,
+        group: focusGroup,
       );
     }
     return result;
@@ -253,35 +274,35 @@ abstract base class DIBase {
 
   /// ...
   @protected
-  FutureOr<Object>? getFactoryByExactTypeOrNull({
+  FutureOr<Object>? getFactoryOfExactTypeOrNull({
     required Identifier type,
-    Identifier key = Identifier.defaultId,
+    Identifier? group,
   });
 
   /// Unregisters a dependency registered under type [T] and the
-  /// specified [key], or under [Identifier.defaultId] if no key is provided.
+  /// specified [group], or under [Identifier.defaultId] if no group is provided.
   ///
   /// - Throws [DependencyNotFoundException] if the dependency is not found.
   @pragma('vm:prefer-inline')
   FutureOr<void> unregister<T extends Object>({
-    Identifier key = Identifier.defaultId,
+    Identifier? group,
   }) {
-    return unregisterByExactType(
+    return unregisterOfExactType(
       type: Identifier.typeId(T),
-      key: key,
+      group: group,
     );
   }
 
   /// ...
   @protected
   @pragma('vm:prefer-inline')
-  FutureOr<void> unregisterByExactType({
+  FutureOr<void> unregisterOfExactType({
     required Identifier type,
-    Identifier key = Identifier.defaultId,
+    Identifier? group,
   }) {
-    final dep = removeDependencyByExactType(
+    final dep = removeDependencyOfExactType(
       type: type,
-      key: key,
+      group: group,
     );
     return dep.onUnregister?.call(dep.value);
   }
@@ -295,137 +316,152 @@ abstract base class DIBase {
   /// ...
   @protected
   Dependency<Object> removeDependency<T extends Object>({
-    Identifier key = Identifier.defaultId,
+    Identifier? group,
   }) {
-    return removeDependencyByExactType(
+    return removeDependencyOfExactType(
       type: Identifier.typeId(T),
-      key: key,
+      group: group,
     );
   }
 
   /// ...
   @protected
-  Dependency<Object> removeDependencyByExactType({
+  Dependency<Object> removeDependencyOfExactType({
     required Identifier type,
-    Identifier<Object> key = Identifier.defaultId,
+    Identifier? group,
   });
 
   /// A shorthand for [getSync], allowing retrieval of a dependency using
   /// call syntax.
   @pragma('vm:prefer-inline')
   T call<T extends Object>({
-    Identifier key = Identifier.defaultId,
+    Identifier? group,
   }) {
-    return getSync<T>(key: key);
+    return getSync<T>(group: group);
   }
 
-  /// Gets via [get] using [T] and [key] or `null` upon any error,
+  /// Gets via [get] using [T] and [group] or `null` upon any error,
   /// including but not limited to [DependencyNotFoundException].
   FutureOr<T?> getOrNull<T extends Object>({
-    Identifier key = Identifier.defaultId,
+    Identifier? group,
   }) {
-    if (isRegisteredByExactType(type: Identifier.typeId(T), key: key)) {
-      return get<T>(key: key);
+    final focusGroup = preferFocusGroup(group);
+    final registered = isRegisteredOfExactType(
+      type: Identifier.typeId(T),
+      group: focusGroup,
+    );
+    if (registered) {
+      return get<T>(group: focusGroup);
     }
     return null;
   }
 
-  /// Gets via [getSync] using [T] and [key] or `null` upon any error,
+  /// Gets via [getSync] using [T] and [group] or `null` upon any error,
   /// including but not limited to [TypeError] and
   /// [DependencyNotFoundException].
   T? getSyncOrNull<T extends Object>({
-    Identifier<Object> key = Identifier.defaultId,
+    Identifier? group,
   }) {
-    if (isRegisteredByExactType(type: Identifier.typeId(T), key: key)) {
+    final focusGroup = preferFocusGroup(group);
+    final registered = isRegisteredOfExactType(
+      type: Identifier.typeId(T),
+      group: focusGroup,
+    );
+    if (registered) {
       try {
-        return getSync<T>(key: key);
+        return getSync<T>(group: focusGroup);
       } catch (_) {}
     }
     return null;
   }
 
-  /// Gets via [get] using [T] and [key], then and casts the result to [T].
+  /// Gets via [get] using [T] and [group], then and casts the result to [T].
   ///
   /// Throws [TypeError] if this result is a [Future].
   T getSync<T extends Object>({
-    Identifier key = Identifier.defaultId,
+    Identifier? group,
   }) {
-    final value = get<T>(key: key);
+    final value = get<T>(group: group);
     if (value is Future<T>) {
       throw TypeError();
     }
     return value;
   }
 
-  /// Gets via [getAsync] using [T] and [key] or `null` upon any error.
+  /// Gets via [getAsync] using [T] and [group] or `null` upon any error.
   Future<T>? getAsyncOrNull<T extends Object>({
-    Identifier<Object> key = Identifier.defaultId,
+    Identifier? group,
   }) {
-    if (isRegisteredByExactType(type: Identifier.typeId(T), key: key)) {
+    final focusGroup = preferFocusGroup(group);
+    final registered = isRegisteredOfExactType(
+      type: Identifier.typeId(T),
+      group: focusGroup,
+    );
+    if (registered) {
       try {
-        return getAsync<T>(key: key);
+        return getAsync<T>(group: focusGroup);
       } catch (_) {}
     }
     return null;
   }
 
-  /// Gets via [get] using [T] and [key], then and casts the result to [Future]
+  /// Gets via [get] using [T] and [group], then and casts the result to [Future]
   /// of [T].
   Future<T> getAsync<T extends Object>({
-    Identifier key = Identifier.defaultId,
+    Identifier? group,
   }) async {
-    final value = await get<T>(key: key);
+    final value = await get<T>(group: group);
     return value;
   }
 
   /// Gets the registration [Identifier] of the current dependency that can be
-  /// fetched with type [T] and [key].
+  /// fetched with type [T] and [group].
   ///
   /// Useful for debugging.
   @visibleForTesting
   @pragma('vm:prefer-inline')
   Type registrationType<T extends Object>({
-    Identifier key = Identifier.defaultId,
+    Identifier? group,
   }) {
     return getDependency<T>(
-      key: key,
+      group: group,
     ).registrationType;
   }
 
   /// Gets the registration index of the current dependency that can be
-  /// fetched with type [T] and [key].
+  /// fetched with type [T] and [group].
   ///
   /// Useful for debugging.
   @pragma('vm:prefer-inline')
   @visibleForTesting
   int registrationIndex<T extends Object>({
-    Identifier key = Identifier.defaultId,
+    Identifier? group,
   }) {
     return getDependency<T>(
-      key: key,
+      group: group,
     ).registrationIndex;
   }
 
-  /// Checks if a dependency is registered under [T] and [key].
+  /// Checks if a dependency is registered under [T] and [group].
   bool isRegistered<T extends Object>({
-    Identifier<Object> key = Identifier.defaultId,
+    Identifier? group,
   }) {
     final dep = getDependencyOrNull<T>(
-      key: key,
+      group: group,
     );
     final registered = dep != null;
     return registered;
   }
 
-  /// Checks if a dependency is registered under [type] and [key].
+  /// Checks if a dependency is registered under [type] and [group].
   @protected
-  bool isRegisteredByExactType({
+  bool isRegisteredOfExactType({
     required Identifier type,
-    Identifier<Object> key = Identifier.defaultId,
+    required Identifier group,
   }) {
-    final dep = getDependencyByExactTypeOrNull(
+    final dep = getDependencyOfExactTypeOrNull(
       type: type,
-      key: key,
+      group: group,
     );
     final registered = dep != null;
     return registered;
@@ -434,15 +470,16 @@ abstract base class DIBase {
   /// ...
   @protected
   Dependency<Object> getDependency<T extends Object>({
-    Identifier key = Identifier.defaultId,
+    Identifier? group,
   }) {
+    final focusGroup = preferFocusGroup(group);
     final dep = getDependencyOrNull<T>(
-      key: key,
+      group: group,
     );
     if (dep == null) {
       throw DependencyNotFoundException(
         type: T,
-        key: key,
+        group: focusGroup,
       );
     } else {
       return dep;
@@ -451,18 +488,18 @@ abstract base class DIBase {
 
   /// ...
   @protected
-  Dependency<Object> getDependencyByExactType({
+  Dependency<Object> getDependencyOfExactType({
     required Identifier type,
-    Identifier<Object> key = Identifier.defaultId,
+    required Identifier group,
   }) {
-    final dep = getDependencyByExactTypeOrNull(
+    final dep = getDependencyOfExactTypeOrNull(
       type: type,
-      key: key,
+      group: group,
     );
     if (dep == null) {
       throw DependencyNotFoundException(
         type: type,
-        key: key,
+        group: group,
       );
     } else {
       return dep;
@@ -471,14 +508,14 @@ abstract base class DIBase {
 
   /// ...
   Dependency<Object>? getDependencyOrNull<T extends Object>({
-    Identifier<Object> key = Identifier.defaultId,
+    Identifier? group,
   });
 
   /// ...
   @protected
-  Dependency<Object>? getDependencyByExactTypeOrNull({
+  Dependency<Object>? getDependencyOfExactTypeOrNull({
     required Identifier type,
-    Identifier<Object> key = Identifier.defaultId,
+    Identifier? group,
   });
 }
 
@@ -488,14 +525,14 @@ abstract base class DIBase {
 final class DependencyAlreadyRegisteredException extends DFDIPackageException {
   DependencyAlreadyRegisteredException({
     required Object type,
-    required Identifier key,
-  }) : super('Dependency of type $type with key $key is already registered.');
+    required Identifier group,
+  }) : super('Dependency of type $type in group $group is already registered.');
 }
 
 /// Exception thrown when a requested dependency is not found.
 final class DependencyNotFoundException extends DFDIPackageException {
   DependencyNotFoundException({
     required Object type,
-    required Identifier key,
-  }) : super('Dependency of type $type with key "$key" not found.');
+    required Identifier group,
+  }) : super('Dependency of type $type in group "$group" not found.');
 }
