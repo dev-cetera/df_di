@@ -21,9 +21,6 @@ import 'package:df_di/df_di.dart';
 void main() async {
   final di = DI.global;
 
-  // Print the current state of di to understand what's registed.
-  print(di.registry.state); // Nothing registered at this point.
-
   // Register FooBarService as a lazy singleton.
   di.registerLazySingletonService(FooBarService.new);
   // Now we have a SingletonInst<FooBarService> registered.

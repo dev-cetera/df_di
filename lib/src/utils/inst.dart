@@ -12,7 +12,7 @@
 
 import 'dart:async';
 
-import 'identifier.dart';
+import 'descriptor.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -24,7 +24,7 @@ class Inst<T extends Object> {
   final InstConstructor<T> constructor;
 
   /// The type of the objects created by this inst.
-  Identifier get type => Identifier.typeId(T);
+  Descriptor get type => Descriptor.type(T);
 
   @override
   String toString() {

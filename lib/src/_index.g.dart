@@ -10,7 +10,7 @@
 // --- PUBLIC FILES ---
 export 'di/di.dart';
 export 'di/di_base.dart';
-export 'utils/identifier.dart';
+export 'utils/descriptor.dart';
 export 'utils/inst.dart';
 export 'utils/df_di_package_exception.dart';
 export 'services/service.dart';

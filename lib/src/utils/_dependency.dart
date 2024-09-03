@@ -24,7 +24,7 @@ import '/src/_index.g.dart';
 final class Dependency<T extends Object> {
   final T value;
   final Type type;
-  final Identifier group;
+  final Descriptor group;
   final Type registrationType;
   final int registrationIndex;
   final bool Function(DIBase di)? condition;
