@@ -26,7 +26,7 @@ import '/src/_index.g.dart';
 /// It provides a standardized structure for managing the lifecycle of services,
 /// ensuring they are properly initialized when needed and disposed of when no
 /// longer in use.
-abstract base class Service<TParams extends Object> {
+abstract base class Service<TParams extends Object?> {
   /// Creates an uninitialized instance. Must call [initService]
   /// before using this service.
   Service();
@@ -99,26 +99,4 @@ abstract base class Service<TParams extends Object> {
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-/// Exception thrown when interacting with a service that has already been disposed.
-final class ServiceAlreadyDisposedException extends DFDIPackageException {
-  ServiceAlreadyDisposedException()
-      : super(
-          'Cannot interact with a DisposableService that has already been disposed.',
-        );
-}
-
-/// Exception thrown when attempting to initialize a service that has already been initialized.
-final class ServiceAlreadyInitializedException extends DFDIPackageException {
-  ServiceAlreadyInitializedException()
-      : super(
-          'Cannot initialize a DisposableService that has already been initialized.',
-        );
-}
-
-/// Exception thrown when attempting to dispose a service that has not been initialized.
-final class ServiceNotYetInitializedException extends DFDIPackageException {
-  ServiceNotYetInitializedException()
-      : super(
-          'Cannot dispose a DisposableService that has not yet been initialized.',
-        );
-}
+typedef NoParamsService = Service<Object>;

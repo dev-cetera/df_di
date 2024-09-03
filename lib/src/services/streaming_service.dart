@@ -85,3 +85,7 @@ abstract base class StreamingService<TData extends Object, TParams extends Objec
     await _streamController?.close(); // Close the stream controller
   }
 }
+
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+typedef NoParamsStreamingService<TData extends Object> = StreamingService<TData, Object>;

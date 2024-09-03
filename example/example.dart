@@ -81,7 +81,7 @@ typedef Params = ({String name, int age});
 /// - Register via `di.initSingletonService(FooBarService.new);`
 /// - Get via `di.get<FooBarService>();`
 /// - Unregister via `di.unregister<FooBarService>();`
-final class FooBarService extends Service<Object> {
+final class FooBarService extends NoParamsService {
   @override
   void onInitService(_) async {}
 
@@ -93,7 +93,7 @@ final class FooBarService extends Service<Object> {
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-final class CountingService extends StreamingService<int, Object> {
+final class CountingService extends NoParamsStreamingService<int> {
   @override
   Stream<int> provideInputStream() async* {
     for (var n = 0; n < 100; n++) {
