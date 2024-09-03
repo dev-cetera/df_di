@@ -8,45 +8,47 @@
 //.title~
 
 // --- PUBLIC FILES ---
-export 'di/di.dart';
 export 'descriptor.dart';
 export 'inst.dart';
+export 'di/di.dart';
+export 'exceptions/dependency_already_registered_exception.dart';
+export 'exceptions/dependency_not_found_exception.dart';
 export 'exceptions/df_di_package_exception.dart';
 export 'services/service.dart';
 export 'services/streaming_service.dart';
 
 // --- PRIVATE FILES (EXCLUDED) ---
+// export '_dependency.dart';
 // export '_index.g.dart';
-// export 'di/_di_iface.dart';
-// export 'di/_di_parts/register_using_exact_type/register_using_exact_type_iface.dart';
-// export 'di/_di_parts/register_using_exact_type/register_using_exact_type_impl.dart';
-// export 'di/_di_parts/get_factory/get_factory_iface.dart';
-// export 'di/_di_parts/get_factory/get_factory_impl.dart';
-// export 'di/_di_parts/get/get_impl.dart';
-// export 'di/_di_parts/get/get_iface.dart';
-// export 'di/_di_parts/unregister/unregister_impl.dart';
-// export 'di/_di_parts/unregister/unregister_iface.dart';
-// export 'di/_di_parts/remove_dependency/remove_dependency_iface.dart';
-// export 'di/_di_parts/remove_dependency/remove_dependency_impl.dart';
-// export 'di/_di_parts/register/register_impl.dart';
-// export 'di/_di_parts/register/register_iface.dart';
-// export 'di/_di_parts/is_registered/is_registered_iface.dart';
-// export 'di/_di_parts/is_registered/is_registered_impl.dart';
-// export 'di/_di_parts/focus_group/focus_group_iface.dart';
-// export 'di/_di_parts/focus_group/focus_group_impl.dart';
-// export 'di/_di_parts/register_dependency/register_dependency_impl.dart';
-// export 'di/_di_parts/register_dependency/register_dependency_iface.dart';
-// export 'di/_di_parts/get_using_exact_type/get_using_exact_type_iface.dart';
-// export 'di/_di_parts/get_using_exact_type/get_using_exact_type_impl.dart';
-// export 'di/_di_parts/get_dependency/get_dependency_impl.dart';
-// export 'di/_di_parts/get_dependency/get_dependency_iface.dart';
-// export 'di/_di_parts/child/child_impl.dart';
-// export 'di/_di_parts/child/child_iface.dart';
-// export 'di/_di_parts/debug/debug_impl.dart';
-// export 'di/_di_parts/debug/debug_iface.dart';
-// export 'utils/_dependency.dart';
-// export 'utils/_type_safe_registry/type_safe_registry.dart';
-// export 'utils/_type_safe_registry/type_safe_registry_base.dart';
+// export 'di/_di_base.dart';
+// export 'di/_mixins/register_using_exact_type/register_using_exact_type_impl.dart';
+// export 'di/_mixins/register_using_exact_type/register_using_exact_type_iface.dart';
+// export 'di/_mixins/get_factory/get_factory_impl.dart';
+// export 'di/_mixins/get_factory/get_factory_iface.dart';
+// export 'di/_mixins/get/get_impl.dart';
+// export 'di/_mixins/get/get_iface.dart';
+// export 'di/_mixins/unregister/unregister_impl.dart';
+// export 'di/_mixins/unregister/unregister_iface.dart';
+// export 'di/_mixins/remove_dependency/remove_dependency_iface.dart';
+// export 'di/_mixins/remove_dependency/remove_dependency_impl.dart';
+// export 'di/_mixins/register/register_iface.dart';
+// export 'di/_mixins/register/register_impl.dart';
+// export 'di/_mixins/is_registered/is_registered_impl.dart';
+// export 'di/_mixins/is_registered/is_registered_iface.dart';
+// export 'di/_mixins/focus_group/focus_group_iface.dart';
+// export 'di/_mixins/focus_group/focus_group_impl.dart';
+// export 'di/_mixins/register_dependency/register_dependency_impl.dart';
+// export 'di/_mixins/register_dependency/register_dependency_iface.dart';
+// export 'di/_mixins/get_using_exact_type/get_using_exact_type_iface.dart';
+// export 'di/_mixins/get_using_exact_type/get_using_exact_type_impl.dart';
+// export 'di/_mixins/get_dependency/get_dependency_iface.dart';
+// export 'di/_mixins/get_dependency/get_dependency_impl.dart';
+// export 'di/_mixins/child/child_impl.dart';
+// export 'di/_mixins/child/child_iface.dart';
+// export 'di/_mixins/debug/debug_iface.dart';
+// export 'di/_mixins/debug/debug_impl.dart';
+// export '_type_safe_registry/type_safe_registry.dart';
+// export '_type_safe_registry/type_safe_registry_base.dart';
 
 // --- GENERATED FILES (EXCLUDED) ---
 // None found.

@@ -79,20 +79,4 @@ base class DI extends DIBase
   }
 }
 
-// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-/// Exception thrown when attempting to register a dependency that is already registered.
-final class DependencyAlreadyRegisteredException extends DFDIPackageException {
-  DependencyAlreadyRegisteredException({
-    required Object type,
-    required Descriptor group,
-  }) : super('Dependency of type $type in group $group is already registered.');
-}
-
-/// Exception thrown when a requested dependency is not found.
-final class DependencyNotFoundException extends DFDIPackageException {
-  DependencyNotFoundException({
-    required Object type,
-    required Descriptor group,
-  }) : super('Dependency of type $type in group "$group" not found.');
-}

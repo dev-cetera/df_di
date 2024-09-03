@@ -17,6 +17,7 @@ This package offers a powerful and versatile dependency injection system along w
 
 - Robust support for `FutureOr`, facilitating seamless handling of both synchronous and asynchronous dependencies and callbacks.
 - Ability to register dependencies using both “type” and “group”, enabling the management of multiple dependencies of the same type.
+- 
 - Supports standard features like factory dependencies and lazy initialization for singleton dependencies.
 - Abstract service classes that integrate effortlessly with your application.
 - Clear and comprehensive documentation for easy understanding.
