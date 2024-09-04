@@ -10,15 +10,7 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-import 'dart:async';
-
-import 'package:df_type/df_type.dart';
-import 'package:meta/meta.dart';
-
-import '../_index.g.dart';
-import '/src/_index.g.dart';
-import '../../_di_base.dart';
-import '../../../_dependency.dart';
+import '/src/_internal.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -58,7 +50,7 @@ base mixin UnregisterImpl on DIBase implements UnregisterIface {
   @override
   FutureOr<void> unregisterUsingExactType({
     required Id type,
-    required Id paramsType,
+    Id? paramsType,
     Id? group,
   }) {
     final dep = removeDependencyUsingExactType(
@@ -70,9 +62,9 @@ base mixin UnregisterImpl on DIBase implements UnregisterIface {
   }
 
   @override
-  FutureOr<void> unregisterUsingRuntimeType({
-    required Type type,
-    required Id paramsType,
+  FutureOr<void> unregisterUsingRuntimeType(
+    Type type, {
+    Id? paramsType,
     Id? group,
   }) {
     return unregisterUsingExactType(

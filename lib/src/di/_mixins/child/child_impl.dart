@@ -10,11 +10,7 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-import 'package:meta/meta.dart';
-
-import '../_index.g.dart';
-import '/src/_index.g.dart';
-import '../../_di_base.dart';
+import '/src/_internal.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -23,12 +19,14 @@ base mixin ChildImpl on DIBase implements ChildIface {
   @override
   @pragma('vm:prefer-inline')
   void registerChild({
-    Id? group,
     Id? childGroup,
+    Id? group,
   }) {
+    final childFocusGroup = preferFocusGroup(childGroup);
+    final focusGroup = preferFocusGroup(group);
     registerLazySingleton<DI>(
-      (_) => DI(focusGroup: childGroup, parent: this),
-      group: group,
+      (_) => DI(focusGroup: childFocusGroup, parent: this),
+      group: focusGroup,
       onUnregister: (e) => e.unregisterAll(),
     );
   }
@@ -36,6 +34,22 @@ base mixin ChildImpl on DIBase implements ChildIface {
   @override
   @pragma('vm:prefer-inline')
   DI getChild({Id? group}) => getSync<DI>(group: group);
+
+  @override
+  DI child({
+    Id? childGroup,
+    Id? group,
+  }) {
+    if (!isRegistered<DI>()) {
+      registerChild(
+        childGroup: childGroup,
+        group: group,
+      );
+    }
+    return getChild(
+      group: group,
+    );
+  }
 
   @override
   @pragma('vm:prefer-inline')

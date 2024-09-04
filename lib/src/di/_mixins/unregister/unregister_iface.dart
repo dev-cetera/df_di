@@ -10,12 +10,7 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-import 'dart:async';
-
-import 'package:meta/meta.dart';
-
-import '/src/_index.g.dart';
-import '../../../_dependency.dart';
+import '/src/_internal.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -37,13 +32,13 @@ abstract interface class UnregisterIface {
 
   FutureOr<void> unregisterUsingExactType({
     required Id type,
-    required Id paramsType,
+    Id? paramsType,
     Id? group,
   });
 
-  FutureOr<void> unregisterUsingRuntimeType({
-    required Type type,
-    required Id paramsType,
+  FutureOr<void> unregisterUsingRuntimeType(
+    Type type, {
+    Id? paramsType,
     Id? group,
   });
 }

@@ -12,13 +12,7 @@
 
 // ignore_for_file: invalid_use_of_protected_member
 
-import 'dart:async';
-
-import 'package:meta/meta.dart';
-
-import '../_index.g.dart';
-import '/src/_index.g.dart';
-import '../../_di_base.dart';
+import '/src/_internal.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -45,15 +39,13 @@ base mixin GetFactoryImpl on DIBase implements GetFactoryIface {
     P params, {
     Id? group,
   }) {
-    return getFirstNonNull(
-      child: this,
-      parent: parent,
-      test: (di) => _getFactoryOrNull<T, P>(
-        di: di,
-        params: params,
-        group: group,
-      ),
+    final focusGroup = preferFocusGroup(group);
+    final dep = registry.getDependencyOrNull<FactoryInst<T, P>>(
+      group: focusGroup,
     );
+    final casted = (dep?.value as FactoryInst?)?.cast<T, P>();
+    final result = casted?.constructor(params);
+    return result;
   }
 
   @override
@@ -79,8 +71,8 @@ base mixin GetFactoryImpl on DIBase implements GetFactoryIface {
 
   @override
   @pragma('vm:prefer-inline')
-  FutureOr<Object> getFactoryUsingRuntimeType({
-    required Type type,
+  FutureOr<Object> getFactoryUsingRuntimeType(
+    Type type, {
     required Object params,
     Id? group,
   }) {
@@ -96,22 +88,19 @@ base mixin GetFactoryImpl on DIBase implements GetFactoryIface {
     required Object params,
     Id? group,
   }) {
-    return getFirstNonNull(
-      child: this,
-      parent: parent,
-      test: (di) => _getFactoryUsingExactTypeOrNull(
-        di: di,
-        params: params,
-        type: type,
-        group: group,
-      ),
+    final focusGroup = preferFocusGroup(group);
+    final dep = registry.getDependencyUsingExactTypeOrNull(
+      type: type,
+      group: focusGroup,
     );
+    final result = (dep?.value as FactoryInst?)?.constructor(params);
+    return result;
   }
 
   @override
   @pragma('vm:prefer-inline')
-  FutureOr<Object>? getFactoryUsingRuntimeTypeOrNull({
-    required Type type,
+  FutureOr<Object>? getFactoryUsingRuntimeTypeOrNull(
+    Type type, {
     required Object params,
     Id? group,
   }) {
@@ -120,33 +109,4 @@ base mixin GetFactoryImpl on DIBase implements GetFactoryIface {
       params: params,
     );
   }
-}
-
-FutureOr<T>? _getFactoryOrNull<T extends Object, P extends Object>({
-  required DI di,
-  required P params,
-  Id? group,
-}) {
-  final focusGroup = di.preferFocusGroup(group);
-  final dep = di.registry.getDependencyOrNull<FactoryInst<T, P>>(
-    group: focusGroup,
-  );
-  final casted = (dep?.value as FactoryInst?)?.cast<T, P>();
-  final result = casted?.constructor(params);
-  return result;
-}
-
-FutureOr<Object>? _getFactoryUsingExactTypeOrNull({
-  required DI di,
-  required Object params,
-  required Id type,
-  Id? group,
-}) {
-  final focusGroup = di.preferFocusGroup(group);
-  final dep = di.registry.getDependencyUsingExactTypeOrNull(
-    type: type,
-    group: focusGroup,
-  );
-  final result = (dep?.value as FactoryInst?)?.constructor(params);
-  return result;
 }

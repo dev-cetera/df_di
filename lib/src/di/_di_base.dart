@@ -10,11 +10,7 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-import 'package:meta/meta.dart';
-
-import '_mixins/_index.g.dart';
-import '../_type_safe_registry/type_safe_registry.dart';
-import '/src/_index.g.dart';
+import '/src/_internal.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -40,21 +36,6 @@ abstract base class DIBase
   /// registration.
   @protected
   var registrationCount = 0;
-
-  @protected
-  E? getFirstNonNull<E>({
-    required DIBase? child,
-    required DIBase? parent,
-    required E? Function(DI di) test,
-  }) {
-    for (final di in [child, parent].nonNulls) {
-      final result = test(di as DI);
-      if (result != null) {
-        return result;
-      }
-    }
-    return null;
-  }
 
   final DIBase? parent;
 

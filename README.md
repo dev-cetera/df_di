@@ -1,4 +1,4 @@
-# DF - DI (Dependency Injection)
+# DI
 
 <a href="https://www.buymeacoffee.com/robmllze" target="_blank"><img align="right" src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
 
@@ -11,186 +11,183 @@ Dart & Flutter Packages by DevCetra.com & contributors.
 
 ## Summary
 
-This package offers a powerful and versatile dependency injection system along with service classes for easy state management.
+This package provides a powerful and flexible dependency injection (DI) system, coupled with service classes for seamless state management in Dart.
 
 ## Features
 
-- Robust support for `FutureOr`, facilitating seamless handling of both synchronous and asynchronous dependencies and callbacks.
-- Ability to register dependencies using both “type” and “group”, enabling the management of multiple dependencies of the same type.
-- 
-- Supports standard features like factory dependencies and lazy initialization for singleton dependencies.
-- Abstract service classes that integrate effortlessly with your application.
-- Clear and comprehensive documentation for easy understanding.
-- Code snippets for Visual Studio Code [here](https://raw.githubusercontent.com/robmllze/df_di/main/.vscode/snippets.code-snippets).
+- Robust FutureOr support for handling both synchronous and asynchronous dependencies and callbacks.
+- Register dependencies by type and group, enabling management of multiple dependencies of the same type.
+- Hierarchical DI with scoped dependencies through child containers.
+- Retrieve dependencies by runtime type or generic type.
+- Factory dependencies and lazy initialization for singleton dependencies.
+- Service classes that automatically handle cleanup when they are unregistered.
 
 For a full feature set, please refer to the [API reference](https://pub.dev/documentation/df_di/).
 
 ## Quickstart
 
-### Creating a DI instance:
+### Creating a DI container:
 
 ```dart
-// Access the global DI instance from anywhere in your app.
-di;
+// Access the global DI instance anywhere in your app.
 DI.global;
 
-// Or create a local DI instance.
-final local = DI.newInstance();
+// Or create your own DI container.
+final di = DI();
+
+// Create nested child containers, useful for scoping dependencies in modular apps.
+final scopedDi = di.child().child().child(group: Id('moduleGroup'));
 ```
 
 ### Registering Dependencies:
 
 ```dart
-// Register a dependency under type "int" and defaultKey.
-di.register<int>(1);
-print(Identifier.defaultId);
+// Register the answer to life, the universe and everything.
+di.register<int>(42);
 
-// Register a dependency under type "int" also but with a different group.
-di.register(2, group: const DIKey('second'));
+// Register an integer under a specific group, useful in environments like testing.
+di.register<int>(0, group: Id.test);
 
-// Register a Future.
-di.register<double>(Future.value(3.0));
+// Register a Future as a dependency.
+di.register(Future.value('Hello, DI!'));
+print(di.get<String>()); // Instance of 'Future<String>'
 
-int counter = 0;
-di.registerSingleton<int>(() => ++counter), group: const DIKey('singleton-counter'));
-di.registerFactory<int>(() async => ++counter, group: const DIKey('factory-counter'));
+// Register a singleton that lazily initializes. The result will always be 1.
+int n = 0;
+di.registerLazySingleton<int>(() => n + 1);
+
+// Register a factory that returns a new instance each time.
+di.registerFactory(() => DateTime.now());
 ```
 
 ### Unregistering Dependencies:
 
 ```dart
-// Throws an error because there is no dependency registered under type "String".
-FutureOr<void> futureOr = di.unregister<String>();
+// Unregister a specific type.
+di.unregister<int>();
+Type intType = int;
+di.unregisterUsingRuntimeType(intType);
 
-// Unregister all dependencies in the reverse order of their registration, effectively resetting the instance di.
-futureOr = di.unregisterAll();
+// Unregister all dependencies, resetting the container.
+di.unregisterAll();
+
+// Unregister child containers when they’re no longer needed.
+di.unregisterChild();
 ```
 
 ### Getting Dependencies:
 
 ```dart
-// Getting a dependency under type "int" and defaultKey.
-FutureOr<void> futureOr = di<int>();
-print(futureOr); // prints 1
+// Retrieve a registered integer dependency.
+print(di<int>()); // 42
+Type intType = int;
+print(di.getUsingRuntimeType(intType)); // 42
 
-// Register a dependency under type "int" also but with a different group.
-print(di.get<int>(const DIKey('second'))); // prints 2
+// Retrieve a dependency registered under a specific group.
+print(di.get<int>(group: Id('testGroup'))); // 0
 
-print(await di.get<double>()); // prints 3.0.
+// Handle asynchronous dependencies.
+final greeting = await di.get<String>();
+print(greeting); // Hello, DI!
 
-print(await di.getFactory<double>(group: const DIKey('factory-counter'))); // prints 1.
-print(await di.getFactory<double>(group: const DIKey('factory-counter'))); // prints 2.
-print(await di.get<double>(group: const DIKey('factory-counter'))); // prints 3.
-print(await di.get<double>(group: const DIKey('factory-counter'))); // prints 4.
+// Retrieve a factory-registered dependency.
+final now = di.getFactory<DateTime>();
+print(now); // Current timestamp
+await Future.delayed(Duration(seconds: 1));
+final now1 = di.getFactoryUsingRuntimeType(DateTime);
+print(now1);  // A second later
 ```
 
-### Creating a new Singleton Service:
+### Real-World Example - UserService:
 
 ```dart
-final class FooBarService extends Service {
-  // Provide objects that the UI can consume, like ValueNotifiers or Streams, etc.
-  ValueListenable<String?> get vFooBar => _vFooBar;
-  final _vFooBar = ValueNotifier<String?>(null);
+final class UserService extends Service<Object> {
+  final _userName = ValueNotifier<String>('Guest');
+
+  // Getter for the UI to consume.
+  ValueListenable<String> get userName => _userName;
 
   @override
-  FutureOr<void> onInitService() async {
-    _vFooBar.value = 'FooBar';
-    // Put initialization logic here, like starting Streams.
+  Future<void> onInitService(_) async {
+    // Simulate loading user data.
+    await Future.delayed(Duration(seconds: 2));
+    _userName.value = 'John Doe';
   }
 
-  // Always called when unregistering a service.
   @override
-  FutureOr<void> onDispose() {
-    _vFooBar.dispose();
-    // Put cleanup logic here, like disposing resources and canceling Streams.
+  void onDispose() {
+    _userName.dispose(); // Cleanup resources.
   }
 }
+
+// Register the service.
+di.registerLazySingletonService(UserService.new);
+
+// Access the service.
+final userService = await di.get<UserService>();
+print(userService.userName.value); // John Doe
 ```
 
-### Registering and Using Singleton Services:
+### Handling Synchronous and Asynchronous Services:
+
+#### Service with Synchronous Initialization and Asynchronous Disposal
 
 ```dart
-// Register FooBarService as a lazy singleton.
-di.registerSingletonService(FooBarService.new);
-
-// Initialize the service, get it, and use it.
-final fooBarService1 = await di.get<FooBarService>();
-final fooBarService2 = di.get<FooBarService>();
-print(fooBarService1 == fooBarService2); // prints true
-
-print(fooBarService.vFooBar.value); // prints "FooBar"
-```
-
-### Creating a Sync Service:
-
-Notice how onInitService isn't a Future. This means that DI will treat it as sync.
-
-```dart
-final class SyncServiceExmple extends Service {
+final class SyncInitAsyncDisposeService extends Service<Object> {
+  // di<SyncInitAsyncDisposeService>() will not return a Future.
   @override
-  void onInitService() {}
-
-  // Always called when unregistering a service.
-  @override
-  void onDispose() {}
-}
-
-di.registerSingletonService(SyncServiceExmple.new);
-
-// Use get that returns FutureOr<T> if you don't know what to expect.
-print(await di.get<SyncServiceExmple>() is Future); // false
-
-// Use call/getSync/getSyncOrNull if you expect a sync.
-print(di<SyncServiceExmple>());
-print(di.getSync<SyncServiceExmple>());
-print(di.getSyncOrNull<SyncServiceExmple>());
-```
-
-### Creating an Async Service:
-
-Notice how onInitService is a Future. This means that DI will treat it as async.
-
-```dart
-final class AsyncServiceExample extends Service {
-  @override
-  Future<void> onInitService() async {
-    await Future<void>.delayed(
-      const Duration(seconds: 3),
-    );
+  void onInitService(_) {
+    // Synchronous initialization logic
   }
 
-  // Always called when unregistering a service.
+  // di.unregister<SyncInitAsyncDisposeService>() will return a Future.
   @override
-  Future<void> onDispose() async {}
+  Future<void> onDispose() async {
+    // Asynchronous cleanup logic
+  }
 }
 
-di.registerSingletonService(AsyncServiceExample.new);
+// Register and use the service.
+di.registerLazySingletonService(SyncInitAsyncDisposeService.new);
+final service = di.get<SyncInitAsyncDisposeService>();
+await di.unregister<SyncInitAsyncDisposeService>();
+```
 
-// Use get that returns FutureOr<T> if you don't know what to expect.
-print(await di.get<AsyncServiceExample>() is Future); // true
+#### Service with Asynchronous Initialization and Synchronous Disposal
 
- // Use getAsync or getAsyncOrNull if you expect an async.
-print(await di.getAsync<AsyncServiceExample>());
-print(await di.getAsyncOrNull<AsyncServiceExample>());
+```dart
+final class AsyncInitSyncDisposeService extends Service<Object> {
+  // di<AsyncInitSyncDisposeService>() will not return a Future.
+  @override
+  Future<void> onInitService(_) async {
+    await Future.delayed(Duration(seconds: 3));
+    // Asynchronous initialization logic
+  }
+
+  // di.unregister<AsyncInitSyncDisposeService>() will not return a Future.
+  @override
+  void onDispose() {
+    // Synchronous cleanup logic
+  }
+}
+
+// Register and use the service.
+di.registerLazySingletonService(AsyncInitSyncDisposeService.new);
+final service = await di.get<AsyncInitSyncDisposeService>();
+di.unregister<AsyncInitSyncDisposeService>();
 ```
 
 ### Getting the State for Debugging:
 
 ```dart
-// Print the current state of di to understand what's registered.
+// Print the current state of the DI container.
 print(di.registry.state);
 
-// Check if there's a dependency under "int" and Identifier.defaultId.
-print(di.isRegistered<int>());
-print(di.registry.getDependency<T>() != null);
+// Check if a specific type is registered.
+print(di.isRegistered<int>()); // true
 
-// Check how the dependency under "String" and Identifier.defaultId got initially registered.
-di.registerFactory<String>(() => 'Hello World');
-print(di<String>()); // prints "Hello World".
-print(registrationType<String>()); // prints" FactoryInst<String>"
-
-// Print the registration index of dependency under "int" and Identifier.defaultId.
-print(di.registrationIndex<int>());
+// Inspect how a dependency was registered.
+print(di.registrationType<String>()); // FactoryInst<String>
 ```
 
 ## Installation

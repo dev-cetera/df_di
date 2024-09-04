@@ -12,15 +12,7 @@
 
 // ignore_for_file: invalid_use_of_protected_member
 
-import 'dart:async';
-
-import 'package:df_type/df_type.dart';
-import 'package:meta/meta.dart';
-
-import '../_index.g.dart';
-import '/src/_index.g.dart';
-import '../../_di_base.dart';
-import '../../../_dependency.dart';
+import '/src/_internal.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -103,101 +95,54 @@ base mixin GetImpl on DIBase implements GetIface {
   FutureOr<T> get<T extends Object>({
     Id? group,
   }) {
-    final dep = _get<T>(group: group);
-    return dep.thenOr((dep) {
-      if (dep.condition?.call(this) ?? true) {
-        return dep.value;
-      } else {
-        // TODO: Need a specific error.
-        throw Error();
-      }
-    });
-  }
-
-  @protected
-  FutureOr<Dependency<T>> _get<T extends Object>({
-    Id? group,
-  }) {
-    final focusGroup = preferFocusGroup(group);
-    final result = getFirstNonNull(
-      child: this,
-      parent: parent,
-      test: (di) => _getInternal<T>(
-        di: di,
-        group: focusGroup,
-      ),
-    );
-    if (result == null) {
+    focusGroup = preferFocusGroup(group);
+    final dep = _get<T>(group: focusGroup);
+    if (dep == null) {
       throw DependencyNotFoundException(
         type: T,
         group: focusGroup,
       );
     }
-    return result;
+    return dep.thenOr((e) => e.value);
   }
-}
 
-FutureOr<Dependency<T>>? _getInternal<T extends Object>({
-  required DI di,
-  required Id group,
-}) {
-  // Sync types.
-  {
-    final dep = di.registry.getDependencyOrNull<T>(
-      group: group,
-    );
+  @protected
+  FutureOr<Dependency<T>>? _get<T extends Object>({
+    required Id group,
+  }) {
+    final dep = getDependencyOrNull1<T>(group: group);
     if (dep != null) {
-      return dep.cast();
+      switch (dep.value) {
+        case T _:
+          return dep.cast();
+        case FutureInst<T> _:
+          return _inst<T, FutureInst<T>>(dep);
+        case SingletonInst<T> _:
+          return _inst<T, SingletonInst<T>>(dep);
+      }
     }
+    return null;
   }
-  // Future types.
-  {
-    final res = _inst<T, FutureInst<T>>(
-      di: di,
-      group: group,
-    );
-    if (res != null) {
-      return res;
-    }
-  }
-  // Singleton types.
-  {
-    final res = _inst<T, SingletonInst<T>>(
-      di: di,
-      group: group,
-    );
-    if (res != null) {
-      return res;
-    }
-  }
-  return null;
-}
 
-FutureOr<Dependency<T>>? _inst<T extends Object, TInst extends Inst<T, Object>>({
-  required DI di,
-  required Id group,
-}) {
-  final dep = di.registry.getDependencyOrNull<TInst>(
-    group: group,
-  );
-  if (dep != null) {
+  FutureOr<Dependency<T>> _inst<T extends Object, TInst extends Inst<T, Object>>(
+    Dependency<Object> dep,
+  ) {
     final value = (dep.value as TInst).cast<T, Object>();
     return value.thenOr((value) {
       return value.constructor(-1);
     }).thenOr((newValue) {
-      return di.registerDependency<T>(
+      return registerDependency<T>(
         dependency: dep.reassign(newValue),
         suppressDependencyAlreadyRegisteredException: true,
       );
     }).thenOr((_) {
-      return di.registry.removeDependency<TInst>(
-        group: group,
+      return registry.removeDependency<TInst>(
+        group: dep.group,
       );
     }).thenOr((_) {
-      return di._get<T>(
-        group: group,
-      );
+      return _get<T>(
+        group: dep.group,
+      )!;
     });
   }
-  return null;
 }

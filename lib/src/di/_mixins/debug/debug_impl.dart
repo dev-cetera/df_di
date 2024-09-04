@@ -10,11 +10,7 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-import 'package:meta/meta.dart';
-
-import '../_index.g.dart';
-import '/src/_index.g.dart';
-import '../../_di_base.dart';
+import '/src/_internal.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -26,7 +22,7 @@ base mixin DebugImpl on DIBase implements DebugIface {
   Type registrationType<T extends Object>({
     Id? group,
   }) {
-    return getDependency<T>(group: group).registrationType;
+    return getDependency1<T>(group: group).registrationType;
   }
 
   @visibleForTesting
@@ -35,6 +31,6 @@ base mixin DebugImpl on DIBase implements DebugIface {
   int registrationIndex<T extends Object>({
     Id? group,
   }) {
-    return getDependency<T>(group: group).registrationIndex;
+    return getDependency1<T>(group: group).registrationIndex;
   }
 }

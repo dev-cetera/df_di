@@ -10,9 +10,7 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-import 'package:meta/meta.dart';
-
-import '/src/_index.g.dart';
+import '/src/_internal.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -27,14 +25,14 @@ abstract interface class IsRegisteredIface {
   @protected
   bool isRegisteredUsingExactType({
     required Id type,
-    required Id paramsType,
+    Id? paramsType,
     required Id group,
   });
 
   @protected
   bool isRegisteredAsRuntimeType({
     required Type type,
-    required Id paramsType,
+    Id? paramsType,
     required Id group,
   });
 }

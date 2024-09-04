@@ -10,14 +10,14 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-import '/src/_internal.dart';
-
-// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-
-/// Exception thrown when attempting to register a dependency that is already registered.
-final class DependencyAlreadyRegisteredException extends DFDIPackageException {
-  DependencyAlreadyRegisteredException({
-    required Object type,
-    required Id group,
-  }) : super('Dependency of type $type in group $group is already registered.');
-}
+// Exports for internal use.
+export 'dart:async';
+export 'package:df_type/df_type.dart';
+export 'package:collection/collection.dart';
+export 'package:meta/meta.dart';
+export '_index.g.dart';
+export 'di/_di_base.dart';
+export 'di/_mixins/_index.g.dart';
+export '_type_safe_registry/type_safe_registry.dart';
+export '_type_safe_registry/type_safe_registry_base.dart';
+export '_dependency.dart';

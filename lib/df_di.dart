@@ -10,7 +10,7 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-/// A powerful and versatile dependency injection (DI) system with service classes for easy state management.
+/// A powerful and flexible dependency injection (DI) system, coupled with service classes for seamless state management.
 library;
 
 export 'src/_index.g.dart';

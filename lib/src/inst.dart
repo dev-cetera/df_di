@@ -10,14 +10,11 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-import 'dart:async';
-
-import 'package:meta/meta.dart';
-
-import '/src/_index.g.dart';
+import '/src/_internal.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
+@pragma('vm:keep-name') // enable string lookups
 class Inst<T extends Object, P extends Object> {
   /// Creates a new inst.
   const Inst(this.constructor);
@@ -49,6 +46,7 @@ typedef InstConstructor<T extends Object, P extends Object> = FutureOr<T> Functi
 
 typedef FutureInst<T extends Object> = _FutureInst<T, Object>;
 
+@pragma('vm:keep-name') // enable string lookups
 class _FutureInst<T extends Object, P extends Object> extends Inst<T, P> {
   const _FutureInst(super.constructor);
 
@@ -61,6 +59,7 @@ class _FutureInst<T extends Object, P extends Object> extends Inst<T, P> {
 typedef SingletonInst<T extends Object> = _SingletonInst<T, Object>;
 
 /// A singleton interface that also reports the type of the created objects.
+@pragma('vm:keep-name') // enable string lookups
 class _SingletonInst<T extends Object, P extends Object> extends Inst<T, P> {
   /// Creates a new singleton.
   const _SingletonInst(super.constructor);
@@ -72,6 +71,7 @@ class _SingletonInst<T extends Object, P extends Object> extends Inst<T, P> {
 }
 
 /// A factory interface that also reports the type of the created objects.
+@pragma('vm:keep-name') // enable string lookups
 class FactoryInst<T extends Object, P extends Object> extends Inst<T, P> {
   /// Creates a new factory.
   const FactoryInst(super.constructor);

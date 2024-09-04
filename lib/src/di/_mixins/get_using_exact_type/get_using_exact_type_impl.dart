@@ -12,15 +12,7 @@
 
 // ignore_for_file: invalid_use_of_protected_member
 
-import 'dart:async';
-
-import 'package:df_type/df_type.dart';
-import 'package:meta/meta.dart';
-
-import '../_index.g.dart';
-import '/src/_index.g.dart';
-import '../../_di_base.dart';
-import '../../../_dependency.dart';
+import '/src/_internal.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -31,15 +23,15 @@ base mixin GetUsingExactTypeImpl on DIBase implements GetUsingExactTypeIface {
     required Id type,
     Id? group,
   }) {
-    final dep = _get(type: type, group: group);
-    return dep.thenOr((dep) {
-      if (dep.condition?.call(this) ?? true) {
-        return dep.value;
-      } else {
-        // TODO: Need a specific error.
-        throw Error();
-      }
-    });
+     focusGroup = preferFocusGroup(group);
+    final dep = _get(type: type, group: focusGroup);
+     if (dep == null) {
+      throw DependencyNotFoundException(
+        type: type,
+        group: focusGroup,
+      );
+    }
+    return dep.thenOr((e) => e.value);
   }
 
   @override
@@ -54,109 +46,78 @@ base mixin GetUsingExactTypeImpl on DIBase implements GetUsingExactTypeIface {
   }
 
   @protected
-  FutureOr<Dependency<Object>> _get({
+  FutureOr<Dependency<Object>>? _get({
     required Id type,
-    Id? group,
+    required Id group,
   }) {
-    final focusGroup = preferFocusGroup(group);
-    final result = getFirstNonNull(
-      child: this,
-      parent: parent,
-      test: (di) => _getInternal(
-        di: di,
+    // Sync types.
+    {
+      final dep = registry.getDependencyUsingExactTypeOrNull(
         type: type,
-        group: focusGroup,
-      ),
-    );
-    if (result == null) {
-      throw DependencyNotFoundException(
-        type: type,
-        group: focusGroup,
+        group: group,
       );
+      if (dep != null) {
+        return dep;
+      }
     }
-    return result;
+    // Future types.
+    {
+      final genericType = GenericTypeId<FutureInst>([type, TypeId(Object)]);
+      final res = _inst(
+        type: type,
+        genericType: genericType,
+        group: group,
+      );
+      if (res != null) {
+        return res;
+      }
+    }
+    // Singleton types.
+    {
+      final genericType = GenericTypeId<SingletonInst>([type, TypeId(Object)]);
+      final res = _inst(
+        type: type,
+        genericType: genericType,
+        group: group,
+      );
+      if (res != null) {
+        return res;
+      }
+    }
+    return null;
   }
-}
 
-// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-
-FutureOr<Dependency<Object>>? _getInternal({
-  required DI di,
-  required Id type,
-  required Id group,
-}) {
-  // Sync types.
-  {
-    final dep = di.registry.getDependencyUsingExactTypeOrNull(
-      type: type,
+  FutureOr<Dependency<Object>>? _inst({
+    required Id type,
+    required Id genericType,
+    required Id group,
+  }) {
+    final dep = registry.getDependencyUsingExactTypeOrNull(
+      type: genericType,
       group: group,
     );
     if (dep != null) {
-      return dep;
+      final value = dep.value;
+      return value.thenOr((value) {
+        return (value as Inst).constructor(-1);
+      }).thenOr((newValue) {
+        return registerDependencyUsingExactType(
+          type: type,
+          dependency: dep.reassign(newValue),
+          suppressDependencyAlreadyRegisteredException: true,
+        );
+      }).thenOr((_) {
+        return registry.removeDependencyUsingExactType(
+          type: genericType,
+          group: group,
+        );
+      }).thenOr((_) {
+        return _get(
+          type: type,
+          group: group,
+        )!;
+      });
     }
+    return null;
   }
-  // Future types.
-  {
-    final genericType = GenericTypeId<FutureInst>([type, TypeId(Object)]);
-    final res = _inst(
-      di: di,
-      type: type,
-      genericType: genericType,
-      group: group,
-    );
-    if (res != null) {
-      return res;
-    }
-  }
-  // Singleton types.
-  {
-    final genericType = GenericTypeId<SingletonInst>([type, TypeId(Object)]);
-    final res = _inst(
-      di: di,
-      type: type,
-      genericType: genericType,
-      group: group,
-    );
-    if (res != null) {
-      return res;
-    }
-  }
-  return null;
-}
-
-// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-
-FutureOr<Dependency<Object>>? _inst({
-  required DI di,
-  required Id type,
-  required Id genericType,
-  required Id group,
-}) {
-  final dep = di.registry.getDependencyUsingExactTypeOrNull(
-    type: genericType,
-    group: group,
-  );
-  if (dep != null) {
-    final value = dep.value;
-    return value.thenOr((value) {
-      return (value as Inst).constructor(-1);
-    }).thenOr((newValue) {
-      return di.registerDependencyUsingExactType(
-        type: type,
-        dependency: dep.reassign(newValue),
-        suppressDependencyAlreadyRegisteredException: true,
-      );
-    }).thenOr((_) {
-      return di.registry.removeDependencyUsingExactType(
-        type: genericType,
-        group: group,
-      );
-    }).thenOr((_) {
-      return di._get(
-        type: type,
-        group: group,
-      );
-    });
-  }
-  return null;
 }

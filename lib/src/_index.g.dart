@@ -8,7 +8,7 @@
 //.title~
 
 // --- PUBLIC FILES ---
-export 'descriptor.dart';
+export 'id.dart';
 export 'inst.dart';
 export 'di/di.dart';
 export 'exceptions/dependency_already_registered_exception.dart';

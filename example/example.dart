@@ -10,7 +10,7 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-// ignore_for_file: invalid_use_of_protected_member
+// ignore_for_file: invalid_use_of_protected_member, strict_raw_type
 
 import 'dart:async';
 
@@ -21,8 +21,12 @@ import 'package:df_di/df_di.dart';
 void main() async {
   final di = DI.global;
 
+  di.register(Future.value('Hello, DI!'));
+  print(di.get<String>()); // prin
+
   // Register FooBarService as a lazy singleton.
   di.registerLazySingletonService(FooBarService.new);
+
   // Now we have a SingletonInst<FooBarService> registered.
   print(di.registry.state);
 
@@ -52,8 +56,10 @@ void main() async {
 
   di.registerLazySingletonService(CountingService.new);
   print(di.registry.state);
-  final coutingService = di.getUsingExactType(type: TypeId(CountingService));
+  final coutingService = di.getUsingRuntimeType(CountingService);
   print(di.registry.state);
+
+  
   print(coutingService);
 
   Future.delayed(
@@ -81,7 +87,7 @@ typedef Params = ({String name, int age});
 /// - Register via `di.initSingletonService(FooBarService.new);`
 /// - Get via `di.get<FooBarService>();`
 /// - Unregister via `di.unregister<FooBarService>();`
-final class FooBarService extends NoParamsService {
+final class FooBarService extends Service<Object> {
   @override
   void onInitService(_) async {}
 
@@ -93,7 +99,7 @@ final class FooBarService extends NoParamsService {
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-final class CountingService extends NoParamsStreamingService<int> {
+final class CountingService extends StreamingService<int, Object> {
   @override
   Stream<int> provideInputStream() async* {
     for (var n = 0; n < 100; n++) {

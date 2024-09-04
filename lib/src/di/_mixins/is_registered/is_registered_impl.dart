@@ -10,11 +10,7 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-import 'package:meta/meta.dart';
-
-import '../_index.g.dart';
-import '/src/_index.g.dart';
-import '../../_di_base.dart';
+import '/src/_internal.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -24,7 +20,7 @@ base mixin IsRegisteredImpl on DIBase implements IsRegisteredIface {
   bool isRegistered<T extends Object>({
     Id? group,
   }) {
-    final dep = getDependencyOrNull<T>(
+    final dep = getDependencyOrNull1<T>(
       group: group,
     );
     final registered = dep != null;
@@ -34,10 +30,10 @@ base mixin IsRegisteredImpl on DIBase implements IsRegisteredIface {
   @override
   bool isRegisteredUsingExactType({
     required Id type,
-    required Id paramsType,
+    Id? paramsType,
     required Id group,
   }) {
-    final dep = getDependencyUsingExactTypeOrNull(
+    final dep = getDependencyUsingExactTypeOrNull1(
       type: type,
       paramsType: paramsType,
       group: group,
@@ -49,7 +45,7 @@ base mixin IsRegisteredImpl on DIBase implements IsRegisteredIface {
   @override
   bool isRegisteredAsRuntimeType({
     required Type type,
-    required Id paramsType,
+    Id? paramsType,
     required Id group,
   }) {
     return isRegisteredUsingExactType(

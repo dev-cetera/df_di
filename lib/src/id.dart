@@ -22,6 +22,14 @@ class Id<T extends Object> {
   static const devGroup = Id('DEV_GROUP');
   static const testGroup = Id('TEST_GROUP');
 
+  static const $1 = Id('1');
+  static const $2 = Id('2');
+  static const $3 = Id('3');
+  static const $4 = Id('4');
+  static const $5 = Id('5');
+  static const $6 = Id('6');
+  static const $7 = Id('7');
+
   // Two Groups are equal if ther hashCodes are equal.
   @override
   bool operator ==(Object other) {
@@ -46,22 +54,45 @@ class TypeId extends Id<String> {
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-/// Constructs a generic type string context using the base type [T] and the
-/// provided [subTypes]. This is useful for dynamically creating type strings
-/// with multiple subtypes.
+/// Constructs a `GenericTypeId` based on the base type [T] and the optional
+/// list of `subtypes`. If no subtypes are provided or the list is empty, the
+/// method retains the original generic parameters from [T]. This is useful
+/// for dynamically creating type strings with multiple subtypes.
 ///
 /// Example:
 /// ```dart
-/// print(_constructGenericType<Map>(['String', 'int'])); // Map<String, int>
-/// print(_constructGenericType<Tuple3>(['A', 'B', 'C'])); // Tuple3<A, B, C>
+/// // With subtypes provided:
+/// final id1 = GenericTypeId<Map>([Id('String'), Id('int')]);
+/// print(id1); // Map<String, int>
+///
+/// // Without subtypes:
+/// final id2 = GenericTypeId<Map>();
+/// print(id2); // Map<String, String>
+///
+/// // Non-generic type:
+/// final id3 = GenericTypeId<int>();
+/// print(id3); // int
 /// ```
 class GenericTypeId<T> extends TypeId {
   GenericTypeId._(super.type);
-  factory GenericTypeId(List<Id> subTypes) {
+
+  factory GenericTypeId(List<Id?>? subTypes) {
     final typeString = '$T';
     final n = typeString.indexOf('<');
-    final base = typeString.substring(0, n == -1 ? typeString.length : n);
-    final subTypeString = subTypes.join(', ');
+
+    // If there is no generic type in the base type [T], return the type name directly.
+    if (n == -1) {
+      return GenericTypeId._(typeString);
+    }
+
+    // If no subtypes are provided, retain the original generic parameters.
+    if (subTypes == null || subTypes.isEmpty) {
+      return GenericTypeId._(typeString);
+    }
+
+    // Construct the generic type string using the provided subtypes.
+    final base = typeString.substring(0, n);
+    final subTypeString = subTypes.nonNulls.join(', ');
     final value = '$base<$subTypeString>';
     return GenericTypeId._(value);
   }

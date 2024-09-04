@@ -10,20 +10,27 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-import 'package:meta/meta.dart';
-
-import '/src/_index.g.dart';
+import '/src/_internal.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 @internal
 abstract interface class ChildIface {
   void registerChild({
-    Id? group,
     Id? childGroup,
+    Id? group,
   });
 
-  DI getChild({Id? group});
+  DI getChild({
+    Id? group,
+  });
 
-  void unregisterChild({Id? group});
+  DI child({
+    Id? childGroup,
+    Id? group,
+  });
+
+  void unregisterChild({
+    Id? group,
+  });
 }

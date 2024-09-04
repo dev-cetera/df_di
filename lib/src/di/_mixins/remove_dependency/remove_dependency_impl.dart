@@ -10,12 +10,7 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-import 'package:meta/meta.dart';
-
-import '../_index.g.dart';
-import '/src/_index.g.dart';
-import '../../_di_base.dart';
-import '../../../_dependency.dart';
+import '/src/_internal.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -47,7 +42,7 @@ base mixin RemoveDependencyImpl on DIBase implements RemoveDependencyIface {
   @override
   Dependency<Object> removeDependencyUsingExactType({
     required Id type,
-    required Id paramsType,
+    Id? paramsType,
     Id? group,
   }) {
     final focusGroup = preferFocusGroup(group);
@@ -78,12 +73,12 @@ base mixin RemoveDependencyImpl on DIBase implements RemoveDependencyIface {
   @pragma('vm:prefer-inline')
   Dependency<Object> removeDependencyOfRuntimeType({
     required Type type,
-    required Id paramsType,
+    Id? paramsType,
     Id? group,
   }) {
     return removeDependencyUsingExactType(
       type: TypeId(type),
-      paramsType: TypeId(Object),
+      paramsType: null,
       group: group,
     );
   }

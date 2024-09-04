@@ -10,11 +10,7 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-import 'dart:async';
-
-import 'package:meta/meta.dart';
-
-import '/src/_index.g.dart';
+import '/src/_internal.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -51,8 +47,8 @@ abstract interface class GetFactoryIface {
 
   /// ...
   @protected
-  FutureOr<Object> getFactoryUsingRuntimeType({
-    required Type type,
+  FutureOr<Object> getFactoryUsingRuntimeType(
+    Type type, {
     required Object params,
     Id? group,
   });
@@ -67,8 +63,8 @@ abstract interface class GetFactoryIface {
 
   /// ...
   @protected
-  FutureOr<Object>? getFactoryUsingRuntimeTypeOrNull({
-    required Type type,
+  FutureOr<Object>? getFactoryUsingRuntimeTypeOrNull(
+    Type type, {
     required Object params,
     Id? group,
   });

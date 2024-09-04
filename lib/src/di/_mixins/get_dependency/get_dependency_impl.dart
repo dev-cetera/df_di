@@ -12,23 +12,18 @@
 
 // ignore_for_file: invalid_use_of_protected_member
 
-import 'package:meta/meta.dart';
-
-import '../_index.g.dart';
-import '/src/_index.g.dart';
-import '../../_di_base.dart';
-import '../../../_dependency.dart';
+import '/src/_internal.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 @internal
 base mixin GetDependencyImpl on DIBase implements GetDependencyIface {
   @override
-  Dependency<Object> getDependency<T extends Object>({
+  Dependency<Object> getDependency1<T extends Object>({
     Id? group,
   }) {
     final focusGroup = preferFocusGroup(group);
-    final dep = getDependencyOrNull<T>(
+    final dep = getDependencyOrNull1<T>(
       group: group,
     );
     if (dep == null) {
@@ -42,12 +37,38 @@ base mixin GetDependencyImpl on DIBase implements GetDependencyIface {
   }
 
   @override
-  Dependency<Object> getDependencyUsingExactType({
-    required Id type,
-    required Id paramsType,
-    required Id group,
+  Dependency<Object>? getDependencyOrNull1<T extends Object>({
+    Id? group,
   }) {
-    final dep = getDependencyUsingExactTypeOrNull(
+    final focusGroup = preferFocusGroup(group);
+    final getters = [
+      () => registry.getDependencyOrNull<T>(group: focusGroup),
+      () => registry.getDependencyOrNull<FutureInst<T>>(group: focusGroup),
+      () => registry.getDependencyOrNull<SingletonInst<T>>(group: focusGroup),
+      () => registry.getDependencyOrNull<FactoryInst<T, Object>>(group: focusGroup),
+    ];
+    for (final getter in getters) {
+      final dep = getter();
+      if (dep != null) {
+        final conditionMet = dep.condition?.call(this) ?? true;
+        if (conditionMet) {
+          return dep;
+        }
+      }
+    }
+    return parent?.getDependencyOrNull1<T>(
+      group: group,
+    );
+  }
+
+  @override
+  Dependency<Object> getDependencyUsingExactType1({
+    required Id type,
+    Id? paramsType,
+    Id? group,
+  }) {
+    final focusGroup = preferFocusGroup(group);
+    final dep = getDependencyUsingExactTypeOrNull1(
       type: type,
       paramsType: paramsType,
       group: group,
@@ -55,7 +76,7 @@ base mixin GetDependencyImpl on DIBase implements GetDependencyIface {
     if (dep == null) {
       throw DependencyNotFoundException(
         type: type,
-        group: group,
+        group: focusGroup,
       );
     } else {
       return dep;
@@ -63,45 +84,47 @@ base mixin GetDependencyImpl on DIBase implements GetDependencyIface {
   }
 
   @override
-  Dependency<Object>? getDependencyOrNull<T extends Object>({
-    Id? group,
-  }) {
-    return getFirstNonNull(
-      child: this,
-      parent: parent,
-      test: (di) => _getDependencyOrNull<T>(
-        di: di,
-        group: group,
-      ),
-    );
-  }
-
-  @override
-  Dependency<Object>? getDependencyUsingExactTypeOrNull({
+  Dependency<Object>? getDependencyUsingExactTypeOrNull1({
     required Id type,
-    required Id paramsType,
+    Id? paramsType,
     Id? group,
   }) {
-    return getFirstNonNull(
-      child: this,
-      parent: parent,
-      test: (di) => _getDependencyUsingExactTypeOrNull(
-        di: di,
-        type: type,
-        paramsType: paramsType,
-        group: group,
-      ),
+    final focusGroup = preferFocusGroup(group);
+    final getters = [
+      type,
+      GenericTypeId<FutureInst>([type, paramsType]),
+      GenericTypeId<SingletonInst>([type, paramsType]),
+      GenericTypeId<FactoryInst>([type, paramsType]),
+    ].map(
+      (type) => () => registry.getDependencyUsingExactTypeOrNull(
+            type: type,
+            group: focusGroup,
+          ),
+    );
+    for (final getter in getters) {
+      final dep = getter();
+      if (dep != null) {
+        final conditionMet = dep.condition?.call(this) ?? true;
+        if (conditionMet) {
+          return dep;
+        }
+      }
+    }
+    return parent?.getDependencyUsingExactTypeOrNull1(
+      type: type,
+      paramsType: paramsType,
+      group: group,
     );
   }
 
   @override
   @pragma('vm:prefer-inline')
-  Dependency<Object> getDependencyUsingRuntimeType({
+  Dependency<Object> getDependencyUsingRuntimeType1({
     required Type type,
-    required Id paramsType,
-    required Id group,
+    Id? paramsType,
+    Id? group,
   }) {
-    return getDependencyUsingExactType(
+    return getDependencyUsingExactType1(
       type: TypeId(type),
       paramsType: paramsType,
       group: group,
@@ -110,62 +133,15 @@ base mixin GetDependencyImpl on DIBase implements GetDependencyIface {
 
   @pragma('vm:prefer-inline')
   @override
-  Dependency<Object>? getDependencyUsingRuntimeTypeOrNull({
+  Dependency<Object>? getDependencyUsingRuntimeTypeOrNull1({
     required Type type,
-    required Id paramsType,
+    Id? paramsType,
     Id? group,
   }) {
-    return getDependencyUsingExactTypeOrNull(
+    return getDependencyUsingExactTypeOrNull1(
       type: TypeId(type),
       paramsType: paramsType,
       group: group,
     );
   }
-}
-
-Dependency<Object>? _getDependencyOrNull<T extends Object>({
-  required DI di,
-  required Id? group,
-}) {
-  final focusGroup = di.preferFocusGroup(group);
-  final getters = [
-    () => di.registry.getDependencyOrNull<T>(group: focusGroup),
-    () => di.registry.getDependencyOrNull<FutureInst<T>>(group: focusGroup),
-    () => di.registry.getDependencyOrNull<SingletonInst<T>>(group: focusGroup),
-    () => di.registry.getDependencyOrNull<FactoryInst<T, Object>>(group: focusGroup),
-  ];
-  for (final getter in getters) {
-    final dep = getter();
-    if (dep != null) {
-      return dep;
-    }
-  }
-  return null;
-}
-
-Dependency<Object>? _getDependencyUsingExactTypeOrNull({
-  required DI di,
-  required Id type,
-  required Id paramsType,
-  required Id? group,
-}) {
-  final focusGroup = di.preferFocusGroup(group);
-  final getters = [
-    type,
-    GenericTypeId<FutureInst>([type, paramsType]),
-    GenericTypeId<SingletonInst>([type, paramsType]),
-    GenericTypeId<FactoryInst>([type, paramsType]),
-  ].map(
-    (type) => () => di.registry.getDependencyUsingExactTypeOrNull(
-          type: type,
-          group: focusGroup,
-        ),
-  );
-  for (final getter in getters) {
-    final dep = getter();
-    if (dep != null) {
-      return dep;
-    }
-  }
-  return null;
 }

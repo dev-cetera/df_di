@@ -10,9 +10,7 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-import '/src/_index.g.dart';
-import '_mixins/_index.g.dart';
-import '_di_base.dart';
+import '/src/_internal.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -50,7 +48,7 @@ base class DI extends DIBase
   /// Default app group.
   static final app = DI.instantiate(
     onInstantiate: (di) {
-      di.registerChild(group: Id.globalGroup);
+      di.registerChild(group: Id.globalGroup,);
       di.registerChild(group: Id.sessionGroup);
       di.registerChild(group: Id.devGroup);
       di.registerChild(group: Id.prodGroup);

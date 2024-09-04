@@ -10,50 +10,47 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-import 'package:meta/meta.dart';
-
-import '/src/_index.g.dart';
-import '../../../_dependency.dart';
+import '/src/_internal.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 @internal
 abstract interface class GetDependencyIface {
   @protected
-  Dependency<Object> getDependency<T extends Object>({
+  Dependency<Object> getDependency1<T extends Object>({
     Id? group,
   });
 
   @protected
-  Dependency<Object> getDependencyUsingExactType({
+  Dependency<Object> getDependencyUsingExactType1({
     required Id type,
-    required Id paramsType,
-    required Id group,
-  });
-
-  @protected
-  Dependency<Object>? getDependencyOrNull<T extends Object>({
+    Id? paramsType,
     Id? group,
   });
 
   @protected
-  Dependency<Object>? getDependencyUsingExactTypeOrNull({
+  Dependency<Object>? getDependencyOrNull1<T extends Object>({
+    Id? group,
+  });
+
+  @protected
+  Dependency<Object>? getDependencyUsingExactTypeOrNull1({
     required Id type,
-    required Id paramsType,
+    Id? paramsType,
     Id? group,
   });
 
   @protected
-  Dependency<Object> getDependencyUsingRuntimeType({
+  Dependency<Object> getDependencyUsingRuntimeType1({
     required Type type,
-    required Id paramsType,
-    required Id group,
+    Id? paramsType,
+    Id? group,
   });
 
   @protected
-  Dependency<Object>? getDependencyUsingRuntimeTypeOrNull({
+  Dependency<Object>? getDependencyUsingRuntimeTypeOrNull1({
     required Type type,
-    required Id paramsType,
+    Id? paramsType,
     Id? group,
   });
 }
