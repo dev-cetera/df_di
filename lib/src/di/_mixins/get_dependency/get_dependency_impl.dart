@@ -20,7 +20,7 @@ import '/src/_internal.dart';
 base mixin GetDependencyImpl on DIBase implements GetDependencyIface {
   @override
   Dependency<Object> getDependency1<T extends Object>({
-    Id? group,
+    Gr? group,
   }) {
     final focusGroup = preferFocusGroup(group);
     final dep = getDependencyOrNull1<T>(
@@ -38,7 +38,7 @@ base mixin GetDependencyImpl on DIBase implements GetDependencyIface {
 
   @override
   Dependency<Object>? getDependencyOrNull1<T extends Object>({
-    Id? group,
+    Gr? group,
   }) {
     final focusGroup = preferFocusGroup(group);
     final getters = [
@@ -46,7 +46,8 @@ base mixin GetDependencyImpl on DIBase implements GetDependencyIface {
       () => registry.getDependencyOrNull<FutureInst<T>>(group: focusGroup),
       () => registry.getDependencyOrNull<SingletonInst<T>>(group: focusGroup),
       () => registry.getDependencyOrNull<FactoryInst<T, Object>>(
-          group: focusGroup,),
+            group: focusGroup,
+          ),
     ];
     for (final getter in getters) {
       final dep = getter();
@@ -64,9 +65,9 @@ base mixin GetDependencyImpl on DIBase implements GetDependencyIface {
 
   @override
   Dependency<Object> getDependencyUsingExactType1({
-    required Id type,
-    Id? paramsType,
-    Id? group,
+    required Gr type,
+    Gr? paramsType,
+    Gr? group,
   }) {
     final focusGroup = preferFocusGroup(group);
     final dep = getDependencyUsingExactTypeOrNull1(
@@ -86,16 +87,16 @@ base mixin GetDependencyImpl on DIBase implements GetDependencyIface {
 
   @override
   Dependency<Object>? getDependencyUsingExactTypeOrNull1({
-    required Id type,
-    Id? paramsType,
-    Id? group,
+    required Gr type,
+    Gr? paramsType,
+    Gr? group,
   }) {
     final focusGroup = preferFocusGroup(group);
     final getters = [
       type,
-      GenericTypeId<FutureInst>([type, paramsType]),
-      GenericTypeId<SingletonInst>([type, paramsType]),
-      GenericTypeId<FactoryInst>([type, paramsType]),
+      GenericTypeGr<FutureInst>([type, paramsType]),
+      GenericTypeGr<SingletonInst>([type, paramsType]),
+      GenericTypeGr<FactoryInst>([type, paramsType]),
     ].map(
       (type) => () => registry.getDependencyUsingExactTypeOrNull(
             type: type,
@@ -122,11 +123,11 @@ base mixin GetDependencyImpl on DIBase implements GetDependencyIface {
   @pragma('vm:prefer-inline')
   Dependency<Object> getDependencyUsingRuntimeType1({
     required Type type,
-    Id? paramsType,
-    Id? group,
+    Gr? paramsType,
+    Gr? group,
   }) {
     return getDependencyUsingExactType1(
-      type: TypeId(type),
+      type: TypeGr(type),
       paramsType: paramsType,
       group: group,
     );
@@ -136,11 +137,11 @@ base mixin GetDependencyImpl on DIBase implements GetDependencyIface {
   @override
   Dependency<Object>? getDependencyUsingRuntimeTypeOrNull1({
     required Type type,
-    Id? paramsType,
-    Id? group,
+    Gr? paramsType,
+    Gr? group,
   }) {
     return getDependencyUsingExactTypeOrNull1(
-      type: TypeId(type),
+      type: TypeGr(type),
       paramsType: paramsType,
       group: group,
     );

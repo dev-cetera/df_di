@@ -24,7 +24,7 @@ abstract interface class RegisterDependencyIface {
 
   @protected
   void registerDependencyUsingExactType({
-    required Id type,
+    required Gr type,
     required Dependency<Object> dependency,
     bool suppressDependencyAlreadyRegisteredException = false,
   });

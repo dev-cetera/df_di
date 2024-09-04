@@ -18,21 +18,21 @@ import '/src/_internal.dart';
 abstract interface class IsRegisteredIface {
   /// Checks if a dependency is registered under [T] and [group].
   bool isRegistered<T extends Object>({
-    Id? group,
+    Gr? group,
   });
 
   /// Checks if a dependency is registered under [type] and [group].
   @protected
   bool isRegisteredUsingExactType({
-    required Id type,
-    Id? paramsType,
-    required Id group,
+    required Gr type,
+    Gr? paramsType,
+    required Gr group,
   });
 
   @protected
   bool isRegisteredAsRuntimeType({
     required Type type,
-    Id? paramsType,
-    required Id group,
+    Gr? paramsType,
+    required Gr group,
   });
 }

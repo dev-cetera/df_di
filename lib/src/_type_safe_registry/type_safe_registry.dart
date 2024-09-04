@@ -30,35 +30,35 @@ final class TypeSafeRegistry extends TypeSafeRegistryBase {
   void Function(TypeSafeRegistryMap state) onUpdate = (_) {};
 
   /// A snapshot describing the current state of the dependencies.
-  TypeSafeRegistryMap get state =>
-      Map<Id, Map<Id, Dependency<Object>>>.unmodifiable(_state)
-          .map((k, v) => MapEntry(k, Map.unmodifiable(v)));
+  TypeSafeRegistryMap get state => Map<Gr, Map<Gr, Dependency<Object>>>.unmodifiable(_state)
+      .map((k, v) => MapEntry(k, Map.unmodifiable(v)));
 
   /// A snapshot of the current groups.
-  Iterable<Id> get groups => state.keys;
+  Iterable<Gr> get groups => state.keys;
 
   @override
   @pragma('vm:prefer-inline')
   Dependency<Object>? getDependencyUsingExactTypeOrNull({
-    required Id type,
-    required Id group,
+    required Gr type,
+    required Gr group,
   }) {
     return _state[group]?[type];
   }
 
   @override
   Iterable<Dependency<Object>> getDependenciesByKey({
-    required Id group,
+    required Gr group,
   }) {
     return _state.entries
-        .expand((entry) =>
-            entry.value.values.where((dependency) => dependency.group == group),)
+        .expand(
+          (entry) => entry.value.values.where((dependency) => dependency.group == group),
+        )
         .cast<Dependency<Object>>();
   }
 
   @override
   void setDependencyUsingExactType({
-    required Id type,
+    required Gr type,
     required Dependency<Object> value,
   }) {
     final group = value.group;
@@ -71,8 +71,8 @@ final class TypeSafeRegistry extends TypeSafeRegistryBase {
 
   @override
   Dependency<Object>? removeDependencyUsingExactType({
-    required Id group,
-    required Id type,
+    required Gr group,
+    required Gr type,
   }) {
     final value = getDependencyMapByKey(group: group);
     if (value != null) {
@@ -92,12 +92,11 @@ final class TypeSafeRegistry extends TypeSafeRegistryBase {
 
   @override
   void setDependencyMapByKey({
-    required Id group,
+    required Gr group,
     required DependencyMap value,
   }) {
     final prev = _state[group];
-    final equals =
-        const MapEquality<Id, Dependency<Object>>().equals(prev, value);
+    final equals = const MapEquality<Gr, Dependency<Object>>().equals(prev, value);
     if (!equals) {
       _state[group] = value;
       onUpdate(_state);
@@ -107,7 +106,7 @@ final class TypeSafeRegistry extends TypeSafeRegistryBase {
   @override
   @pragma('vm:prefer-inline')
   DependencyMap<Object>? getDependencyMapByKey({
-    required Id group,
+    required Gr group,
   }) {
     return _state[group];
   }
@@ -115,7 +114,7 @@ final class TypeSafeRegistry extends TypeSafeRegistryBase {
   @override
   @pragma('vm:prefer-inline')
   void removeDependencyMapUsingExactType({
-    required Id type,
+    required Gr type,
   }) {
     _state.remove(type);
     onUpdate(_state);

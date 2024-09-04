@@ -49,24 +49,24 @@ base class DI extends DIBase
   static final app = DI.instantiate(
     onInstantiate: (di) {
       di.registerChild(
-        group: Id.globalGroup,
+        group: Gr.globalGroup,
       );
-      di.registerChild(group: Id.sessionGroup);
-      di.registerChild(group: Id.devGroup);
-      di.registerChild(group: Id.prodGroup);
-      di.registerChild(group: Id.testGroup);
+      di.registerChild(group: Gr.sessionGroup);
+      di.registerChild(group: Gr.devGroup);
+      di.registerChild(group: Gr.prodGroup);
+      di.registerChild(group: Gr.testGroup);
     },
   );
 
   /// Default global group.
-  static DI get global => app.getChild(group: Id.globalGroup);
-  static DI get session => app.getChild(group: Id.sessionGroup);
-  static DI get dev => app.getChild(group: Id.devGroup);
-  static DI get prod => app.getChild(group: Id.prodGroup);
-  static DI get test => app.getChild(group: Id.testGroup);
+  static DI get global => app.getChild(group: Gr.globalGroup);
+  static DI get session => app.getChild(group: Gr.sessionGroup);
+  static DI get dev => app.getChild(group: Gr.devGroup);
+  static DI get prod => app.getChild(group: Gr.prodGroup);
+  static DI get test => app.getChild(group: Gr.testGroup);
 
   factory DI.instantiate({
-    Id<Object>? focusGroup = Id.defaultGroup,
+    Gr<Object>? focusGroup = Gr.defaultGroup,
     DI? parent,
     void Function(DI di)? onInstantiate,
   }) {

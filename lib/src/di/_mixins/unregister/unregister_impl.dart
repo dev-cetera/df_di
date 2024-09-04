@@ -21,10 +21,9 @@ base mixin UnregisterImpl on DIBase implements UnregisterIface {
     void Function(Dependency<Object> dependency)? onUnregister,
   }) {
     final foc = FutureOrController<void>();
-    final dependencies = registry.state.values
-        .fold(<Dependency<Object>>[], (buffer, e) => buffer..addAll(e.values));
-    dependencies
-        .sort((a, b) => b.registrationIndex.compareTo(a.registrationIndex));
+    final dependencies =
+        registry.state.values.fold(<Dependency<Object>>[], (buffer, e) => buffer..addAll(e.values));
+    dependencies.sort((a, b) => b.registrationIndex.compareTo(a.registrationIndex));
     for (final dep in dependencies) {
       final a = dep.onUnregister;
       final b = onUnregister;
@@ -39,20 +38,20 @@ base mixin UnregisterImpl on DIBase implements UnregisterIface {
 
   @override
   FutureOr<void> unregister<T extends Object>({
-    Id? group,
+    Gr? group,
   }) {
     return unregisterUsingExactType(
-      type: TypeId(T),
-      paramsType: TypeId(Object),
+      type: TypeGr(T),
+      paramsType: TypeGr(Object),
       group: group,
     );
   }
 
   @override
   FutureOr<void> unregisterUsingExactType({
-    required Id type,
-    Id? paramsType,
-    Id? group,
+    required Gr type,
+    Gr? paramsType,
+    Gr? group,
   }) {
     final dep = removeDependencyUsingExactType(
       type: type,
@@ -65,11 +64,11 @@ base mixin UnregisterImpl on DIBase implements UnregisterIface {
   @override
   FutureOr<void> unregisterUsingRuntimeType(
     Type type, {
-    Id? paramsType,
-    Id? group,
+    Gr? paramsType,
+    Gr? group,
   }) {
     return unregisterUsingExactType(
-      type: TypeId(type),
+      type: TypeGr(type),
       paramsType: paramsType,
       group: group,
     );

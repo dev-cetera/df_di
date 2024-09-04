@@ -16,12 +16,12 @@ import '/src/_internal.dart';
 
 @internal
 abstract interface class DebugIface {
-  /// Gets the registration [Id] of the current dependency that can be
+  /// Gets the registration [Gr] of the current dependency that can be
   /// fetched with type [T] and [group].
   ///
   /// Useful for debugging.
   Type registrationType<T extends Object>({
-    Id? group,
+    Gr? group,
   });
 
   /// Gets the registration index of the current dependency that can be
@@ -29,6 +29,6 @@ abstract interface class DebugIface {
   ///
   /// Useful for debugging.
   int registrationIndex<T extends Object>({
-    Id? group,
+    Gr? group,
   });
 }

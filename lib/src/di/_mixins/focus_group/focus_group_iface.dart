@@ -16,11 +16,11 @@ import '/src/_internal.dart';
 
 @internal
 abstract interface class FocusGroupIface {
-  Id focusGroup = Id.defaultGroup;
+  Gr focusGroup = Gr.defaultGroup;
 
-  void setFocusGroup(Id group);
+  void setFocusGroup(Gr group);
 
-  Id getFocusGroup();
+  Gr getFocusGroup();
 
-  Id preferFocusGroup(Id? group);
+  Gr preferFocusGroup(Gr? group);
 }

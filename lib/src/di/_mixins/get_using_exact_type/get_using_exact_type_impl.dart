@@ -20,8 +20,8 @@ import '/src/_internal.dart';
 base mixin GetUsingExactTypeImpl on DIBase implements GetUsingExactTypeIface {
   @override
   FutureOr<Object> getUsingExactType({
-    required Id type,
-    Id? group,
+    required Gr type,
+    Gr? group,
   }) {
     focusGroup = preferFocusGroup(group);
     final dep = _get(type: type, group: focusGroup);
@@ -37,18 +37,18 @@ base mixin GetUsingExactTypeImpl on DIBase implements GetUsingExactTypeIface {
   @override
   FutureOr<Object> getUsingRuntimeType(
     Type type, {
-    Id? group,
+    Gr? group,
   }) {
     return getUsingExactType(
-      type: TypeId(type),
+      type: TypeGr(type),
       group: group,
     );
   }
 
   @protected
   FutureOr<Dependency<Object>>? _get({
-    required Id type,
-    required Id group,
+    required Gr type,
+    required Gr group,
   }) {
     // Sync types.
     {
@@ -62,7 +62,7 @@ base mixin GetUsingExactTypeImpl on DIBase implements GetUsingExactTypeIface {
     }
     // Future types.
     {
-      final genericType = GenericTypeId<FutureInst>([type, TypeId(Object)]);
+      final genericType = GenericTypeGr<FutureInst>([type, TypeGr(Object)]);
       final res = _inst(
         type: type,
         genericType: genericType,
@@ -74,7 +74,7 @@ base mixin GetUsingExactTypeImpl on DIBase implements GetUsingExactTypeIface {
     }
     // Singleton types.
     {
-      final genericType = GenericTypeId<SingletonInst>([type, TypeId(Object)]);
+      final genericType = GenericTypeGr<SingletonInst>([type, TypeGr(Object)]);
       final res = _inst(
         type: type,
         genericType: genericType,
@@ -88,9 +88,9 @@ base mixin GetUsingExactTypeImpl on DIBase implements GetUsingExactTypeIface {
   }
 
   FutureOr<Dependency<Object>>? _inst({
-    required Id type,
-    required Id genericType,
-    required Id group,
+    required Gr type,
+    required Gr genericType,
+    required Gr group,
   }) {
     final dep = registry.getDependencyUsingExactTypeOrNull(
       type: genericType,

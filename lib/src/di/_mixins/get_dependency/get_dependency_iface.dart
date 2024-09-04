@@ -18,39 +18,39 @@ import '/src/_internal.dart';
 abstract interface class GetDependencyIface {
   @protected
   Dependency<Object> getDependency1<T extends Object>({
-    Id? group,
+    Gr? group,
   });
 
   @protected
   Dependency<Object> getDependencyUsingExactType1({
-    required Id type,
-    Id? paramsType,
-    Id? group,
+    required Gr type,
+    Gr? paramsType,
+    Gr? group,
   });
 
   @protected
   Dependency<Object>? getDependencyOrNull1<T extends Object>({
-    Id? group,
+    Gr? group,
   });
 
   @protected
   Dependency<Object>? getDependencyUsingExactTypeOrNull1({
-    required Id type,
-    Id? paramsType,
-    Id? group,
+    required Gr type,
+    Gr? paramsType,
+    Gr? group,
   });
 
   @protected
   Dependency<Object> getDependencyUsingRuntimeType1({
     required Type type,
-    Id? paramsType,
-    Id? group,
+    Gr? paramsType,
+    Gr? group,
   });
 
   @protected
   Dependency<Object>? getDependencyUsingRuntimeTypeOrNull1({
     required Type type,
-    Id? paramsType,
-    Id? group,
+    Gr? paramsType,
+    Gr? group,
   });
 }

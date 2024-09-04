@@ -17,20 +17,20 @@ import '/src/_internal.dart';
 @internal
 abstract interface class ChildIface {
   void registerChild({
-    Id? childGroup,
-    Id? group,
+    Gr? childGroup,
+    Gr? group,
   });
 
   DI getChild({
-    Id? group,
+    Gr? group,
   });
 
   DI child({
-    Id? childGroup,
-    Id? group,
+    Gr? childGroup,
+    Gr? group,
   });
 
   void unregisterChild({
-    Id? group,
+    Gr? group,
   });
 }

@@ -20,7 +20,7 @@ base mixin DebugImpl on DIBase implements DebugIface {
   @override
   @pragma('vm:prefer-inline')
   Type registrationType<T extends Object>({
-    Id? group,
+    Gr? group,
   }) {
     return getDependency1<T>(group: group).registrationType;
   }
@@ -29,7 +29,7 @@ base mixin DebugImpl on DIBase implements DebugIface {
   @override
   @pragma('vm:prefer-inline')
   int registrationIndex<T extends Object>({
-    Id? group,
+    Gr? group,
   }) {
     return getDependency1<T>(group: group).registrationIndex;
   }

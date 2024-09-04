@@ -40,10 +40,10 @@ abstract base class DIBase
   final DIBase? parent;
 
   DIBase({
-    Id? focusGroup = Id.defaultGroup,
+    Gr? focusGroup = Gr.defaultGroup,
     this.parent,
-  }) : focusGroup = focusGroup ?? Id.defaultGroup;
+  }) : focusGroup = focusGroup ?? Gr.defaultGroup;
 
   @override
-  Id focusGroup;
+  Gr focusGroup;
 }

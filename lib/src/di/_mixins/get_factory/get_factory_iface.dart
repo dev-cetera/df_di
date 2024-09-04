@@ -18,7 +18,7 @@ import '/src/_internal.dart';
 abstract interface class GetFactoryIface {
   /// Gets a dependency registered via [registerFactory] as either a
   /// [Future] or an instance of [T] under the specified [group], or under
-  /// [Id.defaultId] if no group is provided.
+  /// [Gr.defaultGroup] if no group is provided.
   ///
   /// This method returns a new instance of the dependency each time it is
   /// called.
@@ -27,22 +27,22 @@ abstract interface class GetFactoryIface {
   ///   requested type [T] and [group].
   FutureOr<T> getFactory<T extends Object, P extends Object>(
     P params, {
-    Id? group,
+    Gr? group,
   });
 
   /// ...
   @protected
   FutureOr<T>? getFactoryOrNull<T extends Object, P extends Object>(
     P params, {
-    Id? group,
+    Gr? group,
   });
 
   /// ...
   @protected
   FutureOr<Object> getFactoryUsingExactType({
-    required Id type,
+    required Gr type,
     required Object params,
-    Id? group,
+    Gr? group,
   });
 
   /// ...
@@ -50,15 +50,15 @@ abstract interface class GetFactoryIface {
   FutureOr<Object> getFactoryUsingRuntimeType(
     Type type, {
     required Object params,
-    Id? group,
+    Gr? group,
   });
 
   /// ...
   @protected
   FutureOr<Object>? getFactoryUsingExactTypeOrNull({
-    required Id type,
+    required Gr type,
     required Object params,
-    Id? group,
+    Gr? group,
   });
 
   /// ...
@@ -66,6 +66,6 @@ abstract interface class GetFactoryIface {
   FutureOr<Object>? getFactoryUsingRuntimeTypeOrNull(
     Type type, {
     required Object params,
-    Id? group,
+    Gr? group,
   });
 }

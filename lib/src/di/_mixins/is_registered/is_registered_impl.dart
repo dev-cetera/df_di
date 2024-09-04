@@ -18,7 +18,7 @@ import '/src/_internal.dart';
 base mixin IsRegisteredImpl on DIBase implements IsRegisteredIface {
   @override
   bool isRegistered<T extends Object>({
-    Id? group,
+    Gr? group,
   }) {
     final dep = getDependencyOrNull1<T>(
       group: group,
@@ -29,9 +29,9 @@ base mixin IsRegisteredImpl on DIBase implements IsRegisteredIface {
 
   @override
   bool isRegisteredUsingExactType({
-    required Id type,
-    Id? paramsType,
-    required Id group,
+    required Gr type,
+    Gr? paramsType,
+    required Gr group,
   }) {
     final dep = getDependencyUsingExactTypeOrNull1(
       type: type,
@@ -45,11 +45,11 @@ base mixin IsRegisteredImpl on DIBase implements IsRegisteredIface {
   @override
   bool isRegisteredAsRuntimeType({
     required Type type,
-    Id? paramsType,
-    required Id group,
+    Gr? paramsType,
+    required Gr group,
   }) {
     return isRegisteredUsingExactType(
-      type: TypeId(type),
+      type: TypeGr(type),
       paramsType: paramsType,
       group: group,
     );

@@ -18,12 +18,12 @@ import '/src/_internal.dart';
 abstract interface class GetUsingExactTypeIface {
   @protected
   FutureOr<Object> getUsingExactType({
-    required Id type,
-    Id? group,
+    required Gr type,
+    Gr? group,
   });
 
   FutureOr<Object> getUsingRuntimeType(
     Type type, {
-    Id? group,
+    Gr? group,
   });
 }

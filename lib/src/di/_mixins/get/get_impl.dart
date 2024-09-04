@@ -21,14 +21,14 @@ base mixin GetImpl on DIBase implements GetIface {
   @override
   @pragma('vm:prefer-inline')
   T call<T extends Object>({
-    Id? group,
+    Gr? group,
   }) {
     return getSync<T>(group: group);
   }
 
   @override
   T? getSyncOrNull<T extends Object>({
-    Id? group,
+    Gr? group,
   }) {
     final focusGroup = preferFocusGroup(group);
     final registered = isRegistered<T>(
@@ -44,7 +44,7 @@ base mixin GetImpl on DIBase implements GetIface {
 
   @override
   T getSync<T extends Object>({
-    Id? group,
+    Gr? group,
   }) {
     final value = get<T>(group: group);
     if (value is Future<T>) {
@@ -55,7 +55,7 @@ base mixin GetImpl on DIBase implements GetIface {
 
   @override
   Future<T>? getAsyncOrNull<T extends Object>({
-    Id? group,
+    Gr? group,
   }) {
     final focusGroup = preferFocusGroup(group);
     final registered = isRegistered<T>(
@@ -71,7 +71,7 @@ base mixin GetImpl on DIBase implements GetIface {
 
   @override
   Future<T> getAsync<T extends Object>({
-    Id? group,
+    Gr? group,
   }) async {
     final value = await get<T>(group: group);
     return value;
@@ -79,7 +79,7 @@ base mixin GetImpl on DIBase implements GetIface {
 
   @override
   FutureOr<T?> getOrNull<T extends Object>({
-    Id? group,
+    Gr? group,
   }) {
     final focusGroup = preferFocusGroup(group);
     final registered = isRegistered<T>(
@@ -93,7 +93,7 @@ base mixin GetImpl on DIBase implements GetIface {
 
   @override
   FutureOr<T> get<T extends Object>({
-    Id? group,
+    Gr? group,
   }) {
     focusGroup = preferFocusGroup(group);
     final dep = _get<T>(group: focusGroup);
@@ -108,7 +108,7 @@ base mixin GetImpl on DIBase implements GetIface {
 
   @protected
   FutureOr<Dependency<T>>? _get<T extends Object>({
-    required Id group,
+    required Gr group,
   }) {
     final dep = getDependencyOrNull1<T>(group: group);
     if (dep != null) {
@@ -124,8 +124,7 @@ base mixin GetImpl on DIBase implements GetIface {
     return null;
   }
 
-  FutureOr<Dependency<T>>
-      _inst<T extends Object, TInst extends Inst<T, Object>>(
+  FutureOr<Dependency<T>> _inst<T extends Object, TInst extends Inst<T, Object>>(
     Dependency<Object> dep,
   ) {
     final value = (dep.value as TInst).cast<T, Object>();

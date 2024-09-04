@@ -15,13 +15,12 @@ import '/src/_internal.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 @internal
-base mixin RegisterUsingExactTypeImpl on DIBase
-    implements RegisterUsingExactTypeIface {
+base mixin RegisterUsingExactTypeImpl on DIBase implements RegisterUsingExactTypeIface {
   // ignore: unused_element
   void _register(
     FutureOr<Object> value, {
-    required Id type,
-    Id? group,
+    required Gr type,
+    Gr? group,
     OnUnregisterCallback<Object>? onUnregister,
     GetDependencyCondition? condition,
   }) {

@@ -21,7 +21,7 @@ base mixin GetFactoryImpl on DIBase implements GetFactoryIface {
   @override
   FutureOr<T> getFactory<T extends Object, P extends Object>(
     P params, {
-    Id? group,
+    Gr? group,
   }) {
     final focusGroup = preferFocusGroup(group);
     final result = getFactoryOrNull<T, P>(params, group: focusGroup);
@@ -37,7 +37,7 @@ base mixin GetFactoryImpl on DIBase implements GetFactoryIface {
   @override
   FutureOr<T>? getFactoryOrNull<T extends Object, P extends Object>(
     P params, {
-    Id? group,
+    Gr? group,
   }) {
     final focusGroup = preferFocusGroup(group);
     final dep = registry.getDependencyOrNull<FactoryInst<T, P>>(
@@ -50,9 +50,9 @@ base mixin GetFactoryImpl on DIBase implements GetFactoryIface {
 
   @override
   FutureOr<Object> getFactoryUsingExactType({
-    required Id type,
+    required Gr type,
     required Object params,
-    Id? group,
+    Gr? group,
   }) {
     final focusGroup = preferFocusGroup(group);
     final result = getFactoryUsingExactTypeOrNull(
@@ -74,19 +74,19 @@ base mixin GetFactoryImpl on DIBase implements GetFactoryIface {
   FutureOr<Object> getFactoryUsingRuntimeType(
     Type type, {
     required Object params,
-    Id? group,
+    Gr? group,
   }) {
     return getFactoryUsingExactType(
-      type: TypeId(type),
+      type: TypeGr(type),
       params: params,
     );
   }
 
   @override
   FutureOr<Object>? getFactoryUsingExactTypeOrNull({
-    required Id type,
+    required Gr type,
     required Object params,
-    Id? group,
+    Gr? group,
   }) {
     final focusGroup = preferFocusGroup(group);
     final dep = registry.getDependencyUsingExactTypeOrNull(
@@ -102,10 +102,10 @@ base mixin GetFactoryImpl on DIBase implements GetFactoryIface {
   FutureOr<Object>? getFactoryUsingRuntimeTypeOrNull(
     Type type, {
     required Object params,
-    Id? group,
+    Gr? group,
   }) {
     return getFactoryUsingExactTypeOrNull(
-      type: TypeId(type),
+      type: TypeGr(type),
       params: params,
     );
   }

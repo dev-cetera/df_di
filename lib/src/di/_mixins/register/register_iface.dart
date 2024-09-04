@@ -17,7 +17,7 @@ import '/src/_internal.dart';
 @internal
 abstract interface class RegisterIface {
   /// Registers the [value] under type [T] and the specified [group], or
-  /// under [Id.defaultId] if no group is provided.
+  /// under [Gr.defaultGroup] if no group is provided.
   ///
   /// Optionally provide an [onUnregister] callback to be called on [unregister].
   ///
@@ -51,7 +51,7 @@ abstract interface class RegisterIface {
   /// ```
   void register<T extends Object>(
     FutureOr<T> value, {
-    Id? group,
+    Gr? group,
     OnUnregisterCallback<T>? onUnregister,
   });
 
@@ -68,7 +68,7 @@ abstract interface class RegisterIface {
   /// ```
   void registerLazySingletonService<T extends Service<Object>>(
     Constructor<T> constructor, {
-    Id? group,
+    Gr? group,
   });
 
   /// Registers a [Service] as a factory. Each time [get] is called
@@ -84,7 +84,7 @@ abstract interface class RegisterIface {
   /// ```
   void registerFactoryService<T extends Service<P>, P extends Object>(
     Constructor<T> constructor, {
-    Id? group,
+    Gr? group,
   });
 
   /// Registers a singleton instance of [T] with the given [constructor]. When
@@ -98,7 +98,7 @@ abstract interface class RegisterIface {
   /// ```
   void registerLazySingleton<T extends Object>(
     InstConstructor<T, Object> constructor, {
-    Id? group,
+    Gr? group,
     OnUnregisterCallback<T>? onUnregister,
   });
 
@@ -113,6 +113,6 @@ abstract interface class RegisterIface {
   /// ```
   void registerFactory<T extends Object, P extends Object>(
     InstConstructor<T, P> constructor, {
-    Id? group,
+    Gr? group,
   });
 }

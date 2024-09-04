@@ -19,8 +19,8 @@ base mixin ChildImpl on DIBase implements ChildIface {
   @override
   @pragma('vm:prefer-inline')
   void registerChild({
-    Id? childGroup,
-    Id? group,
+    Gr? childGroup,
+    Gr? group,
   }) {
     final childFocusGroup = preferFocusGroup(childGroup);
     final focusGroup = preferFocusGroup(group);
@@ -33,12 +33,12 @@ base mixin ChildImpl on DIBase implements ChildIface {
 
   @override
   @pragma('vm:prefer-inline')
-  DI getChild({Id? group}) => getSync<DI>(group: group);
+  DI getChild({Gr? group}) => getSync<DI>(group: group);
 
   @override
   DI child({
-    Id? childGroup,
-    Id? group,
+    Gr? childGroup,
+    Gr? group,
   }) {
     if (!isRegistered<DI>()) {
       registerChild(
@@ -53,5 +53,5 @@ base mixin ChildImpl on DIBase implements ChildIface {
 
   @override
   @pragma('vm:prefer-inline')
-  void unregisterChild({Id? group}) => unregister<DI>(group: group);
+  void unregisterChild({Gr? group}) => unregister<DI>(group: group);
 }

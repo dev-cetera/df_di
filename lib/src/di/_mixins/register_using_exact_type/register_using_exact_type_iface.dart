@@ -19,8 +19,8 @@ abstract interface class RegisterUsingExactTypeIface {
   @protected
   void registerUsingExactTypeOr(
     FutureOr<Object> value, {
-    required Id type,
-    Id? group,
+    required Gr type,
+    Gr? group,
     OnUnregisterCallback<Object>? onUnregister,
   });
 }

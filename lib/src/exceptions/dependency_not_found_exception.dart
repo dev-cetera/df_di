@@ -18,6 +18,6 @@ import '/src/_internal.dart';
 final class DependencyNotFoundException extends DFDIPackageException {
   DependencyNotFoundException({
     required Object type,
-    required Id group,
+    required Gr group,
   }) : super('Dependency of type $type in group "$group" not found.');
 }
