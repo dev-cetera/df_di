@@ -42,7 +42,8 @@ class Inst<T extends Object, P extends Object> {
   }
 }
 
-typedef InstConstructor<T extends Object, P extends Object> = FutureOr<T> Function(P params);
+typedef InstConstructor<T extends Object, P extends Object> = FutureOr<T>
+    Function(P params);
 
 typedef FutureInst<T extends Object> = _FutureInst<T, Object>;
 
@@ -52,7 +53,8 @@ class _FutureInst<T extends Object, P extends Object> extends Inst<T, P> {
 
   @override
   _FutureInst<T2, P2> cast<T2 extends Object, P2 extends Object>() {
-    return castWith<T2, P2, _FutureInst<T2, P2>>((c) => _FutureInst<T2, P2>((e) => c(e)));
+    return castWith<T2, P2, _FutureInst<T2, P2>>(
+        (c) => _FutureInst<T2, P2>((e) => c(e)),);
   }
 }
 
@@ -66,7 +68,8 @@ class _SingletonInst<T extends Object, P extends Object> extends Inst<T, P> {
 
   @override
   _SingletonInst<T2, P2> cast<T2 extends Object, P2 extends Object>() {
-    return castWith<T2, P2, _SingletonInst<T2, P2>>((c) => _SingletonInst<T2, P2>((e) => c(e)));
+    return castWith<T2, P2, _SingletonInst<T2, P2>>(
+        (c) => _SingletonInst<T2, P2>((e) => c(e)),);
   }
 }
 
@@ -78,7 +81,8 @@ class FactoryInst<T extends Object, P extends Object> extends Inst<T, P> {
 
   @override
   FactoryInst<T2, P2> cast<T2 extends Object, P2 extends Object>() {
-    return castWith<T2, P2, FactoryInst<T2, P2>>((c) => FactoryInst<T2, P2>((e) => c(e)));
+    return castWith<T2, P2, FactoryInst<T2, P2>>(
+        (c) => FactoryInst<T2, P2>((e) => c(e)),);
   }
 }
 

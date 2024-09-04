@@ -59,7 +59,6 @@ void main() async {
   final coutingService = di.getUsingRuntimeType(CountingService);
   print(di.registry.state);
 
-  
   print(coutingService);
 
   Future.delayed(

@@ -23,9 +23,9 @@ base mixin GetUsingExactTypeImpl on DIBase implements GetUsingExactTypeIface {
     required Id type,
     Id? group,
   }) {
-     focusGroup = preferFocusGroup(group);
+    focusGroup = preferFocusGroup(group);
     final dep = _get(type: type, group: focusGroup);
-     if (dep == null) {
+    if (dep == null) {
       throw DependencyNotFoundException(
         type: type,
         group: focusGroup,

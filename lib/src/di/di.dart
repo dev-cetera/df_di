@@ -48,7 +48,9 @@ base class DI extends DIBase
   /// Default app group.
   static final app = DI.instantiate(
     onInstantiate: (di) {
-      di.registerChild(group: Id.globalGroup,);
+      di.registerChild(
+        group: Id.globalGroup,
+      );
       di.registerChild(group: Id.sessionGroup);
       di.registerChild(group: Id.devGroup);
       di.registerChild(group: Id.prodGroup);

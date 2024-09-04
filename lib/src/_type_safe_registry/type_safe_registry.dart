@@ -30,8 +30,9 @@ final class TypeSafeRegistry extends TypeSafeRegistryBase {
   void Function(TypeSafeRegistryMap state) onUpdate = (_) {};
 
   /// A snapshot describing the current state of the dependencies.
-  TypeSafeRegistryMap get state => Map<Id, Map<Id, Dependency<Object>>>.unmodifiable(_state)
-      .map((k, v) => MapEntry(k, Map.unmodifiable(v)));
+  TypeSafeRegistryMap get state =>
+      Map<Id, Map<Id, Dependency<Object>>>.unmodifiable(_state)
+          .map((k, v) => MapEntry(k, Map.unmodifiable(v)));
 
   /// A snapshot of the current groups.
   Iterable<Id> get groups => state.keys;
@@ -50,7 +51,8 @@ final class TypeSafeRegistry extends TypeSafeRegistryBase {
     required Id group,
   }) {
     return _state.entries
-        .expand((entry) => entry.value.values.where((dependency) => dependency.group == group))
+        .expand((entry) =>
+            entry.value.values.where((dependency) => dependency.group == group),)
         .cast<Dependency<Object>>();
   }
 
@@ -94,7 +96,8 @@ final class TypeSafeRegistry extends TypeSafeRegistryBase {
     required DependencyMap value,
   }) {
     final prev = _state[group];
-    final equals = const MapEquality<Id, Dependency<Object>>().equals(prev, value);
+    final equals =
+        const MapEquality<Id, Dependency<Object>>().equals(prev, value);
     if (!equals) {
       _state[group] = value;
       onUpdate(_state);

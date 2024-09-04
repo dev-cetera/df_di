@@ -35,7 +35,8 @@ base mixin RegisterImpl on DIBase implements RegisterIface {
     Id? group,
   }) {
     registerLazySingleton(
-      (params) => constructor().thenOr((e) => e.initService(params).thenOr((_) => e)),
+      (params) =>
+          constructor().thenOr((e) => e.initService(params).thenOr((_) => e)),
       group: group,
       onUnregister: (e) {
         return e.thenOr((e) {
@@ -54,7 +55,8 @@ base mixin RegisterImpl on DIBase implements RegisterIface {
     Id? group,
   }) {
     registerFactory<T, P>(
-      (params) => constructor().thenOr((e) => e.initService(params).thenOr((_) => e)),
+      (params) =>
+          constructor().thenOr((e) => e.initService(params).thenOr((_) => e)),
       group: group,
     );
   }
@@ -98,7 +100,9 @@ base mixin RegisterImpl on DIBase implements RegisterIface {
           value: value,
           registrationIndex: registrationCount++,
           group: focusGroup,
-          onUnregister: onUnregister != null ? (e) => e is R ? onUnregister(e) : null : null,
+          onUnregister: onUnregister != null
+              ? (e) => e is R ? onUnregister(e) : null
+              : null,
           condition: condition,
         ),
       );
@@ -108,7 +112,9 @@ base mixin RegisterImpl on DIBase implements RegisterIface {
           value: FutureInst<T>((_) => value),
           registrationIndex: registrationCount++,
           group: focusGroup,
-          onUnregister: onUnregister != null ? (e) => e is R ? onUnregister(e) : null : null,
+          onUnregister: onUnregister != null
+              ? (e) => e is R ? onUnregister(e) : null
+              : null,
           condition: condition,
         ),
       );

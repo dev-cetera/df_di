@@ -54,7 +54,8 @@ final class Dependency<T extends Object> {
   Dependency<R> cast<R extends Object>() => reassign(value as R);
 
   @override
-  String toString() => 'Dependency<$type> | Dependency<$registrationType> #$registrationIndex';
+  String toString() =>
+      'Dependency<$type> | Dependency<$registrationType> #$registrationIndex';
 
   @override
   bool operator ==(Object other) {
@@ -70,7 +71,8 @@ final class Dependency<T extends Object> {
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 @internal
-typedef OnUnregisterCallback<T extends Object> = FutureOr<void> Function(T value);
+typedef OnUnregisterCallback<T extends Object> = FutureOr<void> Function(
+    T value,);
 
 @internal
 typedef GetDependencyCondition = bool Function(DIBase current);

@@ -45,7 +45,8 @@ base mixin GetDependencyImpl on DIBase implements GetDependencyIface {
       () => registry.getDependencyOrNull<T>(group: focusGroup),
       () => registry.getDependencyOrNull<FutureInst<T>>(group: focusGroup),
       () => registry.getDependencyOrNull<SingletonInst<T>>(group: focusGroup),
-      () => registry.getDependencyOrNull<FactoryInst<T, Object>>(group: focusGroup),
+      () => registry.getDependencyOrNull<FactoryInst<T, Object>>(
+          group: focusGroup,),
     ];
     for (final getter in getters) {
       final dep = getter();

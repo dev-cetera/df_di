@@ -127,7 +127,8 @@ abstract base class TypeSafeRegistryBase {
   Iterable<Dependency<Object>> getAllDependenciesByKey({
     required Id group,
   }) {
-    return getDependencyMapByKey(group: group)?.values ?? const Iterable.empty();
+    return getDependencyMapByKey(group: group)?.values ??
+        const Iterable.empty();
   }
 
   /// Sets the map of dependencies for a given [group].

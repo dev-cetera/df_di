@@ -21,9 +21,10 @@ base mixin UnregisterImpl on DIBase implements UnregisterIface {
     void Function(Dependency<Object> dependency)? onUnregister,
   }) {
     final foc = FutureOrController<void>();
-    final dependencies =
-        registry.state.values.fold(<Dependency<Object>>[], (buffer, e) => buffer..addAll(e.values));
-    dependencies.sort((a, b) => b.registrationIndex.compareTo(a.registrationIndex));
+    final dependencies = registry.state.values
+        .fold(<Dependency<Object>>[], (buffer, e) => buffer..addAll(e.values));
+    dependencies
+        .sort((a, b) => b.registrationIndex.compareTo(a.registrationIndex));
     for (final dep in dependencies) {
       final a = dep.onUnregister;
       final b = onUnregister;
