@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.2.1]
+
+- Released @ 9/2024 (UTC)
+- refactor: Rename Id to Gr
+
 ## [0.2.0]
 
 - Released @ 9/2024 (UTC)

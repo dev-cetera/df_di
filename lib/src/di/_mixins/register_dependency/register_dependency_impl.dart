@@ -70,7 +70,8 @@ base mixin RegisterDependencyImpl on DIBase implements RegisterDependencyIface {
     registerDependencyUsingExactType(
       dependency: dependency,
       type: TypeGr(type),
-      suppressDependencyAlreadyRegisteredException: suppressDependencyAlreadyRegisteredException,
+      suppressDependencyAlreadyRegisteredException:
+          suppressDependencyAlreadyRegisteredException,
     );
   }
 }

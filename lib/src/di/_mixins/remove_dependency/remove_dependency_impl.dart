@@ -25,7 +25,8 @@ base mixin RemoveDependencyImpl on DIBase implements RemoveDependencyIface {
       () => registry.removeDependency<T>(group: focusGroup),
       () => registry.removeDependency<FutureInst<T>>(group: focusGroup),
       () => registry.removeDependency<SingletonInst<T>>(group: focusGroup),
-      () => registry.removeDependency<FactoryInst<T, Object>>(group: focusGroup),
+      () =>
+          registry.removeDependency<FactoryInst<T, Object>>(group: focusGroup),
     ];
     for (final remover in removers) {
       final dep = remover();

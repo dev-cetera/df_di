@@ -42,7 +42,8 @@ class Inst<T extends Object, P extends Object> {
   }
 }
 
-typedef InstConstructor<T extends Object, P extends Object> = FutureOr<T> Function(P params);
+typedef InstConstructor<T extends Object, P extends Object> = FutureOr<T>
+    Function(P params);
 
 typedef FutureInst<T extends Object> = _FutureInst<T, Object>;
 

@@ -124,7 +124,8 @@ base mixin GetImpl on DIBase implements GetIface {
     return null;
   }
 
-  FutureOr<Dependency<T>> _inst<T extends Object, TInst extends Inst<T, Object>>(
+  FutureOr<Dependency<T>>
+      _inst<T extends Object, TInst extends Inst<T, Object>>(
     Dependency<Object> dep,
   ) {
     final value = (dep.value as TInst).cast<T, Object>();
