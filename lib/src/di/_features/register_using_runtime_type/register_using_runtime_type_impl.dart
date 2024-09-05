@@ -37,7 +37,7 @@ base mixin RegisterUsingRuntimeTypeImpl on DIBase implements RegisterUsingRuntim
     OnUnregisterCallback<Object>? onUnregister,
     GetDependencyCondition? condition,
   }) {
-    final focusGroup = preferFocusGroup(group);
+    final fg = preferFocusGroup(group);
     if (value is Future<Object>) {
       final baseValue = FutureInst((_) => value);
       final type = _convertBaseValueType(baseValue.runtimeType, value.runtimeType);
@@ -46,7 +46,7 @@ base mixin RegisterUsingRuntimeTypeImpl on DIBase implements RegisterUsingRuntim
         dependency: Dependency(
           value: baseValue,
           registrationIndex: registrationCount++,
-          group: focusGroup,
+          group: fg,
           onUnregister: onUnregister != null
               ? (e) => e.runtimeType == eventualType ? onUnregister(e) : null
               : null,
@@ -59,7 +59,7 @@ base mixin RegisterUsingRuntimeTypeImpl on DIBase implements RegisterUsingRuntim
         dependency: Dependency(
           value: value,
           registrationIndex: registrationCount++,
-          group: focusGroup,
+          group: fg,
           onUnregister: onUnregister != null
               ? (e) => e.runtimeType == eventualType ? onUnregister(e) : null
               : null,

@@ -62,7 +62,7 @@ abstract base class Service<TParams extends Object?> {
   ///
   /// Do not override this method. Instead, override [onDispose].
   ///
-  /// Do not call this method directly. Use [DI.registerLazySingletonService] or
+  /// Do not call this method directly. Use [DI.registerSingletonService] or
   /// [DI.registerFactoryService] which will automatically call this methid
   /// on [DI.unregister].
   @protected

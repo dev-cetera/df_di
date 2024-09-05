@@ -23,6 +23,7 @@ abstract base class RegistryBase {
   /// the specified [group].
   ///
   /// Returns `null` if no matching dependency is found.
+  @protected
   Dependency<Object>? getDependencyOrNull<T extends Object>({
     required Gr group,
   }) {
@@ -36,6 +37,7 @@ abstract base class RegistryBase {
   /// specified [group].
   ///
   /// Returns `null` if no matching dependency is found.
+  @protected
   Dependency<Object>? getDependencyUsingExactTypeOrNull({
     required Gr type,
     required Gr group,
@@ -54,6 +56,7 @@ abstract base class RegistryBase {
   //
 
   /// Adds or overwrites the dependency of type [T] with the specified [value].
+  @protected
   @pragma('vm:prefer-inline')
   void setDependency<T extends Object>({
     required Dependency<T> value,
@@ -79,6 +82,7 @@ abstract base class RegistryBase {
   /// specified [group] if it exists.
   ///
   /// Returns the removed value, or `null` if it does not exist.
+  @protected
   Dependency<T>? removeDependency<T extends Object>({
     required Gr group,
   }) {
@@ -106,6 +110,7 @@ abstract base class RegistryBase {
   //
   //
 
+  @protected
   @pragma('vm:prefer-inline')
   bool containsDependencyUsingExactType({
     required Gr type,
@@ -114,15 +119,7 @@ abstract base class RegistryBase {
     return getDependencyUsingExactTypeOrNull(type: type, group: group) != null;
   }
 
-  /// Retrieves all dependencies of type [T].
-  ///
-  /// Returns an iterable of all registered dependencies of type [T]. If none
-  /// exist, an empty iterable is returned.
-  @pragma('vm:prefer-inline')
-  // Iterable<Dependency<Object>> getAllDependencies<T extends Object>() {
-  //   return getDependencyMap<T>()?.values ?? const Iterable.empty();
-  // }
-
+  @protected
   @pragma('vm:prefer-inline')
   Iterable<Dependency<Object>> getAllDependenciesByKey({
     required Gr group,

@@ -32,11 +32,11 @@ base mixin RegisterImpl on DIBase implements RegisterIface {
   }
 
   @override
-  void registerLazySingletonService<T extends Service<Object>>(
+  void registerSingletonService<T extends Service<Object>>(
     Constructor<T> constructor, {
     Gr? group,
   }) {
-    registerLazySingleton(
+    registerSingleton(
       (params) => constructor().thenOr((e) => e.initService(params).thenOr((_) => e)),
       group: group,
       onUnregister: (e) {
@@ -62,7 +62,7 @@ base mixin RegisterImpl on DIBase implements RegisterIface {
 
   @override
   @pragma('vm:prefer-inline')
-  void registerLazySingleton<T extends Object>(
+  void registerSingleton<T extends Object>(
     InstConstructor<T, Object> constructor, {
     Gr? group,
     OnUnregisterCallback<T>? onUnregister,
@@ -92,13 +92,13 @@ base mixin RegisterImpl on DIBase implements RegisterIface {
     OnUnregisterCallback<R>? onUnregister,
     GetDependencyCondition? condition,
   }) {
-    final focusGroup = preferFocusGroup(group);
+    final fg = preferFocusGroup(group);
     if (value is Future<T>) {
       registerDependency<FutureInst<T, P>>(
         dependency: Dependency(
           value: FutureInst<T, P>((_) => value),
           registrationIndex: registrationCount++,
-          group: focusGroup,
+          group: fg,
           onUnregister: onUnregister != null ? (e) => e is R ? onUnregister(e) : null : null,
           condition: condition,
         ),
@@ -108,7 +108,7 @@ base mixin RegisterImpl on DIBase implements RegisterIface {
         dependency: Dependency(
           value: value,
           registrationIndex: registrationCount++,
-          group: focusGroup,
+          group: fg,
           onUnregister: onUnregister != null ? (e) => e is R ? onUnregister(e) : null : null,
           condition: condition,
         ),
@@ -116,6 +116,6 @@ base mixin RegisterImpl on DIBase implements RegisterIface {
     }
     // If there's a completer waiting for this value that was registered via the until() function,
     // complete it.
-    getSyncOrNull<InternalCompleterOr<T>>(group: Gr(T))?.internalValue.complete(value);
+    getOrNull<InternalCompleterOr<T>>(group: Gr(T))?.thenOr((e) => e.internalValue.complete(value));
   }
 }

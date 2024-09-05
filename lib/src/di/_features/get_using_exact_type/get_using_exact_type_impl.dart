@@ -24,14 +24,15 @@ base mixin GetUsingExactTypeImpl on DIBase implements GetUsingExactTypeIface {
     required Gr type,
     Gr? group,
   }) {
+    final fg = preferFocusGroup(group);
     final value = getUsingExactTypeOrNull(
       type: type,
-      group: group,
+      group: fg,
     );
     if (value == null) {
       throw DependencyNotFoundException(
         type: type,
-        group: focusGroup,
+        group: fg,
       );
     }
     return value;
@@ -43,8 +44,8 @@ base mixin GetUsingExactTypeImpl on DIBase implements GetUsingExactTypeIface {
     required Gr type,
     Gr? group,
   }) {
-    focusGroup = preferFocusGroup(group);
-    final dep = _get(type: type, group: focusGroup);
+    final fg = preferFocusGroup(group);
+    final dep = _get(type: type, group: fg);
     return dep?.thenOr((e) => e.value);
   }
 
@@ -95,6 +96,8 @@ base mixin GetUsingExactTypeImpl on DIBase implements GetUsingExactTypeIface {
             genericType: genericType,
             group: group,
           );
+        case FactoryInst _:
+          return dep.cast();
         case Object _:
           return dep.cast();
       }

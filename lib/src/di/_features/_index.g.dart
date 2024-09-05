@@ -12,8 +12,6 @@ export 'register_using_runtime_type/register_using_runtime_type_impl.dart';
 export 'register_using_runtime_type/register_using_runtime_type_iface.dart';
 export 'until/until_iface.dart';
 export 'until/until_impl.dart';
-export 'get_factory/get_factory_impl.dart';
-export 'get_factory/get_factory_iface.dart';
 export 'get/get_impl.dart';
 export 'get/get_iface.dart';
 export 'unregister/unregister_impl.dart';

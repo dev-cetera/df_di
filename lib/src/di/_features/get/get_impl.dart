@@ -23,70 +23,27 @@ base mixin GetImpl on DIBase implements GetIface {
   T call<T extends Object>({
     Gr? group,
   }) {
-    return getSync<T>(group: group);
+    return get<T>(group: group) as T;
   }
 
   @override
-  T? getSyncOrNull<T extends Object>({
+  FutureOr<T> getFactory<T extends Service<P>, P extends Object>(
+    P params, {
     Gr? group,
   }) {
-    final focusGroup = preferFocusGroup(group);
-    final registered = isRegistered<T, Object>(
-      group: focusGroup,
-    );
-    if (registered) {
-      try {
-        return getSync<T>(group: focusGroup);
-      } catch (_) {}
-    }
-    return null;
-  }
-
-  @override
-  T getSync<T extends Object>({
-    Gr? group,
-  }) {
-    final value = get<T>(group: group);
-    if (value is Future<T>) {
-      throw TypeError();
-    }
-    return value;
-  }
-
-  @override
-  Future<T>? getAsyncOrNull<T extends Object>({
-    Gr? group,
-  }) {
-    final focusGroup = preferFocusGroup(group);
-    final registered = isRegistered<T, Object>(
-      group: focusGroup,
-    );
-    if (registered) {
-      try {
-        return getAsync<T>(group: focusGroup);
-      } catch (_) {}
-    }
-    return null;
-  }
-
-  @override
-  Future<T> getAsync<T extends Object>({
-    Gr? group,
-  }) async {
-    final value = await get<T>(group: group);
-    return value;
+    return get<FactoryInst<T, P>>().thenOr((e) => e.constructor(params));
   }
 
   @override
   FutureOr<T>? getOrNull<T extends Object>({
     Gr? group,
   }) {
-    final focusGroup = preferFocusGroup(group);
+    final fg = preferFocusGroup(group);
     final registered = isRegistered<T, Object>(
-      group: focusGroup,
+      group: fg,
     );
     if (registered) {
-      return get<T>(group: focusGroup);
+      return get<T>(group: fg);
     }
     return null;
   }
@@ -95,12 +52,12 @@ base mixin GetImpl on DIBase implements GetIface {
   FutureOr<T> get<T extends Object>({
     Gr? group,
   }) {
-    focusGroup = preferFocusGroup(group);
-    final dep = _get<T, Object>(group: focusGroup);
+    final fg = preferFocusGroup(group);
+    final dep = _get<T, Object>(group: fg);
     if (dep == null) {
       throw DependencyNotFoundException(
         type: T,
-        group: focusGroup,
+        group: fg,
       );
     }
     return dep.thenOr((e) => e.value);

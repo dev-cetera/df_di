@@ -22,31 +22,6 @@ abstract interface class GetIface {
     Gr? group,
   });
 
-  /// Gets via [getSync] using [T] and [group] or `null` upon any error,
-  /// including but not limited to [TypeError] and
-  /// [DependencyNotFoundException].
-  T? getSyncOrNull<T extends Object>({
-    Gr? group,
-  });
-
-  /// Gets via [get] using [T] and [group], then and casts the result to [T].
-  ///
-  /// Throws [TypeError] if this result is a [Future].
-  T getSync<T extends Object>({
-    Gr? group,
-  });
-
-  /// Gets via [getAsync] using [T] and [group] or `null` upon any error.
-  Future<T>? getAsyncOrNull<T extends Object>({
-    Gr? group,
-  });
-
-  /// Gets via [get] using [T] and [group], then and casts the result to [Future]
-  /// of [T].
-  Future<T> getAsync<T extends Object>({
-    Gr? group,
-  });
-
   /// Gets via [get] using [T] and [group] or `null` upon any error,
   /// including but not limited to [DependencyNotFoundException].
   FutureOr<T>? getOrNull<T extends Object>({
@@ -67,6 +42,11 @@ abstract interface class GetIface {
   /// - Throws [DependencyNotFoundException] if the requested dependency cannot
   /// be found.
   FutureOr<T> get<T extends Object>({
+    Gr? group,
+  });
+
+  FutureOr<T> getFactory<T extends Service<P>, P extends Object>(
+    P params, {
     Gr? group,
   });
 }

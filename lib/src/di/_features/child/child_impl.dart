@@ -19,31 +19,33 @@ base mixin ChildImpl on DIBase implements ChildIface {
   @override
   @pragma('vm:prefer-inline')
   void registerChild({
-    Gr? childGroup,
     Gr? group,
+    Gr? childGroup,
   }) {
-    final childFocusGroup = preferFocusGroup(childGroup);
-    final focusGroup = preferFocusGroup(group);
-    registerLazySingleton<DI>(
-      (_) => DI(focusGroup: childFocusGroup, parent: this),
-      group: focusGroup,
+    registerSingleton<DI>(
+      (_) => DI(
+        focusGroup: preferFocusGroup(childGroup),
+        parent: this,
+      ),
+      group: preferFocusGroup(group),
       onUnregister: (e) => e.unregisterAll(),
     );
   }
 
   @override
   @pragma('vm:prefer-inline')
-  DI getChild({Gr? group}) => getSync<DI>(group: group);
+  DI getChild({Gr? group}) => get<DI>(group: group) as DI;
 
   @override
   DI child({
     Gr? childGroup,
     Gr? group,
   }) {
-    if (!isRegistered<DI, Object>()) {
+    final registered = isRegistered<DI, Object>(group: group);
+    if (!registered) {
       registerChild(
-        childGroup: childGroup,
         group: group,
+        childGroup: childGroup,
       );
     }
     return getChild(

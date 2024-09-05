@@ -17,8 +17,8 @@ import '/src/_internal.dart';
 @internal
 abstract interface class ChildIface {
   void registerChild({
-    Gr? childGroup,
     Gr? group,
+    Gr? childGroup,
   });
 
   DI getChild({
@@ -26,8 +26,8 @@ abstract interface class ChildIface {
   });
 
   DI child({
-    Gr? childGroup,
     Gr? group,
+    Gr? childGroup,
   });
 
   void unregisterChild({

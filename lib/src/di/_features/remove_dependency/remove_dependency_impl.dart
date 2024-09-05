@@ -10,6 +10,8 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
+// ignore_for_file: invalid_use_of_protected_member
+
 import '/src/_internal.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
@@ -20,12 +22,12 @@ base mixin RemoveDependencyImpl on DIBase implements RemoveDependencyIface {
   Dependency<Object> removeDependency<T extends Object, P extends Object>({
     Gr? group,
   }) {
-    final focusGroup = preferFocusGroup(group);
+    final fg = preferFocusGroup(group);
     final removers = [
-      () => registry.removeDependency<T>(group: focusGroup),
-      () => registry.removeDependency<FutureInst<T, P>>(group: focusGroup),
-      () => registry.removeDependency<SingletonInst<T, P>>(group: focusGroup),
-      () => registry.removeDependency<FactoryInst<T, P>>(group: focusGroup),
+      () => registry.removeDependency<T>(group: fg),
+      () => registry.removeDependency<FutureInst<T, P>>(group: fg),
+      () => registry.removeDependency<SingletonInst<T, P>>(group: fg),
+      () => registry.removeDependency<FactoryInst<T, P>>(group: fg),
     ];
     for (final remover in removers) {
       final dep = remover();
@@ -35,7 +37,7 @@ base mixin RemoveDependencyImpl on DIBase implements RemoveDependencyIface {
     }
     throw DependencyNotFoundException(
       type: T,
-      group: focusGroup,
+      group: fg,
     );
   }
 
@@ -46,7 +48,7 @@ base mixin RemoveDependencyImpl on DIBase implements RemoveDependencyIface {
     Gr? paramsType,
     Gr? group,
   }) {
-    final focusGroup = preferFocusGroup(group);
+    final fg = preferFocusGroup(group);
     final paramsType1 = paramsType ?? Gr(Object);
     final removers = [
       type,
@@ -56,7 +58,7 @@ base mixin RemoveDependencyImpl on DIBase implements RemoveDependencyIface {
     ].map(
       (type) => () => registry.removeDependencyUsingExactType(
             type: type,
-            group: focusGroup,
+            group: fg,
           ),
     );
     for (final remover in removers) {
@@ -67,7 +69,7 @@ base mixin RemoveDependencyImpl on DIBase implements RemoveDependencyIface {
     }
     throw DependencyNotFoundException(
       type: type,
-      group: focusGroup,
+      group: fg,
     );
   }
 

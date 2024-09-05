@@ -18,10 +18,9 @@ abstract base class DIBase
     implements
         ChildIface,
         DebugIface,
-         RegisterUsingRuntimeTypeIface,
+        RegisterUsingRuntimeTypeIface,
         FocusGroupIface,
         GetDependencyIface,
-        GetFactoryIface,
         GetIface,
         GetUsingExactTypeIface,
         IsRegisteredIface,
@@ -31,7 +30,7 @@ abstract base class DIBase
         UnregisterIface,
         UntilIface {
   /// A type-safe registry that stores all dependencies.
-  @protected
+
   final registry = Registry();
 
   /// Tracks the registration count, assigning a unique index number to each
@@ -48,4 +47,12 @@ abstract base class DIBase
 
   @override
   Gr focusGroup;
+
+  @override
+  String toString() {
+    return [
+      if (parent != null) parent?.toString(),
+      '[$DI-$hashCode]',
+    ].join('; ');
+  }
 }

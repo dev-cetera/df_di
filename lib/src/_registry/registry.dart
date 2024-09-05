@@ -27,6 +27,7 @@ final class Registry extends RegistryBase {
   /// Dependencies, organized by their type.
   final _state = RegistryMap();
 
+  @protected
   void Function(RegistryMap state) onUpdate = (_) {};
 
   /// A snapshot describing the current state of the dependencies.
@@ -36,6 +37,7 @@ final class Registry extends RegistryBase {
   /// A snapshot of the current groups.
   Iterable<Gr> get groups => state.keys;
 
+  @protected
   @override
   @pragma('vm:prefer-inline')
   Dependency<Object>? getDependencyUsingExactTypeOrNull({
@@ -45,6 +47,7 @@ final class Registry extends RegistryBase {
     return _state[group]?[type];
   }
 
+  @protected
   @override
   Iterable<Dependency<Object>> getDependenciesByKey({
     required Gr group,
@@ -56,6 +59,7 @@ final class Registry extends RegistryBase {
         .cast<Dependency<Object>>();
   }
 
+  @protected
   @override
   void setDependencyUsingExactType({
     required Gr type,
@@ -69,6 +73,7 @@ final class Registry extends RegistryBase {
     }
   }
 
+  @protected
   @override
   Dependency<Object>? removeDependencyUsingExactType({
     required Gr group,
@@ -90,6 +95,7 @@ final class Registry extends RegistryBase {
     return null;
   }
 
+  @protected
   @override
   void setDependencyMapByKey({
     required Gr group,
@@ -103,6 +109,7 @@ final class Registry extends RegistryBase {
     }
   }
 
+  @protected
   @override
   @pragma('vm:prefer-inline')
   DependencyMap<Object>? getDependencyMapByKey({
@@ -111,6 +118,7 @@ final class Registry extends RegistryBase {
     return _state[group];
   }
 
+  @protected
   @override
   @pragma('vm:prefer-inline')
   void removeDependencyMapUsingExactType({

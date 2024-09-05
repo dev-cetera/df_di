@@ -66,7 +66,7 @@ abstract interface class RegisterIface {
   /// final fooBarService2 = di.get<FooBarService>();
   /// print(fooBarService1 == fooBarService2); // true
   /// ```
-  void registerLazySingletonService<T extends Service<Object>>(
+  void registerSingletonService<T extends Service<Object>>(
     Constructor<T> constructor, {
     Gr? group,
   });
@@ -96,7 +96,7 @@ abstract interface class RegisterIface {
   /// final fooBarService2 = di.get<FooBarService>();
   /// print(fooBarService1 == fooBarService2); // true
   /// ```
-  void registerLazySingleton<T extends Object>(
+  void registerSingleton<T extends Object>(
     InstConstructor<T, Object> constructor, {
     Gr? group,
     OnUnregisterCallback<T>? onUnregister,
