@@ -16,7 +16,7 @@ import '/src/_internal.dart';
 
 @internal
 abstract interface class RegisterDependencyIface {
-  void registerDependency<T extends Object>({
+  void registerDependency<T extends Object, P extends Object>({
     required Dependency<T> dependency,
     bool suppressDependencyAlreadyRegisteredException = false,
   });

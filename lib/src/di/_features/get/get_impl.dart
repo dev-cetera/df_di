@@ -71,8 +71,8 @@ base mixin GetImpl on DIBase implements GetIface {
       switch (dep.value) {
         case T _:
           return dep.cast();
-        case FutureInst<T, P> _:
-          return _inst<T, P, FutureInst<T, P>>(dep);
+        case FutureOrInst<T, P> _:
+          return _inst<T, P, FutureOrInst<T, P>>(dep);
         case SingletonInst<T, P> _:
           return _inst<T, P, SingletonInst<T, P>>(dep);
       }
@@ -87,14 +87,14 @@ base mixin GetImpl on DIBase implements GetIface {
     return value.thenOr((value) {
       return value.constructor(-1);
     }).thenOr((newValue) {
-      return registerDependency<T>(
+      return registerDependency<T, P>(
         dependency: dep.reassign(newValue),
         suppressDependencyAlreadyRegisteredException: true,
       );
-    }).thenOr((_) {
-      return registry.removeDependency<I>(
-        group: dep.group,
-      );
+      // }).thenOr((_) {
+      //   return registry.removeDependency<I>(
+      //     group: dep.group,
+      //   );
     }).thenOr((_) {
       return _get<T, P>(
         group: dep.group,

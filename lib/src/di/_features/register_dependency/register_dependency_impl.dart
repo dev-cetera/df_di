@@ -20,12 +20,12 @@ import '/src/_internal.dart';
 base mixin RegisterDependencyImpl on DIBase implements RegisterDependencyIface {
   @protected
   @override
-  void registerDependency<T extends Object>({
+  void registerDependency<T extends Object, P extends Object>({
     required Dependency<T> dependency,
     bool suppressDependencyAlreadyRegisteredException = false,
   }) {
     final group = dependency.group;
-    final dep = registry.getDependencyOrNull<T>(
+    final dep = getDependencyOrNull1<T, P>(
       group: group,
     );
     if (!suppressDependencyAlreadyRegisteredException && dep != null) {

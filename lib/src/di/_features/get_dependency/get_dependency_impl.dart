@@ -45,11 +45,9 @@ base mixin GetDependencyImpl on DIBase implements GetDependencyIface {
     final fg = preferFocusGroup(group);
     final getters = [
       () => registry.getDependencyOrNull<T>(group: fg),
-      () => registry.getDependencyOrNull<FutureInst<T, P>>(group: fg),
+      () => registry.getDependencyOrNull<FutureOrInst<T, P>>(group: fg),
       () => registry.getDependencyOrNull<SingletonInst<T, P>>(group: fg),
-      () => registry.getDependencyOrNull<FactoryInst<T, P>>(
-            group: fg,
-          ),
+      // () => registry.getDependencyOrNull<FactoryInst<T, P>>(group: fg),
     ];
     for (final getter in getters) {
       final dep = getter();
@@ -99,9 +97,9 @@ base mixin GetDependencyImpl on DIBase implements GetDependencyIface {
     final paramsType1 = paramsType ?? Gr(Object);
     final getters = [
       type,
-      FutureInst.gr(type, paramsType1),
+      FutureOrInst.gr(type, paramsType1),
       SingletonInst.gr(type, paramsType1),
-      FactoryInst.gr(type, paramsType1),
+      // FactoryInst.gr(type, paramsType1),
     ].map(
       (type) {
         return () => registry.getDependencyUsingExactTypeOrNull(

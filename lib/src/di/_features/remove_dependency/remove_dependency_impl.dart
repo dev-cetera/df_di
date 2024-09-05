@@ -25,7 +25,7 @@ base mixin RemoveDependencyImpl on DIBase implements RemoveDependencyIface {
     final fg = preferFocusGroup(group);
     final removers = [
       () => registry.removeDependency<T>(group: fg),
-      () => registry.removeDependency<FutureInst<T, P>>(group: fg),
+      () => registry.removeDependency<FutureOrInst<T, P>>(group: fg),
       () => registry.removeDependency<SingletonInst<T, P>>(group: fg),
       () => registry.removeDependency<FactoryInst<T, P>>(group: fg),
     ];
@@ -52,7 +52,7 @@ base mixin RemoveDependencyImpl on DIBase implements RemoveDependencyIface {
     final paramsType1 = paramsType ?? Gr(Object);
     final removers = [
       type,
-      FutureInst.gr(type, paramsType1),
+      FutureOrInst.gr(type, paramsType1),
       SingletonInst.gr(type, paramsType1),
       FactoryInst.gr(type, paramsType1),
     ].map(

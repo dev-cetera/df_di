@@ -81,8 +81,8 @@ base mixin GetUsingExactTypeImpl on DIBase implements GetUsingExactTypeIface {
     );
     if (dep != null) {
       switch (dep.value) {
-        case FutureInst _:
-          final genericType = FutureInst.gr(type, Object);
+        case FutureOrInst _:
+          final genericType = FutureOrInst.gr(type, Object);
           return _inst(
             type: type,
             genericType: genericType,
@@ -124,11 +124,11 @@ base mixin GetUsingExactTypeImpl on DIBase implements GetUsingExactTypeIface {
           dependency: dep.reassign(newValue),
           suppressDependencyAlreadyRegisteredException: true,
         );
-      }).thenOr((_) {
-        return registry.removeDependencyUsingExactType(
-          type: genericType,
-          group: group,
-        );
+        // }).thenOr((_) {
+        //   return registry.removeDependencyUsingExactType(
+        //     type: genericType,
+        //     group: group,
+        //   );
       }).thenOr((_) {
         return _get(
           type: type,

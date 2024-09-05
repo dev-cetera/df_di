@@ -13,29 +13,59 @@
 // ignore_for_file: invalid_use_of_protected_member, strict_raw_type
 
 import 'dart:async';
+import 'dart:math';
 
 import 'package:df_di/df_di.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 void main() async {
-  print('\n# Get access to the global DI container:\n');
-  print(DI.session);
+  // print('\n# Get access to the global DI container:\n');
+  // final di = DI.global;
+  // print(DI.global);
+  // print('DI.global == di: ${DI.global == di}');
 
-  print('\n# Get the state of the global DI container (prints an empty map):\n');
-  print(DI.global.registry.state);
+  // print('\n# Get the state of the global DI container (prints an empty map):\n');
+  // print(di.registry.state);
 
-  print('\n# Create a new DI container:\n');
-  print(DI());
+  // print('\n# Create a new DI container:\n');
+  // print(DI());
 
-  print('\n# Register and print the answer to life, the universe and everything:\n');
-  final test = DI.test;
-  test.register<int>(42);
-  print(test.get<int>());
-  test.registerUsingRuntimeType('42');
-  print('dsd');
-  print(test.getUsingRuntimeType(String));
-  
+  // print('\n# Use any of the pre-defined containers for your app:\n');
+  // print(DI.app); // You can store app settings in here.
+  // print(DI.app); // You can contain the global state in here.
+  // print(DI.global); // You can contain stuff for the active session in here.
+  // print(DI.dev); // A container you can use for or development-only.
+  // print(DI.test); // A container you can use for or test-only.
+  // print(DI.prod); // A container you can use for or production-only.
+  // // Or create your own custom containers:
+  // final di1 = DI();
+  // print(di1);
+  // final di2 = DI();
+  // print(di2);
+
+  // print('\n# Register the universe and everything:\n');
+  // di.register<int>(42);
+  // print(di.get<int>());
+  // print(di.getUsingRuntimeType(int));
+  // di.registerUsingRuntimeType('42 :)');
+  // print(di.getUsingRuntimeType(String));
+  // print(di.get<String>());
+
+  DI.app.register(Future<double>.value(pi));
+  // DI.app.register<double>(pi);
+
+  print(DI.app.get<double>());
+  print('------------');
+  DI.app.get<double>();
+
+  // print('\n# Register Futures:\n');
+  // DI.prod.register<double>(Future<double>.value(pi));
+  // //di.register<double>(Future.delayed(const Duration(milliseconds: 10), () => pi));
+  // print('PI is ${await DI.prod.get<double>()}');
+  // DI.prod.register<double>(Future<double>.value(e));
+  // print('E is ${await DI.prod.get<double>()}');
+  // print(DI.prod.registry.state);
 
   // print('Get access to the global DI container:\n\n');
   // di.register(Future.value('Hello, DI!'));

@@ -27,7 +27,7 @@ abstract base class RegistryBase {
   Dependency<Object>? getDependencyOrNull<T extends Object>({
     required Gr group,
   }) {
-    final deps = getDependenciesByKey(group: group);
+    final deps = getDependenciesByGroup(group: group);
     return deps.where((e) {
       return e.value is T;
     }).firstOrNull;
@@ -42,12 +42,12 @@ abstract base class RegistryBase {
     required Gr type,
     required Gr group,
   }) {
-    final deps = getDependenciesByKey(group: group);
+    final deps = getDependenciesByGroup(group: group);
     return deps.where((e) => Gr(e.type) == type).firstOrNull?.cast();
   }
 
   /// Retrieves all dependencies associated with the specified [group].
-  Iterable<Dependency<Object>> getDependenciesByKey({
+  Iterable<Dependency<Object>> getDependenciesByGroup({
     required Gr group,
   });
 

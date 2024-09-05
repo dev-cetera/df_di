@@ -38,12 +38,16 @@ abstract base class DIBase
   @protected
   var registrationCount = 0;
 
+  final String name;
+
   final DIBase? parent;
 
   DIBase({
+    String? name,
     Gr? focusGroup,
     this.parent,
-  }) : focusGroup = focusGroup ?? Gr.defaultGroup;
+  })  : name = name ?? 'unnamed',
+        focusGroup = focusGroup ?? Gr.defaultGroup;
 
   @override
   Gr focusGroup;
@@ -52,7 +56,7 @@ abstract base class DIBase
   String toString() {
     return [
       if (parent != null) parent?.toString(),
-      '[$DI-$hashCode]',
+      '[$name]',
     ].join('; ');
   }
 }

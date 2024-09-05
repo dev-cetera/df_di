@@ -39,7 +39,7 @@ base mixin RegisterUsingRuntimeTypeImpl on DIBase implements RegisterUsingRuntim
   }) {
     final fg = preferFocusGroup(group);
     if (value is Future<Object>) {
-      final baseValue = FutureInst((_) => value);
+      final baseValue = FutureOrInst((_) => value);
       final type = _convertBaseValueType(baseValue.runtimeType, value.runtimeType);
       registerDependencyUsingExactType(
         type: type,

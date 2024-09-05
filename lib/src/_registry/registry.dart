@@ -49,7 +49,7 @@ final class Registry extends RegistryBase {
 
   @protected
   @override
-  Iterable<Dependency<Object>> getDependenciesByKey({
+  Iterable<Dependency<Object>> getDependenciesByGroup({
     required Gr group,
   }) {
     return _state.entries

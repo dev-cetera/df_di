@@ -50,18 +50,18 @@ class Inst<T extends Object, P extends Object> {
 typedef InstConstructor<T extends Object, P extends Object> = FutureOr<T> Function(P params);
 
 @pragma('vm:keep-name') // enable string lookups
-class FutureInst<T extends Object, P extends Object> extends Inst<T, P> {
+class FutureOrInst<T extends Object, P extends Object> extends Inst<T, P> {
   static Gr gr(Object type, Object paramsType) => Gr.fromType(
-        baseType: FutureInst,
+        baseType: FutureOrInst,
         subTypes: [type, paramsType],
       );
 
-  const FutureInst(super.constructor);
+  const FutureOrInst(super.constructor);
 
   @override
-  FutureInst<T2, P2> cast<T2 extends Object, P2 extends Object>() {
-    return castWith<T2, P2, FutureInst<T2, P2>>(
-      (c) => FutureInst<T2, P2>((e) => c(e)),
+  FutureOrInst<T2, P2> cast<T2 extends Object, P2 extends Object>() {
+    return castWith<T2, P2, FutureOrInst<T2, P2>>(
+      (c) => FutureOrInst<T2, P2>((e) => c(e)),
     );
   }
 }
