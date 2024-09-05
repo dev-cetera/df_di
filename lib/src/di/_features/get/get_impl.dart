@@ -22,28 +22,74 @@ base mixin GetImpl on DIBase implements GetIface {
   @pragma('vm:prefer-inline')
   T call<T extends Object>({
     Gr? group,
+    bool getFromParents = true,
   }) {
-    return get<T>(group: group) as T;
+    return get<T>(
+      group: group,
+      getFromParents: getFromParents,
+    ) as T;
   }
 
   @override
-  FutureOr<T> getFactory<T extends Service<P>, P extends Object>(
+  FutureOr<T> getInstance<T extends Object, P extends Object>(
     P params, {
     Gr? group,
+    bool getFromParents = true,
   }) {
-    return get<FactoryInst<T, P>>().thenOr((e) => e.constructor(params));
+    return get<Inst<T, P>>(
+      group: group,
+      getFromParents: getFromParents,
+    ).thenOr((e) => e.constructor(params));
+  }
+
+  FutureOr<T>? getInstanceOrNull<T extends Object, P extends Object>(
+    P params, {
+    Gr? group,
+    bool getFromParents = true,
+  }) {
+    return getOrNull<Inst<T, P>>(
+      group: group,
+      getFromParents: getFromParents,
+    )?.thenOr((e) => e.constructor(params));
+  }
+
+  @override
+  FutureOr<T> getSingleton<T extends Object>({
+    Gr? group,
+    bool getFromParents = true,
+  }) {
+    return getInstance<SingletonWrapper<T>, Object>(
+      Object(),
+      group: group,
+      getFromParents: getFromParents,
+    ).thenOr((e) => e.instance);
+  }
+
+  FutureOr<T>? getSingletonOrNull<T extends Object>({
+    Gr? group,
+    bool getFromParents = true,
+  }) {
+    return getInstanceOrNull<SingletonWrapper<T>, Object>(
+      Object(),
+      group: group,
+      getFromParents: getFromParents,
+    )?.thenOr((e) => e.instance);
   }
 
   @override
   FutureOr<T>? getOrNull<T extends Object>({
     Gr? group,
+    bool getFromParents = true,
   }) {
     final fg = preferFocusGroup(group);
     final registered = isRegistered<T, Object>(
       group: fg,
     );
     if (registered) {
-      return get<T>(group: fg);
+      return get<T>(
+        group: fg,
+        getFromParents: getFromParents,
+      );
     }
     return null;
   }
@@ -51,9 +97,17 @@ base mixin GetImpl on DIBase implements GetIface {
   @override
   FutureOr<T> get<T extends Object>({
     Gr? group,
+    bool getFromParents = true,
   }) {
+    final test = getSingletonOrNull<T>();
+    if (test != null) {
+      return test;
+    }
     final fg = preferFocusGroup(group);
-    final dep = _get<T, Object>(group: fg);
+    final dep = _get<T, Object>(
+      group: fg,
+      getFromParents: getFromParents,
+    );
     if (dep == null) {
       throw DependencyNotFoundException(
         type: T,
@@ -65,24 +119,30 @@ base mixin GetImpl on DIBase implements GetIface {
 
   FutureOr<Dependency<T>>? _get<T extends Object, P extends Object>({
     required Gr group,
+    required bool getFromParents,
   }) {
-    final dep = getDependencyOrNull1<T, P>(group: group);
+    final dep = getDependencyOrNull1<T, P>(
+      group: group,
+      getFromParents: getFromParents,
+    );
     if (dep != null) {
       switch (dep.value) {
         case T _:
           return dep.cast();
         case FutureOrInst<T, P> _:
-          return _inst<T, P, FutureOrInst<T, P>>(dep);
-        case SingletonInst<T, P> _:
-          return _inst<T, P, SingletonInst<T, P>>(dep);
+          return _inst<T, P, FutureOrInst<T, P>>(
+            dep: dep,
+            getFromParents: getFromParents,
+          );
       }
     }
     return null;
   }
 
-  FutureOr<Dependency<T>> _inst<T extends Object, P extends Object, I extends Inst<T, P>>(
-    Dependency<Object> dep,
-  ) {
+  FutureOr<Dependency<T>> _inst<T extends Object, P extends Object, I extends Inst<T, P>>({
+    required Dependency<Object> dep,
+    required bool getFromParents,
+  }) {
     final value = (dep.value as I).cast<T, Object>();
     return value.thenOr((value) {
       return value.constructor(-1);
@@ -98,6 +158,7 @@ base mixin GetImpl on DIBase implements GetIface {
     }).thenOr((_) {
       return _get<T, P>(
         group: dep.group,
+        getFromParents: getFromParents,
       )!;
     });
   }

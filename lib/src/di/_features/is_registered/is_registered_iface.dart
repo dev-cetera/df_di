@@ -19,6 +19,7 @@ abstract interface class IsRegisteredIface {
   /// Checks if a dependency is registered under [T] and [group].
   bool isRegistered<T extends Object, P extends Object>({
     Gr? group,
+    bool getFromParents = true,
   });
 
   /// Checks if a dependency is registered under [type] and [group].
@@ -27,11 +28,13 @@ abstract interface class IsRegisteredIface {
     required Gr type,
     Gr? paramsType,
     required Gr group,
+    bool getFromParents = true,
   });
 
   bool isRegisteredUsingRuntimeType({
     required Type type,
     Type paramsType = Object,
     required Gr group,
+    bool getFromParents = true,
   });
 }

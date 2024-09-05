@@ -36,8 +36,11 @@ base mixin RegisterImpl on DIBase implements RegisterIface {
     Constructor<T> constructor, {
     Gr? group,
   }) {
-    registerSingleton(
-      (params) => constructor().thenOr((e) => e.initService(params).thenOr((_) => e)),
+    registerSingleton<T>(
+      () {
+        final instance = constructor();
+        return instance.thenOr((e) => e.initService(Object()).thenOr((e) => instance));
+      },
       group: group,
       onUnregister: (e) {
         return e.thenOr((e) {
@@ -62,13 +65,13 @@ base mixin RegisterImpl on DIBase implements RegisterIface {
 
   @override
   @pragma('vm:prefer-inline')
-  void registerSingleton<T extends Object>(
-    InstConstructor<T, Object> constructor, {
+  void registerFactory<T extends Object, P extends Object>(
+    InstConstructor<T, P> constructor, {
     Gr? group,
     OnUnregisterCallback<T>? onUnregister,
   }) {
-    _register<SingletonInst<T, Object>, Object, T>(
-      SingletonInst<T, Object>(constructor),
+    _register<Inst<T, P>, P, T>(
+      Inst<T, P>(constructor),
       group: group,
       onUnregister: onUnregister,
     );
@@ -76,13 +79,15 @@ base mixin RegisterImpl on DIBase implements RegisterIface {
 
   @override
   @pragma('vm:prefer-inline')
-  void registerFactory<T extends Object, P extends Object>(
-    InstConstructor<T, P> constructor, {
+  void registerSingleton<T extends Object>(
+    Constructor<T> constructor, {
     Gr? group,
+    OnUnregisterCallback<T>? onUnregister,
   }) {
-    _register<FactoryInst<T, P>, P, T>(
-      FactoryInst<T, P>(constructor),
-      group: group,
+    register<SingletonWrapper<T>>(
+      SingletonWrapper<T>(constructor),
+      group: preferFocusGroup(group),
+      onUnregister: (e) => e.instance.thenOr((e) => onUnregister?.call(e)),
     );
   }
 

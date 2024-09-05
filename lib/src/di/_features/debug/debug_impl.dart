@@ -22,7 +22,7 @@ base mixin DebugImpl on DIBase implements DebugIface {
   Type registrationType<T extends Object, P extends Object>({
     Gr? group,
   }) {
-    return getDependency1<T, P>(group: group).registrationType;
+    return getDependency1<T, P>(group: group, getFromParents: true).registrationType;
   }
 
   @visibleForTesting
@@ -31,6 +31,6 @@ base mixin DebugImpl on DIBase implements DebugIface {
   int registrationIndex<T extends Object, P extends Object>({
     Gr? group,
   }) {
-    return getDependency1<T, P>(group: group).registrationIndex;
+    return getDependency1<T, P>(group: group, getFromParents: true).registrationIndex;
   }
 }

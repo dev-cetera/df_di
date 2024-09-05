@@ -66,43 +66,61 @@ class FutureOrInst<T extends Object, P extends Object> extends Inst<T, P> {
   }
 }
 
-/// A singleton interface that also reports the type of the created objects.
-@pragma('vm:keep-name') // enable string lookups
-class SingletonInst<T extends Object, P extends Object> extends Inst<T, P> {
-  static Gr gr(Object type, Object paramsType) => Gr.fromType(
-        baseType: SingletonInst,
-        subTypes: [type, paramsType],
-      );
+class SingletonWrapper<T> {
+  FutureOr<T>? _instance;
+  final FutureOr<T> Function() _constructor;
 
-  /// Creates a new singleton.
-  const SingletonInst(super.constructor);
+  SingletonWrapper(this._constructor);
 
-  @override
-  SingletonInst<T2, P2> cast<T2 extends Object, P2 extends Object>() {
-    return castWith<T2, P2, SingletonInst<T2, P2>>(
-      (c) => SingletonInst<T2, P2>((e) => c(e)),
-    );
+  /// Returns the singleton instance of the wrapped class.
+  FutureOr<T> get instance {
+    _instance ??= _constructor();
+    return _instance!;
+  }
+
+  /// Resets the instance for testing or recreation purposes.
+  void reset() {
+    _instance = null;
   }
 }
 
-/// A factory interface that also reports the type of the created objects.
-@pragma('vm:keep-name') // enable string lookups
-class FactoryInst<T extends Object, P extends Object> extends Inst<T, P> {
-  static Gr gr(Object type, Object paramsType) => Gr.fromType(
-        baseType: FactoryInst,
-        subTypes: [type, paramsType],
-      );
+// /// A singleton interface that also reports the type of the created objects.
+// @pragma('vm:keep-name') // enable string lookups
+// class SingletonInst<T extends Object, P extends Object> extends Inst<T, P> {
+//   static Gr gr(Object type, Object paramsType) => Gr.fromType(
+//         baseType: SingletonInst,
+//         subTypes: [type, paramsType],
+//       );
 
-  /// Creates a new factory.
-  const FactoryInst(super.constructor);
+//   /// Creates a new singleton.
+//   const SingletonInst(super.constructor);
 
-  @override
-  FactoryInst<T2, P2> cast<T2 extends Object, P2 extends Object>() {
-    return castWith<T2, P2, FactoryInst<T2, P2>>(
-      (c) => FactoryInst<T2, P2>((e) => c(e)),
-    );
-  }
-}
+//   @override
+//   SingletonInst<T2, P2> cast<T2 extends Object, P2 extends Object>() {
+//     return castWith<T2, P2, SingletonInst<T2, P2>>(
+//       (c) => SingletonInst<T2, P2>((e) => c(e)),
+//     );
+//   }
+// }
+
+// /// A factory interface that also reports the type of the created objects.
+// @pragma('vm:keep-name') // enable string lookups
+// class FactoryInst<T extends Object, P extends Object> extends Inst<T, P> {
+//   static Gr gr(Object type, Object paramsType) => Gr.fromType(
+//         baseType: FactoryInst,
+//         subTypes: [type, paramsType],
+//       );
+
+//   /// Creates a new factory.
+//   const FactoryInst(super.constructor);
+
+//   @override
+//   FactoryInst<T2, P2> cast<T2 extends Object, P2 extends Object>() {
+//     return castWith<T2, P2, FactoryInst<T2, P2>>(
+//       (c) => FactoryInst<T2, P2>((e) => c(e)),
+//     );
+//   }
+// }
 
 /// A type alias for a function that returns an instance of type `T`.
-typedef Constructor<T> = T Function();
+typedef Constructor<T> = FutureOr<T> Function();

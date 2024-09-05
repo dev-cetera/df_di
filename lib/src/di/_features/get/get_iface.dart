@@ -20,12 +20,14 @@ abstract interface class GetIface {
   /// call syntax.
   T call<T extends Object>({
     Gr? group,
+    bool getFromParents = true,
   });
 
   /// Gets via [get] using [T] and [group] or `null` upon any error,
   /// including but not limited to [DependencyNotFoundException].
   FutureOr<T>? getOrNull<T extends Object>({
     Gr? group,
+    bool getFromParents = true,
   });
 
   /// Gets a dependency as either a [Future] or an instance of [T] registered
@@ -45,8 +47,15 @@ abstract interface class GetIface {
     Gr? group,
   });
 
-  FutureOr<T> getFactory<T extends Service<P>, P extends Object>(
+  FutureOr<T> getInstance<T extends Object, P extends Object>(
     P params, {
     Gr? group,
+    bool getFromParents = true,
+  });
+
+
+  FutureOr<T> getSingleton<T extends Object>({
+    Gr? group,
+    bool getFromParents = true,
   });
 }

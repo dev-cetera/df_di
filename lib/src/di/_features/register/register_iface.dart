@@ -61,7 +61,7 @@ abstract interface class RegisterIface {
   ///
   /// ```dart
   /// // Example:
-  /// di.initSingletonService(FooBarService.new);
+  /// di.initSingletonService(FooBarService.new)
   /// final fooBarService1 = di.get<FooBarService>();
   /// final fooBarService2 = di.get<FooBarService>();
   /// print(fooBarService1 == fooBarService2); // true
@@ -97,7 +97,7 @@ abstract interface class RegisterIface {
   /// print(fooBarService1 == fooBarService2); // true
   /// ```
   void registerSingleton<T extends Object>(
-    InstConstructor<T, Object> constructor, {
+    Constructor<T> constructor, {
     Gr? group,
     OnUnregisterCallback<T>? onUnregister,
   });
@@ -112,7 +112,8 @@ abstract interface class RegisterIface {
   /// print(fooBarService1 == fooBarService2); // false
   /// ```
   void registerFactory<T extends Object, P extends Object>(
-    InstConstructor<T, P> constructor, {
+    InstConstructor<T, Object> constructor, {
     Gr? group,
+    OnUnregisterCallback<T>? onUnregister,
   });
 }

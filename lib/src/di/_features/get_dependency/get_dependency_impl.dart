@@ -22,10 +22,12 @@ base mixin GetDependencyImpl on DIBase implements GetDependencyIface {
   @override
   Dependency<Object> getDependency1<T extends Object, P extends Object>({
     Gr? group,
+    required bool getFromParents,
   }) {
     final fg = preferFocusGroup(group);
     final dep = getDependencyOrNull1<T, P>(
       group: group,
+       getFromParents: getFromParents,
     );
     if (dep == null) {
       throw DependencyNotFoundException(
@@ -41,13 +43,12 @@ base mixin GetDependencyImpl on DIBase implements GetDependencyIface {
   @override
   Dependency<Object>? getDependencyOrNull1<T extends Object, P extends Object>({
     Gr? group,
+    required bool getFromParents,
   }) {
     final fg = preferFocusGroup(group);
     final getters = [
       () => registry.getDependencyOrNull<T>(group: fg),
-      () => registry.getDependencyOrNull<FutureOrInst<T, P>>(group: fg),
-      () => registry.getDependencyOrNull<SingletonInst<T, P>>(group: fg),
-      // () => registry.getDependencyOrNull<FactoryInst<T, P>>(group: fg),
+      () => registry.getDependencyOrNull<FutureOrInst<T, Object>>(group: fg),
     ];
     for (final getter in getters) {
       final dep = getter();
@@ -58,9 +59,13 @@ base mixin GetDependencyImpl on DIBase implements GetDependencyIface {
         }
       }
     }
-    return parent?.getDependencyOrNull1<T, P>(
-      group: group,
-    );
+    if (getFromParents) {
+      return parent?.getDependencyOrNull1<T, P>(
+        group: group,
+         getFromParents: getFromParents,
+      );
+    }
+    return null;
   }
 
   @protected
@@ -69,12 +74,14 @@ base mixin GetDependencyImpl on DIBase implements GetDependencyIface {
     required Gr type,
     Gr? paramsType,
     Gr? group,
+    required bool getFromParents,
   }) {
     final fg = preferFocusGroup(group);
     final dep = getDependencyUsingExactTypeOrNull1(
       type: type,
       paramsType: paramsType,
       group: group,
+       getFromParents: getFromParents,
     );
     if (dep == null) {
       throw DependencyNotFoundException(
@@ -92,14 +99,13 @@ base mixin GetDependencyImpl on DIBase implements GetDependencyIface {
     required Gr type,
     Gr? paramsType,
     Gr? group,
+    required bool getFromParents,
   }) {
     final fg = preferFocusGroup(group);
     final paramsType1 = paramsType ?? Gr(Object);
     final getters = [
       type,
       FutureOrInst.gr(type, paramsType1),
-      SingletonInst.gr(type, paramsType1),
-      // FactoryInst.gr(type, paramsType1),
     ].map(
       (type) {
         return () => registry.getDependencyUsingExactTypeOrNull(
@@ -121,6 +127,7 @@ base mixin GetDependencyImpl on DIBase implements GetDependencyIface {
       type: type,
       paramsType: paramsType,
       group: group,
+       getFromParents: getFromParents,
     );
   }
 
@@ -131,11 +138,13 @@ base mixin GetDependencyImpl on DIBase implements GetDependencyIface {
     required Type type,
     Gr? paramsType,
     Gr? group,
+     required bool getFromParents,
   }) {
     return getDependencyUsingExactType1(
       type: Gr(type),
       paramsType: paramsType,
       group: group,
+       getFromParents: getFromParents,
     );
   }
 
@@ -146,11 +155,13 @@ base mixin GetDependencyImpl on DIBase implements GetDependencyIface {
     required Type type,
     Gr? paramsType,
     Gr? group,
+     required bool getFromParents,
   }) {
     return getDependencyUsingExactTypeOrNull1(
       type: Gr(type),
       paramsType: paramsType,
       group: group,
+      getFromParents: getFromParents,
     );
   }
 }

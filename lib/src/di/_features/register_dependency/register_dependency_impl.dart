@@ -27,6 +27,7 @@ base mixin RegisterDependencyImpl on DIBase implements RegisterDependencyIface {
     final group = dependency.group;
     final dep = getDependencyOrNull1<T, P>(
       group: group,
+      getFromParents: false,
     );
     if (!suppressDependencyAlreadyRegisteredException && dep != null) {
       throw DependencyAlreadyRegisteredException(
@@ -48,9 +49,10 @@ base mixin RegisterDependencyImpl on DIBase implements RegisterDependencyIface {
     bool suppressDependencyAlreadyRegisteredException = false,
   }) {
     final group = dependency.group;
-    final dep = registry.getDependencyUsingExactTypeOrNull(
+    final dep = getDependencyUsingExactTypeOrNull1(
       type: type,
       group: group,
+      getFromParents: false,
     );
     if (!suppressDependencyAlreadyRegisteredException && dep != null) {
       throw DependencyAlreadyRegisteredException(

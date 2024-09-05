@@ -18,33 +18,39 @@ import '/src/_internal.dart';
 abstract interface class GetDependencyIface {
   Dependency<Object> getDependency1<T extends Object, P extends Object>({
     Gr? group,
+    required bool getFromParents,
   });
 
   Dependency<Object> getDependencyUsingExactType1({
     required Gr type,
     Gr? paramsType,
     Gr? group,
+    required bool getFromParents,
   });
 
   Dependency<Object>? getDependencyOrNull1<T extends Object, P extends Object>({
     Gr? group,
+    required bool getFromParents,
   });
 
   Dependency<Object>? getDependencyUsingExactTypeOrNull1({
     required Gr type,
     Gr? paramsType,
     Gr? group,
+    required bool getFromParents,
   });
 
   Dependency<Object> getDependencyUsingRuntimeType1({
     required Type type,
     Gr? paramsType,
     Gr? group,
+    required bool getFromParents,
   });
 
   Dependency<Object>? getDependencyUsingRuntimeTypeOrNull1({
     required Type type,
     Gr? paramsType,
     Gr? group,
+    required bool getFromParents,
   });
 }

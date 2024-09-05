@@ -23,7 +23,7 @@ base mixin ChildImpl on DIBase implements ChildIface {
     Gr? childGroup,
   }) {
     registerSingleton<DI>(
-      (_) => DI(
+      () => DI(
         focusGroup: preferFocusGroup(childGroup),
         parent: this,
       ),
@@ -34,14 +34,20 @@ base mixin ChildImpl on DIBase implements ChildIface {
 
   @override
   @pragma('vm:prefer-inline')
-  DI getChild({Gr? group}) => get<DI>(group: group) as DI;
+  DI getChild({Gr? group}) => getSingleton<DI>(
+        group: group,
+        getFromParents: false,
+      ) as DI;
 
   @override
   DI child({
-    Gr? childGroup,
     Gr? group,
+    Gr? childGroup,
   }) {
-    final registered = isRegistered<DI, Object>(group: group);
+    final registered = isRegistered<SingletonWrapper<DI>, Object>(
+      group: group,
+      getFromParents: false,
+    );
     if (!registered) {
       registerChild(
         group: group,
