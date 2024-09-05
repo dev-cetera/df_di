@@ -16,6 +16,11 @@ import '/src/_internal.dart';
 
 @pragma('vm:keep-name') // enable string lookups
 class Inst<T extends Object, P extends Object> {
+  static Gr gr(Object type, Object paramsType) => Gr.fromType(
+        baseType: Inst,
+        subTypes: [type, paramsType],
+      );
+
   /// Creates a new inst.
   const Inst(this.constructor);
 
@@ -23,7 +28,7 @@ class Inst<T extends Object, P extends Object> {
   final InstConstructor<T, P> constructor;
 
   /// The type of the objects created by this inst.
-  Gr get type => TypeGr(T);
+  Gr get type => Gr(T);
 
   @override
   String toString() {
@@ -42,35 +47,40 @@ class Inst<T extends Object, P extends Object> {
   }
 }
 
-typedef InstConstructor<T extends Object, P extends Object> = FutureOr<T>
-    Function(P params);
-
-typedef FutureInst<T extends Object> = _FutureInst<T, Object>;
+typedef InstConstructor<T extends Object, P extends Object> = FutureOr<T> Function(P params);
 
 @pragma('vm:keep-name') // enable string lookups
-class _FutureInst<T extends Object, P extends Object> extends Inst<T, P> {
-  const _FutureInst(super.constructor);
+class FutureInst<T extends Object, P extends Object> extends Inst<T, P> {
+  static Gr gr(Object type, Object paramsType) => Gr.fromType(
+        baseType: FutureInst,
+        subTypes: [type, paramsType],
+      );
+
+  const FutureInst(super.constructor);
 
   @override
-  _FutureInst<T2, P2> cast<T2 extends Object, P2 extends Object>() {
-    return castWith<T2, P2, _FutureInst<T2, P2>>(
-      (c) => _FutureInst<T2, P2>((e) => c(e)),
+  FutureInst<T2, P2> cast<T2 extends Object, P2 extends Object>() {
+    return castWith<T2, P2, FutureInst<T2, P2>>(
+      (c) => FutureInst<T2, P2>((e) => c(e)),
     );
   }
 }
 
-typedef SingletonInst<T extends Object> = _SingletonInst<T, Object>;
-
 /// A singleton interface that also reports the type of the created objects.
 @pragma('vm:keep-name') // enable string lookups
-class _SingletonInst<T extends Object, P extends Object> extends Inst<T, P> {
+class SingletonInst<T extends Object, P extends Object> extends Inst<T, P> {
+  static Gr gr(Object type, Object paramsType) => Gr.fromType(
+        baseType: SingletonInst,
+        subTypes: [type, paramsType],
+      );
+
   /// Creates a new singleton.
-  const _SingletonInst(super.constructor);
+  const SingletonInst(super.constructor);
 
   @override
-  _SingletonInst<T2, P2> cast<T2 extends Object, P2 extends Object>() {
-    return castWith<T2, P2, _SingletonInst<T2, P2>>(
-      (c) => _SingletonInst<T2, P2>((e) => c(e)),
+  SingletonInst<T2, P2> cast<T2 extends Object, P2 extends Object>() {
+    return castWith<T2, P2, SingletonInst<T2, P2>>(
+      (c) => SingletonInst<T2, P2>((e) => c(e)),
     );
   }
 }
@@ -78,6 +88,11 @@ class _SingletonInst<T extends Object, P extends Object> extends Inst<T, P> {
 /// A factory interface that also reports the type of the created objects.
 @pragma('vm:keep-name') // enable string lookups
 class FactoryInst<T extends Object, P extends Object> extends Inst<T, P> {
+  static Gr gr(Object type, Object paramsType) => Gr.fromType(
+        baseType: FactoryInst,
+        subTypes: [type, paramsType],
+      );
+
   /// Creates a new factory.
   const FactoryInst(super.constructor);
 

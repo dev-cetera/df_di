@@ -28,8 +28,10 @@ base class DI extends DIBase
         IsRegisteredImpl,
         RegisterDependencyImpl,
         RegisterImpl,
+        RegisterUsingRuntimeTypeImpl,
         RemoveDependencyImpl,
-        UnregisterImpl {
+        UnregisterImpl,
+        UntilImpl {
   /// The number of dependencies registered in this instance.
   int get length => registrationCount;
 
@@ -66,7 +68,7 @@ base class DI extends DIBase
   static DI get test => app.getChild(group: Gr.testGroup);
 
   factory DI.instantiate({
-    Gr<Object>? focusGroup = Gr.defaultGroup,
+    Gr<Object>? focusGroup,
     DI? parent,
     void Function(DI di)? onInstantiate,
   }) {

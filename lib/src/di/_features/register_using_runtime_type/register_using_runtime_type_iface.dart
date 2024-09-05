@@ -10,14 +10,15 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-// Exports for internal use.
-export 'dart:async';
-export 'package:df_type/df_type.dart';
-export 'package:collection/collection.dart';
-export 'package:meta/meta.dart';
-export '_index.g.dart';
-export 'di/_di_base.dart';
-export 'di/_features/_index.g.dart';
-export '_registry/registry.dart';
-export '_registry/registry_base.dart';
-export '_dependency.dart';
+import '/src/_internal.dart';
+
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+@internal
+abstract interface class RegisterUsingRuntimeTypeIface {
+  void registerUsingRuntimeType(
+    FutureOr<Object> value, {
+    Gr? group,
+    OnUnregisterCallback<Object>? onUnregister,
+  });
+}

@@ -1,0 +1,77 @@
+//.title
+// ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+//
+// Dart/Flutter (DF) Packages by DevCetra.com & contributors. The use of this
+// source code is governed by an MIT-style license described in the LICENSE
+// file located in this project's root directory.
+//
+// See: https://opensource.org/license/mit
+//
+// ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+//.title~
+
+import '/src/_internal.dart';
+
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+@internal
+base mixin UnregisterImpl on DIBase implements UnregisterIface {
+  @override
+  FutureOr<void> unregisterAll({
+    void Function(Dependency<Object> dependency)? onUnregister,
+  }) {
+    final foc = FutureOrController<void>();
+    final dependencies =
+        registry.state.values.fold(<Dependency<Object>>[], (buffer, e) => buffer..addAll(e.values));
+    dependencies.sort((a, b) => b.registrationIndex.compareTo(a.registrationIndex));
+    for (final dep in dependencies) {
+      final a = dep.onUnregister;
+      final b = onUnregister;
+      foc.addAll([
+        if (a != null) (_) => a(dep.value),
+        if (b != null) (_) => b(dep),
+      ]);
+    }
+    foc.add((_) => registry.clearRegistry());
+    return foc.complete();
+  }
+
+  @override
+  FutureOr<void> unregister<T extends Object>({
+    Gr? group,
+  }) {
+    return unregisterUsingExactType(
+      type: Gr(T),
+      paramsType: Gr(Object),
+      group: group,
+    );
+  }
+
+  @protected
+  @override
+  FutureOr<void> unregisterUsingExactType({
+    required Gr type,
+    Gr? paramsType,
+    Gr? group,
+  }) {
+    final dep = removeDependencyUsingExactType(
+      type: type,
+      paramsType: paramsType,
+      group: group,
+    );
+    return dep.onUnregister?.call(dep.value);
+  }
+
+  @override
+  FutureOr<void> unregisterUsingRuntimeType(
+    Type type, {
+    Gr? paramsType,
+    Gr? group,
+  }) {
+    return unregisterUsingExactType(
+      type: Gr(type),
+      paramsType: paramsType,
+      group: group,
+    );
+  }
+}

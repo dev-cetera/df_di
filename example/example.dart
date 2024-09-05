@@ -57,12 +57,21 @@ void main() async {
   di.registerLazySingletonService(CountingService.new);
   print(di.registry.state);
   final coutingService = di.getUsingRuntimeType(CountingService);
+  print(coutingService);
   print(di.registry.state);
 
-  print(coutingService);
+
+  di.register<F>((i) { return 1; });
+  di.getSync<F>()(44);
+
+
+
+  di.registerFactory<DateTime, int>((e) => DateTime.fromMicrosecondsSinceEpoch(e));
+  final test = di.getFactoryUsingRuntimeType(int, 33333333);
+  print(test);
 
   Future.delayed(
-    const Duration(seconds: 5),
+    const Duration(seconds: 10),
     () {
       di.unregisterAll(
         onUnregister: (dep) {
@@ -76,6 +85,8 @@ void main() async {
     },
   );
 }
+
+typedef F = int Function(int);
 
 typedef Params = ({String name, int age});
 

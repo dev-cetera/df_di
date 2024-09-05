@@ -46,7 +46,7 @@ final scopedDi = di.child().child().child(group: Gr('moduleGroup'));
 di.register<int>(42);
 
 // Register an integer under a specific group, useful in environments like testing.
-di.register<int>(0, group: Gr.test);
+di.register<int>(0, group: Gr.testGroup);
 
 // Register a Future as a dependency.
 di.register(Future.value('Hello, DI!'));

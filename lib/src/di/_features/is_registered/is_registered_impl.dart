@@ -14,38 +14,45 @@ import '/src/_internal.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-abstract base class DIBase
-    implements
-        ChildIface,
-        DebugIface,
-         RegisterUsingRuntimeTypeIface,
-        FocusGroupIface,
-        GetDependencyIface,
-        GetFactoryIface,
-        GetIface,
-        GetUsingExactTypeIface,
-        IsRegisteredIface,
-        RegisterDependencyIface,
-        RegisterIface,
-        RemoveDependencyIface,
-        UnregisterIface,
-        UntilIface {
-  /// A type-safe registry that stores all dependencies.
+@internal
+base mixin IsRegisteredImpl on DIBase implements IsRegisteredIface {
+  @override
+  bool isRegistered<T extends Object, P extends Object>({
+    Gr? group,
+  }) {
+    final dep = getDependencyOrNull1<T, P>(
+      group: group,
+    );
+    final registered = dep != null;
+    return registered;
+  }
+
   @protected
-  final registry = Registry();
-
-  /// Tracks the registration count, assigning a unique index number to each
-  /// registration.
-  @protected
-  var registrationCount = 0;
-
-  final DIBase? parent;
-
-  DIBase({
-    Gr? focusGroup,
-    this.parent,
-  }) : focusGroup = focusGroup ?? Gr.defaultGroup;
+  @override
+  bool isRegisteredUsingExactType({
+    required Gr type,
+    Gr? paramsType,
+    required Gr group,
+  }) {
+    final dep = getDependencyUsingExactTypeOrNull1(
+      type: type,
+      paramsType: paramsType,
+      group: group,
+    );
+    final registered = dep != null;
+    return registered;
+  }
 
   @override
-  Gr focusGroup;
+  bool isRegisteredUsingRuntimeType({
+    required Type type,
+    Type paramsType = Object,
+    required Gr group,
+  }) {
+    return isRegisteredUsingExactType(
+      type: Gr(type),
+      paramsType: Gr(paramsType),
+      group: group,
+    );
+  }
 }

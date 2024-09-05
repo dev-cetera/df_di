@@ -14,38 +14,37 @@ import '/src/_internal.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-abstract base class DIBase
-    implements
-        ChildIface,
-        DebugIface,
-         RegisterUsingRuntimeTypeIface,
-        FocusGroupIface,
-        GetDependencyIface,
-        GetFactoryIface,
-        GetIface,
-        GetUsingExactTypeIface,
-        IsRegisteredIface,
-        RegisterDependencyIface,
-        RegisterIface,
-        RemoveDependencyIface,
-        UnregisterIface,
-        UntilIface {
-  /// A type-safe registry that stores all dependencies.
-  @protected
-  final registry = Registry();
+@internal
+abstract interface class GetDependencyIface {
+  Dependency<Object> getDependency1<T extends Object, P extends Object>({
+    Gr? group,
+  });
 
-  /// Tracks the registration count, assigning a unique index number to each
-  /// registration.
-  @protected
-  var registrationCount = 0;
+  Dependency<Object> getDependencyUsingExactType1({
+    required Gr type,
+    Gr? paramsType,
+    Gr? group,
+  });
 
-  final DIBase? parent;
+  Dependency<Object>? getDependencyOrNull1<T extends Object, P extends Object>({
+    Gr? group,
+  });
 
-  DIBase({
-    Gr? focusGroup,
-    this.parent,
-  }) : focusGroup = focusGroup ?? Gr.defaultGroup;
+  Dependency<Object>? getDependencyUsingExactTypeOrNull1({
+    required Gr type,
+    Gr? paramsType,
+    Gr? group,
+  });
 
-  @override
-  Gr focusGroup;
+  Dependency<Object> getDependencyUsingRuntimeType1({
+    required Type type,
+    Gr? paramsType,
+    Gr? group,
+  });
+
+  Dependency<Object>? getDependencyUsingRuntimeTypeOrNull1({
+    required Type type,
+    Gr? paramsType,
+    Gr? group,
+  });
 }

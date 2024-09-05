@@ -14,38 +14,44 @@ import '/src/_internal.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-abstract base class DIBase
-    implements
-        ChildIface,
-        DebugIface,
-         RegisterUsingRuntimeTypeIface,
-        FocusGroupIface,
-        GetDependencyIface,
-        GetFactoryIface,
-        GetIface,
-        GetUsingExactTypeIface,
-        IsRegisteredIface,
-        RegisterDependencyIface,
-        RegisterIface,
-        RemoveDependencyIface,
-        UnregisterIface,
-        UntilIface {
-  /// A type-safe registry that stores all dependencies.
-  @protected
-  final registry = Registry();
-
-  /// Tracks the registration count, assigning a unique index number to each
-  /// registration.
-  @protected
-  var registrationCount = 0;
-
-  final DIBase? parent;
-
-  DIBase({
-    Gr? focusGroup,
-    this.parent,
-  }) : focusGroup = focusGroup ?? Gr.defaultGroup;
+@internal
+base mixin ChildImpl on DIBase implements ChildIface {
+  @override
+  @pragma('vm:prefer-inline')
+  void registerChild({
+    Gr? childGroup,
+    Gr? group,
+  }) {
+    final childFocusGroup = preferFocusGroup(childGroup);
+    final focusGroup = preferFocusGroup(group);
+    registerLazySingleton<DI>(
+      (_) => DI(focusGroup: childFocusGroup, parent: this),
+      group: focusGroup,
+      onUnregister: (e) => e.unregisterAll(),
+    );
+  }
 
   @override
-  Gr focusGroup;
+  @pragma('vm:prefer-inline')
+  DI getChild({Gr? group}) => getSync<DI>(group: group);
+
+  @override
+  DI child({
+    Gr? childGroup,
+    Gr? group,
+  }) {
+    if (!isRegistered<DI, Object>()) {
+      registerChild(
+        childGroup: childGroup,
+        group: group,
+      );
+    }
+    return getChild(
+      group: group,
+    );
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  void unregisterChild({Gr? group}) => unregister<DI>(group: group);
 }

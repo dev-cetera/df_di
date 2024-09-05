@@ -14,38 +14,22 @@ import '/src/_internal.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-abstract base class DIBase
-    implements
-        ChildIface,
-        DebugIface,
-         RegisterUsingRuntimeTypeIface,
-        FocusGroupIface,
-        GetDependencyIface,
-        GetFactoryIface,
-        GetIface,
-        GetUsingExactTypeIface,
-        IsRegisteredIface,
-        RegisterDependencyIface,
-        RegisterIface,
-        RemoveDependencyIface,
-        UnregisterIface,
-        UntilIface {
-  /// A type-safe registry that stores all dependencies.
-  @protected
-  final registry = Registry();
+@internal
+abstract interface class RegisterDependencyIface {
+  void registerDependency<T extends Object>({
+    required Dependency<T> dependency,
+    bool suppressDependencyAlreadyRegisteredException = false,
+  });
 
-  /// Tracks the registration count, assigning a unique index number to each
-  /// registration.
-  @protected
-  var registrationCount = 0;
+  void registerDependencyUsingExactType({
+    required Gr type,
+    required Dependency<Object> dependency,
+    bool suppressDependencyAlreadyRegisteredException = false,
+  });
 
-  final DIBase? parent;
-
-  DIBase({
-    Gr? focusGroup,
-    this.parent,
-  }) : focusGroup = focusGroup ?? Gr.defaultGroup;
-
-  @override
-  Gr focusGroup;
+  void registerDependencyUsingRuntimeType(
+    Type type, {
+    required Dependency<Object> dependency,
+    bool suppressDependencyAlreadyRegisteredException = false,
+  });
 }
