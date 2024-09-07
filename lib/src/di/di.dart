@@ -18,19 +18,19 @@ import '/src/_internal.dart';
 /// dependencies across an application.
 base class DI extends DIBase
     with
-        ChildImpl,
-        DebugImpl,
-        FocusGroupImpl,
-        GetDependencyImpl,
-        GetImpl,
-        GetUsingExactTypeImpl,
-        IsRegisteredImpl,
-        RegisterDependencyImpl,
-        RegisterImpl,
-        RegisterUsingRuntimeTypeImpl,
-        RemoveDependencyImpl,
-        UnregisterImpl,
-        UntilImpl {
+        ChildMixin,
+        DebugMixin,
+        FocusGroupMixin,
+        GetDependencyMixin,
+        GetMixin,
+        GetUsingExactTypeMixin,
+        IsRegisteredMixin,
+        RegisterDependencyMixin,
+        RegisterMixin,
+        RegisterUsingRuntimeTypeMixin,
+        RemoveDependencyMixin,
+        UnregisterMixin,
+        UntilMixin {
   /// The number of dependencies registered in this instance.
   int get length => registrationCount;
 
@@ -42,13 +42,13 @@ base class DI extends DIBase
     super.parent,
   });
 
-  /// Default app group.
+  /// Default app typeGroup.
   static final app = DI();
 
-  /// Default global group.
-  static DI get global => app.child(group: Gr.globalGroup);
-  static DI get session => global.child(group: Gr.sessionGroup);
-  static DI get dev => app.child(group: Gr.devGroup);
-  static DI get prod => app.child(group: Gr.prodGroup);
-  static DI get test => app.child(group: Gr.testGroup);
+  /// Default global typeGroup.
+  static DI get global => app.child(typeGroup: DIKey.globalGroup);
+  static DI get session => global.child(typeGroup: DIKey.sessionGroup);
+  static DI get dev => app.child(typeGroup: DIKey.devGroup);
+  static DI get prod => app.child(typeGroup: DIKey.prodGroup);
+  static DI get test => app.child(typeGroup: DIKey.testGroup);
 }

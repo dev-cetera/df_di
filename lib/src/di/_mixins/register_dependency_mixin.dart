@@ -17,22 +17,22 @@ import '/src/_internal.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 @internal
-base mixin RegisterDependencyImpl on DIBase implements RegisterDependencyIface {
+base mixin RegisterDependencyMixin on DIBase implements RegisterDependencyInterface {
   @protected
   @override
   void registerDependency<T extends Object, P extends Object>({
     required Dependency<T> dependency,
     bool suppressDependencyAlreadyRegisteredException = false,
   }) {
-    final group = dependency.group;
+    final typeGroup = dependency.metadata.typeGroup;
     final dep = getDependencyOrNull1<T, P>(
-      group: group,
+      typeGroup: typeGroup,
       getFromParents: false,
     );
     if (!suppressDependencyAlreadyRegisteredException && dep != null) {
       throw DependencyAlreadyRegisteredException(
         type: T,
-        group: group,
+        typeGroup: typeGroup,
       );
     }
     // Store the dependency in the type map.
@@ -44,20 +44,20 @@ base mixin RegisterDependencyImpl on DIBase implements RegisterDependencyIface {
   @protected
   @override
   void registerDependencyUsingExactType({
-    required Gr type,
+    required DIKey type,
     required Dependency<Object> dependency,
     bool suppressDependencyAlreadyRegisteredException = false,
   }) {
-    final group = dependency.group;
+    final typeGroup = dependency.metadata.typeGroup;
     final dep = getDependencyUsingExactTypeOrNull1(
       type: type,
-      group: group,
+      typeGroup: typeGroup,
       getFromParents: false,
     );
     if (!suppressDependencyAlreadyRegisteredException && dep != null) {
       throw DependencyAlreadyRegisteredException(
         type: type,
-        group: group,
+        typeGroup: typeGroup,
       );
     }
     // Store the dependency in the type map.
@@ -76,8 +76,30 @@ base mixin RegisterDependencyImpl on DIBase implements RegisterDependencyIface {
   }) {
     registerDependencyUsingExactType(
       dependency: dependency,
-      type: Gr(type),
+      type: DIKey(type),
       suppressDependencyAlreadyRegisteredException: suppressDependencyAlreadyRegisteredException,
     );
   }
+}
+
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+@internal
+abstract interface class RegisterDependencyInterface {
+  void registerDependency<T extends Object, P extends Object>({
+    required Dependency<T> dependency,
+    bool suppressDependencyAlreadyRegisteredException = false,
+  });
+
+  void registerDependencyUsingExactType({
+    required DIKey type,
+    required Dependency<Object> dependency,
+    bool suppressDependencyAlreadyRegisteredException = false,
+  });
+
+  void registerDependencyUsingRuntimeType(
+    Type type, {
+    required Dependency<Object> dependency,
+    bool suppressDependencyAlreadyRegisteredException = false,
+  });
 }

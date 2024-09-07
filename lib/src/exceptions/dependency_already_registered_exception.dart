@@ -18,6 +18,6 @@ import '/src/_internal.dart';
 final class DependencyAlreadyRegisteredException extends DFDIPackageException {
   DependencyAlreadyRegisteredException({
     required Object type,
-    required Gr group,
-  }) : super('Dependency of type $type in group $group is already registered.');
+    required DIKey typeGroup,
+  }) : super('Dependency of type $type in typeGroup $typeGroup is already registered.');
 }

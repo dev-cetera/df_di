@@ -15,14 +15,14 @@ import '/src/_internal.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 @internal
-base mixin IsRegisteredImpl on DIBase implements IsRegisteredIface {
+base mixin IsRegisteredMixin on DIBase implements IsRegisteredInterface {
   @override
   bool isRegistered<T extends Object, P extends Object>({
-    Gr? group,
+    DIKey? typeGroup,
     bool getFromParents = true,
   }) {
     final dep = getDependencyOrNull1<T, P>(
-      group: group,
+      typeGroup: typeGroup,
       getFromParents: getFromParents,
     );
     final registered = dep != null;
@@ -32,15 +32,15 @@ base mixin IsRegisteredImpl on DIBase implements IsRegisteredIface {
   @protected
   @override
   bool isRegisteredUsingExactType({
-    required Gr type,
-    Gr? paramsType,
-    required Gr group,
+    required DIKey type,
+    DIKey? paramsType,
+    required DIKey typeGroup,
     bool getFromParents = true,
   }) {
     final dep = getDependencyUsingExactTypeOrNull1(
       type: type,
       paramsType: paramsType,
-      group: group,
+      typeGroup: typeGroup,
       getFromParents: getFromParents,
     );
     final registered = dep != null;
@@ -51,14 +51,41 @@ base mixin IsRegisteredImpl on DIBase implements IsRegisteredIface {
   bool isRegisteredUsingRuntimeType({
     required Type type,
     Type paramsType = Object,
-    required Gr group,
+    required DIKey typeGroup,
     bool getFromParents = true,
   }) {
     return isRegisteredUsingExactType(
-      type: Gr(type),
-      paramsType: Gr(paramsType),
-      group: group,
+      type: DIKey(type),
+      paramsType: DIKey(paramsType),
+      typeGroup: typeGroup,
       getFromParents: getFromParents,
     );
   }
+}
+
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+@internal
+abstract interface class IsRegisteredInterface {
+  /// Checks if a dependency is registered under [T] and [typeGroup].
+  bool isRegistered<T extends Object, P extends Object>({
+    DIKey? typeGroup,
+    bool getFromParents = true,
+  });
+
+  /// Checks if a dependency is registered under [type] and [typeGroup].
+
+  bool isRegisteredUsingExactType({
+    required DIKey type,
+    DIKey? paramsType,
+    required DIKey typeGroup,
+    bool getFromParents = true,
+  });
+
+  bool isRegisteredUsingRuntimeType({
+    required Type type,
+    Type paramsType = Object,
+    required DIKey typeGroup,
+    bool getFromParents = true,
+  });
 }

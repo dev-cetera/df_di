@@ -16,19 +16,19 @@ import '/src/_internal.dart';
 
 abstract base class DIBase
     implements
-        ChildIface,
-        DebugIface,
-        RegisterUsingRuntimeTypeIface,
-        FocusGroupIface,
-        GetDependencyIface,
-        GetIface,
-        GetUsingExactTypeIface,
-        IsRegisteredIface,
-        RegisterDependencyIface,
-        RegisterIface,
-        RemoveDependencyIface,
-        UnregisterIface,
-        UntilIface {
+        ChildInterface,
+        DebugInterface,
+        RegisterUsingRuntimeTypeInterface,
+        FocusGroupInterface,
+        GetDependencyInterface,
+        GetInterface,
+        GetUsingExactTypeInterface,
+        IsRegisteredInterface,
+        RegisterDependencyInterface,
+        RegisterInterface,
+        RemoveDependencyInterface,
+        UnregisterInterface,
+        UntilInterface {
   /// A type-safe registry that stores all dependencies.
 
   final registry = Registry();
@@ -41,12 +41,12 @@ abstract base class DIBase
   final DIBase? parent;
 
   DIBase({
-    Gr? focusGroup,
+    DIKey? focusGroup,
     this.parent,
-  }) : focusGroup = focusGroup ?? Gr.defaultGroup;
+  }) : focusGroup = focusGroup ?? DIKey.defaultGroup;
 
   @override
-  Gr focusGroup;
+  DIKey focusGroup;
 
   @override
   String toString() {

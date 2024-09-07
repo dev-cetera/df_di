@@ -17,22 +17,22 @@ import '/src/_internal.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 @internal
-base mixin GetUsingExactTypeImpl on DIBase implements GetUsingExactTypeIface {
+base mixin GetUsingExactTypeMixin on DIBase implements GetUsingExactTypeInterface {
   @protected
   @override
   FutureOr<Object> getUsingExactType({
-    required Gr type,
-    Gr? group,
+    required DIKey type,
+    DIKey? typeGroup,
   }) {
-    final fg = preferFocusGroup(group);
+    final fg = preferFocusGroup(typeGroup);
     final value = getUsingExactTypeOrNull(
       type: type,
-      group: fg,
+      typeGroup: fg,
     );
     if (value == null) {
       throw DependencyNotFoundException(
         type: type,
-        group: fg,
+        typeGroup: fg,
       );
     }
     return value;
@@ -41,14 +41,14 @@ base mixin GetUsingExactTypeImpl on DIBase implements GetUsingExactTypeIface {
   @protected
   @override
   FutureOr<Object>? getUsingExactTypeOrNull({
-    required Gr type,
-    Gr? group,
+    required DIKey type,
+    DIKey? typeGroup,
     bool getFromParents = true,
   }) {
-    final fg = preferFocusGroup(group);
+    final fg = preferFocusGroup(typeGroup);
     final dep = _get(
       type: type,
-      group: fg,
+      typeGroup: fg,
       getFromParents: getFromParents,
     );
     return dep?.thenOr((e) => e.value);
@@ -57,33 +57,33 @@ base mixin GetUsingExactTypeImpl on DIBase implements GetUsingExactTypeIface {
   @override
   FutureOr<Object> getUsingRuntimeType(
     Type type, {
-    Gr? group,
+    DIKey? typeGroup,
   }) {
     return getUsingExactType(
-      type: Gr(type),
-      group: group,
+      type: DIKey(type),
+      typeGroup: typeGroup,
     );
   }
 
   @override
   FutureOr<Object>? getUsingRuntimeTypeOrNull(
     Type type, {
-    Gr? group,
+    DIKey? typeGroup,
   }) {
     return getUsingExactTypeOrNull(
-      type: Gr(type),
-      group: group,
+      type: DIKey(type),
+      typeGroup: typeGroup,
     );
   }
 
   FutureOr<Dependency<Object>>? _get({
-    required Gr type,
-    required Gr group,
+    required DIKey type,
+    required DIKey typeGroup,
     required bool getFromParents,
   }) {
     final dep = getDependencyUsingExactTypeOrNull1(
       type: type,
-      group: group,
+      typeGroup: typeGroup,
       getFromParents: getFromParents,
     );
     if (dep != null) {
@@ -93,7 +93,7 @@ base mixin GetUsingExactTypeImpl on DIBase implements GetUsingExactTypeIface {
           return _inst(
             type: type,
             genericType: genericType,
-            group: group,
+            typeGroup: typeGroup,
             getFromParents: getFromParents,
           );
         case Object _:
@@ -104,14 +104,14 @@ base mixin GetUsingExactTypeImpl on DIBase implements GetUsingExactTypeIface {
   }
 
   FutureOr<Dependency<Object>>? _inst({
-    required Gr type,
-    required Gr genericType,
-    required Gr group,
+    required DIKey type,
+    required DIKey genericType,
+    required DIKey typeGroup,
     required bool getFromParents,
   }) {
-    final dep = registry.getDependencyUsingExactTypeOrNull(
+    final dep = registry.getDependencyOfTypeOrNull(
       type: genericType,
-      group: group,
+      typeGroup: typeGroup,
     );
     if (dep != null) {
       final value = dep.value;
@@ -120,22 +120,47 @@ base mixin GetUsingExactTypeImpl on DIBase implements GetUsingExactTypeIface {
       }).thenOr((newValue) {
         return registerDependencyUsingExactType(
           type: type,
-          dependency: dep.reassign(newValue),
+          dependency: dep.passNewValue(newValue),
           suppressDependencyAlreadyRegisteredException: true,
         );
         // }).thenOr((_) {
         //   return registry.removeDependencyUsingExactType(
         //     type: genericType,
-        //     group: group,
+        //     typeGroup: typeGroup,
         //   );
       }).thenOr((_) {
         return _get(
           type: type,
-          group: group,
+          typeGroup: typeGroup,
           getFromParents: getFromParents,
         )!;
       });
     }
     return null;
   }
+}
+
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+@internal
+abstract interface class GetUsingExactTypeInterface {
+  FutureOr<Object> getUsingExactType({
+    required DIKey type,
+    DIKey? typeGroup,
+  });
+
+  FutureOr<Object>? getUsingExactTypeOrNull({
+    required DIKey type,
+    DIKey? typeGroup,
+  });
+
+  FutureOr<Object> getUsingRuntimeType(
+    Type type, {
+    DIKey? typeGroup,
+  });
+
+  FutureOr<Object>? getUsingRuntimeTypeOrNull(
+    Type type, {
+    DIKey? typeGroup,
+  });
 }

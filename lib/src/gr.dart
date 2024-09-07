@@ -10,12 +10,12 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-class Gr<T extends Object> {
+class DIKey<T extends Object> {
   final T value;
   late final String _key;
   late final int _hashCode;
 
-  Gr(this.value) {
+  DIKey(this.value) {
     // Set during initialization for faster lookups.
     _key = _makeKey(value);
     _hashCode = _key.hashCode;
@@ -45,7 +45,7 @@ class Gr<T extends Object> {
   /// final type4 = representedType('Map<dynamic, List<Object>>', ['String', 'int']);
   /// print(type4); // Output: Map<String,List<int>>
   /// ```
-  static Gr fromType({required Object baseType, required List<Object> subTypes}) {
+  static DIKey fromType({required Object baseType, required List<Object> subTypes}) {
     final objectStr = '$Object';
     final dynamicStr = '$dynamic';
     final cleanBaseType = baseType.toString().replaceAll(' ', '');
@@ -73,29 +73,29 @@ class Gr<T extends Object> {
     }
 
     // Return the constructed type string wrapped in a Gr object.
-    return Gr(buffer.toString());
+    return DIKey(buffer.toString());
   }
 
-  static final defaultGroup = Gr('DEFAULT_GROUP');
-  static final globalGroup = Gr('GLOBAL_GROUP');
-  static final sessionGroup = Gr('SESSIONL_GROUP');
-  static final prodGroup = Gr('PROD_GROUP');
-  static final devGroup = Gr('DEV_GROUP');
-  static final testGroup = Gr('TEST_GROUP');
+  static final defaultGroup = DIKey('DEFAULT_GROUP');
+  static final globalGroup = DIKey('GLOBAL_GROUP');
+  static final sessionGroup = DIKey('SESSIONL_GROUP');
+  static final prodGroup = DIKey('PROD_GROUP');
+  static final devGroup = DIKey('DEV_GROUP');
+  static final testGroup = DIKey('TEST_GROUP');
 
-  static final $1 = Gr('1');
-  static final $2 = Gr('2');
-  static final $3 = Gr('3');
-  static final $4 = Gr('4');
-  static final $5 = Gr('5');
-  static final $6 = Gr('6');
-  static final $7 = Gr('7');
+  static final $1 = DIKey('1');
+  static final $2 = DIKey('2');
+  static final $3 = DIKey('3');
+  static final $4 = DIKey('4');
+  static final $5 = DIKey('5');
+  static final $6 = DIKey('6');
+  static final $7 = DIKey('7');
 
   // Two Groups are equal if ther hashCodes are equal.
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    if (other is Gr) {
+    if (other is DIKey) {
       return other.hashCode == hashCode;
     } else {
       return _key == _makeKey(other);
@@ -112,6 +112,9 @@ class Gr<T extends Object> {
   @override
   String toString() => _key;
 }
+
+
+
 
 
 

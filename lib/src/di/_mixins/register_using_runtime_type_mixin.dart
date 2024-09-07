@@ -15,17 +15,17 @@ import '/src/_internal.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 @internal
-base mixin RegisterUsingRuntimeTypeImpl on DIBase implements RegisterUsingRuntimeTypeIface {
+base mixin RegisterUsingRuntimeTypeMixin on DIBase implements RegisterUsingRuntimeTypeInterface {
   @override
   void registerUsingRuntimeType(
     FutureOr<Object> value, {
-    Gr? group,
+    DIKey? typeGroup,
     OnUnregisterCallback<Object>? onUnregister,
   }) {
     _register(
       value,
       eventualType: value.runtimeType,
-      group: group,
+      typeGroup: typeGroup,
       onUnregister: onUnregister,
     );
   }
@@ -33,11 +33,11 @@ base mixin RegisterUsingRuntimeTypeImpl on DIBase implements RegisterUsingRuntim
   void _register(
     FutureOr<Object> value, {
     required Type eventualType,
-    Gr? group,
+    DIKey? typeGroup,
     OnUnregisterCallback<Object>? onUnregister,
-    GetDependencyCondition? condition,
+    DependencyValidator? condition,
   }) {
-    final fg = preferFocusGroup(group);
+    final fg = preferFocusGroup(typeGroup);
     if (value is Future<Object>) {
       final baseValue = FutureOrInst((_) => value);
       final type = _convertBaseValueType(baseValue.runtimeType, value.runtimeType);
@@ -45,37 +45,42 @@ base mixin RegisterUsingRuntimeTypeImpl on DIBase implements RegisterUsingRuntim
         type: type,
         dependency: Dependency(
           value: baseValue,
-          registrationIndex: registrationCount++,
-          group: fg,
-          onUnregister: onUnregister != null
-              ? (e) => e.runtimeType == eventualType ? onUnregister(e) : null
-              : null,
-          condition: condition,
+          metadata: DependencyMetadata(
+            index: registrationCount++,
+            initialType: baseValue.runtimeType,
+            typeGroup: fg,
+            onUnregister: onUnregister != null
+                ? (e) => e.runtimeType == eventualType ? onUnregister(e) : null
+                : null,
+            condition: condition,
+          ),
         ),
       );
     } else {
       registerDependencyUsingExactType(
-        type: Gr(value.runtimeType),
+        type: DIKey(value.runtimeType),
         dependency: Dependency(
-          value: value,
-          registrationIndex: registrationCount++,
-          group: fg,
-          onUnregister: onUnregister != null
-              ? (e) => e.runtimeType == eventualType ? onUnregister(e) : null
-              : null,
-          condition: condition,
-        ),
+            value: value,
+            metadata: DependencyMetadata(
+              index: registrationCount++,
+              initialType: value.runtimeType,
+              typeGroup: fg,
+              onUnregister: onUnregister != null
+                  ? (e) => e.runtimeType == eventualType ? onUnregister(e) : null
+                  : null,
+              condition: condition,
+            )),
       );
     }
     // If there's a completer waiting for this value that was registered via the until() function,
     // complete it.
-    final type = Gr(value.runtimeType);
+    final type = DIKey(value.runtimeType);
     (getUsingExactTypeOrNull(
-      type: Gr.fromType(
+      type: DIKey.fromType(
         baseType: InternalCompleterOr,
         subTypes: [type],
       ),
-      group: Gr(type),
+      typeGroup: DIKey(type),
     ) as InternalCompleterOr?)
         ?.internalValue
         .complete(value);
@@ -84,10 +89,21 @@ base mixin RegisterUsingRuntimeTypeImpl on DIBase implements RegisterUsingRuntim
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-Gr _convertBaseValueType(Type baseValueType, Type valueType) {
+DIKey _convertBaseValueType(Type baseValueType, Type valueType) {
   final futureIdentifierLength = '$Future'.replaceAll('<$dynamic>', '').length;
   final t0 = valueType.toString();
   final t1 = t0.substring(futureIdentifierLength + 1, t0.length - 1);
-  final t2 = Gr.fromType(baseType: baseValueType, subTypes: [t1]);
+  final t2 = DIKey.fromType(baseType: baseValueType, subTypes: [t1]);
   return t2;
+}
+
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+@internal
+abstract interface class RegisterUsingRuntimeTypeInterface {
+  void registerUsingRuntimeType(
+    FutureOr<Object> value, {
+    DIKey? typeGroup,
+    OnUnregisterCallback<Object>? onUnregister,
+  });
 }

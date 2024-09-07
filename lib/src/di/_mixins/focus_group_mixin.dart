@@ -15,13 +15,30 @@ import '/src/_internal.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 @internal
-abstract interface class UntilIface {
-  FutureOr<T> until<T extends Object>({
-    Gr? group,
-  });
+base mixin FocusGroupMixin on DIBase implements FocusGroupInterface {
+  @override
+  @pragma('vm:prefer-inline')
+  void setFocusGroup(DIKey typeGroup) => focusGroup = typeGroup;
 
-  FutureOr<Object> untilUsingRuntimeType(
-    Type type, {
-    Gr? group,
-  });
+  @override
+  @pragma('vm:prefer-inline')
+  DIKey getFocusGroup() => focusGroup;
+
+  @protected
+  @override
+  @pragma('vm:prefer-inline')
+  DIKey preferFocusGroup(DIKey? typeGroup) => typeGroup ?? focusGroup;
+}
+
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+@internal
+abstract interface class FocusGroupInterface {
+  DIKey focusGroup = DIKey.defaultGroup;
+
+  void setFocusGroup(DIKey typeGroup);
+
+  DIKey getFocusGroup();
+
+  DIKey preferFocusGroup(DIKey? typeGroup);
 }

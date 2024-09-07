@@ -17,15 +17,15 @@ import '/src/_internal.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 @internal
-base mixin RemoveDependencyImpl on DIBase implements RemoveDependencyIface {
+base mixin RemoveDependencyMixin on DIBase implements RemoveDependencyInterface {
   @override
   Dependency<Object> removeDependency<T extends Object, P extends Object>({
-    Gr? group,
+    DIKey? typeGroup,
   }) {
-    final fg = preferFocusGroup(group);
+    final fg = preferFocusGroup(typeGroup);
     final removers = [
-      () => registry.removeDependency<T>(group: fg),
-      () => registry.removeDependency<FutureOrInst<T, P>>(group: fg),
+      () => registry.removeDependency<T>(typeGroup: fg),
+      () => registry.removeDependency<FutureOrInst<T, P>>(typeGroup: fg),
     ];
     for (final remover in removers) {
       final dep = remover();
@@ -35,26 +35,26 @@ base mixin RemoveDependencyImpl on DIBase implements RemoveDependencyIface {
     }
     throw DependencyNotFoundException(
       type: T,
-      group: fg,
+      typeGroup: fg,
     );
   }
 
   @protected
   @override
   Dependency<Object> removeDependencyUsingExactType({
-    required Gr type,
-    Gr? paramsType,
-    Gr? group,
+    required DIKey type,
+    DIKey? paramsType,
+    DIKey? typeGroup,
   }) {
-    final fg = preferFocusGroup(group);
-    final paramsType1 = paramsType ?? Gr(Object);
+    final fg = preferFocusGroup(typeGroup);
+    final paramsType1 = paramsType ?? DIKey(Object);
     final removers = [
       type,
       FutureOrInst.gr(type, paramsType1),
     ].map(
-      (type) => () => registry.removeDependencyUsingExactType(
+      (type) => () => registry.removeDependencyByType(
             type: type,
-            group: fg,
+            typeGroup: fg,
           ),
     );
     for (final remover in removers) {
@@ -65,7 +65,7 @@ base mixin RemoveDependencyImpl on DIBase implements RemoveDependencyIface {
     }
     throw DependencyNotFoundException(
       type: type,
-      group: fg,
+      typeGroup: fg,
     );
   }
 
@@ -73,13 +73,40 @@ base mixin RemoveDependencyImpl on DIBase implements RemoveDependencyIface {
   @pragma('vm:prefer-inline')
   Dependency<Object> removeDependencyOfRuntimeType({
     required Type type,
-    Gr? paramsType,
-    Gr? group,
+    DIKey? paramsType,
+    DIKey? typeGroup,
   }) {
     return removeDependencyUsingExactType(
-      type: Gr(type),
+      type: DIKey(type),
       paramsType: paramsType,
-      group: group,
+      typeGroup: typeGroup,
     );
   }
+}
+
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+@internal
+abstract interface class RemoveDependencyInterface {
+  /// ...
+
+  Dependency<Object> removeDependency<T extends Object, P extends Object>({
+    DIKey? typeGroup,
+  });
+
+  /// ...
+
+  Dependency<Object> removeDependencyUsingExactType({
+    required DIKey type,
+    DIKey? paramsType,
+    DIKey? typeGroup,
+  });
+
+  /// ...
+
+  Dependency<Object> removeDependencyOfRuntimeType({
+    required Type type,
+    DIKey? paramsType,
+    DIKey? typeGroup,
+  });
 }

@@ -15,51 +15,37 @@ import '/src/_internal.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 @internal
-base mixin ChildImpl on DIBase implements ChildIface {
+base mixin DebugMixin on DIBase implements DebugInterface {
+  @visibleForTesting
   @override
   @pragma('vm:prefer-inline')
-  void registerChild({
-    Gr? group,
-    Gr? childGroup,
+  Type initialType<T extends Object, P extends Object>({
+    DIKey? typeGroup,
   }) {
-    registerSingleton<DI>(
-      () => DI(
-        focusGroup: preferFocusGroup(childGroup),
-        parent: this,
-      ),
-      group: preferFocusGroup(group),
-      onUnregister: (e) => e.unregisterAll(),
-    );
+    return getDependency1<T, P>(typeGroup: typeGroup, getFromParents: true).metadata.initialType;
   }
 
+  @visibleForTesting
   @override
   @pragma('vm:prefer-inline')
-  DI getChild({Gr? group}) => getSingleton<DI>(
-        group: group,
-        getFromParents: false,
-      ) as DI;
-
-  @override
-  DI child({
-    Gr? group,
-    Gr? childGroup,
+  int index<T extends Object, P extends Object>({
+    DIKey? typeGroup,
   }) {
-    final registered = isRegistered<SingletonWrapper<DI>, Object>(
-      group: group,
-      getFromParents: false,
-    );
-    if (!registered) {
-      registerChild(
-        group: group,
-        childGroup: childGroup,
-      );
-    }
-    return getChild(
-      group: group,
-    );
+    return getDependency1<T, P>(typeGroup: typeGroup, getFromParents: true).metadata.index;
   }
+}
 
-  @override
-  @pragma('vm:prefer-inline')
-  void unregisterChild({Gr? group}) => unregister<DI>(group: group);
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+@internal
+abstract interface class DebugInterface {
+  /// Useful for debugging.
+  Type initialType<T extends Object, P extends Object>({
+    DIKey? typeGroup,
+  });
+
+  /// Useful for debugging.
+  int index<T extends Object, P extends Object>({
+    DIKey? typeGroup,
+  });
 }

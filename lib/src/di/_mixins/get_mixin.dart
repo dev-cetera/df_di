@@ -17,15 +17,15 @@ import '/src/_internal.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 @internal
-base mixin GetImpl on DIBase implements GetIface {
+base mixin GetMixin on DIBase implements GetInterface {
   @override
   @pragma('vm:prefer-inline')
   T call<T extends Object>({
-    Gr? group,
+    DIKey? typeGroup,
     bool getFromParents = true,
   }) {
     return get<T>(
-      group: group,
+      typeGroup: typeGroup,
       getFromParents: getFromParents,
     ) as T;
   }
@@ -33,61 +33,61 @@ base mixin GetImpl on DIBase implements GetIface {
   @override
   FutureOr<T> getInstance<T extends Object, P extends Object>(
     P params, {
-    Gr? group,
+    DIKey? typeGroup,
     bool getFromParents = true,
   }) {
     return get<Inst<T, P>>(
-      group: group,
+      typeGroup: typeGroup,
       getFromParents: getFromParents,
     ).thenOr((e) => e.constructor(params));
   }
 
   FutureOr<T>? getInstanceOrNull<T extends Object, P extends Object>(
     P params, {
-    Gr? group,
+    DIKey? typeGroup,
     bool getFromParents = true,
   }) {
     return getOrNull<Inst<T, P>>(
-      group: group,
+      typeGroup: typeGroup,
       getFromParents: getFromParents,
     )?.thenOr((e) => e.constructor(params));
   }
 
   @override
   FutureOr<T> getSingleton<T extends Object>({
-    Gr? group,
+    DIKey? typeGroup,
     bool getFromParents = true,
   }) {
     return getInstance<SingletonWrapper<T>, Object>(
       Object(),
-      group: group,
+      typeGroup: typeGroup,
       getFromParents: getFromParents,
     ).thenOr((e) => e.instance);
   }
 
   FutureOr<T>? getSingletonOrNull<T extends Object>({
-    Gr? group,
+    DIKey? typeGroup,
     bool getFromParents = true,
   }) {
     return getInstanceOrNull<SingletonWrapper<T>, Object>(
       Object(),
-      group: group,
+      typeGroup: typeGroup,
       getFromParents: getFromParents,
     )?.thenOr((e) => e.instance);
   }
 
   @override
   FutureOr<T>? getOrNull<T extends Object>({
-    Gr? group,
+    DIKey? typeGroup,
     bool getFromParents = true,
   }) {
-    final fg = preferFocusGroup(group);
+    final fg = preferFocusGroup(typeGroup);
     final registered = isRegistered<T, Object>(
-      group: fg,
+      typeGroup: fg,
     );
     if (registered) {
       return get<T>(
-        group: fg,
+        typeGroup: fg,
         getFromParents: getFromParents,
       );
     }
@@ -96,33 +96,33 @@ base mixin GetImpl on DIBase implements GetIface {
 
   @override
   FutureOr<T> get<T extends Object>({
-    Gr? group,
+    DIKey? typeGroup,
     bool getFromParents = true,
   }) {
     final test = getSingletonOrNull<T>();
     if (test != null) {
       return test;
     }
-    final fg = preferFocusGroup(group);
+    final fg = preferFocusGroup(typeGroup);
     final dep = _get<T, Object>(
-      group: fg,
+      typeGroup: fg,
       getFromParents: getFromParents,
     );
     if (dep == null) {
       throw DependencyNotFoundException(
         type: T,
-        group: fg,
+        typeGroup: fg,
       );
     }
     return dep.thenOr((e) => e.value);
   }
 
   FutureOr<Dependency<T>>? _get<T extends Object, P extends Object>({
-    required Gr group,
+    required DIKey typeGroup,
     required bool getFromParents,
   }) {
     final dep = getDependencyOrNull1<T, P>(
-      group: group,
+      typeGroup: typeGroup,
       getFromParents: getFromParents,
     );
     if (dep != null) {
@@ -148,18 +148,65 @@ base mixin GetImpl on DIBase implements GetIface {
       return value.constructor(-1);
     }).thenOr((newValue) {
       return registerDependency<T, P>(
-        dependency: dep.reassign(newValue),
+        dependency: dep.passNewValue(newValue),
         suppressDependencyAlreadyRegisteredException: true,
       );
       // }).thenOr((_) {
       //   return registry.removeDependency<I>(
-      //     group: dep.group,
+      //     typeGroup: dep.typeGroup,
       //   );
     }).thenOr((_) {
       return _get<T, P>(
-        group: dep.group,
+        typeGroup: dep.metadata.typeGroup,
         getFromParents: getFromParents,
       )!;
     });
   }
+}
+
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+@internal
+abstract interface class GetInterface {
+  /// A shorthand for [getSync], allowing retrieval of a dependency using
+  /// call syntax.
+  T call<T extends Object>({
+    DIKey? typeGroup,
+    bool getFromParents = true,
+  });
+
+  /// Gets via [get] using [T] and [typeGroup] or `null` upon any error,
+  /// including but not limited to [DependencyNotFoundException].
+  FutureOr<T>? getOrNull<T extends Object>({
+    DIKey? typeGroup,
+    bool getFromParents = true,
+  });
+
+  /// Gets a dependency as either a [Future] or an instance of [T] registered
+  /// under the type [T] and the specified [typeGroup], or under [DIKey.defaultGroup]
+  /// if no typeGroup is provided.
+  ///
+  /// If the dependency was registered as a lazy singleton via [registerLazySingleton]
+  /// and hasn't been instantiated yet, it will be instantiated on the first call.
+  /// Subsequent calls to [get] will return the already instantiated instance.
+  ///
+  /// If the dependency was registered via [registerFactory], a new instance
+  /// will be created and returned with each call to [get].
+  ///
+  /// - Throws [DependencyNotFoundException] if the requested dependency cannot
+  /// be found.
+  FutureOr<T> get<T extends Object>({
+    DIKey? typeGroup,
+  });
+
+  FutureOr<T> getInstance<T extends Object, P extends Object>(
+    P params, {
+    DIKey? typeGroup,
+    bool getFromParents = true,
+  });
+
+  FutureOr<T> getSingleton<T extends Object>({
+    DIKey? typeGroup,
+    bool getFromParents = true,
+  });
 }
