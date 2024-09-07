@@ -18,11 +18,11 @@ import '/src/_internal.dart';
 base mixin IsRegisteredMixin on DIBase implements IsRegisteredInterface {
   @override
   bool isRegistered<T extends Object, P extends Object>({
-    DIKey? typeGroup,
+    DIKey? groupKey,
     bool getFromParents = true,
   }) {
     final dep = getDependencyOrNull1<T, P>(
-      typeGroup: typeGroup,
+      groupKey: groupKey,
       getFromParents: getFromParents,
     );
     final registered = dep != null;
@@ -34,13 +34,13 @@ base mixin IsRegisteredMixin on DIBase implements IsRegisteredInterface {
   bool isRegisteredUsingExactType({
     required DIKey type,
     DIKey? paramsType,
-    required DIKey typeGroup,
+    required DIKey groupKey,
     bool getFromParents = true,
   }) {
     final dep = getDependencyUsingExactTypeOrNull1(
       type: type,
       paramsType: paramsType,
-      typeGroup: typeGroup,
+      groupKey: groupKey,
       getFromParents: getFromParents,
     );
     final registered = dep != null;
@@ -51,13 +51,13 @@ base mixin IsRegisteredMixin on DIBase implements IsRegisteredInterface {
   bool isRegisteredUsingRuntimeType({
     required Type type,
     Type paramsType = Object,
-    required DIKey typeGroup,
+    required DIKey groupKey,
     bool getFromParents = true,
   }) {
     return isRegisteredUsingExactType(
       type: DIKey(type),
       paramsType: DIKey(paramsType),
-      typeGroup: typeGroup,
+      groupKey: groupKey,
       getFromParents: getFromParents,
     );
   }
@@ -67,25 +67,25 @@ base mixin IsRegisteredMixin on DIBase implements IsRegisteredInterface {
 
 @internal
 abstract interface class IsRegisteredInterface {
-  /// Checks if a dependency is registered under [T] and [typeGroup].
+  /// Checks if a dependency is registered under [T] and [groupKey].
   bool isRegistered<T extends Object, P extends Object>({
-    DIKey? typeGroup,
+    DIKey? groupKey,
     bool getFromParents = true,
   });
 
-  /// Checks if a dependency is registered under [type] and [typeGroup].
+  /// Checks if a dependency is registered under [type] and [groupKey].
 
   bool isRegisteredUsingExactType({
     required DIKey type,
     DIKey? paramsType,
-    required DIKey typeGroup,
+    required DIKey groupKey,
     bool getFromParents = true,
   });
 
   bool isRegisteredUsingRuntimeType({
     required Type type,
     Type paramsType = Object,
-    required DIKey typeGroup,
+    required DIKey groupKey,
     bool getFromParents = true,
   });
 }

@@ -60,8 +60,8 @@ Set<_VersionSection> extractSections(String contents) {
     final sectionContents = contents.substring(start, end).trim();
     final lines = sectionContents.split('\n').where((line) => line.isNotEmpty).toList();
     final version = allVersionMatches[i]
-        .typeGroup(0)!
-        .substring(4, allVersionMatches[i].typeGroup(0)!.length - 1);
+        .groupKey(0)!
+        .substring(4, allVersionMatches[i].groupKey(0)!.length - 1);
     var releasedAt = DateTime.now().toUtc();
     final updates = <String>{};
     final old = lines

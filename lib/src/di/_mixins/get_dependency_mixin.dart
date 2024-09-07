@@ -20,19 +20,19 @@ import '/src/_internal.dart';
 base mixin GetDependencyMixin on DIBase implements GetDependencyInterface {
   @protected
   @override
-  Dependency<Object> getDependency1<T extends Object, P extends Object>({
-    DIKey? typeGroup,
+  Dependency getDependency1<T extends Object, P extends Object>({
+    DIKey? groupKey,
     required bool getFromParents,
   }) {
-    final fg = preferFocusGroup(typeGroup);
+    final fg = preferFocusGroup(groupKey);
     final dep = getDependencyOrNull1<T, P>(
-      typeGroup: typeGroup,
+      groupKey: groupKey,
       getFromParents: getFromParents,
     );
     if (dep == null) {
       throw DependencyNotFoundException(
         type: T,
-        typeGroup: fg,
+        groupKey: fg,
       );
     } else {
       return dep;
@@ -41,14 +41,14 @@ base mixin GetDependencyMixin on DIBase implements GetDependencyInterface {
 
   @protected
   @override
-  Dependency<Object>? getDependencyOrNull1<T extends Object, P extends Object>({
-    DIKey? typeGroup,
+  Dependency? getDependencyOrNull1<T extends Object, P extends Object>({
+    DIKey? groupKey,
     required bool getFromParents,
   }) {
-    final fg = preferFocusGroup(typeGroup);
+    final fg = preferFocusGroup(groupKey);
     final getters = [
-      () => registry.getDependencyOrNull<T>(typeGroup: fg),
-      () => registry.getDependencyOrNull<FutureOrInst<T, Object>>(typeGroup: fg),
+      () => registry.getDependencyOrNull<T>(groupKey: fg),
+      () => registry.getDependencyOrNull<FutureOrInst<T, Object>>(groupKey: fg),
     ];
     for (final getter in getters) {
       final dep = getter();
@@ -61,7 +61,7 @@ base mixin GetDependencyMixin on DIBase implements GetDependencyInterface {
     }
     if (getFromParents) {
       return parent?.getDependencyOrNull1<T, P>(
-        typeGroup: typeGroup,
+        groupKey: groupKey,
         getFromParents: getFromParents,
       );
     }
@@ -70,23 +70,23 @@ base mixin GetDependencyMixin on DIBase implements GetDependencyInterface {
 
   @protected
   @override
-  Dependency<Object> getDependencyUsingExactType1({
+  Dependency getDependencyUsingExactType1({
     required DIKey type,
     DIKey? paramsType,
-    DIKey? typeGroup,
+    DIKey? groupKey,
     required bool getFromParents,
   }) {
-    final fg = preferFocusGroup(typeGroup);
+    final fg = preferFocusGroup(groupKey);
     final dep = getDependencyUsingExactTypeOrNull1(
       type: type,
       paramsType: paramsType,
-      typeGroup: typeGroup,
+      groupKey: groupKey,
       getFromParents: getFromParents,
     );
     if (dep == null) {
       throw DependencyNotFoundException(
         type: type,
-        typeGroup: fg,
+        groupKey: fg,
       );
     } else {
       return dep;
@@ -95,13 +95,13 @@ base mixin GetDependencyMixin on DIBase implements GetDependencyInterface {
 
   @protected
   @override
-  Dependency<Object>? getDependencyUsingExactTypeOrNull1({
+  Dependency? getDependencyUsingExactTypeOrNull1({
     required DIKey type,
     DIKey? paramsType,
-    DIKey? typeGroup,
+    DIKey? groupKey,
     required bool getFromParents,
   }) {
-    final fg = preferFocusGroup(typeGroup);
+    final fg = preferFocusGroup(groupKey);
     final paramsType1 = paramsType ?? DIKey(Object);
     final getters = [
       type,
@@ -110,7 +110,7 @@ base mixin GetDependencyMixin on DIBase implements GetDependencyInterface {
       (type) {
         return () => registry.getDependencyOfTypeOrNull(
               type: type,
-              typeGroup: fg,
+              groupKey: fg,
             );
       },
     );
@@ -126,7 +126,7 @@ base mixin GetDependencyMixin on DIBase implements GetDependencyInterface {
     return parent?.getDependencyUsingExactTypeOrNull1(
       type: type,
       paramsType: paramsType,
-      typeGroup: typeGroup,
+      groupKey: groupKey,
       getFromParents: getFromParents,
     );
   }
@@ -134,16 +134,16 @@ base mixin GetDependencyMixin on DIBase implements GetDependencyInterface {
   @protected
   @override
   @pragma('vm:prefer-inline')
-  Dependency<Object> getDependencyUsingRuntimeType1({
+  Dependency getDependencyUsingRuntimeType1({
     required Type type,
     DIKey? paramsType,
-    DIKey? typeGroup,
+    DIKey? groupKey,
     required bool getFromParents,
   }) {
     return getDependencyUsingExactType1(
       type: DIKey(type),
       paramsType: paramsType,
-      typeGroup: typeGroup,
+      groupKey: groupKey,
       getFromParents: getFromParents,
     );
   }
@@ -151,16 +151,16 @@ base mixin GetDependencyMixin on DIBase implements GetDependencyInterface {
   @protected
   @override
   @pragma('vm:prefer-inline')
-  Dependency<Object>? getDependencyUsingRuntimeTypeOrNull1({
+  Dependency? getDependencyUsingRuntimeTypeOrNull1({
     required Type type,
     DIKey? paramsType,
-    DIKey? typeGroup,
+    DIKey? groupKey,
     required bool getFromParents,
   }) {
     return getDependencyUsingExactTypeOrNull1(
       type: DIKey(type),
       paramsType: paramsType,
-      typeGroup: typeGroup,
+      groupKey: groupKey,
       getFromParents: getFromParents,
     );
   }
@@ -170,41 +170,41 @@ base mixin GetDependencyMixin on DIBase implements GetDependencyInterface {
 
 @internal
 abstract interface class GetDependencyInterface {
-  Dependency<Object> getDependency1<T extends Object, P extends Object>({
-    DIKey? typeGroup,
+  Dependency getDependency1<T extends Object, P extends Object>({
+    DIKey? groupKey,
     required bool getFromParents,
   });
 
-  Dependency<Object> getDependencyUsingExactType1({
+  Dependency getDependencyUsingExactType1({
     required DIKey type,
     DIKey? paramsType,
-    DIKey? typeGroup,
+    DIKey? groupKey,
     required bool getFromParents,
   });
 
-  Dependency<Object>? getDependencyOrNull1<T extends Object, P extends Object>({
-    DIKey? typeGroup,
+  Dependency? getDependencyOrNull1<T extends Object, P extends Object>({
+    DIKey? groupKey,
     required bool getFromParents,
   });
 
-  Dependency<Object>? getDependencyUsingExactTypeOrNull1({
+  Dependency? getDependencyUsingExactTypeOrNull1({
     required DIKey type,
     DIKey? paramsType,
-    DIKey? typeGroup,
+    DIKey? groupKey,
     required bool getFromParents,
   });
 
-  Dependency<Object> getDependencyUsingRuntimeType1({
+  Dependency getDependencyUsingRuntimeType1({
     required Type type,
     DIKey? paramsType,
-    DIKey? typeGroup,
+    DIKey? groupKey,
     required bool getFromParents,
   });
 
-  Dependency<Object>? getDependencyUsingRuntimeTypeOrNull1({
+  Dependency? getDependencyUsingRuntimeTypeOrNull1({
     required Type type,
     DIKey? paramsType,
-    DIKey? typeGroup,
+    DIKey? groupKey,
     required bool getFromParents,
   });
 }

@@ -20,18 +20,18 @@ base mixin DebugMixin on DIBase implements DebugInterface {
   @override
   @pragma('vm:prefer-inline')
   Type initialType<T extends Object, P extends Object>({
-    DIKey? typeGroup,
+    DIKey? groupKey,
   }) {
-    return getDependency1<T, P>(typeGroup: typeGroup, getFromParents: true).metadata.initialType;
+    return getDependency1<T, P>(groupKey: groupKey, getFromParents: true).metadata.initialType;
   }
 
   @visibleForTesting
   @override
   @pragma('vm:prefer-inline')
   int index<T extends Object, P extends Object>({
-    DIKey? typeGroup,
+    DIKey? groupKey,
   }) {
-    return getDependency1<T, P>(typeGroup: typeGroup, getFromParents: true).metadata.index;
+    return getDependency1<T, P>(groupKey: groupKey, getFromParents: true).metadata.index;
   }
 }
 
@@ -41,11 +41,11 @@ base mixin DebugMixin on DIBase implements DebugInterface {
 abstract interface class DebugInterface {
   /// Useful for debugging.
   Type initialType<T extends Object, P extends Object>({
-    DIKey? typeGroup,
+    DIKey? groupKey,
   });
 
   /// Useful for debugging.
   int index<T extends Object, P extends Object>({
-    DIKey? typeGroup,
+    DIKey? groupKey,
   });
 }

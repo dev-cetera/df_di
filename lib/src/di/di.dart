@@ -42,13 +42,13 @@ base class DI extends DIBase
     super.parent,
   });
 
-  /// Default app typeGroup.
+  /// Default app groupKey.
   static final app = DI();
 
-  /// Default global typeGroup.
-  static DI get global => app.child(typeGroup: DIKey.globalGroup);
-  static DI get session => global.child(typeGroup: DIKey.sessionGroup);
-  static DI get dev => app.child(typeGroup: DIKey.devGroup);
-  static DI get prod => app.child(typeGroup: DIKey.prodGroup);
-  static DI get test => app.child(typeGroup: DIKey.testGroup);
+  /// Default global groupKey.
+  static DI get global => app.child(groupKey: DIKey.globalGroup);
+  static DI get session => global.child(groupKey: DIKey.sessionGroup);
+  static DI get dev => app.child(groupKey: DIKey.devGroup);
+  static DI get prod => app.child(groupKey: DIKey.prodGroup);
+  static DI get test => app.child(groupKey: DIKey.testGroup);
 }

@@ -56,7 +56,7 @@ class DependencyMetadata {
   const DependencyMetadata({
     required this.initialType,
     required this.index,
-    required this.typeGroup,
+    required this.groupKey,
     required this.condition,
     required this.onUnregister,
   });
@@ -70,7 +70,7 @@ class DependencyMetadata {
   /// The type group to which the [Dependency] belongs. This enables
   /// dependencies of the same type to coexist in the DI container as long as
   /// they are assigned to different groups.
-  final DIKey typeGroup;
+  final DIKey groupKey;
 
   /// The index at which this dependency was registered in the dependency
   /// injection container. This helps in tracking the order of registration
@@ -88,7 +88,7 @@ class DependencyMetadata {
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-/// A typedef for a callback function that is invoked when a dependency is
+/// A typedef for a callback function to invoke when a dependency is
 /// unregistered. The function passes the value of the unregistered dependency
 /// in order to facilitate any necessary cleanup or additional processing
 /// that might be required for the [value].

@@ -20,10 +20,10 @@ import '/src/_internal.dart';
 base mixin UntilMixin on DIBase implements UntilInterface {
   @override
   FutureOr<T> until<T extends Object>({
-    DIKey? typeGroup,
+    DIKey? groupKey,
   }) {
     // Check if the dependency is already registered.
-    final test = getOrNull<T>(typeGroup: typeGroup);
+    final test = getOrNull<T>(groupKey: groupKey);
     if (test != null) {
       // Return the dependency if it is already registered.
       return test;
@@ -32,14 +32,14 @@ base mixin UntilMixin on DIBase implements UntilInterface {
     // inside the untilsContainer.
     final completerGroup = DIKey(T);
     final completer = InternalCompleterOr<T>._();
-    register(completer, typeGroup: completerGroup);
+    register(completer, groupKey: completerGroup);
 
     // Wait for the Completer to complete, then get the dependency and return it.
     // The register function will complete the Completer when the dependency is
     // registered.
     final value = completer.internalValue.futureOr.thenOr((value) {
-      unregister<InternalCompleterOr<T>>(typeGroup: completerGroup);
-      return get<T>(typeGroup: typeGroup);
+      unregister<InternalCompleterOr<T>>(groupKey: completerGroup);
+      return get<T>(groupKey: groupKey);
     });
     return value;
   }
@@ -47,10 +47,10 @@ base mixin UntilMixin on DIBase implements UntilInterface {
   @override
   FutureOr<Object> untilUsingRuntimeType(
     Type type, {
-    DIKey? typeGroup,
+    DIKey? groupKey,
   }) {
     // Check if the dependency is already registered.
-    final test = getUsingRuntimeTypeOrNull(type, typeGroup: typeGroup);
+    final test = getUsingRuntimeTypeOrNull(type, groupKey: groupKey);
     if (test != null) {
       // Return the dependency if it is already registered.
       return test;
@@ -60,14 +60,14 @@ base mixin UntilMixin on DIBase implements UntilInterface {
     // inside the untilsContainer.
     final completerGroup = DIKey(type);
     final completer = InternalCompleterOr<Object>._();
-    registerUsingRuntimeType(completer, typeGroup: typeGroup);
+    registerUsingRuntimeType(completer, groupKey: groupKey);
 
     // Wait for the Completer to complete, then get the dependency and return it.
     // The register function will complete the Completer when the dependency is
     // registered.
     final value = completer.internalValue.futureOr.thenOr((value) {
-      unregister<InternalCompleterOr<Object>>(typeGroup: completerGroup);
-      return getUsingRuntimeType(type, typeGroup: typeGroup);
+      unregister<InternalCompleterOr<Object>>(groupKey: completerGroup);
+      return getUsingRuntimeType(type, groupKey: groupKey);
     });
     return value;
   }
@@ -89,11 +89,11 @@ class InternalCompleterOr<T extends Object> {
 @internal
 abstract interface class UntilInterface {
   FutureOr<T> until<T extends Object>({
-    DIKey? typeGroup,
+    DIKey? groupKey,
   });
 
   FutureOr<Object> untilUsingRuntimeType(
     Type type, {
-    DIKey? typeGroup,
+    DIKey? groupKey,
   });
 }

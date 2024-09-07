@@ -19,7 +19,7 @@ base mixin ChildMixin on DIBase implements ChildInterface {
   @override
   @pragma('vm:prefer-inline')
   void registerChild({
-    DIKey? typeGroup,
+    DIKey? groupKey,
     DIKey? childGroup,
   }) {
     registerSingleton<DI>(
@@ -27,41 +27,41 @@ base mixin ChildMixin on DIBase implements ChildInterface {
         focusGroup: preferFocusGroup(childGroup),
         parent: this,
       ),
-      typeGroup: preferFocusGroup(typeGroup),
+      groupKey: preferFocusGroup(groupKey),
       onUnregister: (e) => e.unregisterAll(),
     );
   }
 
   @override
   @pragma('vm:prefer-inline')
-  DI getChild({DIKey? typeGroup}) => getSingleton<DI>(
-        typeGroup: typeGroup,
+  DI getChild({DIKey? groupKey}) => getSingleton<DI>(
+        groupKey: groupKey,
         getFromParents: false,
       ) as DI;
 
   @override
   DI child({
-    DIKey? typeGroup,
+    DIKey? groupKey,
     DIKey? childGroup,
   }) {
     final registered = isRegistered<SingletonWrapper<DI>, Object>(
-      typeGroup: typeGroup,
+      groupKey: groupKey,
       getFromParents: false,
     );
     if (!registered) {
       registerChild(
-        typeGroup: typeGroup,
+        groupKey: groupKey,
         childGroup: childGroup,
       );
     }
     return getChild(
-      typeGroup: typeGroup,
+      groupKey: groupKey,
     );
   }
 
   @override
   @pragma('vm:prefer-inline')
-  void unregisterChild({DIKey? typeGroup}) => unregister<DI>(typeGroup: typeGroup);
+  void unregisterChild({DIKey? groupKey}) => unregister<DI>(groupKey: groupKey);
 }
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
@@ -69,20 +69,20 @@ base mixin ChildMixin on DIBase implements ChildInterface {
 @internal
 abstract interface class ChildInterface {
   void registerChild({
-    DIKey? typeGroup,
+    DIKey? groupKey,
     DIKey? childGroup,
   });
 
   DI getChild({
-    DIKey? typeGroup,
+    DIKey? groupKey,
   });
 
   DI child({
-    DIKey? typeGroup,
+    DIKey? groupKey,
     DIKey? childGroup,
   });
 
   void unregisterChild({
-    DIKey? typeGroup,
+    DIKey? groupKey,
   });
 }

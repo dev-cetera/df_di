@@ -18,11 +18,11 @@ import '/src/_internal.dart';
 base mixin UnregisterMixin on DIBase implements UnregisterInterface {
   @override
   FutureOr<void> unregisterAll({
-    void Function(Dependency<Object> dependency)? onUnregister,
+    void Function(Dependency dependency)? onUnregister,
   }) {
     final foc = FutureOrController<void>();
     final dependencies =
-        registry.state.values.fold(<Dependency<Object>>[], (buffer, e) => buffer..addAll(e.values));
+        registry.state.values.fold(<Dependency>[], (buffer, e) => buffer..addAll(e.values));
     dependencies.sort((a, b) => b.metadata.index.compareTo(a.metadata.index));
     for (final dependency in dependencies) {
       final a = dependency.metadata.onUnregister;
@@ -38,12 +38,12 @@ base mixin UnregisterMixin on DIBase implements UnregisterInterface {
 
   @override
   FutureOr<void> unregister<T extends Object>({
-    DIKey? typeGroup,
+    DIKey? groupKey,
   }) {
     return unregisterUsingExactType(
       type: DIKey(T),
       paramsType: DIKey(Object),
-      typeGroup: typeGroup,
+      groupKey: groupKey,
     );
   }
 
@@ -52,12 +52,12 @@ base mixin UnregisterMixin on DIBase implements UnregisterInterface {
   FutureOr<void> unregisterUsingExactType({
     required DIKey type,
     DIKey? paramsType,
-    DIKey? typeGroup,
+    DIKey? groupKey,
   }) {
     final dep = removeDependencyUsingExactType(
       type: type,
       paramsType: paramsType,
-      typeGroup: typeGroup,
+      groupKey: groupKey,
     );
     return dep.metadata.onUnregister?.call(dep.value);
   }
@@ -66,12 +66,12 @@ base mixin UnregisterMixin on DIBase implements UnregisterInterface {
   FutureOr<void> unregisterUsingRuntimeType(
     Type type, {
     DIKey? paramsType,
-    DIKey? typeGroup,
+    DIKey? groupKey,
   }) {
     return unregisterUsingExactType(
       type: DIKey(type),
       paramsType: paramsType,
-      typeGroup: typeGroup,
+      groupKey: groupKey,
     );
   }
 }
@@ -83,26 +83,26 @@ abstract interface class UnregisterInterface {
   /// Unregisters all dependencies in the reverse order of their registration,
   /// effectively resetting this instance of [DI].
   FutureOr<void> unregisterAll({
-    void Function(Dependency<Object> dependency)? onUnregister,
+    void Function(Dependency dependency)? onUnregister,
   });
 
   /// Unregisters a dependency registered under type [T] and the
-  /// specified [typeGroup], or under [DIKey.defaultGroup] if no typeGroup is provided.
+  /// specified [groupKey], or under [DIKey.defaultGroup] if no groupKey is provided.
   ///
   /// - Throws [DependencyNotFoundException] if the dependency is not found.
   FutureOr<void> unregister<T extends Object>({
-    DIKey? typeGroup,
+    DIKey? groupKey,
   });
 
   FutureOr<void> unregisterUsingExactType({
     required DIKey type,
     DIKey? paramsType,
-    DIKey? typeGroup,
+    DIKey? groupKey,
   });
 
   FutureOr<void> unregisterUsingRuntimeType(
     Type type, {
     DIKey? paramsType,
-    DIKey? typeGroup,
+    DIKey? groupKey,
   });
 }

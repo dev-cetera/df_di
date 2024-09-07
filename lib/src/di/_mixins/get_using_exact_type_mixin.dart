@@ -22,17 +22,17 @@ base mixin GetUsingExactTypeMixin on DIBase implements GetUsingExactTypeInterfac
   @override
   FutureOr<Object> getUsingExactType({
     required DIKey type,
-    DIKey? typeGroup,
+    DIKey? groupKey,
   }) {
-    final fg = preferFocusGroup(typeGroup);
+    final fg = preferFocusGroup(groupKey);
     final value = getUsingExactTypeOrNull(
       type: type,
-      typeGroup: fg,
+      groupKey: fg,
     );
     if (value == null) {
       throw DependencyNotFoundException(
         type: type,
-        typeGroup: fg,
+        groupKey: fg,
       );
     }
     return value;
@@ -42,13 +42,13 @@ base mixin GetUsingExactTypeMixin on DIBase implements GetUsingExactTypeInterfac
   @override
   FutureOr<Object>? getUsingExactTypeOrNull({
     required DIKey type,
-    DIKey? typeGroup,
+    DIKey? groupKey,
     bool getFromParents = true,
   }) {
-    final fg = preferFocusGroup(typeGroup);
+    final fg = preferFocusGroup(groupKey);
     final dep = _get(
       type: type,
-      typeGroup: fg,
+      groupKey: fg,
       getFromParents: getFromParents,
     );
     return dep?.thenOr((e) => e.value);
@@ -57,33 +57,33 @@ base mixin GetUsingExactTypeMixin on DIBase implements GetUsingExactTypeInterfac
   @override
   FutureOr<Object> getUsingRuntimeType(
     Type type, {
-    DIKey? typeGroup,
+    DIKey? groupKey,
   }) {
     return getUsingExactType(
       type: DIKey(type),
-      typeGroup: typeGroup,
+      groupKey: groupKey,
     );
   }
 
   @override
   FutureOr<Object>? getUsingRuntimeTypeOrNull(
     Type type, {
-    DIKey? typeGroup,
+    DIKey? groupKey,
   }) {
     return getUsingExactTypeOrNull(
       type: DIKey(type),
-      typeGroup: typeGroup,
+      groupKey: groupKey,
     );
   }
 
-  FutureOr<Dependency<Object>>? _get({
+  FutureOr<Dependency>? _get({
     required DIKey type,
-    required DIKey typeGroup,
+    required DIKey groupKey,
     required bool getFromParents,
   }) {
     final dep = getDependencyUsingExactTypeOrNull1(
       type: type,
-      typeGroup: typeGroup,
+      groupKey: groupKey,
       getFromParents: getFromParents,
     );
     if (dep != null) {
@@ -93,7 +93,7 @@ base mixin GetUsingExactTypeMixin on DIBase implements GetUsingExactTypeInterfac
           return _inst(
             type: type,
             genericType: genericType,
-            typeGroup: typeGroup,
+            groupKey: groupKey,
             getFromParents: getFromParents,
           );
         case Object _:
@@ -103,15 +103,15 @@ base mixin GetUsingExactTypeMixin on DIBase implements GetUsingExactTypeInterfac
     return null;
   }
 
-  FutureOr<Dependency<Object>>? _inst({
+  FutureOr<Dependency>? _inst({
     required DIKey type,
     required DIKey genericType,
-    required DIKey typeGroup,
+    required DIKey groupKey,
     required bool getFromParents,
   }) {
     final dep = registry.getDependencyOfTypeOrNull(
       type: genericType,
-      typeGroup: typeGroup,
+      groupKey: groupKey,
     );
     if (dep != null) {
       final value = dep.value;
@@ -126,12 +126,12 @@ base mixin GetUsingExactTypeMixin on DIBase implements GetUsingExactTypeInterfac
         // }).thenOr((_) {
         //   return registry.removeDependencyUsingExactType(
         //     type: genericType,
-        //     typeGroup: typeGroup,
+        //     groupKey: groupKey,
         //   );
       }).thenOr((_) {
         return _get(
           type: type,
-          typeGroup: typeGroup,
+          groupKey: groupKey,
           getFromParents: getFromParents,
         )!;
       });
@@ -146,21 +146,21 @@ base mixin GetUsingExactTypeMixin on DIBase implements GetUsingExactTypeInterfac
 abstract interface class GetUsingExactTypeInterface {
   FutureOr<Object> getUsingExactType({
     required DIKey type,
-    DIKey? typeGroup,
+    DIKey? groupKey,
   });
 
   FutureOr<Object>? getUsingExactTypeOrNull({
     required DIKey type,
-    DIKey? typeGroup,
+    DIKey? groupKey,
   });
 
   FutureOr<Object> getUsingRuntimeType(
     Type type, {
-    DIKey? typeGroup,
+    DIKey? groupKey,
   });
 
   FutureOr<Object>? getUsingRuntimeTypeOrNull(
     Type type, {
-    DIKey? typeGroup,
+    DIKey? groupKey,
   });
 }

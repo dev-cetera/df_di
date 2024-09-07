@@ -16,7 +16,7 @@ This package provides a powerful and flexible dependency injection (DI) system, 
 ## Features
 
 - Robust FutureOr support for handling both synchronous and asynchronous dependencies and callbacks.
-- Register dependencies by type and typeGroup, enabling management of multiple dependencies of the same type.
+- Register dependencies by type and groupKey, enabling management of multiple dependencies of the same type.
 - Hierarchical DI with scoped dependencies through child containers.
 - Retrieve dependencies by runtime type or generic type.
 - Factory dependencies and lazy initialization for singleton dependencies.
@@ -36,7 +36,7 @@ DI.global;
 final di = DI();
 
 // Create nested child containers, useful for scoping dependencies in modular apps.
-final scopedDi = di.child().child().child(typeGroup: Gr('moduleGroup'));
+final scopedDi = di.child().child().child(groupKey: Gr('moduleGroup'));
 ```
 
 ### Registering Dependencies:
@@ -45,8 +45,8 @@ final scopedDi = di.child().child().child(typeGroup: Gr('moduleGroup'));
 // Register the answer to life, the universe and everything.
 di.register<int>(42);
 
-// Register an integer under a specific typeGroup, useful in environments like testing.
-di.register<int>(0, typeGroup: Gr.testGroup);
+// Register an integer under a specific groupKey, useful in environments like testing.
+di.register<int>(0, groupKey: Gr.testGroup);
 
 // Register a Future as a dependency.
 di.register(Future.value('Hello, DI!'));
@@ -83,8 +83,8 @@ print(di<int>()); // 42
 Type intType = int;
 print(di.getUsingRuntimeType(intType)); // 42
 
-// Retrieve a dependency registered under a specific typeGroup.
-print(di.get<int>(typeGroup: Gr('testGroup'))); // 0
+// Retrieve a dependency registered under a specific groupKey.
+print(di.get<int>(groupKey: Gr('testGroup'))); // 0
 
 // Handle asynchronous dependencies.
 final greeting = await di.get<String>();
@@ -206,7 +206,7 @@ This is an open-source project, and we warmly welcome contributions from everyon
 - **Share your ideas:** Every perspective matters, and your ideas can spark innovation.
 - **Report bugs:** Help us identify and fix issues to make the project more robust.
 - **Suggest improvements or new features:** Your ideas can help shape the future of the project.
-- **Help clarify documentation:** Good documentation is typeGroup to accessibility. You can make it easier for others to get started by improving or expanding our documentation.
+- **Help clarify documentation:** Good documentation is groupKey to accessibility. You can make it easier for others to get started by improving or expanding our documentation.
 - **Write articles:** Share your knowledge by writing tutorials, guides, or blog posts about your experiences with the project. It's a great way to contribute and help others learn.
 
 No matter how you choose to contribute, your involvement is greatly appreciated and valued!

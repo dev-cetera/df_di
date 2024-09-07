@@ -19,13 +19,13 @@ base mixin RegisterUsingRuntimeTypeMixin on DIBase implements RegisterUsingRunti
   @override
   void registerUsingRuntimeType(
     FutureOr<Object> value, {
-    DIKey? typeGroup,
+    DIKey? groupKey,
     OnUnregisterCallback<Object>? onUnregister,
   }) {
     _register(
       value,
       eventualType: value.runtimeType,
-      typeGroup: typeGroup,
+      groupKey: groupKey,
       onUnregister: onUnregister,
     );
   }
@@ -33,11 +33,11 @@ base mixin RegisterUsingRuntimeTypeMixin on DIBase implements RegisterUsingRunti
   void _register(
     FutureOr<Object> value, {
     required Type eventualType,
-    DIKey? typeGroup,
+    DIKey? groupKey,
     OnUnregisterCallback<Object>? onUnregister,
     DependencyValidator? condition,
   }) {
-    final fg = preferFocusGroup(typeGroup);
+    final fg = preferFocusGroup(groupKey);
     if (value is Future<Object>) {
       final baseValue = FutureOrInst((_) => value);
       final type = _convertBaseValueType(baseValue.runtimeType, value.runtimeType);
@@ -48,7 +48,7 @@ base mixin RegisterUsingRuntimeTypeMixin on DIBase implements RegisterUsingRunti
           metadata: DependencyMetadata(
             index: registrationCount++,
             initialType: baseValue.runtimeType,
-            typeGroup: fg,
+            groupKey: fg,
             onUnregister: onUnregister != null
                 ? (e) => e.runtimeType == eventualType ? onUnregister(e) : null
                 : null,
@@ -64,7 +64,7 @@ base mixin RegisterUsingRuntimeTypeMixin on DIBase implements RegisterUsingRunti
             metadata: DependencyMetadata(
               index: registrationCount++,
               initialType: value.runtimeType,
-              typeGroup: fg,
+              groupKey: fg,
               onUnregister: onUnregister != null
                   ? (e) => e.runtimeType == eventualType ? onUnregister(e) : null
                   : null,
@@ -80,7 +80,7 @@ base mixin RegisterUsingRuntimeTypeMixin on DIBase implements RegisterUsingRunti
         baseType: InternalCompleterOr,
         subTypes: [type],
       ),
-      typeGroup: DIKey(type),
+      groupKey: DIKey(type),
     ) as InternalCompleterOr?)
         ?.internalValue
         .complete(value);
@@ -103,7 +103,7 @@ DIKey _convertBaseValueType(Type baseValueType, Type valueType) {
 abstract interface class RegisterUsingRuntimeTypeInterface {
   void registerUsingRuntimeType(
     FutureOr<Object> value, {
-    DIKey? typeGroup,
+    DIKey? groupKey,
     OnUnregisterCallback<Object>? onUnregister,
   });
 }

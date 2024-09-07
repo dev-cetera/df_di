@@ -18,7 +18,7 @@ import '/src/_internal.dart';
 base mixin FocusGroupMixin on DIBase implements FocusGroupInterface {
   @override
   @pragma('vm:prefer-inline')
-  void setFocusGroup(DIKey typeGroup) => focusGroup = typeGroup;
+  void setFocusGroup(DIKey groupKey) => focusGroup = groupKey;
 
   @override
   @pragma('vm:prefer-inline')
@@ -27,7 +27,7 @@ base mixin FocusGroupMixin on DIBase implements FocusGroupInterface {
   @protected
   @override
   @pragma('vm:prefer-inline')
-  DIKey preferFocusGroup(DIKey? typeGroup) => typeGroup ?? focusGroup;
+  DIKey preferFocusGroup(DIKey? groupKey) => groupKey ?? focusGroup;
 }
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
@@ -36,9 +36,9 @@ base mixin FocusGroupMixin on DIBase implements FocusGroupInterface {
 abstract interface class FocusGroupInterface {
   DIKey focusGroup = DIKey.defaultGroup;
 
-  void setFocusGroup(DIKey typeGroup);
+  void setFocusGroup(DIKey groupKey);
 
   DIKey getFocusGroup();
 
-  DIKey preferFocusGroup(DIKey? typeGroup);
+  DIKey preferFocusGroup(DIKey? groupKey);
 }

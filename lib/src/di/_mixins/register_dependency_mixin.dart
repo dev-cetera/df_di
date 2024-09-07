@@ -24,20 +24,20 @@ base mixin RegisterDependencyMixin on DIBase implements RegisterDependencyInterf
     required Dependency<T> dependency,
     bool suppressDependencyAlreadyRegisteredException = false,
   }) {
-    final typeGroup = dependency.metadata.typeGroup;
+    final groupKey = dependency.metadata.groupKey;
     final dep = getDependencyOrNull1<T, P>(
-      typeGroup: typeGroup,
+      groupKey: groupKey,
       getFromParents: false,
     );
     if (!suppressDependencyAlreadyRegisteredException && dep != null) {
       throw DependencyAlreadyRegisteredException(
         type: T,
-        typeGroup: typeGroup,
+        groupKey: groupKey,
       );
     }
     // Store the dependency in the type map.
     registry.setDependency<T>(
-      value: dependency,
+      dependency: dependency,
     );
   }
 
@@ -45,25 +45,24 @@ base mixin RegisterDependencyMixin on DIBase implements RegisterDependencyInterf
   @override
   void registerDependencyUsingExactType({
     required DIKey type,
-    required Dependency<Object> dependency,
+    required Dependency dependency,
     bool suppressDependencyAlreadyRegisteredException = false,
   }) {
-    final typeGroup = dependency.metadata.typeGroup;
+    final groupKey = dependency.metadata.groupKey;
     final dep = getDependencyUsingExactTypeOrNull1(
       type: type,
-      typeGroup: typeGroup,
+      groupKey: groupKey,
       getFromParents: false,
     );
     if (!suppressDependencyAlreadyRegisteredException && dep != null) {
       throw DependencyAlreadyRegisteredException(
         type: type,
-        typeGroup: typeGroup,
+        groupKey: groupKey,
       );
     }
     // Store the dependency in the type map.
-    registry.setDependencyUsingExactType(
-      type: type,
-      value: dependency,
+    registry.setDependencyOfType(
+      dependency: dependency,
     );
   }
 
@@ -71,7 +70,7 @@ base mixin RegisterDependencyMixin on DIBase implements RegisterDependencyInterf
   @override
   void registerDependencyUsingRuntimeType(
     Type type, {
-    required Dependency<Object> dependency,
+    required Dependency dependency,
     bool suppressDependencyAlreadyRegisteredException = false,
   }) {
     registerDependencyUsingExactType(
@@ -93,13 +92,13 @@ abstract interface class RegisterDependencyInterface {
 
   void registerDependencyUsingExactType({
     required DIKey type,
-    required Dependency<Object> dependency,
+    required Dependency dependency,
     bool suppressDependencyAlreadyRegisteredException = false,
   });
 
   void registerDependencyUsingRuntimeType(
     Type type, {
-    required Dependency<Object> dependency,
+    required Dependency dependency,
     bool suppressDependencyAlreadyRegisteredException = false,
   });
 }
