@@ -35,7 +35,7 @@ base mixin RegisterUsingRuntimeTypeMixin on DIBase implements RegisterUsingRunti
     required Type eventualType,
     DIKey? groupKey,
     OnUnregisterCallback<Object>? onUnregister,
-    DependencyValidator? condition,
+    DependencyValidator? isValid,
   }) {
     final fg = preferFocusGroup(groupKey);
     if (value is Future<Object>) {
@@ -47,12 +47,11 @@ base mixin RegisterUsingRuntimeTypeMixin on DIBase implements RegisterUsingRunti
           value: baseValue,
           metadata: DependencyMetadata(
             index: registrationCount++,
-            initialType: baseValue.runtimeType,
             groupKey: fg,
             onUnregister: onUnregister != null
                 ? (e) => e.runtimeType == eventualType ? onUnregister(e) : null
                 : null,
-            condition: condition,
+            isValid: isValid,
           ),
         ),
       );
@@ -60,16 +59,16 @@ base mixin RegisterUsingRuntimeTypeMixin on DIBase implements RegisterUsingRunti
       registerDependencyUsingExactType(
         type: DIKey(value.runtimeType),
         dependency: Dependency(
-            value: value,
-            metadata: DependencyMetadata(
-              index: registrationCount++,
-              initialType: value.runtimeType,
-              groupKey: fg,
-              onUnregister: onUnregister != null
-                  ? (e) => e.runtimeType == eventualType ? onUnregister(e) : null
-                  : null,
-              condition: condition,
-            )),
+          value: value,
+          metadata: DependencyMetadata(
+            index: registrationCount++,
+            groupKey: fg,
+            onUnregister: onUnregister != null
+                ? (e) => e.runtimeType == eventualType ? onUnregister(e) : null
+                : null,
+            isValid: isValid,
+          ),
+        ),
       );
     }
     // If there's a completer waiting for this value that was registered via the until() function,
@@ -77,7 +76,7 @@ base mixin RegisterUsingRuntimeTypeMixin on DIBase implements RegisterUsingRunti
     final type = DIKey(value.runtimeType);
     (getUsingExactTypeOrNull(
       type: DIKey.fromType(
-        baseType: InternalCompleterOr,
+        InternalCompleterOr,
         subTypes: [type],
       ),
       groupKey: DIKey(type),
@@ -93,7 +92,7 @@ DIKey _convertBaseValueType(Type baseValueType, Type valueType) {
   final futureIdentifierLength = '$Future'.replaceAll('<$dynamic>', '').length;
   final t0 = valueType.toString();
   final t1 = t0.substring(futureIdentifierLength + 1, t0.length - 1);
-  final t2 = DIKey.fromType(baseType: baseValueType, subTypes: [t1]);
+  final t2 = DIKey.fromType(baseValueType, subTypes: [t1]);
   return t2;
 }
 

@@ -53,8 +53,8 @@ base mixin GetDependencyMixin on DIBase implements GetDependencyInterface {
     for (final getter in getters) {
       final dep = getter();
       if (dep != null) {
-        final conditionMet = dep.metadata.condition?.call(this) ?? true;
-        if (conditionMet) {
+        final isValid = dep.metadata.isValid?.call() ?? true;
+        if (isValid) {
           return dep;
         }
       }
@@ -117,8 +117,8 @@ base mixin GetDependencyMixin on DIBase implements GetDependencyInterface {
     for (final getter in getters) {
       final dep = getter();
       if (dep != null) {
-        final conditionMet = dep.metadata.condition?.call(this) ?? true;
-        if (conditionMet) {
+        final isValid = dep.metadata.isValid?.call() ?? true;
+        if (isValid) {
           return dep;
         }
       }

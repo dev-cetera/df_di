@@ -95,20 +95,19 @@ base mixin RegisterMixin on DIBase implements RegisterInterface {
     FutureOr<T> value, {
     DIKey? groupKey,
     OnUnregisterCallback<R>? onUnregister,
-    DependencyValidator? condition,
+    DependencyValidator? isValid,
   }) {
     final fg = preferFocusGroup(groupKey);
-    final value1 = FutureOrInst<T, P>((_) => value);
     registerDependency<FutureOrInst<T, P>, P>(
       dependency: Dependency(
-          value: value1,
-          metadata: DependencyMetadata(
-            index: registrationCount++,
-            initialType: value1.runtimeType,
-            groupKey: fg,
-            onUnregister: onUnregister != null ? (e) => e is R ? onUnregister(e) : null : null,
-            condition: condition,
-          )),
+        value: FutureOrInst<T, P>((_) => value),
+        metadata: DependencyMetadata(
+          index: registrationCount++,
+          groupKey: fg,
+          onUnregister: onUnregister != null ? (e) => e is R ? onUnregister(e) : null : null,
+          isValid: isValid,
+        ),
+      ),
     );
     // If there's a completer waiting for this value that was registered via the until() function,
     // complete it.

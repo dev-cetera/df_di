@@ -19,7 +19,14 @@ import '/src/_internal.dart';
 /// lifecycle.
 @internal
 final class Dependency<T extends Object> {
-  const Dependency({
+  Dependency({
+    required this.value,
+    required this.metadata,
+  }) {
+    this.metadata._initialType = value.runtimeType;
+  }
+
+  Dependency._internal({
     required this.value,
     required this.metadata,
   });
@@ -36,7 +43,7 @@ final class Dependency<T extends Object> {
   /// Creates a new [Dependency] instance with a different value of type [R],
   /// while retaining the existing [metadata].
   Dependency<R> passNewValue<R extends Object>(R newValue) {
-    return Dependency<R>(value: newValue, metadata: metadata);
+    return Dependency<R>._internal(value: newValue, metadata: metadata);
   }
 
   /// Returns a new [Dependency] instance where the current [value] is cast
@@ -53,11 +60,10 @@ final class Dependency<T extends Object> {
 /// track registration details, and support dependency resolution.
 @internal
 class DependencyMetadata {
-  const DependencyMetadata({
-    required this.initialType,
+  DependencyMetadata({
     required this.index,
     required this.groupKey,
-    required this.condition,
+    required this.isValid,
     required this.onUnregister,
   });
 
@@ -65,7 +71,8 @@ class DependencyMetadata {
   /// This type remains unchanged even if [Dependency.value] is updated through
   /// [Dependency.passNewValue]. This property consistently reflects the original type
   /// with which the dependency was registered.
-  final Type initialType;
+  Type get initialType => _initialType!;
+  Type? _initialType;
 
   /// The type group to which the [Dependency] belongs. This enables
   /// dependencies of the same type to coexist in the DI container as long as
@@ -77,10 +84,8 @@ class DependencyMetadata {
   /// and ensuring proper management of dependencies.
   final int index;
 
-  /// A condition to determine if the dependency is considered valid or not
-  /// so which will cuause errors the be thropwn when getting the dependency if
-  /// inva;id.
-  final DependencyValidator? condition;
+  /// A function that evaluates the validity of a dependency.
+  final DependencyValidator? isValid;
 
   /// A callback to be invoked when this dependency is unregistered.
   final OnUnregisterCallback<Object>? onUnregister;
@@ -97,7 +102,6 @@ typedef OnUnregisterCallback<T extends Object> = FutureOr<void> Function(
   T value,
 );
 
-/// A typedef for a function that evaluates the validity of a dependency based
-/// on the current state of a [DI] container.
+/// A typedef for a function that evaluates the validity of a dependency.
 @internal
-typedef DependencyValidator = bool Function(DIBase di);
+typedef DependencyValidator = bool Function();

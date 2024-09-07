@@ -17,7 +17,7 @@ import '/src/_internal.dart';
 @pragma('vm:keep-name') // enable string lookups
 class Inst<T extends Object, P extends Object> {
   static DIKey gr(Object type, Object paramsType) => DIKey.fromType(
-        baseType: Inst,
+        Inst,
         subTypes: [type, paramsType],
       );
 
@@ -52,7 +52,7 @@ typedef InstConstructor<T extends Object, P extends Object> = FutureOr<T> Functi
 @pragma('vm:keep-name') // enable string lookups
 class FutureOrInst<T extends Object, P extends Object> extends Inst<T, P> {
   static DIKey gr(Object type, Object paramsType) => DIKey.fromType(
-        baseType: FutureOrInst,
+        FutureOrInst,
         subTypes: [type, paramsType],
       );
 

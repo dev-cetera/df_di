@@ -21,13 +21,11 @@ final class Registry {
   //
   //
 
-  const Registry({
-    RegistryState state = const {},
-    this.onChange,
-  }) : _state = const {};
+  Registry({this.onChange});
 
-  /// Represents the internal state of this [Registry] instance, stored as a map.
-  final RegistryState _state;
+  /// Represents the internal state of this [Registry] instance, stored as a
+  /// map.
+  final RegistryState _state = {};
 
   /// A callback invoked whenever the [state] is updated.
   final _OnChangeRegistry? onChange;
@@ -40,7 +38,7 @@ final class Registry {
   List<DIKey> get groupKeys => state.keys.toList();
 
   /// Updates the [state] by setting or updating [dependency].
-  @protected
+  /// @protected
   @pragma('vm:prefer-inline')
   void setDependency<T extends Object>({
     required Dependency<T> dependency,
@@ -65,7 +63,7 @@ final class Registry {
   /// specified [groupKey].
   ///
   /// Returns `true` if it does and `false` if it doesn't.
-  @protected
+  /// @protected
   @pragma('vm:prefer-inline')
   bool containsDependency<T extends Object>({
     required DIKey groupKey,
@@ -78,7 +76,7 @@ final class Registry {
   /// subtype of [type].
   ///
   /// Returns `true` if it does and `false` if it doesn't.
-  @protected
+  /// @protected
   @pragma('vm:prefer-inline')
   bool containsDependencyOfType({
     required DIKey type,
@@ -91,12 +89,17 @@ final class Registry {
   /// the specified [groupKey] if it exists.
   ///
   /// Returns `null` if no matching dependency is found.
-  @pragma('vm:prefer-inline')
-  @protected
+  /// @protected
   Dependency? getDependencyOrNull<T extends Object>({
     required DIKey groupKey,
   }) {
-    return getGroup(groupKey: groupKey)?.values.firstWhereOrNull((e) => e.value is T);
+    final dependency = _state[groupKey]?.values.firstWhereOrNull((e) => e.value is T);
+    final valid = dependency?.metadata.isValid?.call() == true;
+    if (valid) {
+      return dependency;
+    } else {
+      return null;
+    }
   }
 
   /// Gets any dependency of the exact [type] that is associated with the
@@ -104,17 +107,22 @@ final class Registry {
   /// will not include any subtype of [type].
   ///
   /// Returns `null` if no matching dependency is found.
-  @pragma('vm:prefer-inline')
-  @protected
+  /// @protected
   Dependency? getDependencyOfTypeOrNull({
     required DIKey type,
     required DIKey groupKey,
   }) {
-    return getGroup(groupKey: groupKey)?.values.firstWhereOrNull((e) => e.type == type);
+    final dependency = _state[groupKey]?.values.firstWhereOrNull((e) => e.type == type);
+    final valid = dependency?.metadata.isValid?.call() == true;
+    if (valid) {
+      return dependency;
+    } else {
+      return null;
+    }
   }
 
   /// Gets all dependencies within [state] of the specified [type].
-  @protected
+  /// @protected
   List<Dependency> getAllDependenciesOfType({
     required DIKey type,
   }) {
@@ -132,13 +140,13 @@ final class Registry {
   ///
   /// Returns the removed [Dependency] of [T], or `null` if it did not exist
   /// within [state].
-  @protected
+  /// @protected
   Dependency<T>? removeDependency<T extends Object>({
     required DIKey groupKey,
   }) {
     final dependency = getDependencyOrNull<T>(groupKey: groupKey);
     if (dependency != null) {
-      final removed = removeDependencyByType(
+      final removed = removeDependencyOfType(
         type: dependency.type,
         groupKey: groupKey,
       );
@@ -153,20 +161,22 @@ final class Registry {
   ///
   /// Returns the removed [Dependency] or `null` if it did not exist within
   /// [state].
-  Dependency? removeDependencyByType({
+  Dependency? removeDependencyOfType({
     required DIKey type,
     required DIKey groupKey,
   }) {
-    final value = getGroup(groupKey: groupKey);
-    if (value != null) {
-      final removed = value.remove(type);
+    final group = _state[groupKey];
+    if (group != null) {
+      final removed = group.remove(type);
       if (removed != null) {
-        if (value.isEmpty) {
-          removeGroup(groupKey: groupKey);
+        if (group.isEmpty) {
+          removeGroup(
+            groupKey: groupKey,
+          );
         } else {
           setGroup(
             groupKey: groupKey,
-            group: value,
+            group: group,
           );
         }
         onChange?.call(state);
@@ -192,17 +202,17 @@ final class Registry {
 
   /// Gets the [DependencyGroup] with the specified [groupKey] from the [state]
   /// as or `null` if none exist.
-  @protected
-  DependencyGroup<Object>? getGroup({
-    required DIKey groupKey,
-  }) {
-    final temp = _state[groupKey];
-    return temp != null ? DependencyGroup.unmodifiable(temp) : null;
-  }
+  /// @protected
+  // DependencyGroup<Object>? getGroup({
+  //   required DIKey groupKey,
+  // }) {
+  //   final temp = _state[groupKey];
+  //   return temp != null ? DependencyGroup.unmodifiable(temp) : null;
+  // }
 
   /// Removes the [DependencyGroup] with the specified [groupKey] from the
   /// [state].
-  @protected
+  /// @protected
   @pragma('vm:prefer-inline')
   void removeGroup({
     required DIKey groupKey,

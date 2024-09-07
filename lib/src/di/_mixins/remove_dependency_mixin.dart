@@ -52,7 +52,7 @@ base mixin RemoveDependencyMixin on DIBase implements RemoveDependencyInterface 
       type,
       FutureOrInst.gr(type, paramsType1),
     ].map(
-      (type) => () => registry.removeDependencyByType(
+      (type) => () => registry.removeDependencyOfType(
             type: type,
             groupKey: fg,
           ),

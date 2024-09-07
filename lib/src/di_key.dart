@@ -45,7 +45,10 @@ class DIKey<T extends Object> {
   /// final type4 = representedType('Map<dynamic, List<Object>>', ['String', 'int']);
   /// print(type4); // Output: Map<String,List<int>>
   /// ```
-  static DIKey fromType({required Object baseType, required List<Object> subTypes}) {
+  static DIKey fromType(
+    Object baseType, {
+    List<Object> subTypes = const [],
+  }) {
     final objectStr = '$Object';
     final dynamicStr = '$dynamic';
     final cleanBaseType = baseType.toString().replaceAll(' ', '');
