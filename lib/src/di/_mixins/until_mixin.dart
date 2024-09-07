@@ -28,6 +28,7 @@ base mixin UntilMixin on DIBase implements UntilInterface {
       // Return the dependency if it is already registered.
       return test;
     }
+    
     // If it's not already registered, register a Completer for the type
     // inside the untilsContainer.
     final completerGroup = DIKey(T);

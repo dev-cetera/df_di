@@ -6,10 +6,9 @@ import 'package:df_di/src/test_di.dart';
 void main() async {
   final di = TestDI();
 
-  di.parent = TestDI();
-  di.parent!.register<Future<int>>(Future.value(123));
+  Future.delayed(const Duration(seconds: 3), () {
+    di.register<int>(Future.value(123));
+  });
 
-  // di.register<int>(123);
-  print(await di.getOrNull<int>());
-  print(di.getOrNull<int>());
+  print(await di.untilOrNull<int>());
 }
