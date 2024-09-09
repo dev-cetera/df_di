@@ -61,9 +61,7 @@ base mixin RegisterDependencyMixin on DIBase implements RegisterDependencyInterf
       );
     }
     // Store the dependency in the type map.
-    registry.setDependency(
-      dependency,
-    );
+    registry.setDependency(dependency);
   }
 
   @protected

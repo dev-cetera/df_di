@@ -33,8 +33,8 @@ final class DIRegistry {
   final _OnChangeRegistry? onChange;
 
   /// A snapshot describing the current state of the dependencies.
-  RegistryState get state => Map<DIKey, Map<DIKey, Dependency>>.unmodifiable(_state)
-      .map((k, v) => MapEntry(k, Map.unmodifiable(v)));
+  RegistryState get state =>
+      RegistryState.unmodifiable(_state).map((k, v) => MapEntry(k, Map.unmodifiable(v)));
 
   /// A snapshot of the current groups
   List<DIKey?> get groupKeys => List.of(state.keys);
@@ -51,8 +51,8 @@ final class DIRegistry {
     }
   }
 
-  /// Checks if any dependency of type [T] or subtype of [T] exists in the
-  /// specified [groupKey].
+  /// Checks if any dependency of type [T] or subtype of [T] exists that is
+  /// associated with the specified [groupKey]
   ///
   /// Returns `true` if it does and `false` if it doesn't.
   @pragma('vm:prefer-inline')
@@ -62,9 +62,25 @@ final class DIRegistry {
     return getDependencyOrNull<T>(groupKey: groupKey) != null;
   }
 
-  /// Checks if any dependency with the exact [typeKey] exists in the specified
-  /// [groupKey]. Unlike [containsDependency], this will not include any
-  /// subtype of [typeKey].
+  /// Checks if any dependency with the exact [runtimeType] exists that is
+  /// associated with the specified [groupKey]. Unlike [containsDependency],
+  /// this will not include subtypes of [runtimeType].
+  ///
+  /// Returns `true` if it does and `false` if it doesn't.
+  @pragma('vm:prefer-inline')
+  bool containsDependencyOfRuntimeType(
+    Type runtimeType, {
+    DIKey? groupKey,
+  }) {
+    return containsDependencyWithKey(
+      DIKey(runtimeType),
+      groupKey: groupKey,
+    );
+  }
+
+  /// Checks if any dependency registered under the exact [typeKey] exists that
+  /// is associated with the specified [groupKey]. Unlike [containsDependency],
+  /// this will not include subtypes.
   ///
   /// Returns `true` if it does and `false` if it doesn't.
   @pragma('vm:prefer-inline')
@@ -87,9 +103,26 @@ final class DIRegistry {
     return dependency;
   }
 
-  /// Returns any dependency with the exact [typeKey] that is associated with the
-  /// specified [groupKey] if it exists. Unlike [getDependencyOrNull], this
-  /// will not include any subtype of [typeKey].
+  /// Returns any dependency with the exact [runtimeType] that is associated
+  /// with the specified [groupKey] if it exists. Unlike [getDependencyOrNull],
+  /// this will not include subtypes.
+  ///
+  /// Returns `null` if no matching dependency is found.
+  @_protected
+  @pragma('vm:prefer-inline')
+  Dependency? getDependencyOfRuntimeTypeOrNull(
+    Type runtimeType, {
+    DIKey? groupKey,
+  }) {
+    return getDependencyWithKeyOrNull(
+      DIKey(runtimeType),
+      groupKey: groupKey,
+    );
+  }
+
+  /// Returns any dependency with the exact [typeKey] that is associated with
+  /// the specified [groupKey] if it exists. Unlike [getDependencyOrNull], this
+  /// will not include subtypes.
   ///
   /// Returns `null` if no matching dependency is found.
   @_protected
@@ -135,9 +168,27 @@ final class DIRegistry {
     return null;
   }
 
+  /// Removes any dependency with the exact [runtimeType] that is associated
+  /// with the specified [groupKey]. Unlike [removeDependency], this will not
+  /// include any subtypes.
+  ///
+  /// Returns the removed [Dependency] or `null` if it did not exist within
+  /// [state].
+  @_protected
+  @pragma('vm:prefer-inline')
+  Dependency? removeDependencyOfRuntimeType(
+    Type runtimeType, {
+    DIKey? groupKey,
+  }) {
+    return removeDependencyWithKey(
+      DIKey(runtimeType),
+      groupKey: groupKey,
+    );
+  }
+
   /// Removes any dependency with the exact [typeKey] that is associated with
   /// the specified [groupKey]. Unlike [removeDependency], this will not
-  /// include any subtype of [typeKey].
+  /// include any subtypes.
   ///
   /// Returns the removed [Dependency] or `null` if it did not exist within
   /// [state].

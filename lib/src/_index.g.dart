@@ -8,10 +8,10 @@
 //.title~
 
 // --- PUBLIC FILES ---
-export 'di_key.dart';
 export 'inst.dart';
+export 'di_key.dart';
+export 'test_di.dart';
 export 'di/di.dart';
-export 'exceptions/dependency_already_registered_exception.dart';
 export 'exceptions/service_not_yet_initialized_exception.dart';
 export 'exceptions/dependency_not_found_exception.dart';
 export 'exceptions/service_already_initialized_exception.dart';
@@ -23,38 +23,22 @@ export 'services/streaming_service.dart';
 // --- PRIVATE FILES (EXCLUDED) ---
 // export '_internal.dart';
 // export '_dependency.dart';
+// export '_registry.dart';
 // export '_index.g.dart';
 // export 'di/_di_base.dart';
-// export 'di/_features/register_using_exact_type/register_using_exact_type_impl.dart';
-// export 'di/_features/register_using_exact_type/register_using_exact_type_iface.dart';
-// export 'di/_features/until/until_iface.dart';
-// export 'di/_features/until/until_impl.dart';
-// export 'di/_features/get_factory/get_factory_impl.dart';
-// export 'di/_features/get_factory/get_factory_iface.dart';
-// export 'di/_features/get/get_impl.dart';
-// export 'di/_features/get/get_iface.dart';
-// export 'di/_features/unregister/unregister_impl.dart';
-// export 'di/_features/unregister/unregister_iface.dart';
-// export 'di/_features/remove_dependency/remove_dependency_iface.dart';
-// export 'di/_features/remove_dependency/remove_dependency_impl.dart';
-// export 'di/_features/register/register_iface.dart';
-// export 'di/_features/register/register_impl.dart';
-// export 'di/_features/is_registered/is_registered_impl.dart';
-// export 'di/_features/is_registered/is_registered_iface.dart';
-// export 'di/_features/focus_group/focus_group_iface.dart';
-// export 'di/_features/focus_group/focus_group_impl.dart';
-// export 'di/_features/register_dependency/register_dependency_impl.dart';
-// export 'di/_features/register_dependency/register_dependency_iface.dart';
-// export 'di/_features/get_using_exact_type/get_using_exact_type_iface.dart';
-// export 'di/_features/get_using_exact_type/get_using_exact_type_impl.dart';
-// export 'di/_features/get_dependency/get_dependency_iface.dart';
-// export 'di/_features/get_dependency/get_dependency_impl.dart';
-// export 'di/_features/child/child_impl.dart';
-// export 'di/_features/child/child_iface.dart';
-// export 'di/_features/debug/debug_iface.dart';
-// export 'di/_features/debug/debug_impl.dart';
-// export '_registry/registry_base.dart';
-// export '_registry/registry.dart';
+// export 'di/_mixins/register_using_runtime_type_mixin.dart';
+// export 'di/_mixins/is_registered_mixin.dart';
+// export 'di/_mixins/remove_dependency_mixin.dart';
+// export 'di/_mixins/focus_group_mixin.dart';
+// export 'di/_mixins/debug_mixin.dart';
+// export 'di/_mixins/until_mixin.dart';
+// export 'di/_mixins/get_mixin.dart';
+// export 'di/_mixins/register_dependency_mixin.dart';
+// export 'di/_mixins/get_using_exact_type_mixin.dart';
+// export 'di/_mixins/unregister_mixin.dart';
+// export 'di/_mixins/get_dependency_mixin.dart';
+// export 'di/_mixins/register_mixin.dart';
+// export 'di/_mixins/child_mixin.dart';
 
 // --- GENERATED FILES (EXCLUDED) ---
 // export '_index.g.dart';
