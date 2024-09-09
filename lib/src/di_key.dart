@@ -21,7 +21,7 @@ class DIKey<T extends Object> {
     _hashCode = _key.hashCode;
   }
 
-  /// Constructs a `Gr` representation by replacing occurrences of `Object`
+  /// Constructs a `DIKey` representation by replacing occurrences of `Object`
   /// or `dynamic` in the `baseType` with corresponding values from `subTypes`.
   /// The replacements are applied sequentially based on their order in `subTypes`.
   ///
@@ -30,25 +30,25 @@ class DIKey<T extends Object> {
   /// Examples:
   /// ```dart
   /// // Example 1: Replacing multiple generic placeholders
-  /// final type1 = representedType('Map<Object, Object>', ['String', 'int']);
+  /// final type1 = DIKey.type(Map<Object, Object>, [String, int]);
   /// print(type1); // Output: Map<String,int>
   ///
   /// // Example 2: Replacing `dynamic`
-  /// final type2 = representedType('List<dynamic>', ['int']);
+  /// final type2 = DIKey.type('List<dynamic>', ['int']);
   /// print(type2); // Output: List<int>
   ///
   /// // Example 3: Handling non-generic types
-  /// final type3 = representedType('int');
+  /// final type3 = DIKey.type(int);
   /// print(type3); // Output: int
   ///
   /// // Example 4: More complex generics
-  /// final type4 = representedType('Map<dynamic, List<Object>>', ['String', 'int']);
+  /// final type4 = DIKey.type(Map<dynamic, List<Object>>, ['String', 'int']);
   /// print(type4); // Output: Map<String,List<int>>
   /// ```
-  static DIKey fromType(
-    Object baseType, {
+  static DIKey<String> type(
+    Object baseType, [
     List<Object> subTypes = const [],
-  }) {
+  ]) {
     final objectStr = '$Object';
     final dynamicStr = '$dynamic';
     final cleanBaseType = baseType.toString().replaceAll(' ', '');
@@ -75,7 +75,7 @@ class DIKey<T extends Object> {
       }
     }
 
-    // Return the constructed type string wrapped in a Gr object.
+    // Return the constructed type string wrapped in a DIKey object.
     return DIKey(buffer.toString());
   }
 
@@ -131,7 +131,7 @@ class DIKey<T extends Object> {
 /// Example:
 /// ```dart
 /// // With subtypes provided:
-/// final id1 = GenericGr<Map>([Gr('String'), Gr('int')]);
+/// final id1 = GenericGr<Map>([DIKey('String'), DIKey('int')]);
 /// print(id1); // Map<String, int>
 ///
 /// // Without subtypes:
@@ -142,10 +142,10 @@ class DIKey<T extends Object> {
 /// final id3 = GenericGr<int>();
 /// print(id3); // int
 /// ```
-// class GenericGr<T extends Object> extends Gr {
+// class GenericGr<T extends Object> extends DIKey {
 //   GenericGr._(super.type);
 
-//   factory GenericGr(List<Gr?>? subTypes) {
+//   factory GenericGr(List<DIKey?>? subTypes) {
 //     final typeString = '$T';
 //     final n = typeString.indexOf('<');
 

@@ -62,7 +62,7 @@ class DIContainer {
 
     final registeredDep = _registerDependency<FutureOr<T>>(
       dependency: Dependency<FutureOr<T>>(
-        value: value,
+        value,
         metadata: metadata,
       ),
       overrideExisting: overrideExisting,
@@ -95,7 +95,7 @@ class DIContainer {
   }) {
     // Throw an exception if the dependency is already registered and
     // [overrideExisting] is set to false.
-    final groupKey = dependency.metadata.groupKey;
+    final groupKey = dependency.metadata?.groupKey ?? focusGroup;
     if (!overrideExisting) {
       final existingDep = _getDependencyOrNull<T>(
         groupKey: groupKey,
@@ -103,8 +103,8 @@ class DIContainer {
       );
       if (existingDep != null) {
         throw DependencyAlreadyRegisteredException(
-          type: T,
           groupKey: groupKey,
+          type: T,
         );
       }
     }
@@ -119,9 +119,7 @@ class DIContainer {
 
     // If [dependency] is not a [DIContainer], register it as a normal
     // dependency.
-    registry.setDependency<T>(
-      dependency: dependency,
-    );
+    registry.setDependency<T>(dependency);
     return dependency;
   }
 
@@ -139,18 +137,17 @@ class DIContainer {
     return value.thenOr(
       (child) {
         child._parents.add(this);
-        registry.setDependency<FutureOr<DIContainer>>(
-          dependency: childContainer.copyWith(
-            metadata: childContainer.metadata.copyWith(
-              onUnregister: (_) {
-                return (childContainer.metadata.onUnregister?.call(child)).thenOr((_) {
-                  print('[_setChildDependency] Clearing child registry');
-                  child.registry.clear();
-                });
-              },
-            ),
+        final dependency = childContainer.copyWith(
+          metadata: (childContainer.metadata ?? DependencyMetadata()).copyWith(
+            onUnregister: (_) {
+              return (childContainer.metadata?.onUnregister?.call(child)).thenOr((_) {
+                print('[_setChildDependency] Clearing child registry');
+                child.registry.clear();
+              });
+            },
           ),
         );
+        registry.setDependency<FutureOr<DIContainer>>(dependency);
       },
     );
   }
@@ -174,7 +171,7 @@ class DIContainer {
     if (skipOnUnregisterCallback) {
       return value;
     }
-    return (removed.metadata.onUnregister?.call(value)).thenOr((_) {
+    return (removed.metadata?.onUnregister?.call(value)).thenOr((_) {
       return value;
     });
   }
@@ -194,28 +191,33 @@ class DIContainer {
       groupKey: key,
       traverse: traverse,
     );
-    final futureOrValue = existingDep?.value;
-    switch (futureOrValue) {
-      case Future<T> _:
-        return futureOrValue.then((value) {
-          if (registerFutureResults) {
-            register<T>(
-              value,
-              groupKey: key,
-              onUnregister: existingDep?.metadata.onUnregister,
-              validator: existingDep?.metadata.validator,
+    final value = existingDep?.value;
+    switch (value) {
+      case Future<T> futureValue:
+        return futureValue.then(
+          (value) {
+            return (registerFutureResults
+                    ? register<T>(
+                        value,
+                        groupKey: key,
+                        onUnregister: existingDep?.metadata?.onUnregister,
+                        validator: existingDep?.metadata?.validator,
+                      )
+                    : Object())
+                .thenOr(
+              (_) {
+                return (unregisterFutures
+                        ? registry.removeDependency<Future<T>>(groupKey: key)
+                        : Object())
+                    .thenOr((_) {
+                  return value;
+                });
+              },
             );
-          }
-          if (unregisterFutures) {
-            return unregister<T>(
-              groupKey: key,
-              skipOnUnregisterCallback: true,
-            );
-          }
-          return value;
-        }) as FutureOr<T>;
+          },
+        );
       case T _:
-        return futureOrValue;
+        return value;
       default:
         return null;
     }
@@ -237,11 +239,14 @@ class DIContainer {
           groupKey: key,
         );
     if (dependency != null) {
-      final valid = dependency.metadata.validator?.call(dependency) ?? true;
+      final valid = dependency.metadata?.validator?.call(dependency) ?? true;
       if (valid) {
         return dependency;
       } else {
-        // TODO: Throw error!
+        throw DependencyInvalidException(
+          groupKey: key,
+          type: T,
+        );
       }
     }
     if (traverse) {

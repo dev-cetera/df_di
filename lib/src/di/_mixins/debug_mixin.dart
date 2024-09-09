@@ -22,7 +22,7 @@ base mixin DebugMixin on DIBase implements DebugInterface {
   Type initialType<T extends Object, P extends Object>({
     DIKey? groupKey,
   }) {
-    return getDependency1<T, P>(groupKey: groupKey, getFromParents: true).metadata.initialType;
+    return getDependency1<T, P>(groupKey: groupKey, getFromParents: true).metadata!.initialType;
   }
 
   @visibleForTesting
@@ -31,7 +31,7 @@ base mixin DebugMixin on DIBase implements DebugInterface {
   int index<T extends Object, P extends Object>({
     DIKey? groupKey,
   }) {
-    return getDependency1<T, P>(groupKey: groupKey, getFromParents: true).metadata.index;
+    return getDependency1<T, P>(groupKey: groupKey, getFromParents: true).metadata!.index!;
   }
 }
 

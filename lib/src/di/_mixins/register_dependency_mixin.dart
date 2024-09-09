@@ -24,7 +24,7 @@ base mixin RegisterDependencyMixin on DIBase implements RegisterDependencyInterf
     required Dependency<T> dependency,
     bool suppressDependencyAlreadyRegisteredException = false,
   }) {
-    final groupKey = dependency.metadata.groupKey;
+    final groupKey = dependency.metadata!.groupKey!;
     final dep = getDependencyOrNull1<T, P>(
       groupKey: groupKey,
       getFromParents: false,
@@ -37,7 +37,7 @@ base mixin RegisterDependencyMixin on DIBase implements RegisterDependencyInterf
     }
     // Store the dependency in the type map.
     registry.setDependency<T>(
-      dependency: dependency,
+      dependency,
     );
   }
 
@@ -48,7 +48,7 @@ base mixin RegisterDependencyMixin on DIBase implements RegisterDependencyInterf
     required Dependency dependency,
     bool suppressDependencyAlreadyRegisteredException = false,
   }) {
-    final groupKey = dependency.metadata.groupKey;
+    final groupKey = dependency.metadata!.groupKey!;
     final dep = getDependencyUsingExactTypeOrNull1(
       type: type,
       groupKey: groupKey,
@@ -61,8 +61,8 @@ base mixin RegisterDependencyMixin on DIBase implements RegisterDependencyInterf
       );
     }
     // Store the dependency in the type map.
-    registry.setDependencyOfType(
-      dependency: dependency,
+    registry.setDependency(
+      dependency,
     );
   }
 

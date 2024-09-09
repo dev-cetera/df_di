@@ -44,7 +44,7 @@ base mixin RegisterUsingRuntimeTypeMixin on DIBase implements RegisterUsingRunti
       registerDependencyUsingExactType(
         type: type,
         dependency: Dependency(
-          value: baseValue,
+          baseValue,
           metadata: DependencyMetadata(
             index: registrationCount++,
             groupKey: fg,
@@ -59,7 +59,7 @@ base mixin RegisterUsingRuntimeTypeMixin on DIBase implements RegisterUsingRunti
       registerDependencyUsingExactType(
         type: DIKey(value.runtimeType),
         dependency: Dependency(
-          value: value,
+          value,
           metadata: DependencyMetadata(
             index: registrationCount++,
             groupKey: fg,
@@ -75,10 +75,7 @@ base mixin RegisterUsingRuntimeTypeMixin on DIBase implements RegisterUsingRunti
     // complete it.
     final type = DIKey(value.runtimeType);
     (getUsingExactTypeOrNull(
-      type: DIKey.fromType(
-        InternalCompleterOr,
-        subTypes: [type],
-      ),
+      type: DIKey.type(InternalCompleterOr, [type]),
       groupKey: DIKey(type),
     ) as InternalCompleterOr?)
         ?.internalValue
@@ -92,7 +89,7 @@ DIKey _convertBaseValueType(Type baseValueType, Type valueType) {
   final futureIdentifierLength = '$Future'.replaceAll('<$dynamic>', '').length;
   final t0 = valueType.toString();
   final t1 = t0.substring(futureIdentifierLength + 1, t0.length - 1);
-  final t2 = DIKey.fromType(baseValueType, subTypes: [t1]);
+  final t2 = DIKey.type(baseValueType, [t1]);
   return t2;
 }
 

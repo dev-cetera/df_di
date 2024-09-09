@@ -109,8 +109,8 @@ base mixin GetUsingExactTypeMixin on DIBase implements GetUsingExactTypeInterfac
     required DIKey groupKey,
     required bool getFromParents,
   }) {
-    final dep = registry.getDependencyOfTypeOrNull(
-      type: genericType,
+    final dep = registry.getDependencyWithKeyOrNull(
+      genericType,
       groupKey: groupKey,
     );
     if (dep != null) {

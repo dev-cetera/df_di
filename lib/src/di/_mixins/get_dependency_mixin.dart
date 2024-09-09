@@ -53,7 +53,7 @@ base mixin GetDependencyMixin on DIBase implements GetDependencyInterface {
     for (final getter in getters) {
       final dep = getter();
       if (dep != null) {
-        final valid = dep.metadata.validator?.call(dep) ?? true;
+        final valid = dep.metadata?.validator?.call(dep) ?? true;
         if (valid) {
           return dep;
         }
@@ -108,8 +108,8 @@ base mixin GetDependencyMixin on DIBase implements GetDependencyInterface {
       FutureOrInst.gr(type, paramsType1),
     ].map(
       (type) {
-        return () => registry.getDependencyOfTypeOrNull(
-              type: type,
+        return () => registry.getDependencyWithKeyOrNull(
+              type,
               groupKey: fg,
             );
       },
@@ -117,7 +117,7 @@ base mixin GetDependencyMixin on DIBase implements GetDependencyInterface {
     for (final getter in getters) {
       final dep = getter();
       if (dep != null) {
-        final valid = dep.metadata.validator?.call(dep) ?? true;
+        final valid = dep.metadata?.validator?.call(dep) ?? true;
         if (valid) {
           return dep;
         }

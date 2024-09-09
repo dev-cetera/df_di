@@ -3,7 +3,7 @@
 ## [0.2.1]
 
 - Released @ 9/2024 (UTC)
-- refactor: Rename Id to Gr
+- refactor: Rename Id to DIKey
 
 ## [0.2.0]
 

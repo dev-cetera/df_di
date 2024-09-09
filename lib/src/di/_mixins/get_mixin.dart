@@ -157,7 +157,7 @@ base mixin GetMixin on DIBase implements GetInterface {
       //   );
     }).thenOr((_) {
       return _get<T, P>(
-        groupKey: dep.metadata.groupKey,
+        groupKey: dep.metadata!.groupKey!,
         getFromParents: getFromParents,
       )!;
     });

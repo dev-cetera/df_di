@@ -16,9 +16,9 @@ import '/src/_internal.dart';
 
 @pragma('vm:keep-name') // enable string lookups
 class Inst<T extends Object, P extends Object> {
-  static DIKey gr(Object type, Object paramsType) => DIKey.fromType(
+  static DIKey gr(Object type, Object paramsType) => DIKey.type(
         Inst,
-        subTypes: [type, paramsType],
+        [type, paramsType],
       );
 
   /// Creates a new inst.
@@ -51,9 +51,9 @@ typedef InstConstructor<T extends Object, P extends Object> = FutureOr<T> Functi
 
 @pragma('vm:keep-name') // enable string lookups
 class FutureOrInst<T extends Object, P extends Object> extends Inst<T, P> {
-  static DIKey gr(Object type, Object paramsType) => DIKey.fromType(
+  static DIKey gr(Object type, Object paramsType) => DIKey.type(
         FutureOrInst,
-        subTypes: [type, paramsType],
+        [type, paramsType],
       );
 
   const FutureOrInst(super.constructor);
@@ -87,7 +87,7 @@ class SingletonWrapper<T> {
 // /// A singleton interface that also reports the type of the created objects.
 // @pragma('vm:keep-name') // enable string lookups
 // class SingletonInst<T extends Object, P extends Object> extends Inst<T, P> {
-//   static Gr gr(Object type, Object paramsType) => Gr.fromType(
+//   static DIKey gr(Object type, Object paramsType) => DIKey.fromType(
 //         baseType: SingletonInst,
 //         subTypes: [type, paramsType],
 //       );
@@ -106,7 +106,7 @@ class SingletonWrapper<T> {
 // /// A factory interface that also reports the type of the created objects.
 // @pragma('vm:keep-name') // enable string lookups
 // class FactoryInst<T extends Object, P extends Object> extends Inst<T, P> {
-//   static Gr gr(Object type, Object paramsType) => Gr.fromType(
+//   static DIKey gr(Object type, Object paramsType) => DIKey.fromType(
 //         baseType: FactoryInst,
 //         subTypes: [type, paramsType],
 //       );

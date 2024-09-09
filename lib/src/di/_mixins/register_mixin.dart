@@ -98,7 +98,7 @@ base mixin RegisterMixin on DIBase implements RegisterInterface {
     final fg = preferFocusGroup(groupKey);
     registerDependency<FutureOrInst<T, P>, P>(
       dependency: Dependency(
-        value: FutureOrInst<T, P>((_) => value),
+        FutureOrInst<T, P>((_) => value),
         metadata: DependencyMetadata(
           index: registrationCount++,
           groupKey: fg,

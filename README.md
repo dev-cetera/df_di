@@ -36,7 +36,7 @@ DI.global;
 final di = DI();
 
 // Create nested child containers, useful for scoping dependencies in modular apps.
-final scopedDi = di.child().child().child(groupKey: Gr('moduleGroup'));
+final scopedDi = di.child().child().child(groupKey: DIKey('moduleGroup'));
 ```
 
 ### Registering Dependencies:
@@ -46,7 +46,7 @@ final scopedDi = di.child().child().child(groupKey: Gr('moduleGroup'));
 di.register<int>(42);
 
 // Register an integer under a specific groupKey, useful in environments like testing.
-di.register<int>(0, groupKey: Gr.testGroup);
+di.register<int>(0, groupKey: DIKey.testGroup);
 
 // Register a Future as a dependency.
 di.register(Future.value('Hello, DI!'));
@@ -84,7 +84,7 @@ Type intType = int;
 print(di.getUsingRuntimeType(intType)); // 42
 
 // Retrieve a dependency registered under a specific groupKey.
-print(di.get<int>(groupKey: Gr('testGroup'))); // 0
+print(di.get<int>(groupKey: DIKey('testGroup'))); // 0
 
 // Handle asynchronous dependencies.
 final greeting = await di.get<String>();

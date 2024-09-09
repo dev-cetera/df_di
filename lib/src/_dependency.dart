@@ -19,15 +19,15 @@ import '/src/_internal.dart';
 /// lifecycle.
 @internal
 final class Dependency<T extends Object> {
-  Dependency({
-    required this.value,
-    required this.metadata,
+  Dependency(
+    this.value, {
+    this.metadata,
   }) {
-    this.metadata._initialType = value.runtimeType;
+    this.metadata?._initialType = value.runtimeType;
   }
 
-  Dependency._internal({
-    required this.value,
+  Dependency._internal(
+    this.value, {
     required this.metadata,
   });
 
@@ -35,15 +35,15 @@ final class Dependency<T extends Object> {
   final T value;
 
   /// The metadata associated with this [Dependency].
-  final DependencyMetadata metadata;
+  final DependencyMetadata? metadata;
 
   /// The runtime type of the [value] contained within this [Dependency].
-  DIKey get type => DIKey(value.runtimeType);
+  DIKey get typeKey => DIKey(value.runtimeType);
 
   /// Creates a new [Dependency] instance with a different value of type [R],
   /// while retaining the existing [metadata].
   Dependency<R> passNewValue<R extends Object>(R newValue) {
-    return Dependency<R>._internal(value: newValue, metadata: metadata);
+    return Dependency<R>._internal(newValue, metadata: metadata);
   }
 
   /// Returns a new [Dependency] instance where the current [value] is cast
@@ -57,7 +57,7 @@ final class Dependency<T extends Object> {
     DependencyMetadata? metadata,
   }) {
     return Dependency<T>(
-      value: value ?? this.value,
+      value ?? this.value,
       metadata: metadata ?? this.metadata,
     );
   }
@@ -84,11 +84,16 @@ final class Dependency<T extends Object> {
 @internal
 class DependencyMetadata {
   DependencyMetadata({
-    required this.index,
-    required this.groupKey,
-    required this.validator,
-    required this.onUnregister,
+    this.groupKey,
+    this.index,
+    this.validator,
+    this.onUnregister,
   });
+
+  /// The type group to which the [Dependency] belongs. This enables
+  /// dependencies of the same type to coexist in the DI container as long as
+  /// they are assigned to different groups.
+  final DIKey? groupKey;
 
   /// The type of [Dependency.value] at the time the [Dependency] was registered.
   /// This type remains unchanged even if [Dependency.value] is updated through
@@ -97,15 +102,10 @@ class DependencyMetadata {
   Type get initialType => _initialType!;
   Type? _initialType;
 
-  /// The type group to which the [Dependency] belongs. This enables
-  /// dependencies of the same type to coexist in the DI container as long as
-  /// they are assigned to different groups.
-  final DIKey groupKey;
-
   /// The index at which this dependency was registered in the dependency
   /// injection container. This helps in tracking the order of registration
   /// and ensuring proper management of dependencies.
-  final int index;
+  final int? index;
 
   /// A function that evaluates the validity of a dependency.
   final DependencyValidator? validator;
@@ -116,15 +116,15 @@ class DependencyMetadata {
   /// Creates a new instance with updated fields, preserving the values of any
   /// fields not explicitly specified.
   DependencyMetadata copyWith({
-    Type? initialType,
     DIKey? groupKey,
+    Type? initialType,
     int? index,
     DependencyValidator? validator,
     OnUnregisterCallback<Object>? onUnregister,
   }) {
     return DependencyMetadata(
-      index: index ?? this.index,
       groupKey: groupKey ?? this.groupKey,
+      index: index ?? this.index,
       validator: validator ?? this.validator,
       onUnregister: onUnregister ?? this.onUnregister,
     ).._initialType = initialType ?? _initialType;
@@ -139,8 +139,8 @@ class DependencyMetadata {
   @override
   int get hashCode {
     return Object.hashAll([
-      index,
       groupKey,
+      index,
       validator,
       onUnregister,
       _initialType,

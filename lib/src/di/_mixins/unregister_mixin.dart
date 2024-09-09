@@ -23,9 +23,9 @@ base mixin UnregisterMixin on DIBase implements UnregisterInterface {
     final foc = FutureOrController<void>();
     final dependencies =
         registry.state.values.fold(<Dependency>[], (buffer, e) => buffer..addAll(e.values));
-    dependencies.sort((a, b) => b.metadata.index.compareTo(a.metadata.index));
+    dependencies.sort((a, b) => b.metadata!.index!.compareTo(a.metadata!.index!));
     for (final dependency in dependencies) {
-      final a = dependency.metadata.onUnregister;
+      final a = dependency.metadata!.onUnregister;
       final b = onUnregister;
       foc.addAll([
         if (a != null) (_) => a(dependency.value),
@@ -59,7 +59,7 @@ base mixin UnregisterMixin on DIBase implements UnregisterInterface {
       paramsType: paramsType,
       groupKey: groupKey,
     );
-    return dep.metadata.onUnregister?.call(dep.value);
+    return dep.metadata!.onUnregister?.call(dep.value);
   }
 
   @override
