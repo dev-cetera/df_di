@@ -35,7 +35,7 @@ base mixin RegisterUsingRuntimeTypeMixin on DIBase implements RegisterUsingRunti
     required Type eventualType,
     DIKey? groupKey,
     OnUnregisterCallback<Object>? onUnregister,
-    DependencyValidator? isValid,
+    DependencyValidator? validator,
   }) {
     final fg = preferFocusGroup(groupKey);
     if (value is Future<Object>) {
@@ -51,7 +51,7 @@ base mixin RegisterUsingRuntimeTypeMixin on DIBase implements RegisterUsingRunti
             onUnregister: onUnregister != null
                 ? (e) => e.runtimeType == eventualType ? onUnregister(e) : null
                 : null,
-            isValid: isValid,
+            validator: validator,
           ),
         ),
       );
@@ -66,7 +66,7 @@ base mixin RegisterUsingRuntimeTypeMixin on DIBase implements RegisterUsingRunti
             onUnregister: onUnregister != null
                 ? (e) => e.runtimeType == eventualType ? onUnregister(e) : null
                 : null,
-            isValid: isValid,
+            validator: validator,
           ),
         ),
       );

@@ -95,7 +95,7 @@ base mixin RegisterMixin on DIBase implements RegisterInterface {
     FutureOr<T> value, {
     DIKey? groupKey,
     OnUnregisterCallback<R>? onUnregister,
-    DependencyValidator? isValid,
+    DependencyValidator? validator,
   }) {
     final fg = preferFocusGroup(groupKey);
     registerDependency<FutureOrInst<T, P>, P>(
@@ -105,7 +105,7 @@ base mixin RegisterMixin on DIBase implements RegisterInterface {
           index: registrationCount++,
           groupKey: fg,
           onUnregister: onUnregister != null ? (e) => e is R ? onUnregister(e) : null : null,
-          isValid: isValid,
+          validator: validator,
         ),
       ),
     );

@@ -16,14 +16,14 @@ import '/src/_internal.dart';
 
 /// registry for storing and managing dependencies of by ther generic type,
 /// runtime type and groupKey.
-final class Registry {
+final class DIRegistry {
   //
   //
   //
 
-  Registry({this.onChange});
+  DIRegistry({this.onChange});
 
-  /// Represents the internal state of this [Registry] instance, stored as a
+  /// Represents the internal state of this [DIRegistry] instance, stored as a
   /// map.
   final RegistryState _state = {};
 
@@ -31,14 +31,14 @@ final class Registry {
   final _OnChangeRegistry? onChange;
 
   /// A snapshot describing the current state of the dependencies.
-  RegistryState get state => Map<DIKey, Map<DIKey, Dependency>>.unmodifiable(state)
+  RegistryState get state => Map<DIKey, Map<DIKey, Dependency>>.unmodifiable(_state)
       .map((k, v) => MapEntry(k, Map.unmodifiable(v)));
 
   /// A snapshot of the current groups
-  List<DIKey> get groupKeys => state.keys.toList();
+  List<DIKey> get groupKeys => List.of(state.keys);
 
   /// Updates the [state] by setting or updating [dependency].
-  /// @protected
+  @protected
   @pragma('vm:prefer-inline')
   void setDependency<T extends Object>({
     required Dependency<T> dependency,
@@ -47,13 +47,14 @@ final class Registry {
   }
 
   /// Updates the [state] by setting or updating [dependency].
+  @protected
   void setDependencyOfType({
     required Dependency dependency,
   }) {
     final groupKey = dependency.metadata.groupKey;
     final type = dependency.type;
-    final previous = _state[groupKey]?[type];
-    if (previous != dependency) {
+    final currentDep = _state[groupKey]?[type];
+    if (currentDep != dependency) {
       (_state[groupKey] ??= {})[type] = dependency;
       onChange?.call(state);
     }
@@ -63,7 +64,6 @@ final class Registry {
   /// specified [groupKey].
   ///
   /// Returns `true` if it does and `false` if it doesn't.
-  /// @protected
   @pragma('vm:prefer-inline')
   bool containsDependency<T extends Object>({
     required DIKey groupKey,
@@ -76,7 +76,6 @@ final class Registry {
   /// subtype of [type].
   ///
   /// Returns `true` if it does and `false` if it doesn't.
-  /// @protected
   @pragma('vm:prefer-inline')
   bool containsDependencyOfType({
     required DIKey type,
@@ -85,54 +84,46 @@ final class Registry {
     return getDependencyOfTypeOrNull(type: type, groupKey: groupKey) != null;
   }
 
-  /// Gets any dependency of type [T] or subtype of [T] that is associated with
-  /// the specified [groupKey] if it exists.
+  /// Returns any dependency of type [T] or subtype of [T] that is associated
+  /// with the specified [groupKey] if it exists.
   ///
   /// Returns `null` if no matching dependency is found.
-  /// @protected
+  @protected
   Dependency? getDependencyOrNull<T extends Object>({
     required DIKey groupKey,
   }) {
     final dependency = _state[groupKey]?.values.firstWhereOrNull((e) => e.value is T);
-    final valid = dependency?.metadata.isValid?.call() == true;
-    if (valid) {
-      return dependency;
-    } else {
-      return null;
-    }
+    return dependency;
   }
 
-  /// Gets any dependency of the exact [type] that is associated with the
+  /// Returns any dependency of the exact [type] that is associated with the
   /// specified [groupKey] if it exists. Unlike [getDependencyOrNull], this
   /// will not include any subtype of [type].
   ///
   /// Returns `null` if no matching dependency is found.
-  /// @protected
+  @protected
   Dependency? getDependencyOfTypeOrNull({
     required DIKey type,
     required DIKey groupKey,
   }) {
     final dependency = _state[groupKey]?.values.firstWhereOrNull((e) => e.type == type);
-    final valid = dependency?.metadata.isValid?.call() == true;
-    if (valid) {
-      return dependency;
-    } else {
-      return null;
-    }
+    return dependency;
   }
 
-  /// Gets all dependencies within [state] of the specified [type].
-  /// @protected
-  List<Dependency> getAllDependenciesOfType({
+  /// Returns all dependencies within [state] of the specified [type].
+  @protected
+  List<Dependency> getDependenciesOfType({
     required DIKey type,
   }) {
-    return _state.entries.expand(
-      (entry) {
-        return entry.value.values.where((dependency) {
-          return dependency.type == type;
-        });
-      },
-    ).toList();
+    return List.unmodifiable(
+      _state.entries.expand(
+        (entry) {
+          return entry.value.values.where((dependency) {
+            return dependency.type == type;
+          });
+        },
+      ),
+    );
   }
 
   /// Removes any [Dependency] of [T] or subtype of [T] that is associated with
@@ -140,7 +131,7 @@ final class Registry {
   ///
   /// Returns the removed [Dependency] of [T], or `null` if it did not exist
   /// within [state].
-  /// @protected
+  @protected
   Dependency<T>? removeDependency<T extends Object>({
     required DIKey groupKey,
   }) {
@@ -161,6 +152,7 @@ final class Registry {
   ///
   /// Returns the removed [Dependency] or `null` if it did not exist within
   /// [state].
+  @protected
   Dependency? removeDependencyOfType({
     required DIKey type,
     required DIKey groupKey,
@@ -188,12 +180,13 @@ final class Registry {
 
   /// Updates the [state] by setting or replacing the [group] associated with
   /// the specified [groupKey].
+  @protected
   void setGroup({
     required DIKey groupKey,
     required DependencyGroup<Object> group,
   }) {
-    final prev = _state[groupKey];
-    final equals = const MapEquality<DIKey, Dependency>().equals(prev, group);
+    final currentGroup = _state[groupKey];
+    final equals = const MapEquality<DIKey, Dependency>().equals(currentGroup, group);
     if (!equals) {
       _state[groupKey] = group;
       onChange?.call(state);
@@ -201,18 +194,17 @@ final class Registry {
   }
 
   /// Gets the [DependencyGroup] with the specified [groupKey] from the [state]
-  /// as or `null` if none exist.
-  /// @protected
-  // DependencyGroup<Object>? getGroup({
-  //   required DIKey groupKey,
-  // }) {
-  //   final temp = _state[groupKey];
-  //   return temp != null ? DependencyGroup.unmodifiable(temp) : null;
-  // }
+  /// or `null` if none exist.
+  DependencyGroup<Object>? getGroup({
+    required DIKey groupKey,
+  }) {
+    final temp = _state[groupKey];
+    return temp != null ? DependencyGroup.unmodifiable(temp) : null;
+  }
 
   /// Removes the [DependencyGroup] with the specified [groupKey] from the
   /// [state].
-  /// @protected
+  @protected
   @pragma('vm:prefer-inline')
   void removeGroup({
     required DIKey groupKey,
@@ -222,8 +214,8 @@ final class Registry {
   }
 
   /// Clears the [state], resetting the registry and effectively restoring it
-  /// to the state of a newly created [Registry] instance.
-  void clearRegistry() {
+  /// to the state of a newly created [DIRegistry] instance.
+  void clear() {
     _state.clear();
     onChange?.call(state);
   }
@@ -231,13 +223,13 @@ final class Registry {
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-/// A typedef for a Map representing the state of a [Registry].
+/// A typedef for a Map representing the state of a [DIRegistry].
 typedef RegistryState = Map<DIKey, DependencyGroup<Object>>;
 
 /// A typedef for a Map representing a group of dependencies organized by a
 /// group key.
 typedef DependencyGroup<T extends Object> = Map<DIKey, Dependency<T>>;
 
-/// A typedef for a callback function to invoke when the [state] of a [Registry]
+/// A typedef for a callback function to invoke when the [state] of a [DIRegistry]
 /// changes.
 typedef _OnChangeRegistry = void Function(RegistryState state);

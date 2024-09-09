@@ -31,7 +31,7 @@ abstract base class DIBase
         UntilInterface {
   /// A type-safe registry that stores all dependencies.
 
-  final registry = Registry();
+  final registry = DIRegistry();
 
   /// Tracks the registration count, assigning a unique index number to each
   /// registration.

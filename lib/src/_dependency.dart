@@ -14,7 +14,7 @@ import '/src/_internal.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-/// Represents a dependency stored within [Registry]. Dependencies are wrappers
+/// Represents a dependency stored within [DIRegistry]. Dependencies are wrappers
 /// around values with additional [DependencyMetadata] to manage their
 /// lifecycle.
 @internal
@@ -50,8 +50,31 @@ final class Dependency<T extends Object> {
   /// to type [R], while retaining the existing [metadata].
   Dependency<R> cast<R extends Object>() => passNewValue(value as R);
 
+  /// Creates a new instance with updated fields, preserving the values of any
+  /// fields not explicitly specified.
+  Dependency<T> copyWith({
+    T? value,
+    DependencyMetadata? metadata,
+  }) {
+    return Dependency<T>(
+      value: value ?? this.value,
+      metadata: metadata ?? this.metadata,
+    );
+  }
+
   @override
-  String toString() => 'Dependency<$type> #${metadata.index}';
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is Dependency && hashCode == other.hashCode;
+  }
+
+  @override
+  int get hashCode {
+    return Object.hashAll([
+      value,
+      metadata,
+    ]);
+  }
 }
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
@@ -63,7 +86,7 @@ class DependencyMetadata {
   DependencyMetadata({
     required this.index,
     required this.groupKey,
-    required this.isValid,
+    required this.validator,
     required this.onUnregister,
   });
 
@@ -85,10 +108,44 @@ class DependencyMetadata {
   final int index;
 
   /// A function that evaluates the validity of a dependency.
-  final DependencyValidator? isValid;
+  final DependencyValidator? validator;
 
   /// A callback to be invoked when this dependency is unregistered.
   final OnUnregisterCallback<Object>? onUnregister;
+
+  /// Creates a new instance with updated fields, preserving the values of any
+  /// fields not explicitly specified.
+  DependencyMetadata copyWith({
+    Type? initialType,
+    DIKey? groupKey,
+    int? index,
+    DependencyValidator? validator,
+    OnUnregisterCallback<Object>? onUnregister,
+  }) {
+    return DependencyMetadata(
+      index: index ?? this.index,
+      groupKey: groupKey ?? this.groupKey,
+      validator: validator ?? this.validator,
+      onUnregister: onUnregister ?? this.onUnregister,
+    ).._initialType = initialType ?? _initialType;
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is DependencyMetadata && hashCode == other.hashCode;
+  }
+
+  @override
+  int get hashCode {
+    return Object.hashAll([
+      index,
+      groupKey,
+      validator,
+      onUnregister,
+      _initialType,
+    ]);
+  }
 }
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
@@ -99,9 +156,9 @@ class DependencyMetadata {
 /// that might be required for the [value].
 @internal
 typedef OnUnregisterCallback<T extends Object> = FutureOr<void> Function(
-  T value,
+  FutureOr<T> value,
 );
 
 /// A typedef for a function that evaluates the validity of a dependency.
 @internal
-typedef DependencyValidator = bool Function();
+typedef DependencyValidator<T extends Object> = bool Function(T value);

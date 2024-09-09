@@ -32,7 +32,7 @@ base mixin UnregisterMixin on DIBase implements UnregisterInterface {
         if (b != null) (_) => b(dependency),
       ]);
     }
-    foc.add((_) => registry.clearRegistry());
+    foc.add((_) => registry.clear());
     return foc.complete();
   }
 
