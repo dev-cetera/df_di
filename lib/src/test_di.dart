@@ -37,63 +37,32 @@ class DIContainer {
   //
 
   // must return the registration index
-  void register<T extends Object>(
-    FutureOr<T> value, {
+  void register<F extends FutureOr<Object>>(
+    F value, {
     DIKey? groupKey,
-    OnUnregisterCallback<T>? onUnregister,
-    DependencyValidator? validator,
+    DependencyValidator<F>? validator,
+    OnUnregisterCallback<F>? onUnregister,
+    bool overrideExisting = false,
   }) {
     final key = groupKey ?? focusGroup;
     final metadata = DependencyMetadata(
       index: -1, // TODO: Count index
       groupKey: key,
-      validator: validator,
-      onUnregister: onUnregister != null
-          ? (value) {
-              return onUnregister(value as FutureOr<T>);
-            }
-          : null,
+      validator: validator != null ? (e) => validator(e as F) : null,
+      onUnregister: onUnregister != null ? (e) => onUnregister(e as F) : null,
     );
-    _registerDependency<FutureOr<T>>(
-      dependency: Dependency<FutureOr<T>>(
+    _registerDependency<F>(
+      dependency: Dependency<F>(
         value: value,
         metadata: metadata,
       ),
+      overrideExisting: overrideExisting,
     );
 
     /// TODO: TEST and set traverse to false
     // If there's a completer waiting for this value that was registered via the untilOrNull() function,
     // complete it.
-    _completers?.getOrNull<_Completer<T>>()?.thenOr((e) => e.complete(value));
-  }
-
-  // //
-  // //
-  // //
-
-  void registerChild({
-    DIKey? groupKey,
-    OnUnregisterCallback<DIContainer>? onUnregister,
-    DependencyValidator? validator,
-  }) {
-    register<DIContainer>(
-      DIContainer(),
-      groupKey: groupKey,
-      validator: validator,
-      onUnregister: onUnregister,
-    );
-  }
-
-  //
-  //
-  //
-
-  FutureOr<DIContainer?> unregisterChild({
-    DIKey? groupKey,
-  }) {
-    return unregister<DIContainer>(
-      groupKey: groupKey,
-    );
+    _completers?.getOrNull<CompleterOr<F>>()?.thenOr((e) => e.complete(value));
   }
 
   //
@@ -101,32 +70,37 @@ class DIContainer {
   //
 
   // what happens when you do an await or and there are pending completers? must complete the completer if it exists or something
-  FutureOr<T> unregister<T extends Object>({
+  FutureOr<F> unregister<F extends FutureOr<Object>>({
     DIKey? groupKey,
+    bool skipOnUnregisterCallback = false,
   }) {
     final key = groupKey ?? focusGroup;
-    final removed = registry.removeDependency<T>(groupKey: key);
+    final removed = registry.removeDependency<F>(groupKey: key) ??
+        registry.removeDependency<Future<F>>(groupKey: key);
     if (removed == null) {
       throw 1;
     }
-    final value = removed.value;
+    final value = removed.value as FutureOr<F>;
+    if (skipOnUnregisterCallback) {
+      return value;
+    }
     return (removed.metadata.onUnregister?.call(value)).thenOr((_) {
       return value;
     });
   }
 
-  void _registerDependency<T extends Object>({
-    required Dependency<T> dependency,
+  void _registerDependency<F extends FutureOr<Object>>({
+    required Dependency<F> dependency,
     bool overrideExisting = false,
   }) {
     final groupKey = dependency.metadata.groupKey;
     if (overrideExisting) {
-      final existingDep = _getDependencyOrNull<T>(
+      final existingDep = _getDependencyOrNull<F>(
         groupKey: groupKey,
         traverse: false,
       );
       if (existingDep != null) {
-        // TODO: Throw error!
+        throw 'ERROR: EXISTS!!!';
       }
     }
 
@@ -134,23 +108,21 @@ class DIContainer {
       final childDependency = dependency.copyWith(
         metadata: dependency.metadata.copyWith(
           onUnregister: (child) {
-            print(child.runtimeType);
             return child.thenOr((child) {
               child as DIContainer;
               return (dependency.metadata.onUnregister?.call(child)).thenOr((_) {
-                print('CHILD UNREG!!!');
+                print('Properly unregistering child');
                 child.registry.clear();
               });
             });
           },
         ),
       );
-      print('REG CHILKD');
-      registry.setDependency<T>(
+      registry.setDependency<F>(
         dependency: childDependency,
       );
     } else {
-      registry.setDependency<T>(
+      registry.setDependency<F>(
         dependency: dependency,
       );
     }
@@ -160,30 +132,39 @@ class DIContainer {
   //
   //
 
-  FutureOr<T>? getOrNull<T extends Object>({
+  FutureOr<F>? getOrNull<F extends FutureOr<Object>>({
     DIKey? groupKey,
     bool traverse = true,
     bool registerFutureResults = true,
     bool unregisterFutures = false,
   }) {
     final key = groupKey ?? focusGroup;
-    final test = _getDependencyOrNull<T>(
+    final existingDep = _getDependencyOrNull<F>(
       groupKey: key,
       traverse: traverse,
-    )?.value;
-    switch (test) {
-      case Future<T> _:
-        return test.then((e) async {
+    );
+    final futureOrValue = existingDep?.value;
+    switch (futureOrValue) {
+      case Future<F> _:
+        return futureOrValue.then((value) {
           if (registerFutureResults) {
-            register<T>(e, groupKey: key); // on unregister
+            register<F>(
+              value,
+              groupKey: key,
+              onUnregister: existingDep?.metadata.onUnregister,
+              validator: existingDep?.metadata.validator,
+            );
           }
           if (unregisterFutures) {
-            await unregister<T>(groupKey: key); // on unregister
+            return unregister<F>(
+              groupKey: key,
+              skipOnUnregisterCallback: true,
+            );
           }
-          return e;
+          return value;
         });
-      case T _:
-        return test;
+      case F _:
+        return futureOrValue;
       default:
         return null;
     }
@@ -193,12 +174,12 @@ class DIContainer {
   //
   //
 
-  Dependency? _getDependencyOrNull<T extends Object>({
+  Dependency? _getDependencyOrNull<F extends FutureOr<Object>>({
     DIKey? groupKey,
     bool traverse = true,
   }) {
     final key = groupKey ?? focusGroup;
-    final dependency = registry.getDependencyOrNull<FutureOr<T>>(
+    final dependency = registry.getDependencyOrNull<F>(
       groupKey: key,
     );
     if (dependency != null) {
@@ -211,23 +192,22 @@ class DIContainer {
     }
     if (traverse) {
       for (final parent in _parents) {
-        final parentDep = parent._getDependencyOrNull<FutureOr<T>>(
+        final parentDep = parent._getDependencyOrNull<F>(
           groupKey: key,
         );
         if (parentDep != null) {
           return parentDep;
         }
       }
-    } else {
-      return null;
     }
+    return null;
   }
 
   //
   //
   //
 
-  FutureOr<T>? untilOrNull<T extends Object>({
+  FutureOr<F>? untilOrNull<F extends FutureOr<Object>>({
     DIKey? groupKey,
     bool traverse = true,
     bool registerFutureResults = true,
@@ -236,7 +216,7 @@ class DIContainer {
     final key = groupKey ?? focusGroup;
 
     // Check if the dependency is already registered.
-    final test = getOrNull<T>(groupKey: key);
+    final test = getOrNull<F>(groupKey: key);
     if (test != null) {
       // Return the dependency if it is already registered.
       return test;
@@ -244,22 +224,18 @@ class DIContainer {
 
     // If it's not already registered, register a Completer for the type
     // inside the untilsContainer.
-    final completer = _Completer<T>();
+    final completer = CompleterOr<F>();
     _completers ??= DIContainer();
-    _completers!.register<_Completer<T>>(completer);
+    _completers!.register<CompleterOr<F>>(completer);
     // Wait for the register function to complete the Completer, then unregister
     // the completer before returning the value...
     return completer.futureOr.thenOr((value) {
-      return _completers!.unregister<_Completer<T>>().thenOr((_) {
+      return _completers!.unregister<CompleterOr<F>>().thenOr((_) {
         return value;
       });
     });
   }
 }
-
-// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-
-typedef _Completer<T> = CompleterOr<FutureOr<T>>;
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 

@@ -84,11 +84,9 @@ base mixin RegisterMixin on DIBase implements RegisterInterface {
     DIKey? groupKey,
     OnUnregisterCallback<T>? onUnregister,
   }) {
-    register<SingletonWrapper<T>>(
-      SingletonWrapper<T>(constructor),
-      groupKey: preferFocusGroup(groupKey),
-      onUnregister: (e) => e.instance.thenOr((e) => onUnregister?.call(e)),
-    );
+    register<SingletonWrapper<T>>(SingletonWrapper<T>(constructor),
+        groupKey: preferFocusGroup(groupKey),
+        onUnregister: (e) => e.thenOr((i) => i.instance.thenOr((e) => onUnregister?.call(e))));
   }
 
   void _register<T extends Object, P extends Object, R extends Object>(

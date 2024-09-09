@@ -10,7 +10,7 @@ void main() async {
 
   di.register(child);
   print(di.registry.state);
-  di.unregister<Future<DIContainer>>();
+  di.unregister<DIContainer>();
 
   // Future.delayed(const Duration(seconds: 3), () {
   //   di.register<int>(Future.value(123));

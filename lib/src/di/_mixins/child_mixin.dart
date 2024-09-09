@@ -28,7 +28,7 @@ base mixin ChildMixin on DIBase implements ChildInterface {
         parent: this,
       ),
       groupKey: preferFocusGroup(groupKey),
-      onUnregister: (e) => e.unregisterAll(),
+      onUnregister: (e) => e.thenOr((i) => i.unregisterAll()),
     );
   }
 
