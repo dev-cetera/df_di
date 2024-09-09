@@ -18,6 +18,6 @@ import '/src/_internal.dart';
 final class ServiceNotYetInitializedException extends DFDIPackageException {
   ServiceNotYetInitializedException()
       : super(
-          'Cannot dispose a DisposableService that has not yet been initialized.',
+          condition: 'Cannot dispose a DisposableService that has not yet been initialized.',
         );
 }

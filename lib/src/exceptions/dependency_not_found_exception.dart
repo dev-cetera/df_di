@@ -19,5 +19,7 @@ final class DependencyNotFoundException extends DFDIPackageException {
   DependencyNotFoundException({
     required Object type,
     required DIKey groupKey,
-  }) : super('Dependency of type "$type" in groupKey "$groupKey" not found.');
+  }) : super(
+          condition: 'Dependency of type "$type" in groupKey "$groupKey" not found.',
+        );
 }

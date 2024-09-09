@@ -12,6 +12,8 @@
 
 import '/src/_internal.dart';
 
+const _protected = protected;
+
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 /// registry for storing and managing dependencies of by ther generic type,
@@ -38,7 +40,7 @@ final class DIRegistry {
   List<DIKey> get groupKeys => List.of(state.keys);
 
   /// Updates the [state] by setting or updating [dependency].
-  @protected
+  @_protected
   @pragma('vm:prefer-inline')
   void setDependency<T extends Object>({
     required Dependency<T> dependency,
@@ -47,7 +49,7 @@ final class DIRegistry {
   }
 
   /// Updates the [state] by setting or updating [dependency].
-  @protected
+  @_protected
   void setDependencyOfType({
     required Dependency dependency,
   }) {
@@ -88,7 +90,7 @@ final class DIRegistry {
   /// with the specified [groupKey] if it exists.
   ///
   /// Returns `null` if no matching dependency is found.
-  @protected
+  @_protected
   Dependency? getDependencyOrNull<T extends Object>({
     required DIKey groupKey,
   }) {
@@ -101,7 +103,7 @@ final class DIRegistry {
   /// will not include any subtype of [type].
   ///
   /// Returns `null` if no matching dependency is found.
-  @protected
+  @_protected
   Dependency? getDependencyOfTypeOrNull({
     required DIKey type,
     required DIKey groupKey,
@@ -111,7 +113,7 @@ final class DIRegistry {
   }
 
   /// Returns all dependencies within [state] of the specified [type].
-  @protected
+  @_protected
   List<Dependency> getDependenciesOfType({
     required DIKey type,
   }) {
@@ -131,7 +133,7 @@ final class DIRegistry {
   ///
   /// Returns the removed [Dependency] of [T], or `null` if it did not exist
   /// within [state].
-  @protected
+  @_protected
   Dependency<T>? removeDependency<T extends Object>({
     required DIKey groupKey,
   }) {
@@ -152,7 +154,7 @@ final class DIRegistry {
   ///
   /// Returns the removed [Dependency] or `null` if it did not exist within
   /// [state].
-  @protected
+  @_protected
   Dependency? removeDependencyOfType({
     required DIKey type,
     required DIKey groupKey,
@@ -180,7 +182,7 @@ final class DIRegistry {
 
   /// Updates the [state] by setting or replacing the [group] associated with
   /// the specified [groupKey].
-  @protected
+  @_protected
   void setGroup({
     required DIKey groupKey,
     required DependencyGroup<Object> group,
@@ -204,7 +206,7 @@ final class DIRegistry {
 
   /// Removes the [DependencyGroup] with the specified [groupKey] from the
   /// [state].
-  @protected
+  @_protected
   @pragma('vm:prefer-inline')
   void removeGroup({
     required DIKey groupKey,

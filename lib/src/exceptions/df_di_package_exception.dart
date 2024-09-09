@@ -12,13 +12,32 @@
 
 /// An exception only thrown by the `df_di` package.
 abstract base class DFDIPackageException implements Exception {
-  /// The error [message] to display for this exception.
-  final String message;
+  final String condition;
+  final String reason;
+  final List<String> options;
 
-  DFDIPackageException(this.message);
+  DFDIPackageException({
+    required this.condition,
+    this.reason = '',
+    this.options = const [],
+  });
 
   @override
   String toString() {
-    return '[$runtimeType] $message';
+    final buffer = StringBuffer();
+    buffer.writeln('$runtimeType ($DFDIPackageException):');
+    buffer.writeln('Condition: $condition');
+    if (reason.isNotEmpty) {
+      buffer.writeln('Reason: $reason');
+    }
+
+    if (options.isNotEmpty) {
+      buffer.writeln('Consider trying the following option(s):');
+      for (final option in options) {
+        buffer.writeln('- $option');
+      }
+    }
+
+    return buffer.toString();
   }
 }

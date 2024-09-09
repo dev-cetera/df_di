@@ -19,5 +19,7 @@ final class DependencyAlreadyRegisteredException extends DFDIPackageException {
   DependencyAlreadyRegisteredException({
     required Object type,
     required DIKey groupKey,
-  }) : super('Dependency of type "$type" in groupKey "$groupKey" is already registered.');
+  }) : super(
+          condition: 'Dependency of type "$type" in groupKey "$groupKey" is already registered.',
+        );
 }

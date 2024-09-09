@@ -18,6 +18,6 @@ import '/src/_internal.dart';
 final class ServiceAlreadyInitializedException extends DFDIPackageException {
   ServiceAlreadyInitializedException()
       : super(
-          'Cannot initialize a DisposableService that has already been initialized.',
+          condition: 'Cannot initialize a DisposableService that has already been initialized.',
         );
 }
