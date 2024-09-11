@@ -35,37 +35,41 @@ class DIContainer {
   DIKey focusGroup = DIKey.defaultGroup;
   DIContainer? _completers;
 
+  int _registrationCount = 0;
+  int get registrationCount => _registrationCount;
+
   //
   //
   //
 
-  // must return the registration index
   FutureOr<T> register<T extends Object>(
     FutureOr<T> value, {
     DIKey? groupKey,
     DependencyValidator<FutureOr<T>>? validator,
     OnUnregisterCallback<FutureOr<T>>? onUnregister,
-    bool overrideExisting = false,
+    bool checkExisting = true,
   }) {
     final key = groupKey ?? focusGroup;
     final metadata = DependencyMetadata(
-      index: -1, // TODO: Count index
+      index: _registrationCount++,
       groupKey: key,
       validator: validator != null ? (e) => validator(e as FutureOr<T>) : null,
       onUnregister: onUnregister != null ? (e) => onUnregister(e as FutureOr<T>) : null,
     );
 
-    /// TODO: TEST and set traverse to false
-    // If there's a completer waiting for this value that was registered via the untilOrNull() function,
-    // complete it.
-    _completers?.getOrNull<CompleterOr<FutureOr<T>>>()?.thenOr((e) => e.complete(value));
+    void complete(FutureOr<T> value) {
+      final existingDep = registry.getDependencyOrNull<CompleterOr<FutureOr<T>>>();
+      existingDep?.value.complete(value);
+    }
+
+    //complete(value);
 
     final registeredDep = _registerDependency<FutureOr<T>>(
       dependency: Dependency<FutureOr<T>>(
         value,
         metadata: metadata,
       ),
-      overrideExisting: overrideExisting,
+      checkExisting: checkExisting,
     );
 
     return registeredDep.thenOr((e) => e.value);
@@ -83,20 +87,20 @@ class DIContainer {
   /// cleared upon unregistration.
   ///
   /// Throws a [DependencyAlreadyRegisteredException] if a dependency of the
-  /// same type and group is already registered and [overrideExisting] is set
-  /// to `false`. If [overrideExisting] is set to `true`, any existing
-  /// dependency of the same type and group is replaced.
+  /// same type and group is already registered and [checkExisting] is set
+  /// to `true`. If [checkExisting] is set to `false`, any existing dependency
+  /// of the same type and group is replaced.
   ///
   /// Returns the registered [Dependency] object as a [FutureOr] that
   /// completes with the [dependency] object once it is registered.
   FutureOr<Dependency<T>> _registerDependency<T extends FutureOr<Object>>({
     required Dependency<T> dependency,
-    bool overrideExisting = false,
+    bool checkExisting = false,
   }) {
-    // Throw an exception if the dependency is already registered and
-    // [overrideExisting] is set to false.
+    // If [checkExisting] is true, throw an exception if the dependency is
+    //already registered.
     final groupKey = dependency.metadata?.groupKey ?? focusGroup;
-    if (!overrideExisting) {
+    if (checkExisting) {
       final existingDep = _getDependencyOrNull<T>(
         groupKey: groupKey,
         traverse: false,
@@ -162,12 +166,14 @@ class DIContainer {
     bool skipOnUnregisterCallback = false,
   }) {
     final key = groupKey ?? focusGroup;
-    final removed = registry.removeDependency<T>(groupKey: key) ??
-        registry.removeDependency<Future<T>>(groupKey: key);
+    final removed = (registry.removeDependency<T>(groupKey: key) ??
+        registry.removeDependency<Future<T>>(groupKey: key)) as Dependency<FutureOr<T>>?;
     if (removed == null) {
       throw 1;
     }
-    final value = removed.value as FutureOr<T>;
+
+    final value = removed.value;
+
     if (skipOnUnregisterCallback) {
       return value;
     }
@@ -187,7 +193,7 @@ class DIContainer {
     bool unregisterFutures = false,
   }) {
     final key = groupKey ?? focusGroup;
-    final existingDep = _getDependencyOrNull<FutureOr<T>>(
+    final existingDep = _getDependencyOrNull<T>(
       groupKey: key,
       traverse: traverse,
     );
@@ -197,11 +203,12 @@ class DIContainer {
         return futureValue.then(
           (value) {
             return (registerFutureResults
-                    ? register<T>(
-                        value,
-                        groupKey: key,
-                        onUnregister: existingDep?.metadata?.onUnregister,
-                        validator: existingDep?.metadata?.validator,
+                    ? _registerDependency<T>(
+                        dependency: Dependency<T>(
+                          value,
+                          metadata: existingDep!.metadata,
+                        ),
+                        checkExisting: false,
                       )
                     : Object())
                 .thenOr(
@@ -232,12 +239,9 @@ class DIContainer {
     bool traverse = true,
   }) {
     final key = groupKey ?? focusGroup;
-    final dependency = registry.getDependencyOrNull<T>(
-          groupKey: key,
-        ) ??
-        registry.getDependencyOrNull<Future<T>>(
-          groupKey: key,
-        );
+    final dependency = registry.getDependencyOrNull<FutureOr<T>>(
+      groupKey: key,
+    );
     if (dependency != null) {
       final valid = dependency.metadata?.validator?.call(dependency) ?? true;
       if (valid) {
@@ -281,17 +285,19 @@ class DIContainer {
       return test;
     }
 
+    _completers ??= DIContainer();
+
     // If it's not already registered, register a Completer for the type
     // inside the untilsContainer.
     final completer = CompleterOr<FutureOr<T>>();
-    _completers ??= DIContainer();
-    _completers!.register<CompleterOr<FutureOr<T>>>(completer);
+
+    _completers!.registry.setDependency(Dependency(completer));
+
     // Wait for the register function to complete the Completer, then unregister
     // the completer before returning the value...
     return completer.futureOr.thenOr((value) {
-      return _completers!.unregister<CompleterOr<FutureOr<T>>>().thenOr((_) {
-        return value;
-      });
+      _completers!.registry.removeDependency<CompleterOr<FutureOr<T>>>();
+      return value;
     });
   }
 }

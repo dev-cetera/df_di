@@ -96,10 +96,10 @@ final class DIRegistry {
   ///
   /// Returns `null` if no matching dependency is found.
   @_protected
-  Dependency? getDependencyOrNull<T extends Object>({
+  Dependency<T>? getDependencyOrNull<T extends Object>({
     DIKey? groupKey,
   }) {
-    final dependency = _state[groupKey]?.values.firstWhereOrNull((e) => e.value is T);
+    final dependency = _state[groupKey]?.values.firstWhereOrNull((e) => e.value is T)?.cast<T>();
     return dependency;
   }
 
