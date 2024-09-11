@@ -36,8 +36,12 @@ final class DIRegistry {
   RegistryState get state =>
       RegistryState.unmodifiable(_state).map((k, v) => MapEntry(k, Map.unmodifiable(v)));
 
-  /// A snapshot of the current groups
-  List<DIKey?> get groupKeys => List.of(state.keys);
+  /// A snapshot of the current dependencies within [state].
+  List<Dependency> get dependencies =>
+      List.unmodifiable(_state.entries.expand((e) => e.value.values));
+
+  /// A snapshot of the current group keys within [state].
+  List<DIKey?> get groupKeys => List.unmodifiable(_state.keys);
 
   /// Updates the [state] by setting or updating [dependency].
   @_protected
@@ -47,7 +51,7 @@ final class DIRegistry {
     final currentDep = _state[groupKey]?[typeKey];
     if (currentDep != dependency) {
       (_state[groupKey] ??= {})[typeKey] = dependency;
-      onChange?.call(state);
+      onChange?.call();
     }
   }
 
@@ -96,11 +100,11 @@ final class DIRegistry {
   ///
   /// Returns `null` if no matching dependency is found.
   @_protected
+  @pragma('vm:prefer-inline')
   Dependency<T>? getDependencyOrNull<T extends Object>({
     DIKey? groupKey,
   }) {
-    final dependency = _state[groupKey]?.values.firstWhereOrNull((e) => e.value is T)?.cast<T>();
-    return dependency;
+    return _state[groupKey]?.values.firstWhereOrNull((e) => e.value is T)?.cast<T>();
   }
 
   /// Returns any dependency with the exact [runtimeType] that is associated
@@ -126,27 +130,12 @@ final class DIRegistry {
   ///
   /// Returns `null` if no matching dependency is found.
   @_protected
+  @pragma('vm:prefer-inline')
   Dependency? getDependencyWithKeyOrNull(
     DIKey typeKey, {
     DIKey? groupKey,
   }) {
-    final dependency = _state[groupKey]?.values.firstWhereOrNull((e) => e.typeKey == typeKey);
-    return dependency;
-  }
-
-
-  /// Returns all dependencies within [state] that passes [test].
-  @_protected
-  List<Dependency> getDependenciesWhere(bool Function(Dependency dependency) test) {
-    return List.unmodifiable(
-      _state.entries.expand(
-        (entry) {
-          return entry.value.values.where((dependency) {
-            return test(dependency);
-          });
-        },
-      ),
-    );
+    return _state[groupKey]?.values.firstWhereOrNull((e) => e.typeKey == typeKey);
   }
 
   /// Removes any [Dependency] of [T] or subtype of [T] that is associated with
@@ -212,7 +201,7 @@ final class DIRegistry {
             groupKey: groupKey,
           );
         }
-        onChange?.call(state);
+        onChange?.call();
         return removed;
       }
     }
@@ -230,17 +219,17 @@ final class DIRegistry {
     final equals = const MapEquality<DIKey, Dependency>().equals(currentGroup, group);
     if (!equals) {
       _state[groupKey] = group;
-      onChange?.call(state);
+      onChange?.call();
     }
   }
 
   /// Gets the [DependencyGroup] with the specified [groupKey] from the [state]
   /// or `null` if none exist.
-  DependencyGroup<Object>? getGroup({
+  @pragma('vm:prefer-inline')
+  DependencyGroup<Object> getGroup({
     DIKey? groupKey,
   }) {
-    final temp = _state[groupKey];
-    return temp != null ? DependencyGroup.unmodifiable(temp) : null;
+    return DependencyGroup.unmodifiable(_state[groupKey] ?? {});
   }
 
   /// Removes the [DependencyGroup] with the specified [groupKey] from the
@@ -251,14 +240,15 @@ final class DIRegistry {
     DIKey? groupKey,
   }) {
     _state.remove(groupKey);
-    onChange?.call(state);
+    onChange?.call();
   }
 
   /// Clears the [state], resetting the registry and effectively restoring it
   /// to the state of a newly created [DIRegistry] instance.
+  @pragma('vm:prefer-inline')
   void clear() {
     _state.clear();
-    onChange?.call(state);
+    onChange?.call();
   }
 }
 
@@ -273,4 +263,4 @@ typedef DependencyGroup<T extends Object> = Map<DIKey, Dependency<T>>;
 
 /// A typedef for a callback function to invoke when the [state] of a [DIRegistry]
 /// changes.
-typedef _OnChangeRegistry = void Function(RegistryState state);
+typedef _OnChangeRegistry = void Function();

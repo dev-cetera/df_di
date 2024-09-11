@@ -44,7 +44,7 @@ abstract base class Service<TParams extends Object?> {
     if (_initialized.isCompleted) {
       throw ServiceAlreadyInitializedException();
     }
-    _initialized.complete();
+    _initialized.complete(null);
     return onInitService(params);
   }
 

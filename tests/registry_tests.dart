@@ -25,8 +25,8 @@ void main() {
         '- Testing groups state and clear',
         () {
           final registry = DIRegistry(
-            onChange: (state) {
-              print('CHANGED: ${state.length}');
+            onChange: () {
+              print('CHANGED!!!');
             },
           );
           registry.setDependency(Dependency(1));
@@ -99,15 +99,15 @@ void main() {
             dependency,
           );
           expect(
-            registry.getDependenciesWhere((test) => test.typeKey == DIKey(int)).firstOrNull,
+            registry.dependencies.where((test) => test.typeKey == DIKey(int)).firstOrNull,
             dependency,
           );
           expect(
-            registry.getDependenciesWhere((test) => test.value.runtimeType == int).firstOrNull,
+            registry.dependencies.where((test) => test.value.runtimeType == int).firstOrNull,
             dependency,
           );
           expect(
-            registry.getDependenciesWhere((test) => test.value is int).firstOrNull,
+            registry.dependencies.where((test) => test.value is int).firstOrNull,
             dependency,
           );
           expect(
@@ -147,19 +147,19 @@ void main() {
             dependency,
           );
           expect(
-            registry
-                .getDependenciesWhere((test) => test.typeKey == DIKey.type(Future, [int]))
+            registry.dependencies
+                .where((test) => test.typeKey == DIKey.type(Future, [int]))
                 .firstOrNull,
             dependency,
           );
           expect(
-            registry.getDependenciesWhere((test) {
+            registry.dependencies.where((test) {
               return test.value.runtimeType.toString() == (Future<int>).toString();
             }).firstOrNull,
             dependency,
           );
           expect(
-            registry.getDependenciesWhere((test) => test.value is Future<int>).firstOrNull,
+            registry.dependencies.where((test) => test.value is Future<int>).firstOrNull,
             dependency,
           );
           expect(

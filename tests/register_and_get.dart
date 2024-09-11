@@ -150,12 +150,14 @@ void main() {
       test(
         '- Do not unregister Futures',
         () async {
-          final di = DIContainer();
+          final di = DIContainer(
+            unregisterRedundantFutures: false,
+          );
           final value = Future.value(1);
           di.register(value);
           expect(
             1,
-            di.registry.getGroup(groupKey: di.focusGroup)?.length,
+            di.registry.getGroup(groupKey: di.focusGroup).length,
           );
           final valueGot = await di.getOrNull<int>();
           expect(
@@ -164,7 +166,7 @@ void main() {
           );
           expect(
             2,
-            di.registry.getGroup(groupKey: di.focusGroup)?.length,
+            di.registry.getGroup(groupKey: di.focusGroup).length,
           );
         },
       );
@@ -177,16 +179,16 @@ void main() {
           di.register(value);
           expect(
             1,
-            di.registry.getGroup(groupKey: di.focusGroup)?.length,
+            di.registry.getGroup(groupKey: di.focusGroup).length,
           );
-          final valueGot = await di.getOrNull<int>(unregisterRedundantFutures: true);
+          final valueGot = await di.getOrNull<int>();
           expect(
             1,
             valueGot,
           );
           expect(
             1,
-            di.registry.getGroup(groupKey: di.focusGroup)?.length,
+            di.registry.getGroup(groupKey: di.focusGroup).length,
           );
         },
       );
@@ -201,7 +203,9 @@ void main() {
       test(
         '- 1',
         () async {
-          final di = DIContainer();
+          final di = DIContainer(
+            unregisterRedundantFutures: false,
+          );
           final a = await di.register<int>(Future.value(1));
           final b = await di.register<double>(Future.value(2.0));
           expect(
@@ -214,7 +218,7 @@ void main() {
           );
           expect(
             2,
-            di.registry.state[di.focusGroup]?.length,
+            di.registry.getGroup(groupKey: di.focusGroup).length,
           );
           expect(
             1,
@@ -226,29 +230,16 @@ void main() {
           );
           expect(
             4,
-            di.registry.state[di.focusGroup]?.length,
+            di.registry.getGroup(groupKey: di.focusGroup).length,
           );
           di.unregister<int>();
           di.unregister<double>();
           expect(
-            null,
-            di.registry.state[di.focusGroup]?.length,
+            0,
+            di.registry.getGroup(groupKey: di.focusGroup).length,
           );
         },
       );
-
-      // test(
-      //   '- 2',
-      //   () async {
-      //     final di = DIContainer();
-      //     final a = Future<int>.delayed(const Duration(milliseconds: 100), () => 1);
-      //     final b = di.register(a);
-      //     expect(
-      //       await b,
-      //       1,
-      //     );
-      //   },
-      // );
     },
   );
 }

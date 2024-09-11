@@ -21,7 +21,16 @@ class DIContainer {
   //
   //
 
-  DIContainer();
+  DIContainer({
+    this.unregisterRedundantFutures = true,
+    this.registerFutureResults = true,
+  });
+
+  // Whether or not to remove Futures if they are no longer needed.
+  final bool unregisterRedundantFutures;
+
+  // Whether or not to register the results of Futures once they complete.
+  final bool registerFutureResults;
 
   //
   //
@@ -30,11 +39,8 @@ class DIContainer {
   final registry = DIRegistry();
   final _parents = <DIContainer>{};
 
-  List<DIContainer> get children {
-    return List.unmodifiable(
-      registry.getDependenciesWhere((e) => e.value is DIContainer),
-    );
-  }
+  List<DIContainer> get children =>
+      List.unmodifiable(registry.dependencies.where((e) => e.value is DIContainer));
 
   DIKey focusGroup = DIKey.defaultGroup;
   late DIContainer? _completers = this;
@@ -51,7 +57,6 @@ class DIContainer {
     DIKey? groupKey,
     DependencyValidator<FutureOr<T>>? validator,
     OnUnregisterCallback<FutureOr<T>>? onUnregister,
-    bool checkExisting = true,
   }) {
     final key = groupKey ?? focusGroup;
     final metadata = DependencyMetadata(
@@ -68,7 +73,7 @@ class DIContainer {
         value,
         metadata: metadata,
       ),
-      checkExisting: checkExisting,
+      checkExisting: true,
     );
 
     return registeredDep.thenOr((e) => e.value);
@@ -163,23 +168,23 @@ class DIContainer {
   FutureOr<T> unregister<T extends Object>({
     DIKey? groupKey,
     bool skipOnUnregisterCallback = false,
-    bool unregisterCorrespondingFuture = true,
   }) {
     final key = groupKey ?? focusGroup;
     final removed = [
       registry.removeDependency<T>(groupKey: key),
-      if (unregisterCorrespondingFuture) registry.removeDependency<Future<T>>(groupKey: key),
-    ].firstWhereOrNull((e) => e != null) as Dependency<FutureOr<T>>?;
+      registry.removeDependency<Future<T>>(groupKey: key),
+    ].nonNulls.firstOrNull;
     if (removed == null) {
       throw 1;
     }
 
-    final value = removed.value;
+    final value = removed.value as FutureOr<T>;
 
     if (skipOnUnregisterCallback) {
       return value;
     }
     return (removed.metadata?.onUnregister?.call(value)).thenOr((_) {
+      //!!!
       return value;
     });
   }
@@ -191,8 +196,6 @@ class DIContainer {
   FutureOr<T>? getOrNull<T extends Object>({
     DIKey? groupKey,
     bool traverse = true,
-    bool registerFutureResults = true,
-    bool unregisterRedundantFutures = false,
   }) {
     final key = groupKey ?? focusGroup;
     final existingDep = _getDependencyOrNull<T>(
@@ -204,22 +207,41 @@ class DIContainer {
       case Future<T> futureValue:
         return futureValue.then(
           (value) {
-            return (registerFutureResults
-                    ? _registerDependency<T>(
-                        dependency: Dependency<T>(
-                          value,
-                          metadata: existingDep!.metadata,
-                        ),
-                        checkExisting: false,
-                      ).thenOr((_) => value)
-                    : value)
-                .thenOr(
-              (value) {
-                return (unregisterRedundantFutures
-                    ? registry.removeDependency<Future<T>>(groupKey: key).thenOr((_) => value)
-                    : value);
-              },
-            );
+            return FutureOrController<Object?>([
+              if (registerFutureResults) ...[
+                (_) {
+                  return _registerDependency<T>(
+                    dependency: Dependency<T>(
+                      value,
+                      metadata: existingDep!.metadata,
+                    ),
+                    checkExisting: false,
+                  );
+                },
+                if (unregisterRedundantFutures) ...[
+                  (_) {
+                    return registry.removeDependency<Future<T>>(groupKey: key);
+                  },
+                ],
+              ],
+            ]).completeWith((_) => value);
+
+            // return (_registerFutureResults
+            //         ? _registerDependency<T>(
+            //             dependency: Dependency<T>(
+            //               value,
+            //               metadata: existingDep!.metadata,
+            //             ),
+            //             checkExisting: false,
+            //           ).thenOr((_) => value)
+            //         : value)
+            //     .thenOr(
+            //   (value) {
+            //     return (_registerFutureResults && _unregisterRedundantFutures
+            //         ? registry.removeDependency<Future<T>>(groupKey: key).thenOr((_) => value)
+            //         : value);
+            //   },
+            // );
           },
         );
       case T _:
@@ -275,8 +297,6 @@ class DIContainer {
   FutureOr<T>? untilOrNull<T extends Object>({
     DIKey? groupKey,
     bool traverse = true,
-    bool registerFutureResults = true,
-    bool unregisterFutures = false,
   }) {
     final key = groupKey ?? focusGroup;
 
