@@ -27,13 +27,17 @@ class DIContainer {
   //
   //
 
-  /// forEachParent, forEachChild, forEachDependency, forEachGroup, forEachGroupDependency...
-
   final registry = DIRegistry();
-  final _parents =
-      <DIContainer>{}; // typically we only have 1 parent, addParent(DIContainer), removeParent(DIContainer)
+  final _parents = <DIContainer>{};
+
+  List<DIContainer> get children {
+    return List.unmodifiable(
+      registry.getDependenciesWhere((e) => e.value is DIContainer),
+    );
+  }
+
   DIKey focusGroup = DIKey.defaultGroup;
-  DIContainer? _completers;
+  late DIContainer? _completers = this;
 
   int _registrationCount = 0;
   int get registrationCount => _registrationCount;

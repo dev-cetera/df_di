@@ -134,14 +134,15 @@ final class DIRegistry {
     return dependency;
   }
 
-  /// Returns all dependencies within [state] with the specified [typeKey].
+
+  /// Returns all dependencies within [state] that passes [test].
   @_protected
-  List<Dependency> getDependenciesWithKey(DIKey typeKey) {
+  List<Dependency> getDependenciesWhere(bool Function(Dependency dependency) test) {
     return List.unmodifiable(
       _state.entries.expand(
         (entry) {
           return entry.value.values.where((dependency) {
-            return dependency.typeKey == typeKey;
+            return test(dependency);
           });
         },
       ),

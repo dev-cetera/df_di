@@ -99,7 +99,15 @@ void main() {
             dependency,
           );
           expect(
-            registry.getDependenciesWithKey(DIKey(int)).first,
+            registry.getDependenciesWhere((test) => test.typeKey == DIKey(int)).firstOrNull,
+            dependency,
+          );
+          expect(
+            registry.getDependenciesWhere((test) => test.value.runtimeType == int).firstOrNull,
+            dependency,
+          );
+          expect(
+            registry.getDependenciesWhere((test) => test.value is int).firstOrNull,
             dependency,
           );
           expect(
@@ -139,7 +147,19 @@ void main() {
             dependency,
           );
           expect(
-            registry.getDependenciesWithKey(DIKey(Future<int>)).first,
+            registry
+                .getDependenciesWhere((test) => test.typeKey == DIKey.type(Future, [int]))
+                .firstOrNull,
+            dependency,
+          );
+          expect(
+            registry.getDependenciesWhere((test) {
+              return test.value.runtimeType.toString() == (Future<int>).toString();
+            }).firstOrNull,
+            dependency,
+          );
+          expect(
+            registry.getDependenciesWhere((test) => test.value is Future<int>).firstOrNull,
             dependency,
           );
           expect(
