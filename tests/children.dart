@@ -35,9 +35,27 @@ void main() {
         },
       );
       test(
-        '- Testing traversal',
+        '- Testing singletons',
         () async {
           final di = DIContainer();
+          di.registerConstructor<int>(() => 1);
+          expect(
+            1,
+            di.getSingletonOrNull<int>(),
+          );
+        },
+      );
+      test(
+        '- Testing singletons',
+        () async {
+          final c1 = DIContainer();
+          c1.register<int>(1);
+          final c4 = c1.child().child().child().child();
+          expect(
+            1,
+            c4.getOrNull<int>(),
+          );
+          c1.unregisterConstructor<DIContainer>();
         },
       );
     },

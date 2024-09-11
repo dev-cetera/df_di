@@ -37,8 +37,15 @@ final class DIRegistry {
       RegistryState.unmodifiable(_state).map((k, v) => MapEntry(k, Map.unmodifiable(v)));
 
   /// A snapshot of the current dependencies within [state].
-  List<Dependency> get dependencies =>
-      List.unmodifiable(_state.entries.expand((e) => e.value.values));
+  List<Dependency> get dependencies => List.unmodifiable(
+        _state.entries.expand((e) => e.value.values).toList()
+          // Sort by descending indexes, i.e. largest index is first element.
+          ..sort((d1, d2) {
+            final index1 = d1.metadata?.index ?? -1;
+            final index2 = d2.metadata?.index ?? -1;
+            return index2.compareTo(index1);
+          }),
+      );
 
   /// A snapshot of the current group keys within [state].
   List<DIKey?> get groupKeys => List.unmodifiable(_state.keys);

@@ -85,8 +85,24 @@ void main() {
             },
           );
           di.getOrNull<int>();
-
           di.unregister<int>();
+        },
+      );
+      test(
+        '- Unregistering all',
+        () async {
+          final di = DIContainer(
+            unregisterRedundantFutures: false,
+          );
+          di.register<int>(1, groupKey: DIKey(1));
+          di.register<int>(2, groupKey: DIKey(2));
+          di.register<int>(3, groupKey: DIKey(3));
+          di.register<int>(4, groupKey: DIKey(4));
+          final values = di.unregisterAll().thenOr((e) => e.map((e) => e.value).toList());
+          expect(
+            '[4, 3, 2, 1]',
+            values.toString(),
+          );
         },
       );
     },

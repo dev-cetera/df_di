@@ -128,13 +128,13 @@ class DIContainer {
       }
     }
 
-    // If [dependency] is another [DIContainer], register it as a child via
-    // [_setChildDependency].
-    if (dependency is Dependency<FutureOr<DIContainer>>) {
-      return _setChildDependency(dependency as Dependency<FutureOr<DIContainer>>).thenOr((_) {
-        return dependency;
-      });
-    }
+    // // If [dependency] is another [DIContainer], register it as a child via
+    // // [_setChildDependency].
+    // if (dependency is Dependency<FutureOr<DIContainer>>) {
+    //   return _setChildDependency(dependency as Dependency<FutureOr<DIContainer>>).thenOr((_) {
+    //     return dependency;
+    //   });
+    // }
 
     // If [dependency] is not a [DIContainer], register it as a normal
     // dependency.
@@ -149,27 +149,27 @@ class DIContainer {
   ///
   /// Returns a [FutureOr] that completes when [childDependency] is fully
   /// registered in [registry].
-  FutureOr<void> _setChildDependency(
-    Dependency<FutureOr<DIContainer>> childDependency,
-  ) {
-    final value = childDependency.value;
-    return value.thenOr(
-      (child) {
-        child._parents.add(this);
-        final dependency = childDependency.copyWith(
-          metadata: (childDependency.metadata ?? DependencyMetadata()).copyWith(
-            onUnregister: (_) {
-              return (childDependency.metadata?.onUnregister?.call(child)).thenOr((_) {
-                print('[_setChildDependency] Clearing child registry');
-                child.registry.clear();
-              });
-            },
-          ),
-        );
-        registry.setDependency<FutureOr<DIContainer>>(dependency);
-      },
-    );
-  }
+  // FutureOr<void> _setChildDependency(
+  //   Dependency<FutureOr<DIContainer>> childDependency,
+  // ) {
+  //   final value = childDependency.value;
+  //   return value.thenOr(
+  //     (child) {
+  //       child._parents.add(this);
+  //       final dependency = childDependency.copyWith(
+  //         metadata: (childDependency.metadata ?? DependencyMetadata()).copyWith(
+  //           onUnregister: (_) {
+  //             return (childDependency.metadata?.onUnregister?.call(child)).thenOr((_) {
+  //               print('[_setChildDependency] Clearing child registry');
+  //               child.registry.clear();
+  //             });
+  //           },
+  //         ),
+  //       );
+  //       registry.setDependency<FutureOr<DIContainer>>(dependency);
+  //     },
+  //   );
+  // }
 
   /// Unregisters the dependency of type [T] associated with the specified
   /// [groupKey] from the [registry], if it exists.
@@ -320,59 +320,99 @@ class DIContainer {
     });
   }
 
-  void registerSingleton<T>(
-    FutureOr<T> Function() constructor,
+  FutureOr<Constructor<T>> registerConstructor<T>(
+    FutureOr<T> Function() constructor, {
     DIKey<Object>? groupKey,
     bool Function(FutureOr<T>)? validator,
     FutureOr<void> Function(FutureOr<T>)? onUnregister,
-  ) {
-    register<SingletonWrapper<T>>(
-      SingletonWrapper<T>(constructor),
+  }) {
+    return register<Constructor<T>>(
+      Constructor<T>(constructor),
       groupKey: groupKey,
-      validator: validator != null ? (e) => validator(e.thenOr((e) => e.instance)) : null,
-      onUnregister: onUnregister != null ? (e) => onUnregister(e.thenOr((e) => e.instance)) : null,
+      validator: validator != null ? (e) => validator(e.thenOr((e) => e.singleton)) : null,
+      onUnregister: onUnregister != null ? (e) => onUnregister(e.thenOr((e) => e.singleton)) : null,
     );
   }
+
+  FutureOr<T?> unregisterConstructor<T>({
+    DIKey<Object>? groupKey,
+    bool skipOnUnregisterCallback = false,
+  }) {
+    return unregister<Constructor<T>>(
+      groupKey: groupKey,
+      skipOnUnregisterCallback: skipOnUnregisterCallback,
+    ).thenOr((e) => e).thenOr((e) => e._instance);
+  }
+
+  //
+  //
+  //
 
   FutureOr<T>? getSingletonOrNull<T>({
     DIKey<Object>? groupKey,
     bool traverse = true,
   }) {
-    return getOrNull<SingletonWrapper<T>>(
+    return getOrNull<Constructor<T>>(groupKey: groupKey)?.asValue.singleton;
+  }
+
+  DIContainer child({
+    DIKey<Object>? groupKey,
+    bool Function(FutureOr<DIContainer>)? validator,
+    FutureOr<void> Function(FutureOr<DIContainer>)? onUnregister,
+  }) {
+    final constructor = registerConstructor<DIContainer>(
+      () => DIContainer().._parents.add(this),
       groupKey: groupKey,
-    )?.thenOr(
-      (e) => e.instance,
+      validator: validator,
+      onUnregister: (e) => (onUnregister?.call(e)).thenOr(
+        (_) => e.thenOr((e) => e.unregisterAll()),
+      ),
     );
+    final child = (constructor as Constructor<DIContainer>).singleton.asValue;
+    return child;
+  }
+
+  FutureOr<List<Dependency>> unregisterAll() {
+    final executionQueue = ExecutionQueue();
+    final results = <Dependency>[];
+    for (final dependency in registry.dependencies) {
+      results.add(dependency);
+      executionQueue.add((_) {
+        registry.removeDependencyWithKey(
+          dependency.typeKey,
+          groupKey: dependency.metadata?.groupKey,
+        );
+        if (dependency.value is! Future) {
+          return dependency.metadata?.onUnregister?.call(dependency.value);
+        }
+      });
+    }
+    return executionQueue.last().thenOr((_) => results);
   }
 }
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-class SingletonWrapper<T> {
+class Constructor<T> {
   FutureOr<T>? _instance;
   final FutureOr<T> Function() _constructor;
 
-  SingletonWrapper(this._constructor);
+  Constructor(this._constructor);
 
-  /// Returns the singleton instance of the wrapped class.
-  FutureOr<T> get instance {
+  /// Returns the singleton instance, creating it if necessary.
+  FutureOr<T> get singleton {
     _instance ??= _constructor();
     return _instance!;
   }
 
-  /// Resets the instance for testing or recreation purposes.
-  void reset() {
-    _instance = null;
-  }
-}
-
-class FactoryWrapper<T> {
-  final FutureOr<T> Function() _constructor;
-
-  FactoryWrapper(this._constructor);
-
-  FutureOr<T> get instance {
+  /// Returns a new instance each time, acting as a factory.
+  FutureOr<T> get factory {
     return _constructor();
+  }
+
+  /// Resets the singleton instance, allowing it to be re-created on the next call.
+  void resetSingleton() {
+    _instance = null;
   }
 }
 

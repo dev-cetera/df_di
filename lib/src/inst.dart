@@ -66,6 +66,24 @@ class FutureOrInst<T extends Object, P extends Object> extends Inst<T, P> {
   }
 }
 
+class SingletonWrapper<T> {
+  FutureOr<T>? _instance;
+  final FutureOr<T> Function() _constructor;
+
+  SingletonWrapper(this._constructor);
+
+  /// Returns the singleton instance of the wrapped class.
+  FutureOr<T> get instance {
+    _instance ??= _constructor();
+    return _instance!;
+  }
+
+  /// Resets the instance for testing or recreation purposes.
+  void reset() {
+    _instance = null;
+  }
+}
+
 // /// A singleton interface that also reports the type of the created objects.
 // @pragma('vm:keep-name') // enable string lookups
 // class SingletonInst<T extends Object, P extends Object> extends Inst<T, P> {

@@ -10,7 +10,7 @@
 // --- PUBLIC FILES ---
 export 'inst.dart';
 export 'di_key.dart';
-export 'test_di.dart';
+export 'test_di.dart' hide Constructor;
 export 'di/di.dart';
 export 'exceptions/service_not_yet_initialized_exception.dart';
 export 'exceptions/service_already_initialized_exception.dart';
