@@ -18,6 +18,7 @@ import 'package:test/test.dart';
 
 void main() {
   // ---------------------------------------------------------------------------
+
   group(
     'Testing basics',
     () {
@@ -45,8 +46,8 @@ void main() {
           final a = Future<int>.delayed(const Duration(milliseconds: 100), () => 1);
           final b = di.register(a);
           expect(
-            await b,
             1,
+            await b,
           );
         },
       );
@@ -54,6 +55,7 @@ void main() {
   );
 
   // ---------------------------------------------------------------------------
+
   group(
     'Testing "register" and "get"',
     () {
@@ -65,12 +67,12 @@ void main() {
           di.register('2');
           di.register(false);
           expect(
-            1,
             di.getOrNull(),
+            1,
           );
           expect(
-            1,
             di.getOrNull<Object>(),
+            1,
           );
         },
       );
@@ -84,8 +86,8 @@ void main() {
             di.getOrNull<String>(),
           );
           expect(
-            'Hello World!',
             di.getOrNull<String>(),
+            'Hello World!',
           );
         },
       );
@@ -96,16 +98,16 @@ void main() {
           final di = DIContainer();
           final a = di.register<Set<int>>({1, 2, 3});
           expect(
-            a,
             di.getOrNull<Iterable<dynamic>>(),
+            a,
           );
           expect(
-            a,
             di.getOrNull<Iterable<Object>>(),
+            a,
           );
           expect(
-            a,
             di.getOrNull<LinkedHashSet<Object>>(),
+            a,
           );
         },
       );
@@ -124,19 +126,129 @@ void main() {
             di.getOrNull<Map<String, Map<String, int>>>(),
           );
           expect(
-            a,
             di.getOrNull<Map<dynamic, dynamic>>(),
+            a,
           );
           expect(
-            a,
             di.getOrNull<Map<Object, Object>>(),
+            a,
           );
           expect(
-            a,
             di.getOrNull<LinkedHashMap<Object, Object>>(),
+            a,
           );
         },
       );
+    },
+  );
+
+  // ---------------------------------------------------------------------------
+
+  group(
+    'Testing Future registrations',
+    () {
+      test(
+        '- Do not unregister Futures',
+        () async {
+          final di = DIContainer();
+          final value = Future.value(1);
+          di.register(value);
+          expect(
+            1,
+            di.registry.getGroup(groupKey: di.focusGroup)?.length,
+          );
+          final valueGot = await di.getOrNull<int>();
+          expect(
+            1,
+            valueGot,
+          );
+          expect(
+            2,
+            di.registry.getGroup(groupKey: di.focusGroup)?.length,
+          );
+        },
+      );
+
+      test(
+        '- Do unregister Futures',
+        () async {
+          final di = DIContainer();
+          final value = Future.value(1);
+          di.register(value);
+          expect(
+            1,
+            di.registry.getGroup(groupKey: di.focusGroup)?.length,
+          );
+          final valueGot = await di.getOrNull<int>(unregisterRedundantFutures: true);
+          expect(
+            1,
+            valueGot,
+          );
+          expect(
+            1,
+            di.registry.getGroup(groupKey: di.focusGroup)?.length,
+          );
+        },
+      );
+    },
+  );
+
+  // ---------------------------------------------------------------------------
+
+  group(
+    'Testing unregistering',
+    () {
+      test(
+        '- 1',
+        () async {
+          final di = DIContainer();
+          final a = await di.register<int>(Future.value(1));
+          final b = await di.register<double>(Future.value(2.0));
+          expect(
+            1,
+            a,
+          );
+          expect(
+            2.0,
+            b,
+          );
+          expect(
+            2,
+            di.registry.state[di.focusGroup]?.length,
+          );
+          expect(
+            1,
+            await di.getOrNull<int>(),
+          );
+          expect(
+            2.0,
+            await di.getOrNull<double>(),
+          );
+          expect(
+            4,
+            di.registry.state[di.focusGroup]?.length,
+          );
+          di.unregister<int>();
+          di.unregister<double>();
+          expect(
+            null,
+            di.registry.state[di.focusGroup]?.length,
+          );
+        },
+      );
+
+      // test(
+      //   '- 2',
+      //   () async {
+      //     final di = DIContainer();
+      //     final a = Future<int>.delayed(const Duration(milliseconds: 100), () => 1);
+      //     final b = di.register(a);
+      //     expect(
+      //       await b,
+      //       1,
+      //     );
+      //   },
+      // );
     },
   );
 }

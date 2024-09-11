@@ -57,15 +57,10 @@ class DIContainer {
       onUnregister: onUnregister != null ? (e) => onUnregister(e as FutureOr<T>) : null,
     );
 
-    void complete(FutureOr<T> value) {
-      final existingDep = registry.getDependencyOrNull<CompleterOr<FutureOr<T>>>();
-      existingDep?.value.complete(value);
-    }
+    _completers?.registry.getDependencyOrNull<CompleterOr<FutureOr<T>>>()?.value.complete(value);
 
-    //complete(value);
-
-    final registeredDep = _registerDependency<FutureOr<T>>(
-      dependency: Dependency<FutureOr<T>>(
+    final registeredDep = _registerDependency(
+      dependency: Dependency(
         value,
         metadata: metadata,
       ),
@@ -164,10 +159,13 @@ class DIContainer {
   FutureOr<T> unregister<T extends Object>({
     DIKey? groupKey,
     bool skipOnUnregisterCallback = false,
+    bool unregisterCorrespondingFuture = true,
   }) {
     final key = groupKey ?? focusGroup;
-    final removed = (registry.removeDependency<T>(groupKey: key) ??
-        registry.removeDependency<Future<T>>(groupKey: key)) as Dependency<FutureOr<T>>?;
+    final removed = [
+      registry.removeDependency<T>(groupKey: key),
+      if (unregisterCorrespondingFuture) registry.removeDependency<Future<T>>(groupKey: key),
+    ].firstWhereOrNull((e) => e != null) as Dependency<FutureOr<T>>?;
     if (removed == null) {
       throw 1;
     }
@@ -190,7 +188,7 @@ class DIContainer {
     DIKey? groupKey,
     bool traverse = true,
     bool registerFutureResults = true,
-    bool unregisterFutures = false,
+    bool unregisterRedundantFutures = false,
   }) {
     final key = groupKey ?? focusGroup;
     final existingDep = _getDependencyOrNull<T>(
@@ -209,16 +207,13 @@ class DIContainer {
                           metadata: existingDep!.metadata,
                         ),
                         checkExisting: false,
-                      )
-                    : Object())
+                      ).thenOr((_) => value)
+                    : value)
                 .thenOr(
-              (_) {
-                return (unregisterFutures
-                        ? registry.removeDependency<Future<T>>(groupKey: key)
-                        : Object())
-                    .thenOr((_) {
-                  return value;
-                });
+              (value) {
+                return (unregisterRedundantFutures
+                    ? registry.removeDependency<Future<T>>(groupKey: key).thenOr((_) => value)
+                    : value);
               },
             );
           },
@@ -234,18 +229,21 @@ class DIContainer {
   //
   //
 
-  Dependency? _getDependencyOrNull<T extends Object>({
+  Dependency<FutureOr<T>>? _getDependencyOrNull<T extends Object>({
     DIKey? groupKey,
     bool traverse = true,
   }) {
     final key = groupKey ?? focusGroup;
-    final dependency = registry.getDependencyOrNull<FutureOr<T>>(
-      groupKey: key,
-    );
+    final dependency = registry.getDependencyOrNull<T>(
+          groupKey: key,
+        ) ??
+        registry.getDependencyOrNull<Future<T>>(
+          groupKey: key,
+        );
     if (dependency != null) {
       final valid = dependency.metadata?.validator?.call(dependency) ?? true;
       if (valid) {
-        return dependency;
+        return dependency.cast();
       } else {
         throw DependencyInvalidException(
           groupKey: key,
@@ -285,11 +283,18 @@ class DIContainer {
       return test;
     }
 
+    CompleterOr<FutureOr<T>>? completer;
+    completer = _completers?.registry.getDependencyOrNull<CompleterOr<FutureOr<T>>>()?.value;
+
+    if (completer != null) {
+      return completer.futureOr.thenOr((value) => value);
+    }
+
     _completers ??= DIContainer();
 
     // If it's not already registered, register a Completer for the type
     // inside the untilsContainer.
-    final completer = CompleterOr<FutureOr<T>>();
+    completer = CompleterOr<FutureOr<T>>();
 
     _completers!.registry.setDependency(Dependency(completer));
 
