@@ -96,9 +96,7 @@ final class DIRegistry {
   }
 
   /// Returns any dependency of type [T] or subtype of [T] that is associated
-  /// with the specified [groupKey] if it exists.
-  ///
-  /// Returns `null` if no matching dependency is found.
+  /// with the specified [groupKey] if it exists, or `null`.
   @_protected
   @pragma('vm:prefer-inline')
   Dependency<T>? getDependencyOrNull<T extends Object>({
@@ -108,10 +106,8 @@ final class DIRegistry {
   }
 
   /// Returns any dependency with the exact [runtimeType] that is associated
-  /// with the specified [groupKey] if it exists. Unlike [getDependencyOrNull],
-  /// this will not include subtypes.
-  ///
-  /// Returns `null` if no matching dependency is found.
+  /// with the specified [groupKey] if it exists, or `null`. Unlike
+  /// [getDependencyOrNull], this will not include subtypes.
   @_protected
   @pragma('vm:prefer-inline')
   Dependency? getDependencyOfRuntimeTypeOrNull(
@@ -125,10 +121,8 @@ final class DIRegistry {
   }
 
   /// Returns any dependency with the exact [typeKey] that is associated with
-  /// the specified [groupKey] if it exists. Unlike [getDependencyOrNull], this
-  /// will not include subtypes.
-  ///
-  /// Returns `null` if no matching dependency is found.
+  /// the specified [groupKey] if it exists, or `null`. Unlike
+  /// [getDependencyOrNull], this will not include subtypes.
   @_protected
   @pragma('vm:prefer-inline')
   Dependency? getDependencyWithKeyOrNull(

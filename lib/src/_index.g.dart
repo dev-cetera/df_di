@@ -13,7 +13,6 @@ export 'di_key.dart';
 export 'test_di.dart';
 export 'di/di.dart';
 export 'exceptions/service_not_yet_initialized_exception.dart';
-export 'exceptions/dependency_not_found_exception.dart';
 export 'exceptions/service_already_initialized_exception.dart';
 export 'exceptions/service_already_disposed_exception.dart';
 export 'exceptions/df_di_package_exception.dart';
