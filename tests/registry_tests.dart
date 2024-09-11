@@ -31,42 +31,42 @@ void main() {
           );
           registry.setDependency(Dependency(1));
           expect(
-            registry.groupKeys.length,
             1,
+            registry.groupKeys.length,
           );
           expect(
-            registry.state.toString(),
             "{null: {int: Instance of 'Dependency<int>'}}",
+            registry.state.toString(),
           );
           registry.removeGroup();
           expect(
-            registry.groupKeys.length,
             0,
+            registry.groupKeys.length,
           );
           expect(
-            registry.state.toString(),
             '{}',
+            registry.state.toString(),
           );
           registry.setGroup(
             {DIKey(int): Dependency(1)},
             groupKey: DIKey.defaultGroup,
           );
           expect(
-            registry.groupKeys.length,
             1,
+            registry.groupKeys.length,
           );
           expect(
-            registry.getGroup(groupKey: DIKey.defaultGroup).toString(),
             "{int: Instance of 'Dependency<Object>'}",
+            registry.getGroup(groupKey: DIKey.defaultGroup).toString(),
           );
           registry.clear();
           expect(
-            registry.getGroup(),
-            null,
+            '{}',
+            registry.getGroup().toString(),
           );
           expect(
-            registry.state.toString(),
             '{}',
+            registry.state.toString(),
           );
         },
       );
@@ -87,40 +87,40 @@ void main() {
             registry.getDependencyOrNull<int>(),
           );
           expect(
+            dependency,
             registry.getDependencyOfRuntimeTypeOrNull(int),
-            dependency,
           );
           expect(
+            dependency,
             registry.getDependencyWithKeyOrNull(DIKey(int)),
-            dependency,
           );
           expect(
+            dependency,
             registry.getDependencyWithKeyOrNull(DIKey(' i n t ')),
-            dependency,
           );
           expect(
+            dependency,
             registry.dependencies.where((test) => test.typeKey == DIKey(int)).firstOrNull,
-            dependency,
           );
           expect(
+            dependency,
             registry.dependencies.where((test) => test.value.runtimeType == int).firstOrNull,
-            dependency,
           );
           expect(
+            dependency,
             registry.dependencies.where((test) => test.value is int).firstOrNull,
-            dependency,
           );
           expect(
+            true,
             registry.containsDependency<int>(),
-            true,
           );
           expect(
+            true,
             registry.containsDependencyOfRuntimeType(int),
-            true,
           );
           expect(
-            registry.containsDependencyWithKey(DIKey(int)),
             true,
+            registry.containsDependencyWithKey(DIKey(int)),
           );
         },
       );
@@ -131,48 +131,48 @@ void main() {
           final dependency = Dependency<Future<int>>(Future.value(1));
           registry.setDependency<Future<int>>(dependency);
           expect(
+            dependency,
             registry.getDependencyOrNull<Future<int>>(),
-            dependency,
           );
           expect(
+            dependency,
             registry.getDependencyOfRuntimeTypeOrNull(Future<int>),
-            dependency,
           );
           expect(
+            dependency,
             registry.getDependencyWithKeyOrNull(DIKey.type(Future, [int])),
-            dependency,
           );
           expect(
+            dependency,
             registry.getDependencyWithKeyOrNull(DIKey(' F u t u r e < i n t > ')),
-            dependency,
           );
           expect(
+            dependency,
             registry.dependencies
                 .where((test) => test.typeKey == DIKey.type(Future, [int]))
                 .firstOrNull,
-            dependency,
           );
           expect(
+            dependency,
             registry.dependencies.where((test) {
               return test.value.runtimeType.toString() == (Future<int>).toString();
             }).firstOrNull,
-            dependency,
           );
           expect(
+            dependency,
             registry.dependencies.where((test) => test.value is Future<int>).firstOrNull,
-            dependency,
           );
           expect(
+            true,
             registry.containsDependency<Future<int>>(),
-            true,
           );
           expect(
+            true,
             registry.containsDependencyOfRuntimeType(Future<int>),
-            true,
           );
           expect(
-            registry.containsDependencyWithKey(DIKey(Future<int>)),
             true,
+            registry.containsDependencyWithKey(DIKey(Future<int>)),
           );
         },
       );

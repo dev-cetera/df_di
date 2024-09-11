@@ -207,7 +207,7 @@ class DIContainer {
       case Future<T> futureValue:
         return futureValue.then(
           (value) {
-            return FutureOrController<Object?>([
+            return FutureOrController<dynamic>([
               if (registerFutureResults) ...[
                 (_) {
                   return _registerDependency<T>(
@@ -218,30 +218,12 @@ class DIContainer {
                     checkExisting: false,
                   );
                 },
-                if (unregisterRedundantFutures) ...[
+                if (unregisterRedundantFutures)
                   (_) {
                     return registry.removeDependency<Future<T>>(groupKey: key);
                   },
-                ],
               ],
             ]).completeWith((_) => value);
-
-            // return (_registerFutureResults
-            //         ? _registerDependency<T>(
-            //             dependency: Dependency<T>(
-            //               value,
-            //               metadata: existingDep!.metadata,
-            //             ),
-            //             checkExisting: false,
-            //           ).thenOr((_) => value)
-            //         : value)
-            //     .thenOr(
-            //   (value) {
-            //     return (_registerFutureResults && _unregisterRedundantFutures
-            //         ? registry.removeDependency<Future<T>>(groupKey: key).thenOr((_) => value)
-            //         : value);
-            //   },
-            // );
           },
         );
       case T _:
