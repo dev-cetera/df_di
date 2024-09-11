@@ -200,10 +200,6 @@ class DIContainer {
     return (removed.metadata?.onUnregister?.call(value)).thenOr((_) => value);
   }
 
-  //
-  //
-  //
-
   /// Returns any dependency of type [T] or subtype of [T] that is associated
   /// with the specified [groupKey] if it exists, or `null`.
   ///
@@ -284,10 +280,6 @@ class DIContainer {
     return null;
   }
 
-  //
-  //
-  //
-
   /// Returns any dependency of type [T] or subtype of [T] that is associated
   /// with the specified [groupKey] if it exists, or waits until it is
   /// registered before returning it.
@@ -309,11 +301,9 @@ class DIContainer {
 
     CompleterOr<FutureOr<T>>? completer;
     completer = _completers?.registry.getDependencyOrNull<CompleterOr<FutureOr<T>>>()?.value;
-
     if (completer != null) {
       return completer.futureOr.thenOr((value) => value);
     }
-
     _completers ??= DIContainer();
 
     // If it's not already registered, register a Completer for the type
@@ -328,6 +318,61 @@ class DIContainer {
       _completers!.registry.removeDependency<CompleterOr<FutureOr<T>>>();
       return value;
     });
+  }
+
+  void registerSingleton<T>(
+    FutureOr<T> Function() constructor,
+    DIKey<Object>? groupKey,
+    bool Function(FutureOr<T>)? validator,
+    FutureOr<void> Function(FutureOr<T>)? onUnregister,
+  ) {
+    register<SingletonWrapper<T>>(
+      SingletonWrapper<T>(constructor),
+      groupKey: groupKey,
+      validator: validator != null ? (e) => validator(e.thenOr((e) => e.instance)) : null,
+      onUnregister: onUnregister != null ? (e) => onUnregister(e.thenOr((e) => e.instance)) : null,
+    );
+  }
+
+  FutureOr<T>? getSingletonOrNull<T>({
+    DIKey<Object>? groupKey,
+    bool traverse = true,
+  }) {
+    return getOrNull<SingletonWrapper<T>>(
+      groupKey: groupKey,
+    )?.thenOr(
+      (e) => e.instance,
+    );
+  }
+}
+
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+class SingletonWrapper<T> {
+  FutureOr<T>? _instance;
+  final FutureOr<T> Function() _constructor;
+
+  SingletonWrapper(this._constructor);
+
+  /// Returns the singleton instance of the wrapped class.
+  FutureOr<T> get instance {
+    _instance ??= _constructor();
+    return _instance!;
+  }
+
+  /// Resets the instance for testing or recreation purposes.
+  void reset() {
+    _instance = null;
+  }
+}
+
+class FactoryWrapper<T> {
+  final FutureOr<T> Function() _constructor;
+
+  FactoryWrapper(this._constructor);
+
+  FutureOr<T> get instance {
+    return _constructor();
   }
 }
 

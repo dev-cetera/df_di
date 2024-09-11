@@ -21,9 +21,9 @@ void main() {
     'Testing children',
     () {
       test(
-        '- Testing if a child gets created',
+        '- Testing if a child gets created and unregistered',
         () async {
-          final di = DIContainer(unregisterRedundantFutures: false);
+          final di = DIContainer();
           final child = DIContainer();
           di.register(child);
           final gotChild = di.getOrNull<DIContainer>();
@@ -31,6 +31,13 @@ void main() {
             child,
             gotChild,
           );
+          di.unregister<DIContainer>();
+        },
+      );
+      test(
+        '- Testing traversal',
+        () async {
+          final di = DIContainer();
         },
       );
     },
