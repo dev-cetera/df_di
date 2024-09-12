@@ -27,7 +27,7 @@ void main() {
       test(
         '- The value returned by "register" is the same as the value registered',
         () {
-          final di = DIContainer();
+          final di = DI();
           final a = <int>[1, 2, 3];
           final b = di.register(a);
           expect(
@@ -44,7 +44,7 @@ void main() {
       test(
         '- The exact registered value is returned by "register"',
         () async {
-          final di = DIContainer();
+          final di = DI();
           final a = Future<int>.delayed(const Duration(milliseconds: 100), () => 1);
           final b = di.register(a);
           expect(
@@ -62,7 +62,7 @@ void main() {
       test(
         '- Get with "dynamic" or "Object" should return the first registered value',
         () {
-          final di = DIContainer();
+          final di = DI();
           di.register(1);
           di.register('2');
           di.register(false);
@@ -80,7 +80,7 @@ void main() {
       test(
         '- Register "String", get "String"',
         () {
-          final di = DIContainer();
+          final di = DI();
           expect(
             di.register('Hello World!'),
             di.getOrNull<String>(),
@@ -95,7 +95,7 @@ void main() {
       test(
         '- Register "Set<int>", get "Iterable"',
         () {
-          final di = DIContainer();
+          final di = DI();
           final a = di.register<Set<int>>({1, 2, 3});
           expect(
             di.getOrNull<Iterable<dynamic>>(),
@@ -115,7 +115,7 @@ void main() {
       test(
         '- Register "Map<String, Map<String, int>>, get "Map"',
         () {
-          final di = DIContainer();
+          final di = DI();
           final a = <String, Map<String, int>>{
             'a': {
               'b': 3,
@@ -146,33 +146,9 @@ void main() {
     'Testing Future registrations',
     () {
       test(
-        '- Do not unregister Futures',
+        '- Unregister Futures',
         () async {
-          final di = DIContainer(
-            unregisterRedundantFutures: false,
-          );
-          final value = Future.value(1);
-          di.register(value);
-          expect(
-            1,
-            di.registry.getGroup(groupKey: di.focusGroup).length,
-          );
-          final valueGot = await di.getOrNull<int>();
-          expect(
-            1,
-            valueGot,
-          );
-          expect(
-            2,
-            di.registry.getGroup(groupKey: di.focusGroup).length,
-          );
-        },
-      );
-
-      test(
-        '- Do unregister Futures',
-        () async {
-          final di = DIContainer();
+          final di = DI();
           final value = Future.value(1);
           di.register(value);
           expect(
@@ -199,9 +175,7 @@ void main() {
       test(
         '- 1',
         () async {
-          final di = DIContainer(
-            unregisterRedundantFutures: false,
-          );
+          final di = DI();
           final a = await di.register<int>(Future.value(1));
           final b = await di.register<double>(Future.value(2.0));
           expect(
@@ -225,7 +199,7 @@ void main() {
             await di.getOrNull<double>(),
           );
           expect(
-            4,
+            2,
             di.registry.getGroup(groupKey: di.focusGroup).length,
           );
           di.unregister<int>();

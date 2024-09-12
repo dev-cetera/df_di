@@ -16,7 +16,5 @@ export 'package:df_type/df_type.dart';
 export 'package:collection/collection.dart';
 export 'package:meta/meta.dart';
 export '_index.g.dart';
-export 'di/_di_base.dart';
-export 'di/_mixins/_index.g.dart';
 export '_registry.dart';
 export '_dependency.dart';

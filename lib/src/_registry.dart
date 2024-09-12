@@ -52,7 +52,7 @@ final class DIRegistry {
 
   /// Updates the [state] by setting or updating [dependency].
   @_protected
-  void setDependency<T extends Object>(Dependency<T> dependency) {
+  void setDependency(Dependency dependency) {
     final groupKey = dependency.metadata?.groupKey;
     final typeKey = dependency.typeKey;
     final currentDep = _state[groupKey]?[typeKey];

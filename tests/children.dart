@@ -23,21 +23,21 @@ void main() {
       test(
         '- Testing if a child gets created and unregistered',
         () async {
-          final di = DIContainer();
-          final child = DIContainer();
+          final di = DI();
+          final child = DI();
           di.register(child);
-          final gotChild = di.getOrNull<DIContainer>();
+          final gotChild = di.getOrNull<DI>();
           expect(
             child,
             gotChild,
           );
-          di.unregister<DIContainer>();
+          di.unregister<DI>();
         },
       );
       test(
         '- Testing singletons',
         () async {
-          final di = DIContainer();
+          final di = DI();
           di.registerConstructor<int>(() => 1);
           expect(
             1,
@@ -48,14 +48,14 @@ void main() {
       test(
         '- Testing singletons',
         () async {
-          final c1 = DIContainer();
+          final c1 = DI();
           c1.register<int>(1);
           final c4 = c1.child().child().child().child();
           expect(
             1,
             c4.getOrNull<int>(),
           );
-          c1.unregisterConstructor<DIContainer>();
+          //c1.unregisterConstructor<DIContainer>();
         },
       );
     },

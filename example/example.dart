@@ -13,74 +13,78 @@
 // ignore_for_file: invalid_use_of_protected_member, strict_raw_type
 
 import 'dart:async';
-import 'dart:math';
 
-import 'package:df_di/df_di.dart';
+import 'package:df_di/src/di.dart';
+import 'package:df_di/src/services/service.dart';
+import 'package:df_di/src/services/streaming_service.dart';
+import 'package:df_type/df_type.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-void main() async {
-  print('\n# Get access to the global DI container:\n');
-  final di = DI.global;
-  print('DI.global == di: ${DI.global == di}');
+Future<void> main() async {
+  //print('\n# Get access to the global DI container:\n');
+  final di = DI();
+  //print('DI.global == di: ${DI.global == di}');
 
-  print('\n# Get the state of the global DI container (prints an empty map):\n');
-  print(di.registry.state);
+  //print('\n# Get the state of the global DI container (prints an empty map):\n');
+  //print(di.registry.state);
 
-  print('\n# Create a new DI container:\n');
-  print(DI());
+  //print('\n# Create a new DI container:\n');
+  //print(DI());
 
-  print('\n# Use any of the pre-defined containers for your app:\n');
-  print(DI.app); // You can store app settings in here.
-  print(DI.app); // You can contain the global state in here.
-  print(DI.global); // You can contain stuff for the active session in here.
-  print(DI.dev); // A container you can use for or development-only.
-  print(DI.test); // A container you can use for or test-only.
-  print(DI.prod); // A container you can use for or production-only.
+  // print('\n# Use any of the pre-defined containers for your app:\n');
+  // print(DI.app); // You can store app settings in here.
+  // print(DI.app); // You can contain the global state in here.
+  // print(DI.global); // You can contain stuff for the active session in here.
+  // print(DI.dev); // A container you can use for or development-only.
+  // print(DI.test); // A container you can use for or test-only.
+  // print(DI.prod); // A container you can use for or production-only.
   // Or create your own custom containers:
   final di1 = DI();
-  print(di1);
+  //print(di1);
   final di2 = DI();
-  print(di2);
+  //print(di2);
 
-  print('\n# Register the universe and everything:\n');
+  //print('\n# Register the universe and everything:\n');
   di.register<int>(42);
-  print(di.get<int>());
-  print(di.getUsingRuntimeType(int));
-  di.registerUsingRuntimeType('42 :)');
-  print(di.getUsingRuntimeType(String));
-  print(di.get<String>());
+  //print(di.getOrNull<int>());
 
-  print('\n# Register Futures:\n');
-  DI.prod.register<double>(Future<double>.value(pi));
+  //print('\n# Register Futures:\n');
+  //DI.prod.register<double>(Future<double>.value(pi));
   //di.register<double>(Future.delayed(const Duration(milliseconds: 10), () => pi));
-  print('PI is ${await DI.prod.get<double>()}');
+  //print('PI is ${await DI.prod.getOrNull<double>()}');
 
-  print('Get access to the global DI container:\n\n');
+  //print('Get access to the global DI container:\n\n');
   di.register(Future.value('Hello, DI!'));
 
   // Register FooBarService as a lazy singleton.
-  di.registerSingleton(FooBarService.new);
-  final fooBarService1 = await di.get<FooBarService>();
-  final fooBarService2 = await di.get<FooBarService>();
+  // di.registerService(FooBarService.new);
 
+  di.register(Constructor(FooBarService.new));
 
- 
+  print(di.registry.state.entries);
 
-  Future.delayed(
-    const Duration(seconds: 10),
-    () {
-      di.unregisterAll(
-        onUnregister: (dep) {
-          print(dep);
-        },
-      ).thenOr((_) {
-        // Completes when all dependencies are unregistered and removed
-        // from di.
-        print('Disposed all!');
-      });
+  // final fooBarService1 = await di.getServiceSingletonOrNull<Object, FooBarService>(Object());
+  // final fooBarService2 = await di.getServiceSingletonOrNull<Object, FooBarService>(Object());
+  //print(fooBarService1 == fooBarService2);
+
+  print(di.registry.state.entries);
+
+  // await di.unregister<int>();
+  // await di.unregister<String>();
+  // await di.unregister<Constructor<FooBarService>>();
+
+  di.unregisterAll(
+    onUnregister: (dependency) {
+      print('Unregistered: ${dependency.value}');
     },
-  );
+  ).thenOr((_) {
+    // Completes when all dependencies are unregistered and removed
+    // from di.
+    print('Unregistered all!');
+  });
+
+  print('FINISHED!!!');
 }
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░

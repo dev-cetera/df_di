@@ -16,38 +16,39 @@ import '/src/_internal.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-class DIContainer {
+class DI {
   //
   //
   //
 
-  DIContainer({
-    this.unregisterRedundantFutures = true,
-    this.registerFutureResults = true,
-  });
+  /// Default app groupKey.
+  static final app = DI();
 
-  /// Whether to register the results of Futures once they have completed.
-  final bool registerFutureResults;
-
-  /// Whether Futures should be removed from [registry] when no longer needed.
-  final bool unregisterRedundantFutures;
+  /// Default global groupKey.
+  static DI get global => app.child(groupKey: DIKey.globalGroup);
+  static DI get session => global.child(groupKey: DIKey.sessionGroup);
+  static DI get dev => app.child(groupKey: DIKey.devGroup);
+  static DI get prod => app.child(groupKey: DIKey.prodGroup);
+  static DI get test => app.child(groupKey: DIKey.testGroup);
 
   /// Internal registry that stores dependencies.
   @protected
   final registry = DIRegistry();
 
   /// Parent containers.
-  final _parents = <DIContainer>{};
+  final _parents = <DI>{};
 
   /// Child containers.
-  List<DIContainer> get children =>
-      List.unmodifiable(registry.dependencies.where((e) => e.value is DIContainer));
+  List<DI> get children => List.unmodifiable(registry.dependencies.where((e) => e.value is DI));
 
   /// A key that identifies the current group in focus for dependency management.
-  DIKey focusGroup = DIKey.defaultGroup;
+  DIKey? focusGroup = DIKey.defaultGroup;
 
-  /// The container for handling pending Future completions.
-  late DIContainer? _completers = this;
+  /// A container storing Future completions.
+  late DI? _completers = this;
+
+  /// A container for storing children.
+  late DI? _children = this;
 
   /// Returns the total number of registered dependencies.
   int get registrationCount => _registrationCount;
@@ -56,9 +57,9 @@ class DIContainer {
   /// Register a dependency [value] of type [T] under the specified [groupKey]
   /// in the [registry].
   ///
-  /// If the [value] is an instance of [DIContainer], it will be registered as
+  /// If the [value] is an instance of [DI], it will be registered as
   /// a child of this container. This action sets the child’s parent to this
-  /// [DIContainer] and ensures that the child's [registry] is cleared upon
+  /// [DI] and ensures that the child's [registry] is cleared upon
   /// unregistration.
   ///
   /// You can provide a [validator] function to validate the dependency before
@@ -91,14 +92,14 @@ class DIContainer {
       ),
       checkExisting: true,
     );
-    return registeredDep.thenOr((e) => e.value);
+    return registeredDep.value;
   }
 
   /// Register a [dependency] of type [T] in the [registry].
   ///
-  /// If the value of [dependency] is an instance of [DIContainer], it will be
+  /// If the value of [dependency] is an instance of [DI], it will be
   /// registered as a child of this container. This action sets the child’s
-  /// parent to this [DIContainer] and ensures that the child's registry is
+  /// parent to this [DI] and ensures that the child's registry is
   /// cleared upon unregistration.
   ///
   /// Throws a [DependencyAlreadyRegisteredException] if a dependency of the
@@ -108,7 +109,7 @@ class DIContainer {
   ///
   /// Returns the registered [Dependency] object as a [FutureOr] that
   /// completes with the [dependency] object once it is registered.
-  FutureOr<Dependency<T>> _registerDependency<T extends FutureOr<Object>>({
+  Dependency<T> _registerDependency<T extends FutureOr<Object>>({
     required Dependency<T> dependency,
     bool checkExisting = false,
   }) {
@@ -128,48 +129,11 @@ class DIContainer {
       }
     }
 
-    // // If [dependency] is another [DIContainer], register it as a child via
-    // // [_setChildDependency].
-    // if (dependency is Dependency<FutureOr<DIContainer>>) {
-    //   return _setChildDependency(dependency as Dependency<FutureOr<DIContainer>>).thenOr((_) {
-    //     return dependency;
-    //   });
-    // }
-
     // If [dependency] is not a [DIContainer], register it as a normal
     // dependency.
-    registry.setDependency<T>(dependency);
+    registry.setDependency(dependency);
     return dependency;
   }
-
-  /// Waits for the value of [childDependency] to resolve, updates its
-  /// [DependencyMetadata.onUnregister] callback to clear the child's
-  /// registry upon unregistration, and then uses [DIRegistry.setDependency]
-  /// to complete the registration.
-  ///
-  /// Returns a [FutureOr] that completes when [childDependency] is fully
-  /// registered in [registry].
-  // FutureOr<void> _setChildDependency(
-  //   Dependency<FutureOr<DIContainer>> childDependency,
-  // ) {
-  //   final value = childDependency.value;
-  //   return value.thenOr(
-  //     (child) {
-  //       child._parents.add(this);
-  //       final dependency = childDependency.copyWith(
-  //         metadata: (childDependency.metadata ?? DependencyMetadata()).copyWith(
-  //           onUnregister: (_) {
-  //             return (childDependency.metadata?.onUnregister?.call(child)).thenOr((_) {
-  //               print('[_setChildDependency] Clearing child registry');
-  //               child.registry.clear();
-  //             });
-  //           },
-  //         ),
-  //       );
-  //       registry.setDependency<FutureOr<DIContainer>>(dependency);
-  //     },
-  //   );
-  // }
 
   /// Unregisters the dependency of type [T] associated with the specified
   /// [groupKey] from the [registry], if it exists.
@@ -197,7 +161,10 @@ class DIContainer {
     if (skipOnUnregisterCallback) {
       return value;
     }
-    return (removed.metadata?.onUnregister?.call(value)).thenOr((_) => value);
+    return mapFutureOr(
+      removed.metadata?.onUnregister?.call(value),
+      (_) => value,
+    );
   }
 
   /// Returns any dependency of type [T] or subtype of [T] that is associated
@@ -219,23 +186,17 @@ class DIContainer {
       case Future<T> futureValue:
         return futureValue.then(
           (value) {
-            return FutureOrController<dynamic>([
-              if (registerFutureResults) ...[
-                (_) {
-                  return _registerDependency<T>(
-                    dependency: Dependency<T>(
-                      value,
-                      metadata: existingDep!.metadata,
-                    ),
-                    checkExisting: false,
-                  );
-                },
-                if (unregisterRedundantFutures)
-                  (_) {
-                    return registry.removeDependency<Future<T>>(groupKey: groupKey1);
-                  },
-              ],
-            ]).completeWith((_) => value);
+            _registerDependency<T>(
+              dependency: Dependency<T>(
+                value,
+                metadata: existingDep!.metadata,
+              ),
+              checkExisting: false,
+            );
+            registry.removeDependency<Future<T>>(
+              groupKey: groupKey1,
+            );
+            return value;
           },
         );
       case T _:
@@ -304,7 +265,7 @@ class DIContainer {
     if (completer != null) {
       return completer.futureOr.thenOr((value) => value);
     }
-    _completers ??= DIContainer();
+    _completers ??= DI();
 
     // If it's not already registered, register a Completer for the type
     // inside the untilsContainer.
@@ -320,59 +281,156 @@ class DIContainer {
     });
   }
 
-  FutureOr<Constructor<T>> registerConstructor<T>(
-    FutureOr<T> Function() constructor, {
-    DIKey<Object>? groupKey,
-    bool Function(FutureOr<T>)? validator,
-    FutureOr<void> Function(FutureOr<T>)? onUnregister,
+  Constructor<T> registerConstructor<T extends Object>(
+    TConstructor<T> constructor, {
+    DIKey? groupKey,
+    bool Function(FutureOr<T> instance)? validator,
+    FutureOr<void> Function(FutureOr<T> instance)? onUnregister,
   }) {
     return register<Constructor<T>>(
       Constructor<T>(constructor),
       groupKey: groupKey,
-      validator: validator != null ? (e) => validator(e.thenOr((e) => e.singleton)) : null,
-      onUnregister: onUnregister != null ? (e) => onUnregister(e.thenOr((e) => e.singleton)) : null,
-    );
+      validator: validator != null
+          ? (constructor) {
+              final instance = constructor.asValue._instance;
+              return instance != null ? validator(instance) : true;
+            }
+          : null,
+      onUnregister: onUnregister != null
+          ? (constructor) {
+              final instance = constructor.asValue._instance;
+              return instance != null ? onUnregister(instance) : true;
+            }
+          : null,
+    ).asValue;
   }
 
-  FutureOr<T?> unregisterConstructor<T>({
-    DIKey<Object>? groupKey,
+  FutureOr<void> unregisterConstructor<T extends Object>({
+    DIKey? groupKey,
     bool skipOnUnregisterCallback = false,
   }) {
     return unregister<Constructor<T>>(
       groupKey: groupKey,
       skipOnUnregisterCallback: skipOnUnregisterCallback,
-    ).thenOr((e) => e).thenOr((e) => e._instance);
+    );
   }
 
   //
   //
   //
 
-  FutureOr<T>? getSingletonOrNull<T>({
-    DIKey<Object>? groupKey,
-    bool traverse = true,
+  void registerService<P extends Object, T extends Service<P>>(
+    TConstructor<T> constructor, {
+    DIKey? groupKey,
+    bool Function(FutureOr<T> instance)? validator,
+    FutureOr<void> Function(FutureOr<T> instance)? onUnregister,
   }) {
-    return getOrNull<Constructor<T>>(groupKey: groupKey)?.asValue.singleton;
-  }
-
-  DIContainer child({
-    DIKey<Object>? groupKey,
-    bool Function(FutureOr<DIContainer>)? validator,
-    FutureOr<void> Function(FutureOr<DIContainer>)? onUnregister,
-  }) {
-    final constructor = registerConstructor<DIContainer>(
-      () => DIContainer().._parents.add(this),
+    registerConstructor<T>(
+      constructor,
       groupKey: groupKey,
       validator: validator,
-      onUnregister: (e) => (onUnregister?.call(e)).thenOr(
-        (_) => e.thenOr((e) => e.unregisterAll()),
-      ),
+      onUnregister: (e) {
+        return e.thenOr((e) => mapFutureOr(e.initializedFuture, (_) => e.dispose()));
+      },
     );
-    final child = (constructor as Constructor<DIContainer>).singleton.asValue;
-    return child;
   }
 
-  FutureOr<List<Dependency>> unregisterAll() {
+  FutureOr<T>? getServiceSingletonOrNull<P extends Object, T extends Service<P>>(
+    P params, {
+    DIKey? groupKey,
+    bool traverse = true,
+  }) {
+    return getSingletonOrNull<T>();
+    //?.thenOr((e) => e.initialized ? mapFutureOr(e.initService(params), (_) => e) : e);
+  }
+
+  FutureOr<T>? getSingletonOrNull<T extends Object>({
+    DIKey? groupKey,
+    bool traverse = true,
+  }) {
+    return getOrNull<Constructor<T>>(
+      groupKey: groupKey,
+      traverse: traverse,
+    )?.asValue.singleton;
+  }
+
+  void resetSingleton<T extends Object>({
+    DIKey? groupKey,
+  }) {
+    getOrNull<Constructor<T>>(groupKey: groupKey)!.asValue.resetSingleton(); // error
+  }
+
+  FutureOr<T>? getServiceFactoryOrNull<P extends Object, T extends Service<P>>(
+    P params, {
+    DIKey? groupKey,
+    bool traverse = true,
+  }) {
+    return getFactoryOrNull<T>(); //?.thenOr((e) => mapFutureOr(e.initService(params), (_) => e));
+  }
+
+  FutureOr<T>? getFactoryOrNull<T extends Object>({
+    DIKey? groupKey,
+    bool traverse = true,
+  }) {
+    return getOrNull<Constructor<T>>(
+      groupKey: groupKey,
+      traverse: traverse,
+    )?.asValue.factory;
+  }
+
+  //
+  //
+  //
+
+  void registerChild({
+    DIKey? groupKey,
+    bool Function(FutureOr<DI>)? validator,
+    OnUnregisterCallback<FutureOr<DI>>? onUnregister,
+  }) {
+    _children ??= DI();
+    _children!.registerConstructor<DI>(
+      () => DI().._parents.add(this),
+      groupKey: groupKey,
+      validator: validator,
+      onUnregister: (e) => mapFutureOr(onUnregister?.call(e), (_) => e.asValue.unregisterAll()),
+    );
+  }
+
+  DI? getChildOrNull({
+    DIKey? groupKey,
+  }) {
+    return _children
+        ?.getSingletonOrNull<DI>(
+          groupKey: groupKey,
+          traverse: false,
+        )
+        ?.asValue;
+  }
+
+  DI child({
+    DIKey? groupKey,
+    bool Function(FutureOr<DI>)? validator,
+    OnUnregisterCallback<FutureOr<DI>>? onUnregister,
+  }) {
+    final existingChild = getChildOrNull(groupKey: groupKey);
+    if (existingChild != null) {
+      return existingChild;
+    }
+    registerChild(
+      groupKey: groupKey,
+      validator: validator,
+      onUnregister: onUnregister,
+    );
+    return getChildOrNull(groupKey: groupKey)!;
+  }
+
+  //
+  //
+  //
+
+  FutureOr<List<Dependency>> unregisterAll({
+    OnUnregisterCallback<Dependency>? onUnregister,
+  }) {
     final executionQueue = ExecutionQueue();
     final results = <Dependency>[];
     for (final dependency in registry.dependencies) {
@@ -382,20 +440,53 @@ class DIContainer {
           dependency.typeKey,
           groupKey: dependency.metadata?.groupKey,
         );
-        if (dependency.value is! Future) {
-          return dependency.metadata?.onUnregister?.call(dependency.value);
-        }
+        return mapFutureOr(
+          dependency.metadata?.onUnregister?.call(dependency.value),
+          (_) => onUnregister?.call(dependency),
+        );
       });
     }
-    return executionQueue.last().thenOr((_) => results);
+    return mapFutureOr(executionQueue.last(), (_) => results);
+  }
+
+  //
+  //
+  //
+
+  FutureOr<Object> unregister1(
+    Type runtimeType, {
+    DIKey? groupKey,
+    bool skipOnUnregisterCallback = false,
+  }) {
+    final groupKey1 = groupKey ?? focusGroup;
+    final removed = [
+      registry.removeDependencyWithKey(DIKey.type(runtimeType), groupKey: groupKey1),
+      registry.removeDependencyWithKey(DIKey.type(Future, [runtimeType]), groupKey: groupKey1),
+    ].nonNulls.firstOrNull;
+    if (removed == null) {
+      throw DependencyNotFoundException(
+        groupKey: groupKey1,
+        type: runtimeType,
+      );
+    }
+    final value = removed.value as FutureOr<Object>;
+    if (skipOnUnregisterCallback) {
+      return value;
+    }
+    return mapFutureOr(
+      removed.metadata?.onUnregister?.call(value),
+      (_) => value,
+    );
   }
 }
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-class Constructor<T> {
+typedef TConstructor<T extends Object> = FutureOr<T> Function();
+
+class Constructor<T extends Object> {
   FutureOr<T>? _instance;
-  final FutureOr<T> Function() _constructor;
+  final TConstructor<T> _constructor;
 
   Constructor(this._constructor);
 
@@ -421,7 +512,7 @@ class Constructor<T> {
 final class DependencyAlreadyRegisteredException extends DFDIPackageException {
   DependencyAlreadyRegisteredException({
     required Object type,
-    required DIKey groupKey,
+    required DIKey? groupKey,
   }) : super(
           condition: 'Dependency of type "$type" in group "$groupKey" has already been registered.',
           reason:
@@ -438,7 +529,7 @@ final class DependencyAlreadyRegisteredException extends DFDIPackageException {
 final class DependencyNotFoundException extends DFDIPackageException {
   DependencyNotFoundException({
     required Object type,
-    required DIKey groupKey,
+    required DIKey? groupKey,
   }) : super(
           condition: 'No dependency of type "$type" found in group "$groupKey".',
           reason:
@@ -454,7 +545,7 @@ final class DependencyNotFoundException extends DFDIPackageException {
 final class DependencyInvalidException extends DFDIPackageException {
   DependencyInvalidException({
     required Object type,
-    required DIKey groupKey,
+    required DIKey? groupKey,
   }) : super(
           condition: 'Dependency of type "$type" in group "$groupKey" is invalid.',
           reason:

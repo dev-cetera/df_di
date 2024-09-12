@@ -82,7 +82,7 @@ void main() {
         () {
           final registry = DIRegistry();
           final dependency = Dependency<int>(1);
-          registry.setDependency<int>(dependency);
+          registry.setDependency(dependency);
           expect(
             dependency,
             registry.getDependencyOrNull<int>(),
@@ -130,7 +130,7 @@ void main() {
         () {
           final registry = DIRegistry();
           final dependency = Dependency<Future<int>>(Future.value(1));
-          registry.setDependency<Future<int>>(dependency);
+          registry.setDependency(dependency);
           expect(
             dependency,
             registry.getDependencyOrNull<Future<int>>(),

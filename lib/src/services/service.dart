@@ -26,13 +26,16 @@ abstract base class Service<TParams extends Object?> {
   /// before using this service.
   Service();
 
-  final _initialized = CompleterOr<void>();
+  final _initializedCompleter = CompleterOr<void>();
 
   /// Completes after initialized via [initService].
   @pragma('vm:prefer-inline')
-  FutureOr<void> get initialized => _initialized.futureOr;
+  FutureOr<void> get initializedFuture => _initializedCompleter.futureOr;
 
-  /// Initializes this service. Completes [initialized], and then calls
+  /// Whether this service has been initialized.
+  bool get initialized => _initializedCompleter.isCompleted;
+
+  /// Initializes this service. Completes [initializedFuture], and then calls
   /// [onInitService].
   ///
   /// This method must be called before interacting with the
@@ -41,10 +44,10 @@ abstract base class Service<TParams extends Object?> {
   /// Do not override this method. Instead, override [onInitService].
   @nonVirtual
   FutureOr<void> initService(TParams params) {
-    if (_initialized.isCompleted) {
+    if (_initializedCompleter.isCompleted) {
       throw ServiceAlreadyInitializedException();
     }
-    _initialized.complete(null);
+    _initializedCompleter.complete(null);
     return onInitService(params);
   }
 
@@ -71,11 +74,10 @@ abstract base class Service<TParams extends Object?> {
     if (_disposed) {
       throw ServiceAlreadyDisposedException();
     }
-    if (!_initialized.isCompleted) {
+    if (!_initializedCompleter.isCompleted) {
       throw ServiceNotYetInitializedException();
     }
-
-    return onDispose().thenOr((_) => _disposed = true);
+    return mapFutureOr(onDispose(), (_) => _disposed = true);
   }
 
   /// Whether the service has been disposed.
