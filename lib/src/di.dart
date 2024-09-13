@@ -14,16 +14,19 @@
 
 import '/src/_internal.dart';
 
-class DI extends _DI
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+class DI extends DIBase
     with
         SupportsConstructorsMixin,
         SupportsChildrenMixin,
         SupportsServicesMixin,
-        SupportsRuntimeTypeMixin {
-  // Base class logic
-}
+        SupportsRuntimeTypeMixin,
+        SupportsNonNullGetters {}
 
-abstract class _DI {
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+abstract class DIBase {
   //
   //
   //
@@ -301,7 +304,7 @@ abstract class _DI {
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-mixin SupportsConstructorsMixin on _DI {
+mixin SupportsConstructorsMixin on DIBase {
   FutureOr<T>? getSingletonOrNull<T extends Object>({
     DIKey? groupKey,
     bool traverse = true,
@@ -452,7 +455,11 @@ mixin SupportsServicesMixin on SupportsConstructorsMixin {
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-mixin SupportsRuntimeTypeMixin on _DI {
+mixin SupportsNonNullGetters on DIBase {}
+
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+mixin SupportsRuntimeTypeMixin on DIBase {
   FutureOr<Object> unregister1(
     Type runtimeType, {
     DIKey? groupKey,
@@ -479,6 +486,8 @@ mixin SupportsRuntimeTypeMixin on _DI {
     );
   }
 }
+
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 mixin SupportsChildrenMixin on SupportsConstructorsMixin {
   /// Default app groupKey.
