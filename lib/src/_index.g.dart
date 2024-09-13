@@ -8,9 +8,8 @@
 //.title~
 
 // --- PUBLIC FILES ---
-export 'inst.dart';
+export 'di.dart';
 export 'di_key.dart';
-export 'di.dart' hide Constructor;
 export 'exceptions/service_not_yet_initialized_exception.dart';
 export 'exceptions/service_already_initialized_exception.dart';
 export 'exceptions/service_already_disposed_exception.dart';
@@ -23,20 +22,6 @@ export 'services/streaming_service.dart';
 // export '_dependency.dart';
 // export '_registry.dart';
 // export '_index.g.dart';
-// export 'di/_di_base.dart';
-// export 'di/_mixins/register_using_runtime_type_mixin.dart';
-// export 'di/_mixins/is_registered_mixin.dart';
-// export 'di/_mixins/remove_dependency_mixin.dart';
-// export 'di/_mixins/focus_group_mixin.dart';
-// export 'di/_mixins/debug_mixin.dart';
-// export 'di/_mixins/until_mixin.dart';
-// export 'di/_mixins/get_mixin.dart';
-// export 'di/_mixins/register_dependency_mixin.dart';
-// export 'di/_mixins/get_using_exact_type_mixin.dart';
-// export 'di/_mixins/unregister_mixin.dart';
-// export 'di/_mixins/get_dependency_mixin.dart';
-// export 'di/_mixins/register_mixin.dart';
-// export 'di/_mixins/child_mixin.dart';
 
 // --- GENERATED FILES (EXCLUDED) ---
 // export '_index.g.dart';

@@ -51,8 +51,8 @@ class DI {
   late DI? _children = this;
 
   /// Returns the total number of registered dependencies.
-  int get registrationCount => _registrationCount;
-  int _registrationCount = 0;
+  int get dependencyCount => _dependencyCount;
+  int _dependencyCount = 0;
 
   /// Register a dependency [value] of type [T] under the specified [groupKey]
   /// in the [registry].
@@ -79,7 +79,7 @@ class DI {
   }) {
     final groupKey1 = groupKey ?? focusGroup;
     final metadata = DependencyMetadata(
-      index: _registrationCount++,
+      index: _dependencyCount++,
       groupKey: groupKey1,
       validator: validator != null ? (e) => validator(e as FutureOr<T>) : null,
       onUnregister: onUnregister != null ? (e) => onUnregister(e as FutureOr<T>) : null,
@@ -150,6 +150,7 @@ class DI {
     final removed = [
       registry.removeDependency<T>(groupKey: groupKey1),
       registry.removeDependency<Future<T>>(groupKey: groupKey1),
+      registry.removeDependency<Constructor<T>>(groupKey: groupKey1),
     ].nonNulls.firstOrNull;
     if (removed == null) {
       throw DependencyNotFoundException(
@@ -305,21 +306,7 @@ class DI {
     ).asValue;
   }
 
-  FutureOr<void> unregisterConstructor<T extends Object>({
-    DIKey? groupKey,
-    bool skipOnUnregisterCallback = false,
-  }) {
-    return unregister<Constructor<T>>(
-      groupKey: groupKey,
-      skipOnUnregisterCallback: skipOnUnregisterCallback,
-    );
-  }
-
-  //
-  //
-  //
-
-  void registerService<P extends Object, T extends Service<P>>(
+  void registerService<T extends Service<Object>>(
     TConstructor<T> constructor, {
     DIKey? groupKey,
     bool Function(FutureOr<T> instance)? validator,
@@ -335,13 +322,13 @@ class DI {
     );
   }
 
-  FutureOr<T>? getServiceSingletonOrNull<P extends Object, T extends Service<P>>(
+  FutureOr<T>? getServiceSingletonOrNull<T extends Service<P>, P extends Object>(
     P params, {
     DIKey? groupKey,
     bool traverse = true,
   }) {
-    return getSingletonOrNull<T>();
-    //?.thenOr((e) => e.initialized ? mapFutureOr(e.initService(params), (_) => e) : e);
+    return getSingletonOrNull<T>()
+        ?.thenOr((e) => e.initialized ? mapFutureOr(e.initService(params), (_) => e) : e);
   }
 
   FutureOr<T>? getSingletonOrNull<T extends Object>({
@@ -360,12 +347,12 @@ class DI {
     getOrNull<Constructor<T>>(groupKey: groupKey)!.asValue.resetSingleton(); // error
   }
 
-  FutureOr<T>? getServiceFactoryOrNull<P extends Object, T extends Service<P>>(
+  FutureOr<T>? getServiceFactoryOrNull<T extends Service<P>, P extends Object>(
     P params, {
     DIKey? groupKey,
     bool traverse = true,
   }) {
-    return getFactoryOrNull<T>(); //?.thenOr((e) => mapFutureOr(e.initService(params), (_) => e));
+    return getFactoryOrNull<T>()?.thenOr((e) => mapFutureOr(e.initService(params), (_) => e));
   }
 
   FutureOr<T>? getFactoryOrNull<T extends Object>({

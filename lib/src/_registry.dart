@@ -12,8 +12,6 @@
 
 import '/src/_internal.dart';
 
-const _protected = protected;
-
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 /// Registry for storing and managing dependencies by runtime type and a group
@@ -51,8 +49,8 @@ final class DIRegistry {
   List<DIKey?> get groupKeys => List.unmodifiable(_state.keys);
 
   /// Updates the [state] by setting or updating [dependency].
-  @_protected
-  void setDependency(Dependency dependency) {
+  @protected
+  void setDependency<T extends Object>(Dependency<T> dependency) {
     final groupKey = dependency.metadata?.groupKey;
     final typeKey = dependency.typeKey;
     final currentDep = _state[groupKey]?[typeKey];
@@ -104,7 +102,7 @@ final class DIRegistry {
 
   /// Returns any dependency of type [T] or subtype of [T] that is associated
   /// with the specified [groupKey] if it exists, or `null`.
-  @_protected
+  @protected
   @pragma('vm:prefer-inline')
   Dependency<T>? getDependencyOrNull<T extends Object>({
     DIKey? groupKey,
@@ -115,7 +113,7 @@ final class DIRegistry {
   /// Returns any dependency with the exact [runtimeType] that is associated
   /// with the specified [groupKey] if it exists, or `null`. Unlike
   /// [getDependencyOrNull], this will not include subtypes.
-  @_protected
+  @protected
   @pragma('vm:prefer-inline')
   Dependency? getDependencyOfRuntimeTypeOrNull(
     Type runtimeType, {
@@ -130,7 +128,7 @@ final class DIRegistry {
   /// Returns any dependency with the exact [typeKey] that is associated with
   /// the specified [groupKey] if it exists, or `null`. Unlike
   /// [getDependencyOrNull], this will not include subtypes.
-  @_protected
+  @protected
   @pragma('vm:prefer-inline')
   Dependency? getDependencyWithKeyOrNull(
     DIKey typeKey, {
@@ -144,7 +142,7 @@ final class DIRegistry {
   ///
   /// Returns the removed [Dependency] of [T], or `null` if it did not exist
   /// within [state].
-  @_protected
+  @protected
   Dependency<T>? removeDependency<T extends Object>({
     DIKey? groupKey,
   }) {
@@ -165,7 +163,7 @@ final class DIRegistry {
   ///
   /// Returns the removed [Dependency] or `null` if it did not exist within
   /// [state].
-  @_protected
+  @protected
   @pragma('vm:prefer-inline')
   Dependency? removeDependencyOfRuntimeType(
     Type runtimeType, {
@@ -183,7 +181,7 @@ final class DIRegistry {
   ///
   /// Returns the removed [Dependency] or `null` if it did not exist within
   /// [state].
-  @_protected
+  @protected
   Dependency? removeDependencyWithKey(
     DIKey typeKey, {
     DIKey? groupKey,
@@ -211,7 +209,7 @@ final class DIRegistry {
 
   /// Updates the [state] by setting or replacing the [group] associated with
   /// the specified [groupKey].
-  @_protected
+  @protected
   void setGroup(
     DependencyGroup<Object> group, {
     DIKey? groupKey,
@@ -235,7 +233,7 @@ final class DIRegistry {
 
   /// Removes the [DependencyGroup] with the specified [groupKey] from the
   /// [state].
-  @_protected
+  @protected
   @pragma('vm:prefer-inline')
   void removeGroup({
     DIKey? groupKey,

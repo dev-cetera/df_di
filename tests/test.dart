@@ -10,16 +10,42 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-import '/src/_internal.dart';
+import 'dart:async';
+
+import 'package:df_di/df_di.dart';
+
+import 'package:test/test.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-/// Exception thrown when attempting to register a dependency that is already registered.
-final class DependencyAlreadyRegisteredException extends DFDIPackageException {
-  DependencyAlreadyRegisteredException({
-    required Object type,
-    required DIKey groupKey,
-  }) : super(
-          condition: 'Dependency of type "$type" in groupKey "$groupKey" is already registered.',
-        );
+void main() {
+  // group(
+  //   'Group 1',
+  //   () {
+  //     test(
+  //       'Test 1',
+  //       () async {
+  //         final di = DI.global;
+  //         expect(0, di.dependencyCount);
+  //         di.registerService(HelloWorldService.new);
+  //         final service = di.getServiceSingletonOrNull<HelloWorldService, String>('Dude!');
+  //         service.
+  //       },
+  //     );
+  //   },
+  // );
+}
+
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+final class HelloWorldService extends Service<String> {
+  @override
+  FutureOr<void> onInitService(String params) {
+    print(params);
+  }
+
+  @override
+  FutureOr<void> onDispose() {
+    print('Disposing $HelloWorldService');
+  }
 }
