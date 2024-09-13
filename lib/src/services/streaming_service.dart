@@ -16,13 +16,13 @@ import '/src/_internal.dart';
 
 /// A base class for services that handle streaming data and require disposal.
 ///
-/// This class is intended to be used within a Dependency Injection [DI] system.
+/// This class is intended to be used within a Dependency Injection [DBI] system.
 ///
 /// It provides a standardized way to manage a stream and its lifecycle,
 /// ensuring that resources are properly cleaned up when the service is
 /// disposed.
-abstract base class StreamingService<TData extends Object,
-    TParams extends Object> extends Service<TParams> {
+abstract base class StreamingService<TData extends Object, TParams extends Object>
+    extends Service<TParams> {
   //
   //
   //
@@ -89,5 +89,4 @@ abstract base class StreamingService<TData extends Object,
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-typedef NoParamsStreamingService<TData extends Object>
-    = StreamingService<TData, Object>;
+typedef NoParamsStreamingService<TData extends Object> = StreamingService<TData, Object>;

@@ -14,22 +14,19 @@
 
 import '/src/_internal.dart';
 
-// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+class DI extends _DI
+    with
+        SupportsConstructorsMixin,
+        SupportsChildrenMixin,
+        SupportsServicesMixin,
+        SupportsRuntimeTypeMixin {
+  // Base class logic
+}
 
-class DI {
+abstract class _DI {
   //
   //
   //
-
-  /// Default app groupKey.
-  static final app = DI();
-
-  /// Default global groupKey.
-  static DI get global => app.child(groupKey: DIKey.globalGroup);
-  static DI get session => global.child(groupKey: DIKey.sessionGroup);
-  static DI get dev => app.child(groupKey: DIKey.devGroup);
-  static DI get prod => app.child(groupKey: DIKey.prodGroup);
-  static DI get test => app.child(groupKey: DIKey.testGroup);
 
   /// Internal registry that stores dependencies.
   @protected
@@ -38,17 +35,11 @@ class DI {
   /// Parent containers.
   final _parents = <DI>{};
 
-  /// Child containers.
-  List<DI> get children => List.unmodifiable(registry.dependencies.where((e) => e.value is DI));
-
   /// A key that identifies the current group in focus for dependency management.
   DIKey? focusGroup = DIKey.defaultGroup;
 
   /// A container storing Future completions.
-  late DI? _completers = this;
-
-  /// A container for storing children.
-  late DI? _children = this;
+  late DI? _completers = this as DI;
 
   /// Returns the total number of registered dependencies.
   int get dependencyCount => _dependencyCount;
@@ -248,7 +239,7 @@ class DI {
   ///
   /// If [traverse] is true, it will also search recursively in parent
   /// containers.
-  FutureOr<T> untilOrNull<T extends Object>({
+  FutureOr<T> until<T extends Object>({
     DIKey? groupKey,
     bool traverse = true,
   }) {
@@ -282,6 +273,51 @@ class DI {
     });
   }
 
+  //
+  //
+  //
+
+  FutureOr<List<Dependency>> unregisterAll({
+    OnUnregisterCallback<Dependency>? onUnregister,
+  }) {
+    final executionQueue = ExecutionQueue();
+    final results = <Dependency>[];
+    for (final dependency in registry.dependencies) {
+      results.add(dependency);
+      executionQueue.add((_) {
+        registry.removeDependencyWithKey(
+          dependency.typeKey,
+          groupKey: dependency.metadata?.groupKey,
+        );
+        return mapFutureOr(
+          dependency.metadata?.onUnregister?.call(dependency.value),
+          (_) => onUnregister?.call(dependency),
+        );
+      });
+    }
+    return mapFutureOr(executionQueue.last(), (_) => results);
+  }
+}
+
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+mixin SupportsConstructorsMixin on _DI {
+  FutureOr<T>? getSingletonOrNull<T extends Object>({
+    DIKey? groupKey,
+    bool traverse = true,
+  }) {
+    return getOrNull<Constructor<T>>(
+      groupKey: groupKey,
+      traverse: traverse,
+    )?.asValue.singleton;
+  }
+
+  void resetSingleton<T extends Object>({
+    DIKey? groupKey,
+  }) {
+    getOrNull<Constructor<T>>(groupKey: groupKey)!.asValue.resetSingleton(); // error
+  }
+
   Constructor<T> registerConstructor<T extends Object>(
     TConstructor<T> constructor, {
     DIKey? groupKey,
@@ -306,6 +342,45 @@ class DI {
     ).asValue;
   }
 
+  FutureOr<T>? getFactoryOrNull<T extends Object>({
+    DIKey? groupKey,
+    bool traverse = true,
+  }) {
+    return getOrNull<Constructor<T>>(
+      groupKey: groupKey,
+      traverse: traverse,
+    )?.asValue.factory;
+  }
+}
+
+typedef TConstructor<T extends Object> = FutureOr<T> Function();
+
+class Constructor<T extends Object> {
+  FutureOr<T>? _instance;
+  final TConstructor<T> _constructor;
+
+  Constructor(this._constructor);
+
+  /// Returns the singleton instance, creating it if necessary.
+  FutureOr<T> get singleton {
+    _instance ??= _constructor();
+    return _instance!;
+  }
+
+  /// Returns a new instance each time, acting as a factory.
+  FutureOr<T> get factory {
+    return _constructor();
+  }
+
+  /// Resets the singleton instance, allowing it to be re-created on the next call.
+  void resetSingleton() {
+    _instance = null;
+  }
+}
+
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+mixin SupportsServicesMixin on SupportsConstructorsMixin {
   void registerService<T extends Service<Object>>(
     TConstructor<T> constructor, {
     DIKey? groupKey,
@@ -322,61 +397,114 @@ class DI {
     );
   }
 
-  FutureOr<T>? getServiceSingletonOrNull<T extends Service<P>, P extends Object>(
-    P params, {
+  FutureOr<T>? getServiceSingletonOrNull<T extends Service<Object>>({
+    Object? params,
     DIKey? groupKey,
     bool traverse = true,
   }) {
-    return getSingletonOrNull<T>()
-        ?.thenOr((e) => e.initialized ? mapFutureOr(e.initService(params), (_) => e) : e);
-  }
-
-  FutureOr<T>? getSingletonOrNull<T extends Object>({
-    DIKey? groupKey,
-    bool traverse = true,
-  }) {
-    return getOrNull<Constructor<T>>(
+    return getServiceSingletonWithParamsOrNull<T, Object>(
+      params: params,
       groupKey: groupKey,
       traverse: traverse,
-    )?.asValue.singleton;
+    );
   }
 
-  void resetSingleton<T extends Object>({
-    DIKey? groupKey,
-  }) {
-    getOrNull<Constructor<T>>(groupKey: groupKey)!.asValue.resetSingleton(); // error
-  }
-
-  FutureOr<T>? getServiceFactoryOrNull<T extends Service<P>, P extends Object>(
-    P params, {
+  FutureOr<T>? getServiceSingletonWithParamsOrNull<T extends Service<P>, P extends Object>({
+    P? params,
     DIKey? groupKey,
     bool traverse = true,
   }) {
-    return getFactoryOrNull<T>()?.thenOr((e) => mapFutureOr(e.initService(params), (_) => e));
+    final singleton = getSingletonOrNull<T>();
+    if (params != null) {
+      return singleton
+          ?.thenOr((e) => e.initialized ? mapFutureOr(e.initService(params), (_) => e) : e);
+    } else {
+      return singleton;
+    }
   }
 
-  FutureOr<T>? getFactoryOrNull<T extends Object>({
+  FutureOr<T>? getServiceFactoryOrNull<T extends Service<Object>>({
+    Object? params,
     DIKey? groupKey,
     bool traverse = true,
   }) {
-    return getOrNull<Constructor<T>>(
+    return getServiceFactoryWithParamsOrNull<T, Object>(
+      params: params,
       groupKey: groupKey,
       traverse: traverse,
-    )?.asValue.factory;
+    );
   }
 
-  //
-  //
-  //
+  FutureOr<T>? getServiceFactoryWithParamsOrNull<T extends Service<P>, P extends Object>({
+    P? params,
+    DIKey? groupKey,
+    bool traverse = true,
+  }) {
+    final singleton = getFactoryOrNull<T>();
+    if (params != null) {
+      return singleton
+          ?.thenOr((e) => e.initialized ? mapFutureOr(e.initService(params), (_) => e) : e);
+    } else {
+      return singleton;
+    }
+  }
+}
+
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+mixin SupportsRuntimeTypeMixin on _DI {
+  FutureOr<Object> unregister1(
+    Type runtimeType, {
+    DIKey? groupKey,
+    bool skipOnUnregisterCallback = false,
+  }) {
+    final groupKey1 = groupKey ?? focusGroup;
+    final removed = [
+      registry.removeDependencyWithKey(DIKey.type(runtimeType), groupKey: groupKey1),
+      registry.removeDependencyWithKey(DIKey.type(Future, [runtimeType]), groupKey: groupKey1),
+    ].nonNulls.firstOrNull;
+    if (removed == null) {
+      throw DependencyNotFoundException(
+        groupKey: groupKey1,
+        type: runtimeType,
+      );
+    }
+    final value = removed.value as FutureOr<Object>;
+    if (skipOnUnregisterCallback) {
+      return value;
+    }
+    return mapFutureOr(
+      removed.metadata?.onUnregister?.call(value),
+      (_) => value,
+    );
+  }
+}
+
+mixin SupportsChildrenMixin on SupportsConstructorsMixin {
+  /// Default app groupKey.
+  static final app = DI();
+
+  /// Default global groupKey.
+  static DI get global => (app as SupportsChildrenMixin).child(groupKey: DIKey.globalGroup);
+  static DI get session => (global as SupportsChildrenMixin).child(groupKey: DIKey.sessionGroup);
+  static DI get dev => (app as SupportsChildrenMixin).child(groupKey: DIKey.devGroup);
+  static DI get prod => (app as SupportsChildrenMixin).child(groupKey: DIKey.prodGroup);
+  static DI get test => (app as SupportsChildrenMixin).child(groupKey: DIKey.testGroup);
+
+  /// A container for storing children.
+  late SupportsChildrenMixin? _children = this;
+
+  /// Child containers.
+  List<DI> get children => List.unmodifiable(registry.dependencies.where((e) => e.value is DI));
 
   void registerChild({
     DIKey? groupKey,
     bool Function(FutureOr<DI>)? validator,
     OnUnregisterCallback<FutureOr<DI>>? onUnregister,
   }) {
-    _children ??= DI();
+    _children ??= DI() as SupportsChildrenMixin;
     _children!.registerConstructor<DI>(
-      () => DI().._parents.add(this),
+      () => DI().._parents.add(this as DI),
       groupKey: groupKey,
       validator: validator,
       onUnregister: (e) => mapFutureOr(onUnregister?.call(e), (_) => e.asValue.unregisterAll()),
@@ -409,88 +537,6 @@ class DI {
       onUnregister: onUnregister,
     );
     return getChildOrNull(groupKey: groupKey)!;
-  }
-
-  //
-  //
-  //
-
-  FutureOr<List<Dependency>> unregisterAll({
-    OnUnregisterCallback<Dependency>? onUnregister,
-  }) {
-    final executionQueue = ExecutionQueue();
-    final results = <Dependency>[];
-    for (final dependency in registry.dependencies) {
-      results.add(dependency);
-      executionQueue.add((_) {
-        registry.removeDependencyWithKey(
-          dependency.typeKey,
-          groupKey: dependency.metadata?.groupKey,
-        );
-        return mapFutureOr(
-          dependency.metadata?.onUnregister?.call(dependency.value),
-          (_) => onUnregister?.call(dependency),
-        );
-      });
-    }
-    return mapFutureOr(executionQueue.last(), (_) => results);
-  }
-
-  //
-  //
-  //
-
-  FutureOr<Object> unregister1(
-    Type runtimeType, {
-    DIKey? groupKey,
-    bool skipOnUnregisterCallback = false,
-  }) {
-    final groupKey1 = groupKey ?? focusGroup;
-    final removed = [
-      registry.removeDependencyWithKey(DIKey.type(runtimeType), groupKey: groupKey1),
-      registry.removeDependencyWithKey(DIKey.type(Future, [runtimeType]), groupKey: groupKey1),
-    ].nonNulls.firstOrNull;
-    if (removed == null) {
-      throw DependencyNotFoundException(
-        groupKey: groupKey1,
-        type: runtimeType,
-      );
-    }
-    final value = removed.value as FutureOr<Object>;
-    if (skipOnUnregisterCallback) {
-      return value;
-    }
-    return mapFutureOr(
-      removed.metadata?.onUnregister?.call(value),
-      (_) => value,
-    );
-  }
-}
-
-// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-
-typedef TConstructor<T extends Object> = FutureOr<T> Function();
-
-class Constructor<T extends Object> {
-  FutureOr<T>? _instance;
-  final TConstructor<T> _constructor;
-
-  Constructor(this._constructor);
-
-  /// Returns the singleton instance, creating it if necessary.
-  FutureOr<T> get singleton {
-    _instance ??= _constructor();
-    return _instance!;
-  }
-
-  /// Returns a new instance each time, acting as a factory.
-  FutureOr<T> get factory {
-    return _constructor();
-  }
-
-  /// Resets the singleton instance, allowing it to be re-created on the next call.
-  void resetSingleton() {
-    _instance = null;
   }
 }
 

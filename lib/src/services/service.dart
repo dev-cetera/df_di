@@ -16,7 +16,7 @@ import '/src/_internal.dart';
 
 /// A base class for services that require initialization and disposal management.
 ///
-/// This class is intended to be used within a Dependency Injection [DI] system.
+/// This class is intended to be used within a Dependency Injection [DBI] system.
 ///
 /// It provides a standardized structure for managing the lifecycle of services,
 /// ensuring they are properly initialized when needed and disposed of when no
@@ -65,9 +65,9 @@ abstract base class Service<TParams extends Object?> {
   ///
   /// Do not override this method. Instead, override [onDispose].
   ///
-  /// Do not call this method directly. Use [DI.registerSingletonService] or
-  /// [DI.registerFactoryService] which will automatically call this methid
-  /// on [DI.unregister].
+  /// Do not call this method directly. Use [DBI.registerSingletonService] or
+  /// [DBI.registerFactoryService] which will automatically call this methid
+  /// on [DBI.unregister].
   @protected
   @nonVirtual
   FutureOr<void> dispose() {
