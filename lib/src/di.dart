@@ -42,7 +42,7 @@ abstract class DIBase {
   DIKey? focusGroup = DIKey.defaultGroup;
 
   /// A container storing Future completions.
-  late DI? _completers = this as DI;
+  late DI? _completers;
 
   /// Returns the total number of registered dependencies.
   int get dependencyCount => _dependencyCount;
