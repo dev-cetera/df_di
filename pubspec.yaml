@@ -11,7 +11,7 @@
 ##.title~
 
 name: df_di
-description: A pragmatic dependency injection (DI) system, coupled with service classes for seamless state management.
+description: A pragmatic dependency injection (DI) system, coupled with service classes for seamless state management in Dart.
 version: 0.3.0
 repository: https://github.com/robmllze/df_di
 funding:

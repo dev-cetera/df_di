@@ -10,7 +10,7 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-/// A pragmatic dependency injection (DI) system, coupled with service classes for seamless state management.
+/// A pragmatic dependency injection (DI) system, coupled with service classes for seamless state management in Dart.
 library;
 
 export 'src/_index.g.dart';
