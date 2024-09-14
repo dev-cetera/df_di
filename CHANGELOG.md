@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.3.1]
+
+- Released @ 9/2024 (UTC)
+- chore: Add initialDataCompleter to StreamingService
+
 ## [0.3.0]
 
 - Released @ 9/2024 (UTC)

@@ -68,7 +68,8 @@ base class DIBase {
       index: dependencyCount++,
       groupKey: groupKey1,
       validator: validator != null ? (e) => validator(e as FutureOr<T>) : null,
-      onUnregister: onUnregister != null ? (e) => onUnregister(e as FutureOr<T>) : null,
+      onUnregister:
+          onUnregister != null ? (e) => onUnregister(e as FutureOr<T>) : null,
     );
     completeRegistration(value);
     final registeredDep = _registerDependency(
@@ -398,7 +399,8 @@ base class DIBase {
           );
           return mapFutureOr(
             dependency.metadata?.onUnregister?.call(dependency.value),
-            (_) => mapFutureOr(onUnregister?.call(dependency), (_) => dependency),
+            (_) =>
+                mapFutureOr(onUnregister?.call(dependency), (_) => dependency),
           );
         },
       );

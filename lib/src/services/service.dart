@@ -48,7 +48,8 @@ abstract base class Service<TParams extends Object?> {
       throw ServiceAlreadyInitializedException();
     }
 
-    return mapFutureOr(onInitService(params), (_) => _initializedCompleter.complete(null));
+    return mapFutureOr(
+        onInitService(params), (_) => _initializedCompleter.complete(null),);
   }
 
   /// Override to define any necessary initialization to be called immediately

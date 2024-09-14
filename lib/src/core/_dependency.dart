@@ -155,7 +155,8 @@ class DependencyMetadata {
 /// in order to facilitate any necessary cleanup or additional processing
 /// that might be required for the [value].
 @internal
-typedef OnUnregisterCallback<T extends Object> = FutureOr<void> Function(T value);
+typedef OnUnregisterCallback<T extends Object> = FutureOr<void> Function(
+    T value,);
 
 /// A typedef for a function that evaluates the validity of a dependency.
 @internal

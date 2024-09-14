@@ -24,7 +24,8 @@ Future<void> main() async {
   final di = DI();
   print('DI.global == di: ${DI.global == di}');
 
-  print('\n# Get the state of the global DI container (prints an empty map):\n');
+  print(
+      '\n# Get the state of the global DI container (prints an empty map):\n',);
   print(di.registry.state);
 
   print('\n# Create a new DI container:\n');
@@ -50,7 +51,8 @@ Future<void> main() async {
 
   print('\n# Register Futures:\n');
   DI.prod.register<double>(Future<double>.value(pi));
-  di.register<double>(Future.delayed(const Duration(milliseconds: 10), () => pi));
+  di.register<double>(
+      Future.delayed(const Duration(milliseconds: 10), () => pi),);
   print('PI is ${await DI.prod.getOrNull<double>()}');
 
   print('Get access to the global DI container:\n\n');

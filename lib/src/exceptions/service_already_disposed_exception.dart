@@ -18,6 +18,7 @@ import '/src/_internal.dart';
 final class ServiceAlreadyDisposedException extends DFDIPackageException {
   ServiceAlreadyDisposedException()
       : super(
-          condition: 'Cannot interact with a DisposableService that has already been disposed.',
+          condition:
+              'Cannot interact with a DisposableService that has already been disposed.',
         );
 }

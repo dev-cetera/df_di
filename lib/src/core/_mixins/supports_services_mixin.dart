@@ -16,7 +16,8 @@ import '/src/_internal.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsRuntimeTypeMixin {
+base mixin SupportsServicesMixin
+    on SupportsConstructorsMixin, SupportsRuntimeTypeMixin {
   void registerService<T extends Service<Object>>(
     TConstructor<T> constructor, {
     DIKey? groupKey,
@@ -85,7 +86,8 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsRuntimeTy
     );
   }
 
-  FutureOr<T> getServiceSingletonWithParams<T extends Service<P>, P extends Object>({
+  FutureOr<T>
+      getServiceSingletonWithParams<T extends Service<P>, P extends Object>({
     P? params,
     DIKey? groupKey,
     bool traverse = true,
@@ -118,14 +120,15 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsRuntimeTy
     });
   }
 
-  FutureOr<T>? getServiceSingletonWithParamsOrNull<T extends Service<P>, P extends Object?>({
+  FutureOr<T>? getServiceSingletonWithParamsOrNull<T extends Service<P>,
+      P extends Object?>({
     P? params,
     DIKey? groupKey,
     bool traverse = true,
   }) {
     final instance = getSingletonOrNull<T>();
-    return instance
-        ?.thenOr((e) => e.initialized ? e : mapFutureOr(e.initService(params), (_) => e));
+    return instance?.thenOr((e) =>
+        e.initialized ? e : mapFutureOr(e.initService(params), (_) => e),);
   }
 
   FutureOr<Service<Object>> getServiceFactoryT(
@@ -182,7 +185,8 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsRuntimeTy
     );
   }
 
-  FutureOr<T> getServiceFactoryWithParams<T extends Service<P>, P extends Object>({
+  FutureOr<T>
+      getServiceFactoryWithParams<T extends Service<P>, P extends Object>({
     P? params,
     DIKey? groupKey,
     bool traverse = true,
@@ -215,13 +219,14 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsRuntimeTy
     });
   }
 
-  FutureOr<T>? getServiceFactoryWithParamsOrNull<T extends Service<P>, P extends Object>({
+  FutureOr<T>? getServiceFactoryWithParamsOrNull<T extends Service<P>,
+      P extends Object>({
     P? params,
     DIKey? groupKey,
     bool traverse = true,
   }) {
     final instance = getFactoryOrNull<T>();
-    return instance
-        ?.thenOr((e) => e.initialized ? e : mapFutureOr(e.initService(params), (_) => e));
+    return instance?.thenOr((e) =>
+        e.initialized ? e : mapFutureOr(e.initService(params), (_) => e),);
   }
 }
