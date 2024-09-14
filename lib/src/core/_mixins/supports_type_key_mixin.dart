@@ -22,35 +22,6 @@ base mixin SupportsTypeKeyMixin on DIBase {
   //
 
   @protected
-  FutureOr<Object> registerK(
-    FutureOr<Object> value, {
-    DIKey? groupKey,
-    DependencyValidator<FutureOr<Object>>? validator,
-    OnUnregisterCallback<FutureOr<Object>>? onUnregister,
-  }) {
-    final groupKey1 = groupKey ?? focusGroup;
-    final metadata = DependencyMetadata(
-      index: dependencyCount++,
-      groupKey: groupKey1,
-      validator: validator,
-      onUnregister: onUnregister,
-    );
-    completeRegistration(value);
-    final registeredDep = _registerDependencyK(
-      dependency: Dependency(
-        value,
-        metadata: metadata,
-      ),
-      checkExisting: true,
-    );
-    return registeredDep.value;
-  }
-
-  //
-  //
-  //
-
-  @protected
   Dependency<FutureOr<Object>> _registerDependencyK({
     required Dependency<FutureOr<Object>> dependency,
     bool checkExisting = false,
@@ -113,6 +84,31 @@ base mixin SupportsTypeKeyMixin on DIBase {
       removed.metadata?.onUnregister?.call(value),
       (_) => value,
     );
+  }
+
+  //
+  //
+  //
+
+  @protected
+  FutureOr<Object> getK(
+    DIKey typeKey, {
+    DIKey? groupKey,
+    bool traverse = true,
+  }) {
+    final value = getOrNullK(
+      typeKey,
+      groupKey: groupKey,
+      traverse: traverse,
+    );
+
+    if (value == null) {
+      throw DependencyNotFoundException(
+        type: typeKey,
+        groupKey: groupKey,
+      );
+    }
+    return value;
   }
 
   //

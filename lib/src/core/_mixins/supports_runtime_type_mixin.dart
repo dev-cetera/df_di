@@ -21,17 +21,16 @@ base mixin SupportsRuntimeTypeMixin on SupportsTypeKeyMixin {
   //
   //
 
-  FutureOr<Object> registerT(
-    FutureOr<Object> value, {
+  @protected
+  FutureOr<Object> getT(
+    Type type, {
     DIKey? groupKey,
-    DependencyValidator<FutureOr<Object>>? validator,
-    OnUnregisterCallback<FutureOr<Object>>? onUnregister,
+    bool traverse = true,
   }) {
-    return registerK(
-      value,
+    return getK(
+      DIKey(type),
       groupKey: groupKey,
-      validator: validator,
-      onUnregister: onUnregister,
+      traverse: traverse,
     );
   }
 
@@ -40,12 +39,12 @@ base mixin SupportsRuntimeTypeMixin on SupportsTypeKeyMixin {
   //
 
   FutureOr<Object> unregisterT(
-    Type runtimeType, {
+    Type type, {
     DIKey? groupKey,
     bool skipOnUnregisterCallback = false,
   }) {
     return unregisterK(
-      DIKey(runtimeType),
+      DIKey(type),
       groupKey: groupKey,
       skipOnUnregisterCallback: skipOnUnregisterCallback,
     );
@@ -56,12 +55,12 @@ base mixin SupportsRuntimeTypeMixin on SupportsTypeKeyMixin {
   //
 
   FutureOr<Object>? getOrNullT(
-    Type runtimeType, {
+    Type type, {
     DIKey? groupKey,
     bool traverse = true,
   }) {
     return getOrNullK(
-      DIKey(runtimeType),
+      DIKey(type),
       groupKey: groupKey,
       traverse: traverse,
     );
@@ -72,12 +71,12 @@ base mixin SupportsRuntimeTypeMixin on SupportsTypeKeyMixin {
   //
 
   FutureOr<Object> untilT(
-    Type runtimeType, {
+    Type type, {
     DIKey? groupKey,
     bool traverse = true,
   }) {
     return untilK(
-      DIKey(runtimeType),
+      DIKey(type),
       groupKey: groupKey,
       traverse: traverse,
     );

@@ -26,8 +26,8 @@ void main() {
         'Test 1',
         () async {
           final di = DI.global;
-          di.registerT(1);
-          di.registerT('2');
+          di.register(1);
+          di.register('2');
           expect(1, di.getOrNullT(int));
           expect('2', di.getOrNullT(String));
           di.unregisterT(int);

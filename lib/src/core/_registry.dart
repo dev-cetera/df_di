@@ -71,18 +71,18 @@ final class DIRegistry {
     return getDependencyOrNull<T>(groupKey: groupKey) != null;
   }
 
-  /// Checks if any dependency with the exact [runtimeType] exists that is
+  /// Checks if any dependency with the exact [type] exists that is
   /// associated with the specified [groupKey]. Unlike [containsDependency],
-  /// this will not include subtypes of [runtimeType].
+  /// this will not include subtypes of [type].
   ///
   /// Returns `true` if it does and `false` if it doesn't.
   @pragma('vm:prefer-inline')
   bool containsDependencyT(
-    Type runtimeType, {
+    Type type, {
     DIKey? groupKey,
   }) {
     return containsDependencyK(
-      DIKey(runtimeType),
+      DIKey(type),
       groupKey: groupKey,
     );
   }
@@ -110,17 +110,17 @@ final class DIRegistry {
     return _state[groupKey]?.values.firstWhereOrNull((e) => e.value is T)?.cast<T>();
   }
 
-  /// Returns any dependency with the exact [runtimeType] that is associated
+  /// Returns any dependency with the exact [type] that is associated
   /// with the specified [groupKey] if it exists, or `null`. Unlike
   /// [getDependencyOrNull], this will not include subtypes.
   @protected
   @pragma('vm:prefer-inline')
   Dependency? getDependencyOrNullT(
-    Type runtimeType, {
+    Type type, {
     DIKey? groupKey,
   }) {
     return getDependencyOrNullK(
-      DIKey(runtimeType),
+      DIKey(type),
       groupKey: groupKey,
     );
   }
@@ -157,7 +157,7 @@ final class DIRegistry {
     return null;
   }
 
-  /// Removes any dependency with the exact [runtimeType] that is associated
+  /// Removes any dependency with the exact [type] that is associated
   /// with the specified [groupKey]. Unlike [removeDependency], this will not
   /// include any subtypes.
   ///
@@ -166,11 +166,11 @@ final class DIRegistry {
   @protected
   @pragma('vm:prefer-inline')
   Dependency? removeDependencyT(
-    Type runtimeType, {
+    Type type, {
     DIKey? groupKey,
   }) {
     return removeDependencyK(
-      DIKey(runtimeType),
+      DIKey(type),
       groupKey: groupKey,
     );
   }

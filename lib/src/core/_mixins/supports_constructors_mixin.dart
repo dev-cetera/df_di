@@ -17,6 +17,14 @@ import '/src/_internal.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 base mixin SupportsConstructorsMixin on SupportsRuntimeTypeMixin {
+  void resetSingletonT(
+    Type type, {
+    DIKey? groupKey,
+  }) {
+    (getK(DIKey.type(Constructor, [type]), groupKey: groupKey) as Constructor)
+        .resetSingleton();
+  }
+
   void resetSingleton<T extends Object>({
     DIKey? groupKey,
   }) {
@@ -47,6 +55,26 @@ base mixin SupportsConstructorsMixin on SupportsRuntimeTypeMixin {
     ).asValue;
   }
 
+  FutureOr<Object> getSingletonT(
+    Type type, {
+    DIKey? groupKey,
+    bool traverse = true,
+  }) {
+    final value = getSingletonOrNullT(
+      type,
+      groupKey: groupKey,
+      traverse: traverse,
+    );
+
+    if (value == null) {
+      throw DependencyNotFoundException(
+        type: type,
+        groupKey: groupKey,
+      );
+    }
+    return value;
+  }
+
   FutureOr<T> getSingleton<T extends Object>({
     DIKey? groupKey,
     bool traverse = true,
@@ -65,6 +93,19 @@ base mixin SupportsConstructorsMixin on SupportsRuntimeTypeMixin {
     return value;
   }
 
+  FutureOr<Object>? getSingletonOrNullT(
+    Type type, {
+    DIKey? groupKey,
+    bool traverse = true,
+  }) {
+    return (getOrNullK(
+      DIKey.type(Constructor, [type]),
+      groupKey: groupKey,
+      traverse: traverse,
+    ) as Constructor?)
+        ?.singleton;
+  }
+
   FutureOr<T>? getSingletonOrNull<T extends Object>({
     DIKey? groupKey,
     bool traverse = true,
@@ -73,6 +114,26 @@ base mixin SupportsConstructorsMixin on SupportsRuntimeTypeMixin {
       groupKey: groupKey,
       traverse: traverse,
     )?.asValue.singleton;
+  }
+
+  FutureOr<Object> getFactoryT(
+    Type type, {
+    DIKey? groupKey,
+    bool traverse = true,
+  }) {
+    final value = getFactoryOrNullT(
+      type,
+      groupKey: groupKey,
+      traverse: traverse,
+    );
+
+    if (value == null) {
+      throw DependencyNotFoundException(
+        type: type,
+        groupKey: groupKey,
+      );
+    }
+    return value;
   }
 
   FutureOr<T> getFactory<T extends Object>({
@@ -91,6 +152,19 @@ base mixin SupportsConstructorsMixin on SupportsRuntimeTypeMixin {
       );
     }
     return value;
+  }
+
+  FutureOr<Object>? getFactoryOrNullT(
+    Type type, {
+    DIKey? groupKey,
+    bool traverse = true,
+  }) {
+    return (getOrNullK(
+      DIKey.type(Constructor, [type]),
+      groupKey: groupKey,
+      traverse: traverse,
+    ) as Constructor?)
+        ?.factory;
   }
 
   FutureOr<T>? getFactoryOrNull<T extends Object>({
