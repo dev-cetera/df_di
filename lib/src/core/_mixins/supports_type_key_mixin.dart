@@ -90,6 +90,46 @@ base mixin SupportsTypeKeyMixin on DIBase {
   //
   //
 
+  bool isRegisteredK(
+    DIKey typeKey, {
+    DIKey? groupKey,
+    bool traverse = true,
+  }) {
+    final groupKey1 = groupKey ?? focusGroup;
+    return [
+      () =>
+          registry.getDependencyOrNullK(
+            typeKey,
+            groupKey: groupKey1,
+          ) !=
+          null,
+      () =>
+          registry.getDependencyOrNullK(
+            DIKey.type(Future, [typeKey]),
+            groupKey: groupKey1,
+          ) !=
+          null,
+      () =>
+          registry.getDependencyOrNullK(
+            DIKey.type(Constructor, [typeKey]),
+            groupKey: groupKey1,
+          ) !=
+          null,
+      if (traverse)
+        () => parents.any(
+              (e) => (e as SupportsTypeKeyMixin).isRegisteredK(
+                typeKey,
+                groupKey: groupKey,
+                traverse: true,
+              ),
+            ),
+    ].any((e) => e());
+  }
+
+  //
+  //
+  //
+
   @protected
   FutureOr<Object> getK(
     DIKey typeKey, {

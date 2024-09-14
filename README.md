@@ -11,7 +11,7 @@ Dart & Flutter Packages by DevCetra.com & contributors.
 
 ## Summary
 
-This package provides a powerful and flexible dependency injection (DI) system, coupled with service classes for seamless state management in Dart.
+This package provides a pragmatic dependency injection (DI) system, coupled with service classes for seamless state management in Dart.
 
 ## Features
 
@@ -52,27 +52,24 @@ di.register<int>(0, groupKey: DIKey.testGroup);
 di.register(Future.value('Hello, DI!'));
 print(di.get<String>()); // Instance of 'Future<String>'
 
-// Register a singleton that lazily initializes. The result will always be 1.
+// Register a factory or lazy singleton constructor.
 int n = 0;
-di.registerLazySingleton<int>(() => n + 1);
-
-// Register a factory that returns a new instance each time.
-di.registerFactory(() => DateTime.now());
+di.registerConstructor<int>(() => n + 1);
+di.registerConstructor(() => DateTime.now());
 ```
 
 ### Unregistering Dependencies:
 
 ```dart
 // Unregister a specific type.
-di.unregister<int>();
-Type intType = int;
-di.unregisterUsingRuntimeType(intType);
+  di.unregister<int>();
+  di.unregisterT(int);
 
 // Unregister all dependencies, resetting the container.
-di.unregisterAll();
+  di.unregisterAll();
 
 // Unregister child containers when they’re no longer needed.
-di.unregisterChild();
+  di.unregisterChild();
 ```
 
 ### Getting Dependencies:
@@ -81,7 +78,7 @@ di.unregisterChild();
 // Retrieve a registered integer dependency.
 print(di<int>()); // 42
 Type intType = int;
-print(di.getUsingRuntimeType(intType)); // 42
+print(di.getT(intType)); // 42
 
 // Retrieve a dependency registered under a specific groupKey.
 print(di.get<int>(groupKey: DIKey('testGroup'))); // 0
@@ -94,7 +91,7 @@ print(greeting); // Hello, DI!
 final now = di.getFactory<DateTime>();
 print(now); // Current timestamp
 await Future.delayed(Duration(seconds: 1));
-final now1 = di.getFactoryUsingRuntimeType(DateTime);
+final now1 = di.getFactoryT(DateTime);
 print(now1);  // A second later
 ```
 
@@ -121,10 +118,10 @@ final class UserService extends Service<Object> {
 }
 
 // Register the service.
-di.registerLazySingletonService(UserService.new);
+di.registerService(UserService.new);
 
 // Access the service.
-final userService = await di.get<UserService>();
+final userService = await di.getServiceSingleton<UserService>();
 print(userService.userName.value); // John Doe
 ```
 
@@ -148,8 +145,8 @@ final class SyncInitAsyncDisposeService extends Service<Object> {
 }
 
 // Register and use the service.
-di.registerLazySingletonService(SyncInitAsyncDisposeService.new);
-final service = di.get<SyncInitAsyncDisposeService>();
+di.registerService(SyncInitAsyncDisposeService.new);
+final service = di.getServiceSingleton<SyncInitAsyncDisposeService>();
 await di.unregister<SyncInitAsyncDisposeService>();
 ```
 
@@ -172,8 +169,8 @@ final class AsyncInitSyncDisposeService extends Service<Object> {
 }
 
 // Register and use the service.
-di.registerLazySingletonService(AsyncInitSyncDisposeService.new);
-final service = await di.get<AsyncInitSyncDisposeService>();
+di.registerService(AsyncInitSyncDisposeService.new);
+final service = await di.getServiceSingleton<AsyncInitSyncDisposeService>();
 di.unregister<AsyncInitSyncDisposeService>();
 ```
 
@@ -185,9 +182,6 @@ print(di.registry.state);
 
 // Check if a specific type is registered.
 print(di.isRegistered<int>()); // true
-
-// Inspect how a dependency was registered.
-print(di.registrationType<String>()); // FactoryInst<String>
 ```
 
 ## Installation

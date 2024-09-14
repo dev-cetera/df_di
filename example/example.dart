@@ -62,7 +62,7 @@ Future<void> main() async {
   print(di.registry.state.entries);
 
   final fooBarService1 = await di.getServiceSingletonOrNull<FooBarService>();
-  final fooBarService2 = await di.getServiceSingletonOrNull<FooBarService>();
+  final fooBarService2 = await di.getServiceSingletonT(FooBarService);
   print(fooBarService1 == fooBarService2);
 
   print(di.registry.state.entries);

@@ -170,6 +170,41 @@ base class DIBase {
     );
   }
 
+  /// Checks whether dependency of type [T] or subtype of [T] is registered.
+  ///
+  /// If [traverse] is true, it will also search recursively in parent
+  /// containers.
+  bool isRegistered<T extends Object>({
+    DIKey? groupKey,
+    bool traverse = true,
+  }) {
+    final groupKey1 = groupKey ?? focusGroup;
+    return [
+      () =>
+          registry.getDependencyOrNull<T>(
+            groupKey: groupKey1,
+          ) !=
+          null,
+      () =>
+          registry.getDependencyOrNull<Future<T>>(
+            groupKey: groupKey1,
+          ) !=
+          null,
+      () =>
+          registry.getDependencyOrNull<Constructor<T>>(
+            groupKey: groupKey1,
+          ) !=
+          null,
+      if (traverse)
+        () => parents.any(
+              (e) => e.isRegistered(
+                groupKey: groupKey1,
+                traverse: true,
+              ),
+            ),
+    ].any((e) => e());
+  }
+
   /// Returns any dependency of type [T] or subtype of [T] that is associated
   /// with the specified [groupKey].
   ///

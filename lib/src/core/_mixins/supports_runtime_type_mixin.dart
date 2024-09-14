@@ -54,6 +54,22 @@ base mixin SupportsRuntimeTypeMixin on SupportsTypeKeyMixin {
   //
   //
 
+  bool isRegisteredT(
+    Type type, {
+    DIKey? groupKey,
+    bool traverse = true,
+  }) {
+    return isRegisteredK(
+      DIKey(type),
+      groupKey: groupKey,
+      traverse: traverse,
+    );
+  }
+
+  //
+  //
+  //
+
   FutureOr<Object>? getOrNullT(
     Type type, {
     DIKey? groupKey,

@@ -37,6 +37,22 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     );
   }
 
+  DI getChild({
+    DIKey? groupKey,
+  }) {
+    final value = getChildOrNull(
+      groupKey: groupKey,
+    );
+
+    if (value == null) {
+      throw DependencyNotFoundException(
+        type: DI,
+        groupKey: groupKey,
+      );
+    }
+    return value;
+  }
+
   DI? getChildOrNull({
     DIKey? groupKey,
   }) {
@@ -46,6 +62,22 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
           traverse: false,
         )
         ?.asValue;
+  }
+
+  FutureOr<Object> unregisterChild({
+    DIKey<Object>? groupKey,
+    bool skipOnUnregisterCallback = false,
+  }) {
+    if (_children == null) {
+      throw DependencyNotFoundException(
+        type: DI,
+        groupKey: groupKey,
+      );
+    }
+    return _children!.unregister<DI>(
+      groupKey: groupKey,
+      skipOnUnregisterCallback: skipOnUnregisterCallback,
+    );
   }
 
   DI child({
