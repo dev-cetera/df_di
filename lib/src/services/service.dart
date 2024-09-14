@@ -16,7 +16,7 @@ import '/src/_internal.dart';
 
 /// A base class for services that require initialization and disposal management.
 ///
-/// This class is intended to be used within a Dependency Injection [DB] system.
+/// This class is intended to be used within a Dependency Injection [DI] system.
 ///
 /// It provides a standardized structure for managing the lifecycle of services,
 /// ensuring they are properly initialized when needed and disposed of when no
@@ -43,7 +43,7 @@ abstract base class Service<TParams extends Object?> {
   ///
   /// Do not override this method. Instead, override [onInitService].
   @nonVirtual
-  FutureOr<void> initService(TParams? params) {
+  FutureOr<void> initService([TParams? params]) {
     if (initialized) {
       throw ServiceAlreadyInitializedException();
     }
@@ -65,9 +65,9 @@ abstract base class Service<TParams extends Object?> {
   ///
   /// Do not override this method. Instead, override [onDispose].
   ///
-  /// Do not call this method directly. Use [DB.registerSingletonService] or
-  /// [DB.registerFactoryService] which will automatically call this methid
-  /// on [DB.unregister].
+  /// Do not call this method directly. Use [DI.registerSingletonService] or
+  /// [DI.registerFactoryService] which will automatically call this methid
+  /// on [DI.unregister].
   @protected
   @nonVirtual
   FutureOr<void> dispose() {

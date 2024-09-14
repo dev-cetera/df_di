@@ -16,12 +16,12 @@ import '/src/_internal.dart';
 
 /// A base class for services that handle streaming data and require disposal.
 ///
-/// This class is intended to be used within a Dependency Injection [DB] system.
+/// This class is intended to be used within a Dependency Injection [DI] system.
 ///
 /// It provides a standardized way to manage a stream and its lifecycle,
 /// ensuring that resources are properly cleaned up when the service is
 /// disposed.
-abstract base class StreamingService<TData extends Object, TParams extends Object>
+abstract base class StreamingService<TData extends Object?, TParams extends Object?>
     extends Service<TParams> {
   //
   //
@@ -29,6 +29,7 @@ abstract base class StreamingService<TData extends Object, TParams extends Objec
 
   StreamController<TData>? _streamController;
   StreamSubscription<TData>? _streamSubscription;
+  final initialDataCompleter = Completer<TData>();
 
   // Provides access to the stream managed by this service.
   @protected
@@ -65,6 +66,9 @@ abstract base class StreamingService<TData extends Object, TParams extends Objec
     if (shouldAdd(data)) {
       _streamController!.add(data);
       onPushToStream(data);
+      if (!initialDataCompleter.isCompleted) {
+        initialDataCompleter.complete(data);
+      }
     }
   }
 
