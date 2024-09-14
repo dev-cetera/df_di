@@ -13,8 +13,8 @@
 // ignore_for_file: invalid_use_of_protected_member
 
 import 'package:df_di/df_di.dart';
-import 'package:df_di/src/_dependency.dart';
-import 'package:df_di/src/_registry.dart';
+import 'package:df_di/src/core/_dependency.dart';
+import 'package:df_di/src/core/_registry.dart';
 
 import 'package:test/test.dart';
 
@@ -91,15 +91,15 @@ void main() {
           );
           expect(
             dependency,
-            registry.getDependencyOfRuntimeTypeOrNull(int),
+            registry.getDependencyOrNullT(int),
           );
           expect(
             dependency,
-            registry.getDependencyWithKeyOrNull(DIKey(int)),
+            registry.getDependencyOrNullK(DIKey(int)),
           );
           expect(
             dependency,
-            registry.getDependencyWithKeyOrNull(DIKey(' i n t ')),
+            registry.getDependencyOrNullK(DIKey(' i n t ')),
           );
           expect(
             dependency,
@@ -119,11 +119,11 @@ void main() {
           );
           expect(
             true,
-            registry.containsDependencyOfRuntimeType(int),
+            registry.containsDependencyT(int),
           );
           expect(
             true,
-            registry.containsDependencyWithKey(DIKey(int)),
+            registry.containsDependencyK(DIKey(int)),
           );
         },
       );
@@ -139,15 +139,15 @@ void main() {
           );
           expect(
             dependency,
-            registry.getDependencyOfRuntimeTypeOrNull(Future<int>),
+            registry.getDependencyOrNullT(Future<int>),
           );
           expect(
             dependency,
-            registry.getDependencyWithKeyOrNull(DIKey.type(Future, [int])),
+            registry.getDependencyOrNullK(DIKey.type(Future, [int])),
           );
           expect(
             dependency,
-            registry.getDependencyWithKeyOrNull(DIKey(' F u t u r e < i n t > ')),
+            registry.getDependencyOrNullK(DIKey(' F u t u r e < i n t > ')),
           );
           expect(
             dependency,
@@ -171,11 +171,11 @@ void main() {
           );
           expect(
             true,
-            registry.containsDependencyOfRuntimeType(Future<int>),
+            registry.containsDependencyT(Future<int>),
           );
           expect(
             true,
-            registry.containsDependencyWithKey(DIKey(Future<int>)),
+            registry.containsDependencyK(DIKey(Future<int>)),
           );
         },
       );

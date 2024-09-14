@@ -86,6 +86,7 @@ class DIKey<T extends Object> {
   static final devGroup = DIKey('DEV_GROUP');
   static final testGroup = DIKey('TEST_GROUP');
 
+  static final $0 = DIKey('0');
   static final $1 = DIKey('1');
   static final $2 = DIKey('2');
   static final $3 = DIKey('3');
@@ -93,6 +94,8 @@ class DIKey<T extends Object> {
   static final $5 = DIKey('5');
   static final $6 = DIKey('6');
   static final $7 = DIKey('7');
+  static final $8 = DIKey('7');
+  static final $9 = DIKey('7');
 
   // Two Groups are equal if ther hashCodes are equal.
   @override
@@ -115,56 +118,3 @@ class DIKey<T extends Object> {
   @override
   String toString() => _key;
 }
-
-
-
-
-
-
-// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-
-/// Constructs a `GenericGr` based on the base type [T] and the optional
-/// list of `subtypes`. If no subtypes are provided or the list is empty, the
-/// method retains the original generic parameters from [T]. This is useful
-/// for dynamically creating type strings with multiple subtypes.
-///
-/// Example:
-/// ```dart
-/// // With subtypes provided:
-/// final id1 = GenericGr<Map>([DIKey('String'), DIKey('int')]);
-/// print(id1); // Map<String, int>
-///
-/// // Without subtypes:
-/// final id2 = GenericGr<Map>();
-/// print(id2); // Map<String, String>
-///
-/// // Non-generic type:
-/// final id3 = GenericGr<int>();
-/// print(id3); // int
-/// ```
-// class GenericGr<T extends Object> extends DIKey {
-//   GenericGr._(super.type);
-
-//   factory GenericGr(List<DIKey?>? subTypes) {
-//     final typeString = '$T';
-//     final n = typeString.indexOf('<');
-
-//     // If there is no generic type in the base type [T], return the type name directly.
-//     if (n == -1) {
-//       return GenericGr._(typeString);
-//     }
-
-//     // If no subtypes are provided, retain the original generic parameters.
-//     if (subTypes == null || subTypes.isEmpty) {
-//       return GenericGr._(typeString);
-//     }
-
-//     // Construct the generic type string using the provided subtypes.
-//     final base = typeString.substring(0, n);
-//     final subTypeString = subTypes.nonNulls.join(', ');
-//     final value = '$base<$subTypeString>';
-//     return GenericGr._(value);
-//   }
-// }
-
-// typedef GenericTypeId<T extends Object> = GenericGr<T>;

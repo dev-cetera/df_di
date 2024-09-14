@@ -77,11 +77,11 @@ final class DIRegistry {
   ///
   /// Returns `true` if it does and `false` if it doesn't.
   @pragma('vm:prefer-inline')
-  bool containsDependencyOfRuntimeType(
+  bool containsDependencyT(
     Type runtimeType, {
     DIKey? groupKey,
   }) {
-    return containsDependencyWithKey(
+    return containsDependencyK(
       DIKey(runtimeType),
       groupKey: groupKey,
     );
@@ -93,11 +93,11 @@ final class DIRegistry {
   ///
   /// Returns `true` if it does and `false` if it doesn't.
   @pragma('vm:prefer-inline')
-  bool containsDependencyWithKey(
+  bool containsDependencyK(
     DIKey typeKey, {
     DIKey? groupKey,
   }) {
-    return getDependencyWithKeyOrNull(typeKey, groupKey: groupKey) != null;
+    return getDependencyOrNullK(typeKey, groupKey: groupKey) != null;
   }
 
   /// Returns any dependency of type [T] or subtype of [T] that is associated
@@ -115,11 +115,11 @@ final class DIRegistry {
   /// [getDependencyOrNull], this will not include subtypes.
   @protected
   @pragma('vm:prefer-inline')
-  Dependency? getDependencyOfRuntimeTypeOrNull(
+  Dependency? getDependencyOrNullT(
     Type runtimeType, {
     DIKey? groupKey,
   }) {
-    return getDependencyWithKeyOrNull(
+    return getDependencyOrNullK(
       DIKey(runtimeType),
       groupKey: groupKey,
     );
@@ -130,7 +130,7 @@ final class DIRegistry {
   /// [getDependencyOrNull], this will not include subtypes.
   @protected
   @pragma('vm:prefer-inline')
-  Dependency? getDependencyWithKeyOrNull(
+  Dependency? getDependencyOrNullK(
     DIKey typeKey, {
     DIKey? groupKey,
   }) {
@@ -148,7 +148,7 @@ final class DIRegistry {
   }) {
     final dependency = getDependencyOrNull<T>(groupKey: groupKey);
     if (dependency != null) {
-      final removed = removeDependencyWithKey(
+      final removed = removeDependencyK(
         dependency.typeKey,
         groupKey: groupKey,
       );
@@ -165,11 +165,11 @@ final class DIRegistry {
   /// [state].
   @protected
   @pragma('vm:prefer-inline')
-  Dependency? removeDependencyOfRuntimeType(
+  Dependency? removeDependencyT(
     Type runtimeType, {
     DIKey? groupKey,
   }) {
-    return removeDependencyWithKey(
+    return removeDependencyK(
       DIKey(runtimeType),
       groupKey: groupKey,
     );
@@ -182,7 +182,7 @@ final class DIRegistry {
   /// Returns the removed [Dependency] or `null` if it did not exist within
   /// [state].
   @protected
-  Dependency? removeDependencyWithKey(
+  Dependency? removeDependencyK(
     DIKey typeKey, {
     DIKey? groupKey,
   }) {

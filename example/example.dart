@@ -14,10 +14,7 @@
 
 import 'dart:async';
 
-import 'package:df_di/src/di.dart';
-import 'package:df_di/src/services/service.dart';
-import 'package:df_di/src/services/streaming_service.dart';
-import 'package:df_type/df_type.dart';
+import 'package:df_di/df_di.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 

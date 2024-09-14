@@ -10,16 +10,8 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-// Exports for internal use.
-export 'dart:async';
-export 'package:df_type/df_type.dart';
-export 'package:collection/collection.dart';
-export 'package:meta/meta.dart';
+import '/src/_internal.dart';
 
-export '_index.g.dart';
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-export 'core/_registry.dart';
-export 'core/_dependency.dart';
-export 'core/_di_base.dart';
-
-export 'core/_mixins/_index.g.dart';
+base mixin SupportsNonNullGettersMixin on DIBase {}
