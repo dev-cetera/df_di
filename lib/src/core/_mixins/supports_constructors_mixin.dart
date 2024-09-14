@@ -21,14 +21,13 @@ base mixin SupportsConstructorsMixin on SupportsRuntimeTypeMixin {
     Type type, {
     DIKey? groupKey,
   }) {
-    (getK(DIKey.type(Constructor, [type]), groupKey: groupKey) as Constructor)
-        .resetSingleton();
+    (getK(DIKey.type(Constructor, [type]), groupKey: groupKey) as Constructor).resetSingleton();
   }
 
   void resetSingleton<T extends Object>({
     DIKey? groupKey,
   }) {
-    get<Constructor<T>>(groupKey: groupKey).asValue.resetSingleton();
+    get<Constructor<T>>(groupKey: groupKey).asResolved.resetSingleton();
   }
 
   Constructor<T> registerConstructor<T extends Object>(
@@ -42,17 +41,17 @@ base mixin SupportsConstructorsMixin on SupportsRuntimeTypeMixin {
       groupKey: groupKey,
       validator: validator != null
           ? (constructor) {
-              final instance = constructor.asValue.currentInstance;
+              final instance = constructor.asResolved.currentInstance;
               return instance != null ? validator(instance) : true;
             }
           : null,
       onUnregister: onUnregister != null
           ? (constructor) {
-              final instance = constructor.asValue.currentInstance;
+              final instance = constructor.asResolved.currentInstance;
               return instance != null ? onUnregister(instance) : true;
             }
           : null,
-    ).asValue;
+    ).asResolved;
   }
 
   FutureOr<Object> getSingletonT(
@@ -113,7 +112,7 @@ base mixin SupportsConstructorsMixin on SupportsRuntimeTypeMixin {
     return getOrNull<Constructor<T>>(
       groupKey: groupKey,
       traverse: traverse,
-    )?.asValue.singleton;
+    )?.asResolvedOrNull?.singleton;
   }
 
   FutureOr<Object> getFactoryT(
@@ -174,6 +173,6 @@ base mixin SupportsConstructorsMixin on SupportsRuntimeTypeMixin {
     return getOrNull<Constructor<T>>(
       groupKey: groupKey,
       traverse: traverse,
-    )?.asValue.factory;
+    )?.asResolvedOrNull?.factory;
   }
 }

@@ -35,7 +35,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
       groupKey: groupKey,
       validator: validator,
       onUnregister: (e) =>
-          mapFutureOr(onUnregister?.call(e), (_) => e.asValue.unregisterAll()),
+          mapFutureOr(onUnregister?.call(e), (_) => e.asResolved.unregisterAll()),
     );
   }
 
@@ -63,7 +63,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
           groupKey: groupKey,
           traverse: false,
         )
-        ?.asValue;
+        ?.asResolvedOrNull;
   }
 
   FutureOr<Object> unregisterChild({
