@@ -16,7 +16,7 @@ import '/src/_internal.dart';
 
 /// A base class for services that require initialization and disposal management.
 ///
-/// This class is intended to be used within a Dependency Injection [DBI] system.
+/// This class is intended to be used within a Dependency Injection [DB] system.
 ///
 /// It provides a standardized structure for managing the lifecycle of services,
 /// ensuring they are properly initialized when needed and disposed of when no
@@ -35,20 +35,20 @@ abstract base class Service<TParams extends Object?> {
   /// Whether this service has been initialized.
   bool get initialized => _initializedCompleter.isCompleted;
 
-  /// Initializes this service. Completes [initializedFuture], and then calls
-  /// [onInitService].
+  /// Initializes this service. Calls [onInitService] then completes
+  /// [initializedFuture].
   ///
   /// This method must be called before interacting with the
   /// service.
   ///
   /// Do not override this method. Instead, override [onInitService].
   @nonVirtual
-  FutureOr<void> initService(TParams params) {
-    if (_initializedCompleter.isCompleted) {
+  FutureOr<void> initService(TParams? params) {
+    if (initialized) {
       throw ServiceAlreadyInitializedException();
     }
-    _initializedCompleter.complete(null);
-    return onInitService(params);
+
+    return mapFutureOr(onInitService(params), (_) => _initializedCompleter.complete(null));
   }
 
   /// Override to define any necessary initialization to be called immediately
@@ -56,7 +56,7 @@ abstract base class Service<TParams extends Object?> {
   ///
   /// This method should not be called directly.
   @protected
-  FutureOr<void> onInitService(TParams params);
+  FutureOr<void> onInitService(TParams? params);
 
   /// Disposes of this service, making it unusable and ready for garbage
   /// collection. Calls [onDispose].
@@ -65,16 +65,16 @@ abstract base class Service<TParams extends Object?> {
   ///
   /// Do not override this method. Instead, override [onDispose].
   ///
-  /// Do not call this method directly. Use [DBI.registerSingletonService] or
-  /// [DBI.registerFactoryService] which will automatically call this methid
-  /// on [DBI.unregister].
+  /// Do not call this method directly. Use [DB.registerSingletonService] or
+  /// [DB.registerFactoryService] which will automatically call this methid
+  /// on [DB.unregister].
   @protected
   @nonVirtual
   FutureOr<void> dispose() {
     if (_disposed) {
       throw ServiceAlreadyDisposedException();
     }
-    if (!_initializedCompleter.isCompleted) {
+    if (!initialized) {
       throw ServiceNotYetInitializedException();
     }
     return mapFutureOr(onDispose(), (_) => _disposed = true);

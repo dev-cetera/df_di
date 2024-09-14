@@ -16,11 +16,11 @@ import '/src/_internal.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-base mixin SupportsConstructorsMixin on DIBase {
+base mixin SupportsConstructorsMixin on SupportsRuntimeTypeMixin {
   void resetSingleton<T extends Object>({
     DIKey? groupKey,
   }) {
-    getOrNull<Constructor<T>>(groupKey: groupKey)!.asValue.resetSingleton(); // error
+    get<Constructor<T>>(groupKey: groupKey).asValue.resetSingleton();
   }
 
   Constructor<T> registerConstructor<T extends Object>(

@@ -18,10 +18,10 @@ import '/src/_internal.dart';
 
 final class DI extends DIBase
     with
+        SupportsRuntimeTypeMixin,
         SupportsConstructorsMixin,
         SupportsChildrenMixin,
-        SupportsServicesMixin,
-        SupportsRuntimeTypeMixin {
+        SupportsServicesMixin {
   /// Default app groupKey.
   static final app = DI();
 

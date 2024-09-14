@@ -138,7 +138,7 @@ base class DIBase {
   /// [DependencyMetadata.onUnregister] callback will be skipped.
   ///
   /// Throws a [DependencyNotFoundException] if the dependency is not found.
-  FutureOr<T> unregister<T extends Object>({
+  FutureOr<Object> unregister<T extends Object>({
     DIKey? groupKey,
     bool skipOnUnregisterCallback = false,
   }) {
@@ -160,7 +160,7 @@ base class DIBase {
         type: T,
       );
     }
-    final value = removed.value as FutureOr<T>;
+    final value = removed.value;
     if (skipOnUnregisterCallback) {
       return value;
     }
@@ -348,29 +348,26 @@ base class DIBase {
     });
   }
 
-  /// Unregisters all dependencies in the [registry] in the reverse
-  /// order of their registration.
-  ///
-  /// If an [onUnregister] callback is provided, it will be called for each
-  /// dependency after it is unregistered.
   FutureOr<List<Dependency>> unregisterAll({
     OnUnregisterCallback<Dependency>? onUnregister,
   }) {
-    final executionQueue = ExecutionQueue();
-    final results = <Dependency>[];
-    for (final dependency in registry.dependencies) {
-      results.add(dependency);
-      executionQueue.add((_) {
-        registry.removeDependencyK(
-          dependency.typeKey,
-          groupKey: dependency.metadata?.groupKey,
-        );
-        return mapFutureOr(
-          dependency.metadata?.onUnregister?.call(dependency.value),
-          (_) => onUnregister?.call(dependency),
-        );
-      });
+    final results = List.of(registry.dependencies);
+    FutureOr<Object> temp = Object;
+    for (final dependency in results) {
+      temp = mapFutureOr(
+        temp,
+        (_) {
+          registry.removeDependencyK(
+            dependency.typeKey,
+            groupKey: dependency.metadata?.groupKey,
+          );
+          return mapFutureOr(
+            dependency.metadata?.onUnregister?.call(dependency.value),
+            (_) => mapFutureOr(onUnregister?.call(dependency), (_) => dependency),
+          );
+        },
+      );
     }
-    return mapFutureOr(executionQueue.last(), (_) => results);
+    return mapFutureOr(temp, (e) => results);
   }
 }

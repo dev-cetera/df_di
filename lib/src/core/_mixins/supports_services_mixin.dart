@@ -27,10 +27,28 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin {
       constructor,
       groupKey: groupKey,
       validator: validator,
-      onUnregister: (e) {
-        return e.thenOr((e) => mapFutureOr(e.initializedFuture, (_) => e.dispose()));
-      },
+      onUnregister: (e) => e.thenOr((e) => e.dispose()),
     );
+  }
+
+  FutureOr<T> getServiceSingleton<T extends Service<Object>>({
+    Object? params,
+    DIKey? groupKey,
+    bool traverse = true,
+  }) {
+    final value = getServiceSingletonOrNull<T>(
+      params: params,
+      groupKey: groupKey,
+      traverse: traverse,
+    );
+
+    if (value == null) {
+      throw DependencyNotFoundException(
+        type: T,
+        groupKey: groupKey,
+      );
+    }
+    return value;
   }
 
   FutureOr<T>? getServiceSingletonOrNull<T extends Service<Object>>({
@@ -45,18 +63,54 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin {
     );
   }
 
-  FutureOr<T>? getServiceSingletonWithParamsOrNull<T extends Service<P>, P extends Object>({
+  FutureOr<T> getServiceSingletonWithParams<T extends Service<P>, P extends Object>({
     P? params,
     DIKey? groupKey,
     bool traverse = true,
   }) {
-    final singleton = getSingletonOrNull<T>();
-    if (params != null) {
-      return singleton
-          ?.thenOr((e) => e.initialized ? mapFutureOr(e.initService(params), (_) => e) : e);
-    } else {
-      return singleton;
+    final value = getServiceSingletonWithParamsOrNull<T, P>(
+      params: params,
+      groupKey: groupKey,
+      traverse: traverse,
+    );
+
+    if (value == null) {
+      throw DependencyNotFoundException(
+        type: T,
+        groupKey: groupKey,
+      );
     }
+    return value;
+  }
+
+  FutureOr<T>? getServiceSingletonWithParamsOrNull<T extends Service<P>, P extends Object?>({
+    P? params,
+    DIKey? groupKey,
+    bool traverse = true,
+  }) {
+    final instance = getSingletonOrNull<T>();
+    return instance
+        ?.thenOr((e) => e.initialized ? e : mapFutureOr(e.initService(params), (_) => e));
+  }
+
+  FutureOr<T> getServiceFactory<T extends Service<Object>>({
+    Object? params,
+    DIKey? groupKey,
+    bool traverse = true,
+  }) {
+    final value = getServiceFactoryOrNull<T>(
+      params: params,
+      groupKey: groupKey,
+      traverse: traverse,
+    );
+
+    if (value == null) {
+      throw DependencyNotFoundException(
+        type: T,
+        groupKey: groupKey,
+      );
+    }
+    return value;
   }
 
   FutureOr<T>? getServiceFactoryOrNull<T extends Service<Object>>({
@@ -71,17 +125,33 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin {
     );
   }
 
+  FutureOr<T> getServiceFactoryWithParams<T extends Service<P>, P extends Object>({
+    P? params,
+    DIKey? groupKey,
+    bool traverse = true,
+  }) {
+    final value = getServiceFactoryWithParamsOrNull<T, P>(
+      params: params,
+      groupKey: groupKey,
+      traverse: traverse,
+    );
+
+    if (value == null) {
+      throw DependencyNotFoundException(
+        type: T,
+        groupKey: groupKey,
+      );
+    }
+    return value;
+  }
+
   FutureOr<T>? getServiceFactoryWithParamsOrNull<T extends Service<P>, P extends Object>({
     P? params,
     DIKey? groupKey,
     bool traverse = true,
   }) {
-    final singleton = getFactoryOrNull<T>();
-    if (params != null) {
-      return singleton
-          ?.thenOr((e) => e.initialized ? mapFutureOr(e.initService(params), (_) => e) : e);
-    } else {
-      return singleton;
-    }
+    final instance = getFactoryOrNull<T>();
+    return instance
+        ?.thenOr((e) => e.initialized ? e : mapFutureOr(e.initService(params), (_) => e));
   }
 }

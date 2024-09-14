@@ -102,7 +102,7 @@ base mixin SupportsRuntimeTypeMixin on DIBase {
         type: runtimeType,
       );
     }
-    final value = removed.value as FutureOr<Object>;
+    final value = removed.value;
     if (skipOnUnregisterCallback) {
       return value;
     }

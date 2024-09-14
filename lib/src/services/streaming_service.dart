@@ -16,7 +16,7 @@ import '/src/_internal.dart';
 
 /// A base class for services that handle streaming data and require disposal.
 ///
-/// This class is intended to be used within a Dependency Injection [DBI] system.
+/// This class is intended to be used within a Dependency Injection [DB] system.
 ///
 /// It provides a standardized way to manage a stream and its lifecycle,
 /// ensuring that resources are properly cleaned up when the service is
@@ -47,7 +47,7 @@ abstract base class StreamingService<TData extends Object, TParams extends Objec
   /// Initializes the service by setting up the stream controller and starting
   /// to listen to the input stream.
   @override
-  void onInitService(TParams params) {
+  void onInitService(TParams? params) {
     _streamController = StreamController<TData>.broadcast();
     _streamSubscription = provideInputStream().listen(
       pushToStream,

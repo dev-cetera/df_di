@@ -13,65 +13,70 @@
 // ignore_for_file: invalid_use_of_protected_member, strict_raw_type
 
 import 'dart:async';
+import 'dart:math';
 
 import 'package:df_di/df_di.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 Future<void> main() async {
-  //print('\n# Get access to the global DI container:\n');
+  print('\n# Get access to the global DI container:\n');
   final di = DI();
-  //print('DI.global == di: ${DI.global == di}');
+  print('DI.global == di: ${DI.global == di}');
 
-  //print('\n# Get the state of the global DI container (prints an empty map):\n');
-  //print(di.registry.state);
+  print('\n# Get the state of the global DI container (prints an empty map):\n');
+  print(di.registry.state);
 
-  //print('\n# Create a new DI container:\n');
-  //print(DI());
+  print('\n# Create a new DI container:\n');
+  print(DI());
 
-  // print('\n# Use any of the pre-defined containers for your app:\n');
-  // print(DI.app); // You can store app settings in here.
-  // print(DI.app); // You can contain the global state in here.
-  // print(DI.global); // You can contain stuff for the active session in here.
-  // print(DI.dev); // A container you can use for or development-only.
-  // print(DI.test); // A container you can use for or test-only.
-  // print(DI.prod); // A container you can use for or production-only.
+  print('\n# Use any of the pre-defined containers for your app:\n');
+  print(DI.app); // You can store app settings in here.
+  print(DI.app); // You can contain the global state in here.
+  print(DI.global); // You can contain stuff for the active session in here.
+  print(DI.dev); // A container you can use for or development-only.
+  print(DI.test); // A container you can use for or test-only.
+  print(DI.prod); // A container you can use for or production-only.
+
   // Or create your own custom containers:
   final di1 = DI();
-  //print(di1);
+  print(di1);
   final di2 = DI();
-  //print(di2);
+  print(di2);
 
-  //print('\n# Register the universe and everything:\n');
+  print('\n# Register the universe and everything:\n');
   di.register<int>(42);
-  //print(di.getOrNull<int>());
+  print(di.getOrNull<int>());
 
-  //print('\n# Register Futures:\n');
-  //DI.prod.register<double>(Future<double>.value(pi));
-  //di.register<double>(Future.delayed(const Duration(milliseconds: 10), () => pi));
-  //print('PI is ${await DI.prod.getOrNull<double>()}');
+  print('\n# Register Futures:\n');
+  DI.prod.register<double>(Future<double>.value(pi));
+  di.register<double>(Future.delayed(const Duration(milliseconds: 10), () => pi));
+  print('PI is ${await DI.prod.getOrNull<double>()}');
 
-  //print('Get access to the global DI container:\n\n');
+  print('Get access to the global DI container:\n\n');
   di.register(Future.value('Hello, DI!'));
 
   // Register FooBarService as a lazy singleton.
-  // di.registerService(FooBarService.new);
-
-  di.register(Constructor(FooBarService.new));
+  di.registerService(FooBarService.new);
 
   print(di.registry.state.entries);
 
-  // final fooBarService1 = await di.getServiceSingletonOrNull<Object, FooBarService>(Object());
-  // final fooBarService2 = await di.getServiceSingletonOrNull<Object, FooBarService>(Object());
-  //print(fooBarService1 == fooBarService2);
+  final fooBarService1 = await di.getServiceSingletonOrNull<FooBarService>();
+  final fooBarService2 = await di.getServiceSingletonOrNull<FooBarService>();
+  print(fooBarService1 == fooBarService2);
 
   print(di.registry.state.entries);
 
-  // await di.unregister<int>();
-  // await di.unregister<String>();
-  // await di.unregister<Constructor<FooBarService>>();
+  print('TIME TO UNREG 1');
 
-  di.unregisterAll(
+  await di.unregister<int>();
+  print('TIME TO UNREG 2');
+  await di.unregister<String>();
+  print('TIME TO UNREG 3');
+  //await di.unregister<Constructor<FooBarService>>();
+  print('TIME TO UNREG 4');
+
+  await di.unregisterAll(
     onUnregister: (dependency) {
       print('Unregistered: ${dependency.value}');
     },
@@ -81,7 +86,7 @@ Future<void> main() async {
     print('Unregistered all!');
   });
 
-  print('FINISHED!!!');
+  print('TIME TO UNREG 5');
 }
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
