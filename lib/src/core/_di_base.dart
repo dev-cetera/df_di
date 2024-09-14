@@ -83,13 +83,12 @@ base class DIBase {
 
   @protected
   void completeRegistration(Object value) {
-    (completers?.registry
-            .getDependencyOrNullT(
-              Object,
-              groupKey: DIKey(value.runtimeType),
-            )
-            ?.value as CompleterOr<FutureOr<Object>>?)
-        ?.complete(value);
+    final completer = (completers?.registry
+        .getDependencyOrNull(
+          groupKey: DIKey(value.runtimeType),
+        )
+        ?.value as CompleterOr?);
+    completer?.complete(value);
   }
 
   /// Register a [dependency] of type [T] in the [registry].
@@ -316,8 +315,7 @@ base class DIBase {
 
     CompleterOr<FutureOr<T>>? completer;
     completer = (completers?.registry
-        .getDependencyOrNullT(
-          Object,
+        .getDependencyOrNull<Object>(
           groupKey: DIKey(T),
         )
         ?.value as CompleterOr<FutureOr<T>>?);
@@ -343,8 +341,7 @@ base class DIBase {
     // Wait for the register function to complete the Completer, then unregister
     // the completer before returning the value.
     return completer.futureOr.thenOr((value) {
-      completers!.registry.removeDependencyT(
-        Object,
+      completers!.registry.removeDependency<Object>(
         groupKey: DIKey(T),
       );
       return value;

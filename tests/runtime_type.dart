@@ -19,33 +19,23 @@ import 'package:test/test.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 void main() {
-  // group(
-  //   'Group 1',
-  //   () {
-  //     test(
-  //       'Test 1',
-  //       () async {
-  //         final di = DI.global;
-  //         expect(0, di.dependencyCount);
-  //         di.registerService(HelloWorldService.new);
-  //         final service = di.getServiceSingletonOrNull<HelloWorldService, String>('Dude!');
-  //         service.
-  //       },
-  //     );
-  //   },
-  // );
-}
-
-// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-
-final class HelloWorldService extends Service<String> {
-  @override
-  FutureOr<void> onInitService(String params) {
-    print(params);
-  }
-
-  @override
-  FutureOr<void> onDispose() {
-    print('Disposing $HelloWorldService');
-  }
+  group(
+    'Group 1',
+    () {
+      test(
+        'Test 1',
+        () async {
+          final di = DI.global;
+          // di.registerT(1);
+          // di.registerT('2');
+          // expect(1, di.getOrNullT(int));
+          // expect('2', di.getOrNullT(String));
+          // di.unregisterT(int);
+          // expect(null, di.getOrNullT(int));
+          Future.delayed(const Duration(seconds: 1), () => di.register(3));
+          expect(3, await di.untilT(int));
+        },
+      );
+    },
+  );
 }
