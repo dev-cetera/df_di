@@ -18,6 +18,7 @@ export 'exceptions/dependency_not_found_exception.dart';
 export 'exceptions/service_already_initialized_exception.dart';
 export 'exceptions/service_already_disposed_exception.dart';
 export 'exceptions/df_di_package_exception.dart';
+export 'exceptions/dependency_is_future_exception.dart';
 export 'services/service.dart';
 export 'services/streaming_service.dart';
 

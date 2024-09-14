@@ -172,6 +172,56 @@ base class DIBase {
   }
 
   /// Returns any dependency of type [T] or subtype of [T] that is associated
+  /// with the specified [groupKey].
+  ///
+  /// If [traverse] is true, it will also search recursively in parent
+  /// containers.
+  ///
+  /// Throws a [DependencyNotFoundException] if the dependency is not found.
+  /// Throws a [DependencyIsFutureException] if the dependency is a [Future].
+  T call<T extends Object>({
+    DIKey? groupKey,
+    bool traverse = true,
+  }) {
+    final value = get<T>(
+      groupKey: groupKey,
+      traverse: traverse,
+    );
+    if (value is! T) {
+      throw DependencyIsFutureException(
+        type: T,
+        groupKey: groupKey,
+      );
+    }
+    return value;
+  }
+
+  /// Returns any dependency of type [T] or subtype of [T] that is associated
+  /// with the specified [groupKey].
+  ///
+  /// If [traverse] is true, it will also search recursively in parent
+  /// containers.
+  ///
+  /// Throws a [DependencyNotFoundException] if the dependency is not found.
+  FutureOr<T> get<T extends Object>({
+    DIKey? groupKey,
+    bool traverse = true,
+  }) {
+    final value = getOrNull<T>(
+      groupKey: groupKey,
+      traverse: traverse,
+    );
+
+    if (value == null) {
+      throw DependencyNotFoundException(
+        type: T,
+        groupKey: groupKey,
+      );
+    }
+    return value;
+  }
+
+  /// Returns any dependency of type [T] or subtype of [T] that is associated
   /// with the specified [groupKey] if it exists, or `null`.
   ///
   /// If [traverse] is true, it will also search recursively in parent

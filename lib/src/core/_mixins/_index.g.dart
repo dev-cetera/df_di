@@ -8,7 +8,6 @@
 //.title~
 
 // --- PUBLIC FILES ---
-export 'supports_non_null_getters_mixin.dart';
 export 'supports_runtime_type_mixin.dart';
 export 'supports_children_mixin.dart';
 export 'supports_constructors_mixin.dart';

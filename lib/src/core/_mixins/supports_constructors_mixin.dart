@@ -17,16 +17,6 @@ import '/src/_internal.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 base mixin SupportsConstructorsMixin on DIBase {
-  FutureOr<T>? getSingletonOrNull<T extends Object>({
-    DIKey? groupKey,
-    bool traverse = true,
-  }) {
-    return getOrNull<Constructor<T>>(
-      groupKey: groupKey,
-      traverse: traverse,
-    )?.asValue.singleton;
-  }
-
   void resetSingleton<T extends Object>({
     DIKey? groupKey,
   }) {
@@ -55,6 +45,52 @@ base mixin SupportsConstructorsMixin on DIBase {
             }
           : null,
     ).asValue;
+  }
+
+  FutureOr<T> getSingleton<T extends Object>({
+    DIKey? groupKey,
+    bool traverse = true,
+  }) {
+    final value = getSingletonOrNull<T>(
+      groupKey: groupKey,
+      traverse: traverse,
+    );
+
+    if (value == null) {
+      throw DependencyNotFoundException(
+        type: T,
+        groupKey: groupKey,
+      );
+    }
+    return value;
+  }
+
+  FutureOr<T>? getSingletonOrNull<T extends Object>({
+    DIKey? groupKey,
+    bool traverse = true,
+  }) {
+    return getOrNull<Constructor<T>>(
+      groupKey: groupKey,
+      traverse: traverse,
+    )?.asValue.singleton;
+  }
+
+  FutureOr<T> getFactory<T extends Object>({
+    DIKey? groupKey,
+    bool traverse = true,
+  }) {
+    final value = getFactoryOrNull<T>(
+      groupKey: groupKey,
+      traverse: traverse,
+    );
+
+    if (value == null) {
+      throw DependencyNotFoundException(
+        type: T,
+        groupKey: groupKey,
+      );
+    }
+    return value;
   }
 
   FutureOr<T>? getFactoryOrNull<T extends Object>({

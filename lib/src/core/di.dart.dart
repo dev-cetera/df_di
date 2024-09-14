@@ -21,8 +21,7 @@ final class DI extends DIBase
         SupportsConstructorsMixin,
         SupportsChildrenMixin,
         SupportsServicesMixin,
-        SupportsRuntimeTypeMixin,
-        SupportsNonNullGettersMixin {
+        SupportsRuntimeTypeMixin {
   /// Default app groupKey.
   static final app = DI();
 
