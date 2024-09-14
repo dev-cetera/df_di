@@ -26,12 +26,12 @@ void main() {
         'Test 1',
         () async {
           final di = DI.global;
-          // di.registerT(1);
-          // di.registerT('2');
-          // expect(1, di.getOrNullT(int));
-          // expect('2', di.getOrNullT(String));
-          // di.unregisterT(int);
-          // expect(null, di.getOrNullT(int));
+          di.registerT(1);
+          di.registerT('2');
+          expect(1, di.getOrNullT(int));
+          expect('2', di.getOrNullT(String));
+          di.unregisterT(int);
+          expect(null, di.getOrNullT(int));
           Future.delayed(const Duration(seconds: 1), () => di.register(3));
           expect(3, await di.untilT(int));
         },

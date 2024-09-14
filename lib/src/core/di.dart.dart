@@ -18,6 +18,7 @@ import '/src/_internal.dart';
 
 final class DI extends DIBase
     with
+        SupportsTypeKeyMixin,
         SupportsRuntimeTypeMixin,
         SupportsConstructorsMixin,
         SupportsChildrenMixin,
