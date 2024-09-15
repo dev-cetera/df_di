@@ -38,7 +38,7 @@ void main() {
         '- Testing singletons',
         () async {
           final di = DI();
-          di.registerConstructor<int>(() => 1);
+          di.registerLazy<int>(() => 1);
           expect(
             1,
             di.getSingletonOrNull<int>(),

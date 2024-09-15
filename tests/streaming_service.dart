@@ -19,7 +19,7 @@ import 'package:df_di/df_di.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 void main() async {
-  DI.session.registerService(UserStreamingService.new);
+  DI.session.registerLazyService(UserStreamingService.new);
   print(await DI.session.getServiceSingleton<UserStreamingService>());
   Future.delayed(
     const Duration(seconds: 3),

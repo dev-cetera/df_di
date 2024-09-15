@@ -54,8 +54,8 @@ print(di.get<String>()); // Instance of 'Future<String>'
 
 // Register a factory or lazy singleton constructor.
 int n = 0;
-di.registerConstructor<int>(() => n + 1);
-di.registerConstructor(() => DateTime.now());
+di.registerLazy<int>(() => n + 1);
+di.registerLazy(() => DateTime.now());
 ```
 
 ### Unregistering Dependencies:

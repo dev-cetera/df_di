@@ -21,8 +21,7 @@ base mixin SupportsConstructorsMixin on SupportsRuntimeTypeMixin {
     Type type, {
     DIKey? groupKey,
   }) {
-    (getK(DIKey.type(Constructor, [type]), groupKey: groupKey) as Constructor)
-        .resetSingleton();
+    (getK(DIKey.type(Constructor, [type]), groupKey: groupKey) as Constructor).resetSingleton();
   }
 
   void resetSingleton<T extends Object>({
@@ -31,7 +30,7 @@ base mixin SupportsConstructorsMixin on SupportsRuntimeTypeMixin {
     get<Constructor<T>>(groupKey: groupKey).asSync.resetSingleton();
   }
 
-  Constructor<T> registerConstructor<T extends Object>(
+  Constructor<T> registerLazy<T extends Object>(
     TConstructor<T> constructor, {
     DIKey? groupKey,
     bool Function(FutureOr<T> instance)? validator,

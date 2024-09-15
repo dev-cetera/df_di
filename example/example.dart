@@ -61,7 +61,7 @@ Future<void> main() async {
   di.register(Future.value('Hello, DI!'));
 
   // Register FooBarService as a lazy singleton.
-  di.registerService(FooBarService.new);
+  di.registerLazyService(FooBarService.new);
 
   print(di.registry.state.entries);
 

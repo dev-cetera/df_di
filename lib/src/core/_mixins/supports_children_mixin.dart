@@ -21,8 +21,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
   late SupportsChildrenMixin? _children = this;
 
   /// Child containers.
-  List<DI> get children =>
-      List.unmodifiable(registry.dependencies.where((e) => e.value is DI));
+  List<DI> get children => List.unmodifiable(registry.dependencies.where((e) => e.value is DI));
 
   void registerChild({
     DIKey? groupKey,
@@ -30,12 +29,14 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     OnUnregisterCallback<FutureOr<DI>>? onUnregister,
   }) {
     _children ??= DI() as SupportsChildrenMixin;
-    _children!.registerConstructor<DI>(
+    _children!.registerLazy<DI>(
       () => DI()..parents.add(this as DI),
       groupKey: groupKey,
       validator: validator,
       onUnregister: (e) => mapSyncOrAsync(
-          onUnregister?.call(e), (_) => e.asSync.unregisterAll(),),
+        onUnregister?.call(e),
+        (_) => e.asSync.unregisterAll(),
+      ),
     );
   }
 
