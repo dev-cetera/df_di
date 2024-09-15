@@ -21,7 +21,8 @@ base mixin SupportsConstructorsMixin on SupportsRuntimeTypeMixin {
     Type type, {
     DIKey? groupKey,
   }) {
-    (getK(DIKey.type(Constructor, [type]), groupKey: groupKey) as Constructor).resetSingleton();
+    (getK(DIKey.type(Constructor, [type]), groupKey: groupKey) as Constructor)
+        .resetSingleton();
   }
 
   void resetSingleton<T extends Object>({

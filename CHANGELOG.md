@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.4.0]
+
+- Released @ 9/2024 (UTC)
+- feat: Add registerService and renamed old registerService to registerLazyService
+
 ## [0.3.3]
 
 - Released @ 9/2024 (UTC)

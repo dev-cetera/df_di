@@ -400,7 +400,9 @@ base class DIBase {
           return mapSyncOrAsync(
             dependency.metadata?.onUnregister?.call(dependency.value),
             (_) => mapSyncOrAsync(
-                onUnregister?.call(dependency), (_) => dependency,),
+              onUnregister?.call(dependency),
+              (_) => dependency,
+            ),
           );
         },
       );
