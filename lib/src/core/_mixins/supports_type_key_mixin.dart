@@ -203,7 +203,7 @@ base mixin SupportsTypeKeyMixin on DIBase {
     bool traverse = true,
   }) {
     final groupKey1 = groupKey ?? focusGroup;
-    final dependency = registry.getDependencyOrNullK(
+    var dependency = registry.getDependencyOrNullK(
           typeKey,
           groupKey: groupKey1,
         ) ??
@@ -211,6 +211,19 @@ base mixin SupportsTypeKeyMixin on DIBase {
           DIKey.type(Future, [typeKey]),
           groupKey: groupKey1,
         );
+
+    if (dependency == null && traverse) {
+      for (final parent in parents) {
+        dependency = (parent as SupportsTypeKeyMixin)._getDependencyOrNullK(
+          typeKey,
+          groupKey: groupKey1,
+        );
+        if (dependency != null) {
+          break;
+        }
+      }
+    }
+
     if (dependency != null) {
       final valid = dependency.metadata?.validator?.call(dependency) ?? true;
       if (valid) {
@@ -222,18 +235,7 @@ base mixin SupportsTypeKeyMixin on DIBase {
         );
       }
     }
-    if (traverse) {
-      for (final parent in parents) {
-        final parentDep =
-            (parent as SupportsTypeKeyMixin)._getDependencyOrNullK(
-          typeKey,
-          groupKey: groupKey1,
-        );
-        if (parentDep != null) {
-          return parentDep;
-        }
-      }
-    }
+
     return null;
   }
 
@@ -258,9 +260,9 @@ base mixin SupportsTypeKeyMixin on DIBase {
 
     CompleterOr<FutureOr<Object>>? completer;
     completer = (completers?.registry
-        .getDependencyOrNullT(
-          Object,
-          groupKey: typeKey,
+        .getDependencyOrNullK(
+          DIKey.type(CompleterOr<FutureOr<Object>>, [typeKey]),
+          groupKey: groupKey1,
         )
         ?.value as CompleterOr<FutureOr<Object>>?);
     if (completer != null) {
@@ -273,10 +275,11 @@ base mixin SupportsTypeKeyMixin on DIBase {
     completer = CompleterOr<FutureOr<Object>>();
 
     completers!.registry.setDependency(
-      Dependency<Object>(
+      Dependency<CompleterOr<FutureOr<Object>>>(
         completer,
         metadata: DependencyMetadata(
-          groupKey: typeKey,
+          groupKey: groupKey1,
+          preemptiveTypeKey: DIKey.type(CompleterOr<Future<Object>>, [typeKey]),
         ),
       ),
     );
@@ -284,9 +287,9 @@ base mixin SupportsTypeKeyMixin on DIBase {
     // Wait for the register function to complete the Completer, then unregister
     // the completer before returning the value.
     return completer.futureOr.thenOr((value) {
-      completers!.registry.removeDependencyT(
-        Object,
-        groupKey: typeKey,
+      completers!.registry.removeDependencyK(
+        DIKey.type(CompleterOr<FutureOr<Object>>, [typeKey]),
+        groupKey: groupKey1,
       );
       return value;
     });

@@ -100,7 +100,7 @@ Future<void> main() async {
 /// - Register via `di.initSingletonService(FooBarService.new);`
 /// - Get via `di.get<FooBarService>();`
 /// - Unregister via `di.unregister<FooBarService>();`
-final class FooBarService extends Service<Object> {
+final class FooBarService extends Service {
   @override
   void onInitService(_) async {}
 
@@ -136,7 +136,7 @@ final class CountingService extends StreamingService<int, bool> {
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 // An example of a service that DI will treat as sync.
-final class SyncServiceExmple extends Service<Object> {
+final class SyncServiceExmple extends Service {
   @override
   void onInitService(_) {}
 
@@ -147,7 +147,7 @@ final class SyncServiceExmple extends Service<Object> {
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 // An example of a service that DI will treat as async.
-final class AsyncServiceExample extends Service<Object> {
+final class AsyncServiceExample extends Service {
   @override
   Future<void> onInitService(_) async {
     await Future<void>.delayed(

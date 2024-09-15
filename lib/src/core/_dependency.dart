@@ -37,8 +37,9 @@ final class Dependency<T extends Object> {
   /// The metadata associated with this [Dependency].
   final DependencyMetadata? metadata;
 
-  /// The runtime type of the [value] contained within this [Dependency].
-  DIKey get typeKey => DIKey(value.runtimeType);
+  /// Returns the `preemptiveTypeKey` of [metadata] if not `null` or the
+  /// runtime type key of [value].
+  DIKey get typeKey => metadata?.preemptiveTypeKey ?? DIKey(value.runtimeType);
 
   /// Creates a new [Dependency] instance with a different value of type [R],
   /// while retaining the existing [metadata].
@@ -85,6 +86,7 @@ final class Dependency<T extends Object> {
 class DependencyMetadata {
   DependencyMetadata({
     this.groupKey,
+    this.preemptiveTypeKey,
     this.index,
     this.validator,
     this.onUnregister,
@@ -94,6 +96,10 @@ class DependencyMetadata {
   /// dependencies of the same type to coexist in the DI container as long as
   /// they are assigned to different groups.
   final DIKey? groupKey;
+
+  /// The type key that the dependency is associated with within its group. If
+  /// not `null`, it will override the default type key.
+  final DIKey? preemptiveTypeKey;
 
   /// The type of [Dependency.value] at the time the [Dependency] was registered.
   /// This type remains unchanged even if [Dependency.value] is updated through
@@ -117,6 +123,7 @@ class DependencyMetadata {
   /// fields not explicitly specified.
   DependencyMetadata copyWith({
     DIKey? groupKey,
+    DIKey? preemptiveTypeKey,
     Type? initialType,
     int? index,
     DependencyValidator? validator,
@@ -124,6 +131,7 @@ class DependencyMetadata {
   }) {
     return DependencyMetadata(
       groupKey: groupKey ?? this.groupKey,
+      preemptiveTypeKey: preemptiveTypeKey ?? this.preemptiveTypeKey,
       index: index ?? this.index,
       validator: validator ?? this.validator,
       onUnregister: onUnregister ?? this.onUnregister,
@@ -140,6 +148,7 @@ class DependencyMetadata {
   int get hashCode {
     return Object.hashAll([
       groupKey,
+      preemptiveTypeKey,
       index,
       validator,
       onUnregister,

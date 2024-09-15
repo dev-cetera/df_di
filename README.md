@@ -98,7 +98,7 @@ print(now1);  // A second later
 ### Real-World Example - UserService:
 
 ```dart
-final class UserService extends Service<Object> {
+final class UserService extends Service {
   final _userName = ValueNotifier<String>('Guest');
 
   // Getter for the UI to consume.
@@ -130,7 +130,7 @@ print(userService.userName.value); // John Doe
 #### Service with Synchronous Initialization and Asynchronous Disposal
 
 ```dart
-final class SyncInitAsyncDisposeService extends Service<Object> {
+final class SyncInitAsyncDisposeService extends Service {
   // di<SyncInitAsyncDisposeService>() will not return a Future.
   @override
   void onInitService(_) {
@@ -153,7 +153,7 @@ await di.unregister<SyncInitAsyncDisposeService>();
 #### Service with Asynchronous Initialization and Synchronous Disposal
 
 ```dart
-final class AsyncInitSyncDisposeService extends Service<Object> {
+final class AsyncInitSyncDisposeService extends Service {
   // di<AsyncInitSyncDisposeService>() will not return a Future.
   @override
   Future<void> onInitService(_) async {

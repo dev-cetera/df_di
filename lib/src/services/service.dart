@@ -99,4 +99,4 @@ abstract base class Service<TParams extends Object?> {
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-typedef NoParamsService = Service<Object>;
+typedef NoParamsService = Service;

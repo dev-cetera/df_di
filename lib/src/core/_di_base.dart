@@ -68,10 +68,9 @@ base class DIBase {
       index: dependencyCount++,
       groupKey: groupKey1,
       validator: validator != null ? (e) => validator(e as FutureOr<T>) : null,
-      onUnregister:
-          onUnregister != null ? (e) => onUnregister(e as FutureOr<T>) : null,
+      onUnregister: onUnregister != null ? (e) => onUnregister(e as FutureOr<T>) : null,
     );
-    completeRegistration(value);
+    completeRegistration(value, groupKey1);
     final registeredDep = _registerDependency(
       dependency: Dependency(
         value,
@@ -83,12 +82,25 @@ base class DIBase {
   }
 
   @protected
-  void completeRegistration(Object value) {
+  void completeRegistration<T extends Object>(
+    T value,
+    DIKey? groupKey,
+  ) {
     final completer = (completers?.registry
-        .getDependencyOrNull(
-          groupKey: DIKey(value.runtimeType),
-        )
-        ?.value as CompleterOr?);
+            .getDependencyOrNull<CompleterOr<FutureOr<T>>>(groupKey: groupKey)
+            ?.value ??
+        completers?.registry
+            .getDependencyOrNullK(
+              DIKey.type(CompleterOr<Object>, [value.runtimeType]),
+              groupKey: groupKey,
+            )
+            ?.value ??
+        completers?.registry
+            .getDependencyOrNullK(
+              DIKey.type(CompleterOr<Future<Object>>, [value.runtimeType]),
+              groupKey: groupKey,
+            )
+            ?.value) as CompleterOr?;
     completer?.complete(value);
   }
 
@@ -300,12 +312,24 @@ base class DIBase {
     bool traverse = true,
   }) {
     final groupKey1 = groupKey ?? focusGroup;
-    final dependency = registry.getDependencyOrNull<T>(
+    var dependency = registry.getDependencyOrNull<T>(
           groupKey: groupKey1,
         ) ??
         registry.getDependencyOrNull<Future<T>>(
           groupKey: groupKey1,
         );
+
+    if (dependency == null && traverse) {
+      for (final parent in parents) {
+        dependency = parent._getDependencyOrNull<T>(
+          groupKey: groupKey1,
+        );
+        if (dependency != null) {
+          break;
+        }
+      }
+    }
+
     if (dependency != null) {
       final valid = dependency.metadata?.validator?.call(dependency) ?? true;
       if (valid) {
@@ -317,16 +341,7 @@ base class DIBase {
         );
       }
     }
-    if (traverse) {
-      for (final parent in parents) {
-        final parentDep = parent._getDependencyOrNull<T>(
-          groupKey: groupKey1,
-        );
-        if (parentDep != null) {
-          return parentDep;
-        }
-      }
-    }
+
     return null;
   }
 
@@ -350,11 +365,11 @@ base class DIBase {
     }
 
     CompleterOr<FutureOr<T>>? completer;
-    completer = (completers?.registry
-        .getDependencyOrNull<Object>(
-          groupKey: DIKey(T),
+    completer = completers?.registry
+        .getDependencyOrNull<CompleterOr<FutureOr<T>>>(
+          groupKey: groupKey1,
         )
-        ?.value as CompleterOr<FutureOr<T>>?);
+        ?.value;
     if (completer != null) {
       return completer.futureOr.thenOr((value) => value);
     }
@@ -366,10 +381,10 @@ base class DIBase {
     completer = CompleterOr<FutureOr<T>>();
 
     completers!.registry.setDependency(
-      Dependency<Object>(
+      Dependency<CompleterOr<FutureOr<T>>>(
         completer,
         metadata: DependencyMetadata(
-          groupKey: DIKey(T),
+          groupKey: groupKey1,
         ),
       ),
     );
@@ -377,8 +392,8 @@ base class DIBase {
     // Wait for the register function to complete the Completer, then unregister
     // the completer before returning the value.
     return completer.futureOr.thenOr((value) {
-      completers!.registry.removeDependency<Object>(
-        groupKey: DIKey(T),
+      completers!.registry.removeDependency<CompleterOr<FutureOr<T>>>(
+        groupKey: groupKey1,
       );
       return value;
     });

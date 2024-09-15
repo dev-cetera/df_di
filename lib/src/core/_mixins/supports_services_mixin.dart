@@ -17,16 +17,19 @@ import '/src/_internal.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsRuntimeTypeMixin {
-  FutureOr<T> registerService<T extends Service<Object>>(
-    T service, {
+  FutureOr<T> registerService<T extends Service>(
+    FutureOr<T> service, {
     Object? params,
     DIKey? groupKey,
     bool Function(FutureOr<T> instance)? validator,
     FutureOr<void> Function(FutureOr<T> instance)? onUnregister,
   }) {
     final initializedService = mapSyncOrAsync(
-      service.initialized ? null : service.initService(params),
-      (_) => service,
+      service,
+      (e) => mapSyncOrAsync(
+        e.initialized ? null : e.initService(params),
+        (_) => service,
+      ),
     );
     return register<T>(
       initializedService,
@@ -46,7 +49,7 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsRuntimeTy
     );
   }
 
-  void registerLazyService<T extends Service<Object>>(
+  void registerLazyService<T extends Service>(
     TConstructor<T> constructor, {
     DIKey? groupKey,
     bool Function(FutureOr<T> instance)? validator,
@@ -72,7 +75,7 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsRuntimeTy
     );
   }
 
-  FutureOr<Service<Object>> getServiceSingletonT(
+  FutureOr<Service> getServiceSingletonT(
     Type type, {
     Object? params,
     DIKey? groupKey,
@@ -94,7 +97,7 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsRuntimeTy
     return value;
   }
 
-  FutureOr<T> getServiceSingleton<T extends Service<Object>>({
+  FutureOr<T> getServiceSingleton<T extends Service>({
     Object? params,
     DIKey? groupKey,
     bool traverse = true,
@@ -114,19 +117,19 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsRuntimeTy
     return value;
   }
 
-  FutureOr<T>? getServiceSingletonOrNull<T extends Service<Object>>({
+  FutureOr<T>? getServiceSingletonOrNull<T extends Service>({
     Object? params,
     DIKey? groupKey,
     bool traverse = true,
   }) {
-    return getServiceSingletonWithParamsOrNull<T, Object>(
+    return getServiceSingletonWithParamsOrNull<T, Object?>(
       params: params,
       groupKey: groupKey,
       traverse: traverse,
     );
   }
 
-  FutureOr<T> getServiceSingletonWithParams<T extends Service<P>, P extends Object>({
+  FutureOr<T> getServiceSingletonWithParams<T extends Service<P>, P extends Object?>({
     P? params,
     DIKey? groupKey,
     bool traverse = true,
@@ -146,7 +149,7 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsRuntimeTy
     return value;
   }
 
-  FutureOr<Service<Object>>? getServiceSingletonOrNullT(
+  FutureOr<Service>? getServiceSingletonOrNullT(
     Type type, {
     Object? params,
     DIKey? groupKey,
@@ -154,7 +157,7 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsRuntimeTy
   }) {
     final instance = getSingletonOrNullT(type);
     return instance?.thenOr((e) {
-      e as Service<Object>;
+      e as Service;
       return e.initialized ? e : mapSyncOrAsync(e.initService(params), (_) => e);
     });
   }
@@ -170,7 +173,7 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsRuntimeTy
     );
   }
 
-  FutureOr<Service<Object>> getServiceFactoryT(
+  FutureOr<Service> getServiceFactoryT(
     Type type, {
     Object? params,
     DIKey? groupKey,
@@ -192,7 +195,7 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsRuntimeTy
     return value;
   }
 
-  FutureOr<T> getServiceFactory<T extends Service<Object>>({
+  FutureOr<T> getServiceFactory<T extends Service>({
     Object? params,
     DIKey? groupKey,
     bool traverse = true,
@@ -212,19 +215,19 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsRuntimeTy
     return value;
   }
 
-  FutureOr<T>? getServiceFactoryOrNull<T extends Service<Object>>({
+  FutureOr<T>? getServiceFactoryOrNull<T extends Service>({
     Object? params,
     DIKey? groupKey,
     bool traverse = true,
   }) {
-    return getServiceFactoryWithParamsOrNull<T, Object>(
+    return getServiceFactoryWithParamsOrNull<T, Object?>(
       params: params,
       groupKey: groupKey,
       traverse: traverse,
     );
   }
 
-  FutureOr<T> getServiceFactoryWithParams<T extends Service<P>, P extends Object>({
+  FutureOr<T> getServiceFactoryWithParams<T extends Service<P>, P extends Object?>({
     P? params,
     DIKey? groupKey,
     bool traverse = true,
@@ -244,7 +247,7 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsRuntimeTy
     return value;
   }
 
-  FutureOr<Service<Object>>? getServiceFactoryOrNullT(
+  FutureOr<Service>? getServiceFactoryOrNullT(
     Type type, {
     Object? params,
     DIKey? groupKey,
@@ -252,12 +255,12 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsRuntimeTy
   }) {
     final instance = getFactoryOrNullT(type);
     return instance?.thenOr((e) {
-      e as Service<Object>;
+      e as Service;
       return e.initialized ? e : mapSyncOrAsync(e.initService(params), (_) => e);
     });
   }
 
-  FutureOr<T>? getServiceFactoryWithParamsOrNull<T extends Service<P>, P extends Object>({
+  FutureOr<T>? getServiceFactoryWithParamsOrNull<T extends Service<P>, P extends Object?>({
     P? params,
     DIKey? groupKey,
     bool traverse = true,
