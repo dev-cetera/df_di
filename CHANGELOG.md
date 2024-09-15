@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.4.1]
+
+- Released @ 9/2024 (UTC)
+- fix: Fix bugs with until() and untilT()
+
 ## [0.4.0]
 
 - Released @ 9/2024 (UTC)
