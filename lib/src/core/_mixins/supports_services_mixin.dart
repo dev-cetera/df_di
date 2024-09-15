@@ -24,8 +24,10 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsRuntimeTy
     bool Function(FutureOr<T> instance)? validator,
     FutureOr<void> Function(FutureOr<T> instance)? onUnregister,
   }) {
-    final initializedService =
-        mapSyncOrAsync(service.initialized ? service.initService(params) : null, (_) => service);
+    final initializedService = mapSyncOrAsync(
+      service.initialized ? null : service.initService(params),
+      (_) => service,
+    );
     return register<T>(
       initializedService,
       onUnregister: (service) => service.thenOr((e) => e.dispose()),
