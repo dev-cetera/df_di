@@ -80,7 +80,7 @@ base mixin SupportsTypeKeyMixin on DIBase {
     if (skipOnUnregisterCallback) {
       return value;
     }
-    return mapFutureOr(
+    return mapSyncOrAsync(
       removed.metadata?.onUnregister?.call(value),
       (_) => value,
     );
@@ -224,8 +224,7 @@ base mixin SupportsTypeKeyMixin on DIBase {
     }
     if (traverse) {
       for (final parent in parents) {
-        final parentDep =
-            (parent as SupportsTypeKeyMixin)._getDependencyOrNullK(
+        final parentDep = (parent as SupportsTypeKeyMixin)._getDependencyOrNullK(
           typeKey,
           groupKey: groupKey1,
         );

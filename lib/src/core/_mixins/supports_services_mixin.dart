@@ -16,8 +16,7 @@ import '/src/_internal.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-base mixin SupportsServicesMixin
-    on SupportsConstructorsMixin, SupportsRuntimeTypeMixin {
+base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsRuntimeTypeMixin {
   void registerService<T extends Service<Object>>(
     TConstructor<T> constructor, {
     DIKey? groupKey,
@@ -86,8 +85,7 @@ base mixin SupportsServicesMixin
     );
   }
 
-  FutureOr<T>
-      getServiceSingletonWithParams<T extends Service<P>, P extends Object>({
+  FutureOr<T> getServiceSingletonWithParams<T extends Service<P>, P extends Object>({
     P? params,
     DIKey? groupKey,
     bool traverse = true,
@@ -116,19 +114,19 @@ base mixin SupportsServicesMixin
     final instance = getSingletonOrNullT(type);
     return instance?.thenOr((e) {
       e as Service<Object>;
-      return e.initialized ? e : mapFutureOr(e.initService(params), (_) => e);
+      return e.initialized ? e : mapSyncOrAsync(e.initService(params), (_) => e);
     });
   }
 
-  FutureOr<T>? getServiceSingletonWithParamsOrNull<T extends Service<P>,
-      P extends Object?>({
+  FutureOr<T>? getServiceSingletonWithParamsOrNull<T extends Service<P>, P extends Object?>({
     P? params,
     DIKey? groupKey,
     bool traverse = true,
   }) {
     final instance = getSingletonOrNull<T>();
-    return instance?.thenOr((e) =>
-        e.initialized ? e : mapFutureOr(e.initService(params), (_) => e),);
+    return instance?.thenOr(
+      (e) => e.initialized ? e : mapSyncOrAsync(e.initService(params), (_) => e),
+    );
   }
 
   FutureOr<Service<Object>> getServiceFactoryT(
@@ -185,8 +183,7 @@ base mixin SupportsServicesMixin
     );
   }
 
-  FutureOr<T>
-      getServiceFactoryWithParams<T extends Service<P>, P extends Object>({
+  FutureOr<T> getServiceFactoryWithParams<T extends Service<P>, P extends Object>({
     P? params,
     DIKey? groupKey,
     bool traverse = true,
@@ -215,18 +212,18 @@ base mixin SupportsServicesMixin
     final instance = getFactoryOrNullT(type);
     return instance?.thenOr((e) {
       e as Service<Object>;
-      return e.initialized ? e : mapFutureOr(e.initService(params), (_) => e);
+      return e.initialized ? e : mapSyncOrAsync(e.initService(params), (_) => e);
     });
   }
 
-  FutureOr<T>? getServiceFactoryWithParamsOrNull<T extends Service<P>,
-      P extends Object>({
+  FutureOr<T>? getServiceFactoryWithParamsOrNull<T extends Service<P>, P extends Object>({
     P? params,
     DIKey? groupKey,
     bool traverse = true,
   }) {
     final instance = getFactoryOrNull<T>();
-    return instance?.thenOr((e) =>
-        e.initialized ? e : mapFutureOr(e.initService(params), (_) => e),);
+    return instance?.thenOr(
+      (e) => e.initialized ? e : mapSyncOrAsync(e.initService(params), (_) => e),
+    );
   }
 }

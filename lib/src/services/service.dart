@@ -48,8 +48,10 @@ abstract base class Service<TParams extends Object?> {
       throw ServiceAlreadyInitializedException();
     }
 
-    return mapFutureOr(
-        onInitService(params), (_) => _initializedCompleter.complete(null),);
+    return mapSyncOrAsync(
+      onInitService(params),
+      (_) => _initializedCompleter.complete(null),
+    );
   }
 
   /// Override to define any necessary initialization to be called immediately
@@ -78,7 +80,7 @@ abstract base class Service<TParams extends Object?> {
     if (!initialized) {
       throw ServiceNotYetInitializedException();
     }
-    return mapFutureOr(onDispose(), (_) => _disposed = true);
+    return mapSyncOrAsync(onDispose(), (_) => _disposed = true);
   }
 
   /// Whether the service has been disposed.
