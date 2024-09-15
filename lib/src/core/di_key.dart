@@ -66,7 +66,8 @@ class DIKey<T extends Object> {
         } else {
           // If no more subtypes are available, retain 'Object' or 'dynamic'.
           buffer.write(
-              cleanBaseType.startsWith(objectStr, n) ? objectStr : dynamicStr,);
+            cleanBaseType.startsWith(objectStr, n) ? objectStr : dynamicStr,
+          );
         }
 
         // Skip ahead over the matched word ('Object' or 'dynamic') dynamically.

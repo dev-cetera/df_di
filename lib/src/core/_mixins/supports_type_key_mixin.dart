@@ -224,7 +224,8 @@ base mixin SupportsTypeKeyMixin on DIBase {
     }
     if (traverse) {
       for (final parent in parents) {
-        final parentDep = (parent as SupportsTypeKeyMixin)._getDependencyOrNullK(
+        final parentDep =
+            (parent as SupportsTypeKeyMixin)._getDependencyOrNullK(
           typeKey,
           groupKey: groupKey1,
         );
