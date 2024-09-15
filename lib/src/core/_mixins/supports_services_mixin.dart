@@ -30,7 +30,19 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsRuntimeTy
     );
     return register<T>(
       initializedService,
-      onUnregister: (service) => service.thenOr((e) => e.dispose()),
+      onUnregister: (e) {
+        return mapSyncOrAsync(
+          e,
+          (service) {
+            return mapSyncOrAsync(
+              onUnregister?.call(service),
+              (_) {
+                return service.dispose();
+              },
+            );
+          },
+        );
+      },
     );
   }
 
@@ -44,7 +56,19 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsRuntimeTy
       constructor,
       groupKey: groupKey,
       validator: validator,
-      onUnregister: (e) => e.thenOr((e) => e.dispose()),
+      onUnregister: (e) {
+        return mapSyncOrAsync(
+          e,
+          (service) {
+            return mapSyncOrAsync(
+              onUnregister?.call(service),
+              (_) {
+                return service.dispose();
+              },
+            );
+          },
+        );
+      },
     );
   }
 
