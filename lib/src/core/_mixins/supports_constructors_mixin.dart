@@ -49,7 +49,7 @@ base mixin SupportsConstructorsMixin on SupportsRuntimeTypeMixin {
       onUnregister: onUnregister != null
           ? (constructor) {
               final instance = constructor.asSync.currentInstance;
-              return instance != null ? onUnregister(instance) : true;
+              return instance != null ? onUnregister(instance) : null;
             }
           : null,
     ).asSync;
