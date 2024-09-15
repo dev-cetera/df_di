@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.4.2]
+
+- Released @ 9/2024 (UTC)
+- chore: Improve Service and StreamingService
+
 ## [0.4.1]
 
 - Released @ 9/2024 (UTC)

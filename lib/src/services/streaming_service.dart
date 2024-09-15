@@ -21,8 +21,8 @@ import '/src/_internal.dart';
 /// It provides a standardized way to manage a stream and its lifecycle,
 /// ensuring that resources are properly cleaned up when the service is
 /// disposed.
-abstract base class StreamingService<TData extends Object?, TParams extends Object?>
-    extends Service<TParams> {
+abstract base class StreamingService<TData extends Object?,
+    TParams extends Object?> extends Service<TParams> {
   //
   //
   //
@@ -97,4 +97,5 @@ abstract base class StreamingService<TData extends Object?, TParams extends Obje
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-typedef NoParamsStreamingService<TData extends Object> = StreamingService<TData, Object>;
+typedef NoParamsStreamingService<TData extends Object>
+    = StreamingService<TData, Object>;
