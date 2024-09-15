@@ -49,10 +49,17 @@ abstract base class Service<TParams extends Object?> {
     }
 
     return mapSyncOrAsync(
-      onInitService(params),
+      mapSyncOrAsync(
+        beforeOnInitService(params),
+        (_) => onInitService(params),
+      ),
       (_) => _initializedCompleter.complete(null),
     );
   }
+
+  @protected
+  @nonVirtual
+  FutureOr<void> beforeOnInitService(TParams? params) {}
 
   /// Override to define any necessary initialization to be called immediately
   /// after [initService].
@@ -68,8 +75,8 @@ abstract base class Service<TParams extends Object?> {
   ///
   /// Do not override this method. Instead, override [onDispose].
   ///
-  /// Do not call this method directly. Use [DI.registerSingletonService] or
-  /// [DI.registerFactoryService] which will automatically call this methid
+  /// Do not call this method directly. Use [DI.registerService] or
+  /// [DI.registerLazyService] which will automatically call this method
   /// on [DI.unregister].
   @protected
   @nonVirtual
@@ -80,8 +87,18 @@ abstract base class Service<TParams extends Object?> {
     if (!initialized) {
       throw ServiceNotYetInitializedException();
     }
-    return mapSyncOrAsync(onDispose(), (_) => _disposed = true);
+    return mapSyncOrAsync(
+      mapSyncOrAsync(
+        beforeOnDispose(),
+        (_) => onDispose(),
+      ),
+      (_) => _disposed = true,
+    );
   }
+
+  @protected
+  @nonVirtual
+  FutureOr<void> beforeOnDispose() {}
 
   /// Whether the service has been disposed.
   @pragma('vm:prefer-inline')
@@ -94,7 +111,7 @@ abstract base class Service<TParams extends Object?> {
   ///
   /// This method should not be called directly.
   @protected
-  FutureOr<void> onDispose() {}
+  FutureOr<void> onDispose();
 }
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░

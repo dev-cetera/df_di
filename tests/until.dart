@@ -69,4 +69,7 @@ void main() {
 base class TestService extends Service {
   @override
   FutureOr<void> onInitService(Object? params) {}
+
+  @override
+  FutureOr<void> onDispose() {}
 }

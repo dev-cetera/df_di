@@ -127,9 +127,11 @@ final class CountingService extends StreamingService<int, bool> {
   }
 
   @override
+  FutureOr<void> onInitService(bool? params) {}
+
+  @override
   FutureOr<void> onDispose() {
     print('Disposed $CountingService');
-    return super.onDispose();
   }
 }
 

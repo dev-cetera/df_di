@@ -38,13 +38,11 @@ void main() async {
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-final class UserStreamingService
-    extends StreamingService<Map<String, dynamic>, Object> {
+final class UserStreamingService extends StreamingService<Map<String, dynamic>, Object> {
   UserStreamingService();
 
   @override
   Future<void> onInitService(_) async {
-    super.onInitService(null);
     await super.initialDataCompleter.future;
   }
 
@@ -55,10 +53,7 @@ final class UserStreamingService
   }
 
   @override
-  FutureOr<void> onDispose() {
-    print('DISPOSING!!!');
-    return super.onDispose();
-  }
+  FutureOr<void> onDispose() {}
 
   @override
   Stream<Map<String, dynamic>> provideInputStream() {

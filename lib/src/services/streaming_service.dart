@@ -21,8 +21,8 @@ import '/src/_internal.dart';
 /// It provides a standardized way to manage a stream and its lifecycle,
 /// ensuring that resources are properly cleaned up when the service is
 /// disposed.
-abstract base class StreamingService<TData extends Object?,
-    TParams extends Object?> extends Service<TParams> {
+abstract base class StreamingService<TData extends Object?, TParams extends Object?>
+    extends Service<TParams> {
   //
   //
   //
@@ -48,7 +48,9 @@ abstract base class StreamingService<TData extends Object?,
   /// Initializes the service by setting up the stream controller and starting
   /// to listen to the input stream.
   @override
-  void onInitService(TParams? params) {
+  @nonVirtual
+  // ignore: invalid_override_of_non_virtual_member
+  void beforeOnInitService(TParams? params) {
     _streamController = StreamController<TData>.broadcast();
     _streamSubscription = provideInputStream().listen(
       pushToStream,
@@ -84,7 +86,9 @@ abstract base class StreamingService<TData extends Object?,
   /// controller, ensuring that all resources are released. This method is
   /// called when the service is disposed.
   @override
-  FutureOr<void> onDispose() async {
+  @nonVirtual
+  // ignore: invalid_override_of_non_virtual_member
+  FutureOr<void> beforeOnDispose() async {
     await _streamSubscription?.cancel(); // Cancel the subscription
     await _streamController?.close();
     return null; // Close the stream controller
@@ -93,5 +97,4 @@ abstract base class StreamingService<TData extends Object?,
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-typedef NoParamsStreamingService<TData extends Object>
-    = StreamingService<TData, Object>;
+typedef NoParamsStreamingService<TData extends Object> = StreamingService<TData, Object>;
