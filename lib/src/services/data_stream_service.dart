@@ -39,7 +39,7 @@ abstract base class DataStreamService<TData extends Object?,
 
   /// Override this method to provide the input stream that this service will
   /// listen to.
-  Stream<TData> provideInputStream();
+  Stream<TData> provideInputStream(TParams? params);
 
   /// Override this method to handle any errors that occur within the stream.
   /// The [dispose] callback allows for immediate cleanup if necessary.
@@ -55,7 +55,7 @@ abstract base class DataStreamService<TData extends Object?,
   void beforeOnInitService(TParams? params) {
     _initialDataCompleter = Completer<TData>();
     _streamController = StreamController<TData>.broadcast();
-    _streamSubscription = provideInputStream().listen(
+    _streamSubscription = provideInputStream(params).listen(
       pushToStream,
       onError: (Object e) => onError(e, dispose),
       // Keep the stream open even after an error. All error handling is done

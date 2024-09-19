@@ -56,7 +56,7 @@ final class UserStreamingService extends StreamService<Map<String, dynamic>> {
   FutureOr<void> onDispose() {}
 
   @override
-  Stream<Map<String, dynamic>> provideInputStream() {
+  Stream<Map<String, dynamic>> provideInputStream(_) {
     return StreamUtils.newPoller<Map<String, dynamic>>(
       () async {
         return {'id': 'pu_1s3hs64kshs74bms'};
