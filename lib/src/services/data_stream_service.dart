@@ -21,8 +21,8 @@ import '/src/_internal.dart';
 /// It provides a standardized way to manage a stream and its lifecycle,
 /// ensuring that resources are properly cleaned up when the service is
 /// disposed.
-abstract base class DataStreamService<TData extends Object?, TParams extends Object?>
-    extends Service<TParams> {
+abstract base class DataStreamService<TData extends Object?,
+    TParams extends Object?> extends Service<TParams> {
   //
   //
   //
@@ -62,7 +62,6 @@ abstract base class DataStreamService<TData extends Object?, TParams extends Obj
       // by onError.
       cancelOnError: false,
     );
-
   }
 
   /// Pushes data into the internal stream and triggers [onPushToStream].
@@ -99,6 +98,7 @@ abstract base class DataStreamService<TData extends Object?, TParams extends Obj
     await _streamController?.close();
     _streamController = null;
     _initialDataCompleter = null;
+    return null;
   }
 }
 

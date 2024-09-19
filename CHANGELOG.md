@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.5.0]
+
+- Released @ 9/2024 (UTC)
+- breaking: Update service classes and add getters such as getAsync, getSync, getSyncOrNull, and more to DI container.
+
 ## [0.4.2]
 
 - Released @ 9/2024 (UTC)
