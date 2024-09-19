@@ -38,13 +38,12 @@ void main() async {
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-final class UserStreamingService
-    extends StreamingService<Map<String, dynamic>, Object> {
+final class UserStreamingService extends StreamService<Map<String, dynamic>> {
   UserStreamingService();
 
   @override
   Future<void> onInitService(_) async {
-    await super.initialDataCompleter.future;
+    await super.initialData;
   }
 
   @override

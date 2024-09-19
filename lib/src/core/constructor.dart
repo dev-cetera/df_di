@@ -14,16 +14,16 @@ import '/src/_internal.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-typedef TConstructor<T extends Object> = FutureOr<T> Function();
+typedef Constructor<T extends Object> = FutureOr<T> Function();
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-class Constructor<T extends Object> {
+class Lazy<T extends Object> {
   @protected
   FutureOr<T>? currentInstance;
-  final TConstructor<T> _constructor;
+  final Constructor<T> _constructor;
 
-  Constructor(this._constructor);
+  Lazy(this._constructor);
 
   /// Returns the singleton instance, creating it if necessary.
   FutureOr<T> get singleton {

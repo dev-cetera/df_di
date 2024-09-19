@@ -26,14 +26,14 @@ abstract base class Service<TParams extends Object?> {
   /// before using this service.
   Service();
 
-  final _initializedCompleter = CompleterOr<void>();
+  CompleterOr<void>? _initializedCompleter;
 
   /// Completes after initialized via [initService].
   @pragma('vm:prefer-inline')
-  FutureOr<void> get initializedFuture => _initializedCompleter.futureOr;
+  FutureOr<void> get initializedFuture => _initializedCompleter?.futureOr;
 
   /// Whether this service has been initialized.
-  bool get initialized => _initializedCompleter.isCompleted;
+  bool get initialized => _initializedCompleter?.isCompleted ?? false;
 
   /// Initializes this service. Calls [onInitService] then completes
   /// [initializedFuture].
@@ -48,12 +48,13 @@ abstract base class Service<TParams extends Object?> {
       throw ServiceAlreadyInitializedException();
     }
 
+    _initializedCompleter = CompleterOr<void>();
     return mapSyncOrAsync(
       mapSyncOrAsync(
         beforeOnInitService(params),
         (_) => onInitService(params),
       ),
-      (_) => _initializedCompleter.complete(null),
+      (_) => _initializedCompleter!.complete(null),
     );
   }
 
@@ -81,18 +82,24 @@ abstract base class Service<TParams extends Object?> {
   @protected
   @nonVirtual
   FutureOr<void> dispose() {
-    if (_disposed) {
+    if (disposed) {
       throw ServiceAlreadyDisposedException();
     }
     if (!initialized) {
       throw ServiceNotYetInitializedException();
     }
+    return disposeAnyway();
+  }
+
+  @nonVirtual
+  @protected
+  FutureOr<void> disposeAnyway() {
     return mapSyncOrAsync(
       mapSyncOrAsync(
         beforeOnDispose(),
         (_) => onDispose(),
       ),
-      (_) => _disposed = true,
+      (_) => disposed = true,
     );
   }
 
@@ -101,10 +108,9 @@ abstract base class Service<TParams extends Object?> {
   FutureOr<void> beforeOnDispose() {}
 
   /// Whether the service has been disposed.
-  @pragma('vm:prefer-inline')
-  bool get disposed => _disposed;
-
-  bool _disposed = false;
+  @protected
+  @nonVirtual
+  bool disposed = false;
 
   /// Override to define any necessary disposal to be called immediately
   /// after [dispose].

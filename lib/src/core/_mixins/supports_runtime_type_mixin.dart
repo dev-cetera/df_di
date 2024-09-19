@@ -21,6 +21,70 @@ base mixin SupportsRuntimeTypeMixin on SupportsTypeKeyMixin {
   //
   //
 
+  Future<Object> getAsyncT(
+    Type type, {
+    DIKey? groupKey,
+    bool traverse = true,
+  }) async {
+    return getT(
+      type,
+      groupKey: groupKey,
+      traverse: traverse,
+    );
+  }
+
+  //
+  //
+  //
+
+  Object getSyncT(
+    Type type, {
+    DIKey? groupKey,
+    bool traverse = true,
+  }) {
+    final value = getT(
+      type,
+      groupKey: groupKey,
+      traverse: traverse,
+    );
+    if (value is Future) {
+      throw DependencyIsFutureException(
+        type: type,
+        groupKey: groupKey,
+      );
+    } else {
+      return value;
+    }
+  }
+
+  //
+  //
+  //
+
+  Object? getSyncOrNullT(
+    Type type, {
+    DIKey? groupKey,
+    bool traverse = true,
+  }) {
+    final value = getOrNullT(
+      type,
+      groupKey: groupKey,
+      traverse: traverse,
+    );
+    if (value is Future) {
+      throw DependencyIsFutureException(
+        type: type,
+        groupKey: groupKey,
+      );
+    } else {
+      return value;
+    }
+  }
+
+  //
+  //
+  //
+
   @protected
   FutureOr<Object> getT(
     Type type, {

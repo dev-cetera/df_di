@@ -68,8 +68,7 @@ base class DIBase {
       index: dependencyCount++,
       groupKey: groupKey1,
       validator: validator != null ? (e) => validator(e as FutureOr<T>) : null,
-      onUnregister:
-          onUnregister != null ? (e) => onUnregister(e as FutureOr<T>) : null,
+      onUnregister: onUnregister != null ? (e) => onUnregister(e as FutureOr<T>) : null,
     );
     completeRegistration(value, groupKey1);
     final registeredDep = _registerDependency(
@@ -164,7 +163,7 @@ base class DIBase {
       registry.removeDependency<Future<T>>(
         groupKey: groupKey1,
       ),
-      registry.removeDependency<Constructor<T>>(
+      registry.removeDependency<Lazy<T>>(
         groupKey: groupKey1,
       ),
     ].nonNulls.firstOrNull;
@@ -205,7 +204,7 @@ base class DIBase {
           ) !=
           null,
       () =>
-          registry.getDependencyOrNull<Constructor<T>>(
+          registry.getDependencyOrNull<Lazy<T>>(
             groupKey: groupKey1,
           ) !=
           null,
@@ -242,6 +241,52 @@ base class DIBase {
       );
     }
     return value;
+  }
+
+  Future<T> getAsync<T extends Object>({
+    DIKey? groupKey,
+    bool traverse = true,
+  }) async {
+    return get<T>(
+      groupKey: groupKey,
+      traverse: traverse,
+    );
+  }
+
+  T getSync<T extends Object>({
+    DIKey? groupKey,
+    bool traverse = true,
+  }) {
+    final value = get<T>(
+      groupKey: groupKey,
+      traverse: traverse,
+    );
+    if (value is Future) {
+      throw DependencyIsFutureException(
+        type: T,
+        groupKey: groupKey,
+      );
+    } else {
+      return value;
+    }
+  }
+
+  T? getSyncOrNull<T extends Object>({
+    DIKey? groupKey,
+    bool traverse = true,
+  }) {
+    final value = getOrNull<T>(
+      groupKey: groupKey,
+      traverse: traverse,
+    );
+    if (value is Future) {
+      throw DependencyIsFutureException(
+        type: T,
+        groupKey: groupKey,
+      );
+    } else {
+      return value;
+    }
   }
 
   /// Returns any dependency of type [T] or subtype of [T] that is associated

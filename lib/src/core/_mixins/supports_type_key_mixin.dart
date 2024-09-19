@@ -66,7 +66,7 @@ base mixin SupportsTypeKeyMixin on DIBase {
         groupKey: groupKey1,
       ),
       registry.removeDependencyK(
-        DIKey.type(Constructor, [typeKey]),
+        DIKey.type(Lazy, [typeKey]),
         groupKey: groupKey1,
       ),
     ].nonNulls.firstOrNull;
@@ -111,7 +111,7 @@ base mixin SupportsTypeKeyMixin on DIBase {
           null,
       () =>
           registry.getDependencyOrNullK(
-            DIKey.type(Constructor, [typeKey]),
+            DIKey.type(Lazy, [typeKey]),
             groupKey: groupKey1,
           ) !=
           null,

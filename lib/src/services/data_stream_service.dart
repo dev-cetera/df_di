@@ -21,19 +21,21 @@ import '/src/_internal.dart';
 /// It provides a standardized way to manage a stream and its lifecycle,
 /// ensuring that resources are properly cleaned up when the service is
 /// disposed.
-abstract base class StreamingService<TData extends Object?,
-    TParams extends Object?> extends Service<TParams> {
+abstract base class DataStreamService<TData extends Object?, TParams extends Object?>
+    extends Service<TParams> {
   //
   //
   //
 
+  Completer<TData>? _initialDataCompleter;
   StreamController<TData>? _streamController;
   StreamSubscription<TData>? _streamSubscription;
-  final initialDataCompleter = Completer<TData>();
 
-  // Provides access to the stream managed by this service.
-  @protected
-  Stream<TData>? get stream => this._streamController?.stream;
+  /// Completes with the initial data pushed to the stream.
+  Future<TData>? get initialData => _initialDataCompleter?.future;
+
+  /// Provides access to the stream managed by this service.
+  Stream<TData>? get stream => _streamController?.stream;
 
   /// Override this method to provide the input stream that this service will
   /// listen to.
@@ -51,6 +53,7 @@ abstract base class StreamingService<TData extends Object?,
   @nonVirtual
   // ignore: invalid_override_of_non_virtual_member
   void beforeOnInitService(TParams? params) {
+    _initialDataCompleter = Completer<TData>();
     _streamController = StreamController<TData>.broadcast();
     _streamSubscription = provideInputStream().listen(
       pushToStream,
@@ -59,6 +62,7 @@ abstract base class StreamingService<TData extends Object?,
       // by onError.
       cancelOnError: false,
     );
+
   }
 
   /// Pushes data into the internal stream and triggers [onPushToStream].
@@ -68,8 +72,9 @@ abstract base class StreamingService<TData extends Object?,
     if (shouldAdd(data)) {
       _streamController!.add(data);
       onPushToStream(data);
-      if (!initialDataCompleter.isCompleted) {
-        initialDataCompleter.complete(data);
+      final completed = _initialDataCompleter?.isCompleted ?? false;
+      if (!completed) {
+        _initialDataCompleter?.complete(data);
       }
     }
   }
@@ -89,13 +94,14 @@ abstract base class StreamingService<TData extends Object?,
   @nonVirtual
   // ignore: invalid_override_of_non_virtual_member
   FutureOr<void> beforeOnDispose() async {
-    await _streamSubscription?.cancel(); // Cancel the subscription
+    await _streamSubscription?.cancel();
+    _streamSubscription = null;
     await _streamController?.close();
-    return null; // Close the stream controller
+    _streamController = null;
+    _initialDataCompleter = null;
   }
 }
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-typedef NoParamsStreamingService<TData extends Object>
-    = StreamingService<TData, Object>;
+typedef StreamService<TData extends Object> = DataStreamService<TData, Object>;

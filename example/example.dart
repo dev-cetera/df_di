@@ -112,7 +112,7 @@ final class FooBarService extends Service {
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-final class CountingService extends StreamingService<int, bool> {
+final class CountingService extends DataStreamService<int, bool> {
   @override
   Stream<int> provideInputStream() async* {
     for (var n = 0; n < 100; n++) {
