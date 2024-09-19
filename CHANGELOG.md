@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.5.1]
+
+- Released @ 9/2024 (UTC)
+- refactor: provideInputStream now accepts param parameters
+
 ## [0.5.0]
 
 - Released @ 9/2024 (UTC)
