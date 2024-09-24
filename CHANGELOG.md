@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.5.2]
+
+- Released @ 9/2024 (UTC)
+- fix: Update example and fix small issue with DataStreamService
+
 ## [0.5.1]
 
 - Released @ 9/2024 (UTC)
