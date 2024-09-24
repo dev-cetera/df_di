@@ -114,7 +114,7 @@ final class FooBarService extends Service {
 
 final class CountingService extends DataStreamService<int, bool> {
   @override
-  Stream<int> provideInputStream() async* {
+  Stream<int> provideInputStream(_) async* {
     for (var n = 0; n < 100; n++) {
       await Future<void>.delayed(const Duration(seconds: 1));
       yield n;

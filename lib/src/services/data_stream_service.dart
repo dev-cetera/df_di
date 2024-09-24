@@ -52,7 +52,7 @@ abstract base class DataStreamService<TData extends Object?,
   @override
   @nonVirtual
   // ignore: invalid_override_of_non_virtual_member
-  void beforeOnInitService(TParams? params) {
+  FutureOr<void> beforeOnInitService(TParams? params) {
     _initialDataCompleter = Completer<TData>();
     _streamController = StreamController<TData>.broadcast();
     _streamSubscription = provideInputStream(params).listen(
