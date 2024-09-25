@@ -49,8 +49,8 @@ abstract base class Service<TParams extends Object?> {
     }
 
     _initializedCompleter = CompleterOr<void>();
-    return concur(
-      concur(
+    return consec(
+      consec(
         beforeOnInitService(params),
         (_) => onInitService(params),
       ),
@@ -94,8 +94,8 @@ abstract base class Service<TParams extends Object?> {
   @nonVirtual
   @protected
   FutureOr<void> disposeAnyway() {
-    return concur(
-      concur(
+    return consec(
+      consec(
         beforeOnDispose(),
         (_) => onDispose(),
       ),

@@ -68,8 +68,7 @@ base class DIBase {
       index: dependencyCount++,
       groupKey: groupKey1,
       validator: validator != null ? (e) => validator(e as FutureOr<T>) : null,
-      onUnregister:
-          onUnregister != null ? (e) => onUnregister(e as FutureOr<T>) : null,
+      onUnregister: onUnregister != null ? (e) => onUnregister(e as FutureOr<T>) : null,
     );
     completeRegistration(value, groupKey1);
     final registeredDep = _registerDependency(
@@ -178,7 +177,7 @@ base class DIBase {
     if (skipOnUnregisterCallback) {
       return value;
     }
-    return concur(
+    return consec(
       removed.metadata?.onUnregister?.call(value),
       (_) => value,
     );
@@ -453,16 +452,16 @@ base class DIBase {
     final results = List.of(registry.dependencies);
     FutureOr<Object> temp = Object;
     for (final dependency in results) {
-      temp = concur(
+      temp = consec(
         temp,
         (_) {
           registry.removeDependencyK(
             dependency.typeKey,
             groupKey: dependency.metadata?.groupKey,
           );
-          return concur(
+          return consec(
             dependency.metadata?.onUnregister?.call(dependency.value),
-            (_) => concur(
+            (_) => consec(
               onUnregister?.call(dependency),
               (_) => dependency,
             ),
@@ -470,6 +469,6 @@ base class DIBase {
         },
       );
     }
-    return concur(temp, (e) => results);
+    return consec(temp, (e) => results);
   }
 }

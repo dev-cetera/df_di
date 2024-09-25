@@ -27,14 +27,12 @@ class Lazy<T extends Object> {
 
   /// Returns the singleton instance, creating it if necessary.
   FutureOr<T> get singleton {
-    currentInstance ??= _constructor();
-    return currentInstance!;
+    return currentInstance ??= _constructor();
   }
 
   /// Returns a new instance each time, acting as a factory.
   FutureOr<T> get factory {
-    currentInstance = _constructor();
-    return currentInstance!;
+    return _constructor();
   }
 
   /// Resets the singleton instance, allowing it to be re-created on the next call.

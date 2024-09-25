@@ -80,7 +80,7 @@ base mixin SupportsTypeKeyMixin on DIBase {
     if (skipOnUnregisterCallback) {
       return value;
     }
-    return concur(
+    return consec(
       removed.metadata?.onUnregister?.call(value),
       (_) => value,
     );
