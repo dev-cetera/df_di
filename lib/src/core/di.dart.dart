@@ -30,8 +30,6 @@ final class DI extends DIBase
   static DI get global => app.child(groupKey: DIKey.globalGroup);
   static DI get session => global.child(groupKey: DIKey.sessionGroup);
   static DI get user => session.child(groupKey: DIKey.userGroup);
-  static DI get sharedPreferences =>
-      global.child(groupKey: DIKey.sharedPreferences);
   static DI get theme => app.child(groupKey: DIKey.themeGroup);
   static DI get dev => app.child(groupKey: DIKey.devGroup);
   static DI get prod => app.child(groupKey: DIKey.prodGroup);

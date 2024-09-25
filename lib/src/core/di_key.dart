@@ -88,7 +88,6 @@ class DIKey<T extends Object> {
   static final globalGroup = DIKey('GLOBAL_GROUP');
   static final sessionGroup = DIKey('SESSION_USER_GROUP');
   static final userGroup = DIKey('USER_GROUP');
-  static final sharedPreferences = DIKey('SHARED_PREFERENCES_GROUP');
   static final themeGroup = DIKey('THEME_GROUP');
 
   static final prodGroup = DIKey('PROD_GROUP');
