@@ -68,8 +68,7 @@ base class DIBase {
       index: dependencyCount++,
       groupKey: groupKey1,
       validator: validator != null ? (e) => validator(e as FutureOr<T>) : null,
-      onUnregister:
-          onUnregister != null ? (e) => onUnregister(e as FutureOr<T>) : null,
+      onUnregister: onUnregister != null ? (e) => onUnregister(e as FutureOr<T>) : null,
     );
     completeRegistration(value, groupKey1);
     final registeredDep = _registerDependency(
@@ -275,19 +274,19 @@ base class DIBase {
   T? getSyncOrNull<T extends Object>({
     DIKey? groupKey,
     bool traverse = true,
+    bool throwIfAsync = false,
   }) {
     final value = getOrNull<T>(
       groupKey: groupKey,
       traverse: traverse,
     );
-    if (value is Future) {
+    if (throwIfAsync && value is Future) {
       throw DependencyIsFutureException(
         type: T,
         groupKey: groupKey,
       );
-    } else {
-      return value;
     }
+    return value?.asSyncOrNull;
   }
 
   /// Returns any dependency of type [T] or subtype of [T] that is associated

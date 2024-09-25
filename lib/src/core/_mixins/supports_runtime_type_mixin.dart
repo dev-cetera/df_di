@@ -65,20 +65,20 @@ base mixin SupportsRuntimeTypeMixin on SupportsTypeKeyMixin {
     Type type, {
     DIKey? groupKey,
     bool traverse = true,
+    bool throwIfAsync = false,
   }) {
     final value = getOrNullT(
       type,
       groupKey: groupKey,
       traverse: traverse,
     );
-    if (value is Future) {
+    if (throwIfAsync && value is Future) {
       throw DependencyIsFutureException(
         type: type,
         groupKey: groupKey,
       );
-    } else {
-      return value;
     }
+    return value?.asSyncOrNull;
   }
 
   //

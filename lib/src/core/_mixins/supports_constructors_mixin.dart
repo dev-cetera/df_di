@@ -21,8 +21,7 @@ base mixin SupportsConstructorsMixin on SupportsRuntimeTypeMixin {
     Type type, {
     DIKey? groupKey,
   }) {
-    (getK(DIKey.type(Lazy, [type]), groupKey: groupKey) as Lazy)
-        .resetSingleton();
+    (getK(DIKey.type(Lazy, [type]), groupKey: groupKey) as Lazy).resetSingleton();
   }
 
   void resetSingleton<T extends Object>({
@@ -91,20 +90,20 @@ base mixin SupportsConstructorsMixin on SupportsRuntimeTypeMixin {
     Type type, {
     DIKey? groupKey,
     bool traverse = true,
+    bool throwIfAsync = false,
   }) {
     final value = getSingletonOrNullT(
       type,
       groupKey: groupKey,
       traverse: traverse,
     );
-    if (value is Future) {
+    if (throwIfAsync && value is Future) {
       throw DependencyIsFutureException(
         type: type,
         groupKey: groupKey,
       );
-    } else {
-      return value;
     }
+    return value?.asSyncOrNull;
   }
 
   FutureOr<Object> getSingletonT(
@@ -171,19 +170,19 @@ base mixin SupportsConstructorsMixin on SupportsRuntimeTypeMixin {
   T? getSingletonSyncOrNull<T extends Object>({
     DIKey? groupKey,
     bool traverse = true,
+    bool throwIfAsync = false,
   }) {
     final value = getSingletonOrNull<T>(
       groupKey: groupKey,
       traverse: traverse,
     );
-    if (value is Future) {
+    if (throwIfAsync && value is Future) {
       throw DependencyIsFutureException(
         type: T,
         groupKey: groupKey,
       );
-    } else {
-      return value;
     }
+    return value?.asSyncOrNull;
   }
 
   FutureOr<T> getSingleton<T extends Object>({
@@ -250,20 +249,20 @@ base mixin SupportsConstructorsMixin on SupportsRuntimeTypeMixin {
     Type type, {
     DIKey? groupKey,
     bool traverse = true,
+    bool throwIfAsync = false,
   }) {
     final value = getFactoryOrNullT(
       type,
       groupKey: groupKey,
       traverse: traverse,
     );
-    if (value is Future) {
+    if (throwIfAsync && value is Future) {
       throw DependencyIsFutureException(
         type: type,
         groupKey: groupKey,
       );
-    } else {
-      return value;
     }
+    return value?.asSyncOrNull;
   }
 
   FutureOr<Object> getFactoryT(
@@ -330,19 +329,19 @@ base mixin SupportsConstructorsMixin on SupportsRuntimeTypeMixin {
   T? getFactorySyncOrNull<T extends Object>({
     DIKey? groupKey,
     bool traverse = true,
+    bool throwIfAsync = false,
   }) {
     final value = getFactoryOrNull<T>(
       groupKey: groupKey,
       traverse: traverse,
     );
-    if (value is Future) {
+    if (throwIfAsync && value is Future) {
       throw DependencyIsFutureException(
         type: T,
         groupKey: groupKey,
       );
-    } else {
-      return value;
     }
+    return value?.asSyncOrNull;
   }
 
   FutureOr<T> getFactory<T extends Object>({
