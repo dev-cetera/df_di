@@ -57,7 +57,8 @@ class DIKey<T extends Object> {
     final buffer = StringBuffer();
     for (var n = 0; n < cleanBaseType.length; n++) {
       // Check for 'Object' or 'dynamic' starting at the current position.
-      if (cleanBaseType.startsWith(objectStr, n) || cleanBaseType.startsWith(dynamicStr, n)) {
+      if (cleanBaseType.startsWith(objectStr, n) ||
+          cleanBaseType.startsWith(dynamicStr, n)) {
         // Replace with the next subtype from subTypes if available.
         if (i < subTypes.length) {
           buffer.write(subTypes[i].toString());
@@ -70,7 +71,9 @@ class DIKey<T extends Object> {
         }
 
         // Skip ahead over the matched word ('Object' or 'dynamic') dynamically.
-        n += cleanBaseType.startsWith(objectStr, n) ? objectStr.length - 1 : dynamicStr.length - 1;
+        n += cleanBaseType.startsWith(objectStr, n)
+            ? objectStr.length - 1
+            : dynamicStr.length - 1;
       } else {
         // Otherwise, just append the current character.
         buffer.write(cleanBaseType[n]);
