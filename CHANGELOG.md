@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.5.3]
+
+- Released @ 9/2024 (UTC)
+- fix: Address issue with SyncOrNull
+
 ## [0.5.2]
 
 - Released @ 9/2024 (UTC)
