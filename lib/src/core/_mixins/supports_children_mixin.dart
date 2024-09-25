@@ -21,8 +21,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
   late SupportsChildrenMixin? _children = this;
 
   /// Child containers.
-  List<DI> get children =>
-      List.unmodifiable(registry.dependencies.where((e) => e.value is DI));
+  List<DI> get children => List.unmodifiable(registry.dependencies.where((e) => e.value is DI));
 
   void registerChild({
     DIKey? groupKey,
@@ -34,7 +33,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
       () => DI()..parents.add(this as DI),
       groupKey: groupKey,
       validator: validator,
-      onUnregister: (e) => mapSyncOrAsync(
+      onUnregister: (e) => concur(
         onUnregister?.call(e),
         (_) => e.asSync.unregisterAll(),
       ),
@@ -44,14 +43,15 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
   DI getChild({
     DIKey? groupKey,
   }) {
+    final groupKey1 = groupKey ?? focusGroup;
     final value = getChildOrNull(
-      groupKey: groupKey,
+      groupKey: groupKey1,
     );
 
     if (value == null) {
       throw DependencyNotFoundException(
         type: DI,
-        groupKey: groupKey,
+        groupKey: groupKey1,
       );
     }
     return value;
@@ -72,14 +72,15 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     DIKey<Object>? groupKey,
     bool skipOnUnregisterCallback = false,
   }) {
+    final groupKey1 = groupKey ?? focusGroup;
     if (_children == null) {
       throw DependencyNotFoundException(
         type: DI,
-        groupKey: groupKey,
+        groupKey: groupKey1,
       );
     }
     return _children!.unregister<DI>(
-      groupKey: groupKey,
+      groupKey: groupKey1,
       skipOnUnregisterCallback: skipOnUnregisterCallback,
     );
   }

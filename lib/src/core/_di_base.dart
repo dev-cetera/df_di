@@ -68,8 +68,7 @@ base class DIBase {
       index: dependencyCount++,
       groupKey: groupKey1,
       validator: validator != null ? (e) => validator(e as FutureOr<T>) : null,
-      onUnregister:
-          onUnregister != null ? (e) => onUnregister(e as FutureOr<T>) : null,
+      onUnregister: onUnregister != null ? (e) => onUnregister(e as FutureOr<T>) : null,
     );
     completeRegistration(value, groupKey1);
     final registeredDep = _registerDependency(
@@ -178,7 +177,7 @@ base class DIBase {
     if (skipOnUnregisterCallback) {
       return value;
     }
-    return mapSyncOrAsync(
+    return concur(
       removed.metadata?.onUnregister?.call(value),
       (_) => value,
     );
@@ -301,15 +300,16 @@ base class DIBase {
     DIKey? groupKey,
     bool traverse = true,
   }) {
+    final groupKey1 = groupKey ?? focusGroup;
     final value = getOrNull<T>(
-      groupKey: groupKey,
+      groupKey: groupKey1,
       traverse: traverse,
     );
 
     if (value == null) {
       throw DependencyNotFoundException(
         type: T,
-        groupKey: groupKey,
+        groupKey: groupKey1,
       );
     }
     return value;
@@ -452,16 +452,16 @@ base class DIBase {
     final results = List.of(registry.dependencies);
     FutureOr<Object> temp = Object;
     for (final dependency in results) {
-      temp = mapSyncOrAsync(
+      temp = concur(
         temp,
         (_) {
           registry.removeDependencyK(
             dependency.typeKey,
             groupKey: dependency.metadata?.groupKey,
           );
-          return mapSyncOrAsync(
+          return concur(
             dependency.metadata?.onUnregister?.call(dependency.value),
-            (_) => mapSyncOrAsync(
+            (_) => concur(
               onUnregister?.call(dependency),
               (_) => dependency,
             ),
@@ -469,6 +469,6 @@ base class DIBase {
         },
       );
     }
-    return mapSyncOrAsync(temp, (e) => results);
+    return concur(temp, (e) => results);
   }
 }

@@ -21,8 +21,7 @@ base mixin SupportsConstructorsMixin on SupportsRuntimeTypeMixin {
     Type type, {
     DIKey? groupKey,
   }) {
-    (getK(DIKey.type(Lazy, [type]), groupKey: groupKey) as Lazy)
-        .resetSingleton();
+    (getK(DIKey.type(Lazy, [type]), groupKey: groupKey) as Lazy).resetSingleton();
   }
 
   void resetSingleton<T extends Object>({
@@ -112,16 +111,17 @@ base mixin SupportsConstructorsMixin on SupportsRuntimeTypeMixin {
     DIKey? groupKey,
     bool traverse = true,
   }) {
+    final groupKey1 = groupKey ?? focusGroup;
     final value = getSingletonOrNullT(
       type,
-      groupKey: groupKey,
+      groupKey: groupKey1,
       traverse: traverse,
     );
 
     if (value == null) {
       throw DependencyNotFoundException(
         type: type,
-        groupKey: groupKey,
+        groupKey: groupKey1,
       );
     }
     return value;
@@ -190,15 +190,16 @@ base mixin SupportsConstructorsMixin on SupportsRuntimeTypeMixin {
     DIKey? groupKey,
     bool traverse = true,
   }) {
+    final groupKey1 = groupKey ?? focusGroup;
     final value = getSingletonOrNull<T>(
-      groupKey: groupKey,
+      groupKey: groupKey1,
       traverse: traverse,
     );
 
     if (value == null) {
       throw DependencyNotFoundException(
         type: T,
-        groupKey: groupKey,
+        groupKey: groupKey1,
       );
     }
     return value;
@@ -271,16 +272,16 @@ base mixin SupportsConstructorsMixin on SupportsRuntimeTypeMixin {
     DIKey? groupKey,
     bool traverse = true,
   }) {
+    final groupKey1 = groupKey ?? focusGroup;
     final value = getFactoryOrNullT(
       type,
-      groupKey: groupKey,
+      groupKey: groupKey1,
       traverse: traverse,
     );
-
     if (value == null) {
       throw DependencyNotFoundException(
         type: type,
-        groupKey: groupKey,
+        groupKey: groupKey1,
       );
     }
     return value;
@@ -349,15 +350,16 @@ base mixin SupportsConstructorsMixin on SupportsRuntimeTypeMixin {
     DIKey? groupKey,
     bool traverse = true,
   }) {
+    final groupKey1 = groupKey ?? focusGroup;
     final value = getFactoryOrNull<T>(
-      groupKey: groupKey,
+      groupKey: groupKey1,
       traverse: traverse,
     );
 
     if (value == null) {
       throw DependencyNotFoundException(
         type: T,
-        groupKey: groupKey,
+        groupKey: groupKey1,
       );
     }
     return value;

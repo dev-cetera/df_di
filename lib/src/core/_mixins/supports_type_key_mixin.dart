@@ -80,7 +80,7 @@ base mixin SupportsTypeKeyMixin on DIBase {
     if (skipOnUnregisterCallback) {
       return value;
     }
-    return mapSyncOrAsync(
+    return concur(
       removed.metadata?.onUnregister?.call(value),
       (_) => value,
     );
@@ -136,16 +136,16 @@ base mixin SupportsTypeKeyMixin on DIBase {
     DIKey? groupKey,
     bool traverse = true,
   }) {
+    final groupKey1 = groupKey ?? focusGroup;
     final value = getOrNullK(
       typeKey,
-      groupKey: groupKey,
+      groupKey: groupKey1,
       traverse: traverse,
     );
-
     if (value == null) {
       throw DependencyNotFoundException(
         type: typeKey,
-        groupKey: groupKey,
+        groupKey: groupKey1,
       );
     }
     return value;
