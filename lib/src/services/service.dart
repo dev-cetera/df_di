@@ -28,11 +28,12 @@ abstract base class Service<TParams extends Object?> {
 
   Service();
 
-  //
-  //
-  //
+  // --- STATE -----------------------------------------------------------------
 
   CompleterOr<void>? _initializedCompleter;
+  bool _disposed = false;
+
+  // --- INITIALIZATION OF SERVICE ---------------------------------------------
 
   /// Completes after initialized via [initService].
   @pragma('vm:prefer-inline')
@@ -76,9 +77,7 @@ abstract base class Service<TParams extends Object?> {
   @protected
   FutureOr<void> onInitService(TParams params);
 
-  //
-  //
-  //
+  // --- RESETTING OF SERVICE --------------------------------------------------
 
   /// Resets this service to its initial state.
   FutureOr<void> resetService(TParams params) {
@@ -92,7 +91,7 @@ abstract base class Service<TParams extends Object?> {
         _disposed = false;
         _initializedCompleter = null;
         return consec(
-          beforeOnReset(params),
+          beforeOnResetService(params),
           (_) => onResetService(params),
         );
       },
@@ -112,15 +111,12 @@ abstract base class Service<TParams extends Object?> {
   /// Do not call this method directly.
   @nonVirtual
   @protected
-  FutureOr<void> beforeOnReset(TParams params) {}
+  FutureOr<void> beforeOnResetService(TParams params) {}
 
-  //
-  //
-  //
+  // --- DISPOSAL OF SERVICE ---------------------------------------------------
 
   /// Whether the service has been disposed.
   bool get disposed => _disposed;
-  bool _disposed = false;
 
   /// Disposes of this service, making it unusable and ready for garbage
   /// collection.
@@ -163,7 +159,3 @@ abstract base class Service<TParams extends Object?> {
   @protected
   FutureOr<void> onDispose();
 }
-
-// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-
-typedef NoParamsService = Service;

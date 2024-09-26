@@ -21,36 +21,26 @@ import '/src/_internal.dart';
 /// It provides a standardized way to manage a stream and its lifecycle,
 /// ensuring that resources are properly cleaned up when the service is
 /// disposed.
-abstract base class DataStreamService<TData extends Object?,
-    TParams extends Object?> extends Service<TParams> {
+abstract base class DataStreamService<TData extends Object?, TParams extends Object?>
+    extends Service<TParams> {
   //
   //
   //
+
+  DataStreamService();
+
+  // --- STATE -----------------------------------------------------------------
 
   Completer<TData>? _initialDataCompleter;
   StreamController<TData>? _streamController;
   StreamSubscription<TData>? _streamSubscription;
 
-  /// Completes with the initial data pushed to the stream.
-  Future<TData>? get initialData => _initialDataCompleter?.future;
-
-  /// Provides access to the stream managed by this service.
-  Stream<TData>? get stream => _streamController?.stream;
-
-  /// Override this method to provide the input stream that this service will
-  /// listen to.
-  Stream<TData> provideInputStream(TParams params);
-
-  /// Override this method to handle any errors that occur within the stream.
-  /// The [dispose] callback allows for immediate cleanup if necessary.
-  void onError(Object e, FutureOr<void> Function() dispose) {
-    print('[$runtimeType] $e');
-  }
+  // --- INITIALIZATION OF SERVICE ---------------------------------------------
 
   /// Initializes the service by setting up the stream controller and starting
   /// to listen to the input stream.
-  @override
   @nonVirtual
+  @override
   // ignore: invalid_override_of_non_virtual_member
   FutureOr<void> beforeOnInitService(TParams params) {
     _initialDataCompleter = Completer<TData>();
@@ -63,6 +53,10 @@ abstract base class DataStreamService<TData extends Object?,
       cancelOnError: false,
     );
   }
+
+  /// Override this method to provide the input stream that this service will
+  /// listen to.
+  Stream<TData> provideInputStream(TParams params);
 
   /// Pushes data into the internal stream and triggers [onPushToStream].
   @nonVirtual
@@ -78,6 +72,12 @@ abstract base class DataStreamService<TData extends Object?,
     }
   }
 
+  /// Override this method to handle any errors that occur within the stream.
+  /// The [dispose] callback allows for immediate cleanup if necessary.
+  void onError(Object e, FutureOr<void> Function() dispose) {
+    print('[$runtimeType] $e');
+  }
+
   /// Override this method to define behavior that should occur immediately
   /// after data has been pushed to the stream.
   void onPushToStream(TData data) {}
@@ -86,19 +86,31 @@ abstract base class DataStreamService<TData extends Object?,
   /// should be added.
   bool shouldAdd(TData data) => true;
 
-  /// Cancels the subscription to the input stream and closes the stream
-  /// controller, ensuring that all resources are released. This method is
-  /// called when the service is disposed.
-  @override
+  /// Completes with the initial data pushed to the stream.
+  Future<TData>? get initialData => _initialDataCompleter?.future;
+
+  /// Provides access to the stream managed by this service.
+  Stream<TData>? get stream => _streamController?.stream;
+
+  // --- RESETTING OF SERVICE --------------------------------------------------
+
   @nonVirtual
+  @override
+  // ignore: invalid_override_of_non_virtual_member
+  FutureOr<void> beforeOnResetService(TParams params) {
+    _streamSubscription = null;
+    _streamController = null;
+    _initialDataCompleter = null;
+  }
+
+  // --- DISPOSAL OF SERVICE ---------------------------------------------------
+
+  @nonVirtual
+  @override
   // ignore: invalid_override_of_non_virtual_member
   FutureOr<void> beforeOnDispose() async {
     await _streamSubscription?.cancel();
-    _streamSubscription = null;
     await _streamController?.close();
-    _streamController = null;
-    _initialDataCompleter = null;
-    return null;
   }
 }
 
