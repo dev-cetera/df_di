@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.6.0]
+
+- Released @ 9/2024 (UTC)
+- breaking: Improve Service class
+
 ## [0.5.6]
 
 - Released @ 9/2024 (UTC)
