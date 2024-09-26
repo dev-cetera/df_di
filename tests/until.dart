@@ -68,7 +68,10 @@ void main() {
 
 base class TestService extends Service {
   @override
-  FutureOr<void> onInitService(Object? params) {}
+  FutureOr<void> onResetService(_) {}
+
+  @override
+  FutureOr<void> onInitService(_) {}
 
   @override
   FutureOr<void> onDispose() {}

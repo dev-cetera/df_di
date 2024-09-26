@@ -19,6 +19,6 @@ final class ServiceAlreadyDisposedException extends DFDIPackageException {
   ServiceAlreadyDisposedException()
       : super(
           condition:
-              'Cannot interact with a DisposableService that has already been disposed.',
+              'Cannot interact with a service that has already been disposed.',
         );
 }

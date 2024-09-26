@@ -22,9 +22,15 @@ import '/src/_internal.dart';
 /// ensuring they are properly initialized when needed and disposed of when no
 /// longer in use.
 abstract base class Service<TParams extends Object?> {
-  /// Creates an uninitialized instance. Must call [initService]
-  /// before using this service.
+  //
+  //
+  //
+
   Service();
+
+  //
+  //
+  //
 
   CompleterOr<void>? _initializedCompleter;
 
@@ -35,19 +41,16 @@ abstract base class Service<TParams extends Object?> {
   /// Whether this service has been initialized.
   bool get initialized => _initializedCompleter?.isCompleted ?? false;
 
-  /// Initializes this service. Calls [onInitService] then completes
-  /// [initializedFuture].
-  ///
-  /// This method must be called before interacting with the
-  /// service.
-  ///
-  /// Do not override this method. Instead, override [onInitService].
+  /// Initializes this service, making it ready for use.
   @nonVirtual
-  FutureOr<void> initService([TParams? params]) {
+  FutureOr<void> initService(TParams params) {
     if (initialized) {
       throw ServiceAlreadyInitializedException();
     }
+    return _initService(params);
+  }
 
+  FutureOr<void> _initService(TParams params) {
     _initializedCompleter = CompleterOr<void>();
     return consec(
       consec(
@@ -58,64 +61,105 @@ abstract base class Service<TParams extends Object?> {
     );
   }
 
-  @protected
+  /// Override to define any necessary initialization to be called immediately
+  /// before [onInitService].
+  ///
+  /// Do not call this method directly.
   @nonVirtual
-  FutureOr<void> beforeOnInitService(TParams? params) {}
+  @protected
+  FutureOr<void> beforeOnInitService(TParams params) {}
 
   /// Override to define any necessary initialization to be called immediately
   /// after [initService].
   ///
-  /// This method should not be called directly.
+  /// Do not call this method directly.
   @protected
-  FutureOr<void> onInitService(TParams? params);
+  FutureOr<void> onInitService(TParams params);
+
+  //
+  //
+  //
+
+  /// Resets this service to its initial state.
+  FutureOr<void> resetService(TParams params) {
+    return _resetService(params);
+  }
+
+  FutureOr<void> _resetService(TParams params) {
+    return consec(
+      _dispose(),
+      (_) {
+        _disposed = false;
+        _initializedCompleter = null;
+        return consec(
+          beforeOnReset(params),
+          (_) => onResetService(params),
+        );
+      },
+    );
+  }
+
+  /// Override to define any necessary reset to be called immediately after
+  /// [resetService].
+  ///
+  /// Do not call this method directly.
+  @protected
+  FutureOr<void> onResetService(TParams params);
+
+  /// Override to define any necessary reset to be called immediately before
+  /// [onResetService].
+  ///
+  /// Do not call this method directly.
+  @nonVirtual
+  @protected
+  FutureOr<void> beforeOnReset(TParams params) {}
+
+  //
+  //
+  //
+
+  /// Whether the service has been disposed.
+  bool get disposed => _disposed;
+  bool _disposed = false;
 
   /// Disposes of this service, making it unusable and ready for garbage
-  /// collection. Calls [onDispose].
+  /// collection.
   ///
-  /// This method must be called when the service is no longer needed.
-  ///
-  /// Do not override this method. Instead, override [onDispose].
-  ///
-  /// Do not call this method directly. Use [DI.registerService] or
-  /// [DI.registerLazyService] which will automatically call this method
-  /// on [DI.unregister].
+  /// Do not call this method directly.
   @protected
   @nonVirtual
   FutureOr<void> dispose() {
-    if (disposed) {
+    if (_disposed) {
       throw ServiceAlreadyDisposedException();
     }
     if (!initialized) {
       throw ServiceNotYetInitializedException();
     }
-    return disposeAnyway();
+    return _dispose();
   }
 
-  @nonVirtual
-  @protected
-  FutureOr<void> disposeAnyway() {
+  FutureOr<void> _dispose() {
     return consec(
       consec(
         beforeOnDispose(),
         (_) => onDispose(),
       ),
-      (_) => disposed = true,
+      (_) => _disposed = true,
     );
   }
 
-  @protected
+  /// Override to define any necessary disposal to be called immediately
+  /// before [onDispose].
+  ///
+  /// Do not call this method directly.
   @nonVirtual
+  @protected
   FutureOr<void> beforeOnDispose() {}
-
-  /// Whether the service has been disposed.
-  @protected
-  @nonVirtual
-  bool disposed = false;
 
   /// Override to define any necessary disposal to be called immediately
   /// after [dispose].
   ///
-  /// This method should not be called directly.
+  /// Do not call this method directly.
   @protected
   FutureOr<void> onDispose();
 }

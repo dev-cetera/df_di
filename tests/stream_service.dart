@@ -47,13 +47,13 @@ final class UserStreamingService extends StreamService<Map<String, dynamic>> {
   }
 
   @override
+  FutureOr<void> onResetService(_) {}
+
+  @override
   void onPushToStream(Map<String, dynamic> data) {
     print(data);
     super.onPushToStream(data);
   }
-
-  @override
-  FutureOr<void> onDispose() {}
 
   @override
   Stream<Map<String, dynamic>> provideInputStream(_) {
@@ -64,4 +64,7 @@ final class UserStreamingService extends StreamService<Map<String, dynamic>> {
       const Duration(seconds: 1),
     );
   }
+
+  @override
+  FutureOr<void> onDispose() {}
 }

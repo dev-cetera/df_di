@@ -16,8 +16,7 @@ import '/src/_internal.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-base mixin SupportsServicesMixin
-    on SupportsConstructorsMixin, SupportsRuntimeTypeMixin {
+base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsRuntimeTypeMixin {
   FutureOr<T> registerService<T extends Service>(
     FutureOr<T> service, {
     Object? params,
@@ -122,9 +121,8 @@ base mixin SupportsServicesMixin
     return value;
   }
 
-  FutureOr<T>
-      getServiceSingletonWithParams<T extends Service<P>, P extends Object?>({
-    P? params,
+  FutureOr<T> getServiceSingletonWithParams<T extends Service<P>, P extends Object?>({
+    required P params,
     DIKey? groupKey,
     bool traverse = true,
   }) {
@@ -279,9 +277,8 @@ base mixin SupportsServicesMixin
     });
   }
 
-  Future<T> getServiceSingletonWithParamsAsync<T extends Service<P>,
-      P extends Object?>({
-    P? params,
+  Future<T> getServiceSingletonWithParamsAsync<T extends Service<P>, P extends Object?>({
+    required P params,
     DIKey? groupKey,
     bool traverse = true,
   }) async {
@@ -293,7 +290,7 @@ base mixin SupportsServicesMixin
   }
 
   T getServiceSingletonWithParamsSync<T extends Service<P>, P extends Object?>({
-    P? params,
+    required P params,
     DIKey? groupKey,
     bool traverse = true,
     bool throwIfAsync = false,
@@ -312,9 +309,8 @@ base mixin SupportsServicesMixin
     return value;
   }
 
-  T? getServiceSingletonWithParamsSyncOrNull<T extends Service<P>,
-      P extends Object?>({
-    P? params,
+  T? getServiceSingletonWithParamsSyncOrNull<T extends Service<P>, P extends Object?>({
+    required P params,
     DIKey? groupKey,
     bool traverse = true,
     bool throwIfAsync = false,
@@ -333,9 +329,8 @@ base mixin SupportsServicesMixin
     return value?.asSyncOrNull;
   }
 
-  FutureOr<T>? getServiceSingletonWithParamsOrNull<T extends Service<P>,
-      P extends Object?>({
-    P? params,
+  FutureOr<T>? getServiceSingletonWithParamsOrNull<T extends Service<P>, P extends Object?>({
+    required P params,
     DIKey? groupKey,
     bool traverse = true,
   }) {
@@ -390,9 +385,8 @@ base mixin SupportsServicesMixin
     return value;
   }
 
-  FutureOr<T>
-      getServiceFactoryWithParams<T extends Service<P>, P extends Object?>({
-    P? params,
+  FutureOr<T> getServiceFactoryWithParams<T extends Service<P>, P extends Object?>({
+    required P params,
     DIKey? groupKey,
     bool traverse = true,
   }) {
@@ -546,9 +540,8 @@ base mixin SupportsServicesMixin
     });
   }
 
-  Future<T> getServiceFactoryWithParamsAsync<T extends Service<P>,
-      P extends Object?>({
-    P? params,
+  Future<T> getServiceFactoryWithParamsAsync<T extends Service<P>, P extends Object?>({
+    required P params,
     DIKey? groupKey,
     bool traverse = true,
   }) async {
@@ -560,7 +553,7 @@ base mixin SupportsServicesMixin
   }
 
   T getServiceFactoryWithParamsSync<T extends Service<P>, P extends Object?>({
-    P? params,
+    required P params,
     DIKey? groupKey,
     bool traverse = true,
     bool throwIfAsync = false,
@@ -579,9 +572,8 @@ base mixin SupportsServicesMixin
     return value;
   }
 
-  T? getServiceFactoryWithParamsSyncOrNull<T extends Service<P>,
-      P extends Object?>({
-    P? params,
+  T? getServiceFactoryWithParamsSyncOrNull<T extends Service<P>, P extends Object?>({
+    required P params,
     DIKey? groupKey,
     bool traverse = true,
     bool throwIfAsync = false,
@@ -600,9 +592,8 @@ base mixin SupportsServicesMixin
     return value?.asSyncOrNull;
   }
 
-  FutureOr<T>? getServiceFactoryWithParamsOrNull<T extends Service<P>,
-      P extends Object?>({
-    P? params,
+  FutureOr<T>? getServiceFactoryWithParamsOrNull<T extends Service<P>, P extends Object?>({
+    required P params,
     DIKey? groupKey,
     bool traverse = true,
   }) {

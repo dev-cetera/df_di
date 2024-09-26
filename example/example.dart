@@ -105,6 +105,9 @@ final class FooBarService extends Service {
   void onInitService(_) async {}
 
   @override
+  FutureOr<void> onResetService(_) {}
+
+  @override
   FutureOr<void> onDispose() {
     print('Disposed $FooBarService');
   }
@@ -127,7 +130,10 @@ final class CountingService extends DataStreamService<int, bool> {
   }
 
   @override
-  FutureOr<void> onInitService(bool? params) {}
+  FutureOr<void> onInitService(_) {}
+
+  @override
+  FutureOr<void> onResetService(_) {}
 
   @override
   FutureOr<void> onDispose() {
@@ -143,6 +149,9 @@ final class SyncServiceExmple extends Service {
   void onInitService(_) {}
 
   @override
+  void onResetService(_) {}
+
+  @override
   Future<void> onDispose() async {}
 }
 
@@ -156,6 +165,9 @@ final class AsyncServiceExample extends Service {
       const Duration(seconds: 3),
     );
   }
+
+  @override
+  void onResetService(_) {}
 
   @override
   void onDispose() {}

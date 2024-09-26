@@ -21,8 +21,8 @@ import '/src/_internal.dart';
 /// It provides a standardized way to manage a stream and its lifecycle,
 /// ensuring that resources are properly cleaned up when the service is
 /// disposed.
-abstract base class DataStreamService<TData extends Object?,
-    TParams extends Object?> extends Service<TParams> {
+abstract base class DataStreamService<TData extends Object?, TParams extends Object?>
+    extends Service<TParams> {
   //
   //
   //
@@ -39,7 +39,7 @@ abstract base class DataStreamService<TData extends Object?,
 
   /// Override this method to provide the input stream that this service will
   /// listen to.
-  Stream<TData> provideInputStream(TParams? params);
+  Stream<TData> provideInputStream(TParams params);
 
   /// Override this method to handle any errors that occur within the stream.
   /// The [dispose] callback allows for immediate cleanup if necessary.
@@ -52,7 +52,7 @@ abstract base class DataStreamService<TData extends Object?,
   @override
   @nonVirtual
   // ignore: invalid_override_of_non_virtual_member
-  FutureOr<void> beforeOnInitService(TParams? params) {
+  FutureOr<void> beforeOnInitService(TParams params) {
     _initialDataCompleter = Completer<TData>();
     _streamController = StreamController<TData>.broadcast();
     _streamSubscription = provideInputStream(params).listen(

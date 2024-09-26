@@ -19,6 +19,6 @@ final class ServiceNotYetInitializedException extends DFDIPackageException {
   ServiceNotYetInitializedException()
       : super(
           condition:
-              'Cannot dispose a DisposableService that has not yet been initialized.',
+              'Cannot dispose a service that has not yet been initialized.',
         );
 }

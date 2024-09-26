@@ -19,6 +19,6 @@ final class ServiceAlreadyInitializedException extends DFDIPackageException {
   ServiceAlreadyInitializedException()
       : super(
           condition:
-              'Cannot initialize a DisposableService that has already been initialized.',
+              'Cannot initialize a service that has already been initialized.',
         );
 }
