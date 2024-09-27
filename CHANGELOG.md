@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.6.2]
+
+- Released @ 9/2024 (UTC)
+- fix: Address potential issue
+
 ## [0.6.1]
 
 - Released @ 9/2024 (UTC)
