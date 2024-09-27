@@ -68,8 +68,7 @@ base class DIBase {
       index: dependencyCount++,
       groupKey: groupKey1,
       validator: validator != null ? (e) => validator(e as FutureOr<T>) : null,
-      onUnregister:
-          onUnregister != null ? (e) => onUnregister(e as FutureOr<T>) : null,
+      onUnregister: onUnregister != null ? (e) => onUnregister(e as FutureOr<T>) : null,
     );
     completeRegistration(value, groupKey1);
     final registeredDep = _registerDependency(
@@ -451,9 +450,9 @@ base class DIBase {
     OnUnregisterCallback<Dependency>? onUnregister,
   }) {
     final results = List.of(registry.dependencies);
-    final seq = Sequential();
+    final sequential = Sequential();
     for (final dependency in results) {
-      seq.addAll([
+      sequential.addAll([
         (_) => registry.removeDependencyK(
               dependency.typeKey,
               groupKey: dependency.metadata?.groupKey,
@@ -462,6 +461,6 @@ base class DIBase {
         (_) => onUnregister?.call(dependency),
       ]);
     }
-    return seq.add((_) => results);
+    return sequential.add((_) => results);
   }
 }
