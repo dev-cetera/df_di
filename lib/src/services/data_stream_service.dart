@@ -114,6 +114,7 @@ abstract base class DataStreamService<TData extends Object?,
   FutureOr<void> beforeOnDispose() async {
     await _streamSubscription?.cancel();
     await _streamController?.close();
+    return null;
   }
 }
 

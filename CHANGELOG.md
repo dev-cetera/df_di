@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.6.3]
+
+- Released @ 9/2024 (UTC)
+- feat: Add onAfterUnregister and onBeforeUnregister to unregisterAll
+
 ## [0.6.2]
 
 - Released @ 9/2024 (UTC)

@@ -68,7 +68,8 @@ base class DIBase {
       index: dependencyCount++,
       groupKey: groupKey1,
       validator: validator != null ? (e) => validator(e as FutureOr<T>) : null,
-      onUnregister: onUnregister != null ? (e) => onUnregister(e as FutureOr<T>) : null,
+      onUnregister:
+          onUnregister != null ? (e) => onUnregister(e as FutureOr<T>) : null,
     );
     completeRegistration(value, groupKey1);
     final registeredDep = _registerDependency(
@@ -447,7 +448,7 @@ base class DIBase {
   }
 
   /// Unregisters all dependencies in the reverse order they were registered.
-  /// 
+  ///
   /// If [onBeforeUnregister] is provided, it will be called before each
   /// dependency is unregistered. If [onAfterUnregister] is provided, it will
   /// be called after each dependency is unregistered. These methods are
