@@ -81,7 +81,7 @@ Future<void> main() async {
   print('TIME TO UNREG 4');
 
   await di.unregisterAll(
-    onUnregister: (dependency) {
+    onAfterUnregister: (dependency) {
       print('Unregistered: ${dependency.value}');
     },
   ).thenOr((_) {
