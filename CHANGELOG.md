@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.6.1]
+
+- Released @ 9/2024 (UTC)
+- chore: Improve unregisterAll function
+
 ## [0.6.0]
 
 - Released @ 9/2024 (UTC)
