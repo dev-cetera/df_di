@@ -115,8 +115,8 @@ class _VersionSection {
   //
 
   void addUpdate(String update) {
-    this.updates.add(update);
-    this.releasedAt = DateTime.now().toUtc();
+    updates.add(update);
+    releasedAt = DateTime.now().toUtc();
   }
 
   //
@@ -143,6 +143,7 @@ int compareVersions(String version1, String version2) {
     }
     return versionParts;
   }
+
   final v1 = parseVersion(version1);
   final v2 = parseVersion(version2);
   final maxLength = v1.length > v2.length ? v1.length : v2.length;

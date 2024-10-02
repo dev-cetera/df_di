@@ -85,16 +85,11 @@ abstract base class Service<TParams extends Object?> {
   }
 
   FutureOr<void> _resetService(TParams params) {
+    _disposed = false;
+    _initializedCompleter = null;
     return consec(
-      _dispose(),
-      (_) {
-        _disposed = false;
-        _initializedCompleter = null;
-        return consec(
-          beforeOnResetService(params),
-          (_) => onResetService(params),
-        );
-      },
+      beforeOnResetService(params),
+      (_) => onResetService(params),
     );
   }
 
