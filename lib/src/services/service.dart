@@ -10,6 +10,8 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
+import 'package:df_debouncer/df_debouncer.dart';
+
 import '/src/_internal.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
@@ -33,6 +35,9 @@ abstract base class Service<TParams extends Object?> {
   CompleterOr<void>? _initializedCompleter;
   bool _disposed = false;
 
+  // Used to avoid concurrent initialization, resetting, and disposal.
+  final _sequantial = Sequential();
+
   // --- INITIALIZATION OF SERVICE ---------------------------------------------
 
   /// Completes after initialized via [initService].
@@ -45,13 +50,13 @@ abstract base class Service<TParams extends Object?> {
   /// Initializes this service, making it ready for use.
   @nonVirtual
   FutureOr<void> initService(TParams params) {
-    if (initialized) {
-      throw ServiceAlreadyInitializedException();
-    }
-    return _initService(params);
+    return _sequantial.add((_) => _initService(params));
   }
 
   FutureOr<void> _initService(TParams params) {
+    if (initialized) {
+      throw ServiceAlreadyInitializedException();
+    }
     _initializedCompleter = CompleterOr<void>();
     return consec(
       consec(
@@ -81,7 +86,7 @@ abstract base class Service<TParams extends Object?> {
 
   /// Resets this service to its initial state.
   FutureOr<void> resetService(TParams params) {
-    return _resetService(params);
+    return _sequantial.add((_) => _resetService(params));
   }
 
   FutureOr<void> _resetService(TParams params) {
@@ -108,6 +113,28 @@ abstract base class Service<TParams extends Object?> {
   @protected
   FutureOr<void> beforeOnResetService(TParams params) {}
 
+  // --- RESTARTING OF SERVICE -------------------------------------------------
+
+  late TParams _params;
+
+  FutureOr<void> restartService(TParams params) async {
+    _params = params;
+    return _restartDebouncer.call();
+  }
+
+  // Used to avoid restarting the service multiple times in quick succession.
+  late final _restartDebouncer = Debouncer(
+    delay: Duration.zero,
+    onWaited: () {
+      if (_params != null) {
+        consec(
+          resetService(_params),
+          (_) => initService(_params),
+        );
+      }
+    },
+  );
+
   // --- DISPOSAL OF SERVICE ---------------------------------------------------
 
   /// Whether the service has been disposed.
@@ -120,16 +147,16 @@ abstract base class Service<TParams extends Object?> {
   @protected
   @nonVirtual
   FutureOr<void> dispose() {
+    return _sequantial.add((_) => _dispose());
+  }
+
+  FutureOr<void> _dispose() {
     if (_disposed) {
       throw ServiceAlreadyDisposedException();
     }
     if (!initialized) {
       throw ServiceNotYetInitializedException();
     }
-    return _dispose();
-  }
-
-  FutureOr<void> _dispose() {
     return consec(
       consec(
         beforeOnDispose(),
