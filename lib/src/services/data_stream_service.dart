@@ -100,10 +100,8 @@ abstract base class DataStreamService<TData extends Object?,
   @nonVirtual
   @override
   // ignore: invalid_override_of_non_virtual_member
-  FutureOr<void> beforeOnResetService(TParams params) {
-    _streamSubscription = null;
-    _streamController = null;
-    _initialDataCompleter = null;
+  Future<void> beforeOnResetService(TParams params) async {
+    await beforeOnDispose();
   }
 
   // --- DISPOSAL OF SERVICE ---------------------------------------------------
@@ -111,10 +109,12 @@ abstract base class DataStreamService<TData extends Object?,
   @nonVirtual
   @override
   // ignore: invalid_override_of_non_virtual_member
-  FutureOr<void> beforeOnDispose() async {
+  Future<void> beforeOnDispose() async {
     await _streamSubscription?.cancel();
     await _streamController?.close();
-    return null;
+    _streamSubscription = null;
+    _streamController = null;
+    _initialDataCompleter = null;
   }
 }
 
