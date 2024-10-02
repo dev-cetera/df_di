@@ -3,7 +3,7 @@
 ## [0.6.6]
 
 - Released @ 10/2024 (UTC)
-- fix: Update Serviceto avoid concurrent initialization, resetting, and disposal
+- fix: Update Service to avoid concurrent initialization, resetting, and disposal
 
 ## [0.6.5]
 
