@@ -19,7 +19,8 @@ final class DependencyNotFoundException extends DFDIPackageException {
     required Object type,
     required DIKey? groupKey,
   }) : super(
-          condition: 'No dependency of type "$type" found in group "$groupKey".',
+          condition:
+              'No dependency of type "$type" found in group "$groupKey".',
           reason:
               'Thrown when attempting to unregister or access a dependency that does not exist.',
           options: [

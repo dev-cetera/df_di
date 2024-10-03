@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.6.9]
+
+- Released @ 10/2024 (UTC)
+- docs: Improve documentation comments
+
 ## [0.6.8]
 
 - Released @ 10/2024 (UTC)

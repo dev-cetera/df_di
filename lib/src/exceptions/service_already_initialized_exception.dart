@@ -18,6 +18,7 @@ import '/src/_common.dart';
 final class ServiceAlreadyInitializedException extends DFDIPackageException {
   ServiceAlreadyInitializedException()
       : super(
-          condition: 'Cannot initialize a service that has already been initialized.',
+          condition:
+              'Cannot initialize a service that has already been initialized.',
         );
 }
