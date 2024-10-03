@@ -38,7 +38,7 @@ void main() async {
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-final class UserStreamingService extends StreamService<Map<String, dynamic>> {
+final class UserStreamingService extends StreamService<Map<String, dynamic>, Object?> {
   UserStreamingService();
 
   @override

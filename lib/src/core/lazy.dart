@@ -14,29 +14,29 @@ import '/src/_internal.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-typedef Constructor<T extends Object> = FutureOr<T> Function();
-
-// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-
+/// A class that provides lazy initialization for instances of type [T].
 class Lazy<T extends Object> {
+  /// Holds the current singleton instance of type [T] or `null` if no
+  /// [singleton] instance was created.
   @protected
   FutureOr<T>? currentInstance;
-  final Constructor<T> _constructor;
+
+  /// A constructor function that creates instances of type [T].
+  final TConstructor<T> _constructor;
 
   Lazy(this._constructor);
 
-  /// Returns the singleton instance, creating it if necessary.
-  FutureOr<T> get singleton {
-    return currentInstance ??= _constructor();
-  }
+  /// Returns the singleton instance [currentInstance], or creating it if necessary.
+  FutureOr<T> get singleton => currentInstance ??= _constructor();
 
-  /// Returns a new instance each time, acting as a factory.
-  FutureOr<T> get factory {
-    return _constructor();
-  }
+  /// Returns a new instance of [T] each time, acting as a factory.
+  FutureOr<T> get factory => _constructor();
 
-  /// Resets the singleton instance, allowing it to be re-created on the next call.
-  void resetSingleton() {
-    currentInstance = null;
-  }
+  /// Resets the singleton instance, by setting [currentInstance] back to `null`
+  /// allowing it to be re-created via [singleton].
+  void resetSingleton() => currentInstance = null;
 }
+
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+typedef TConstructor<T extends Object> = FutureOr<T> Function();

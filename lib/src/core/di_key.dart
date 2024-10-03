@@ -11,23 +11,93 @@
 //.title~
 
 class DIKey<T extends Object> {
+  /// A predefined key recommended to use as the default group key for
+  /// dependencies. This key can be utilized when no specific group is
+  /// defined, allowing for a fallback option that simplifies dependency
+  /// retrieval and management in the DI container.
+  static final defaultGroup = DIKey('DEFAULT_GROUP');
+
+  /// A predefined key recommended to use as the global group key for
+  /// dependencies. Use this key for dependencies that need to be accessible
+  /// throughout the entire application, regardless of the current scope or
+  /// context. This is ideal for singleton services or configurations that
+  /// should remain consistent across all parts of the application.
+  static final globalGroup = DIKey('GLOBAL_GROUP');
+
+  /// A predefined key recommended to use as the session group key for
+  /// dependencies. This key is intended for dependencies that should be
+  /// specific to the current user's session, ensuring that the state
+  /// and behavior are isolated from other sessions. It is useful for
+  /// services that handle user-specific data or contexts.
+  static final sessionGroup = DIKey('SESSION_GROUP');
+
+  /// A predefined key recommended to use as the user group key for
+  /// dependencies. This key is designed for managing dependencies
+  /// that are user-specific, such as user preferences, settings,
+  /// or any other data that varies from user to user. It helps
+  /// organize services related to user management.
+  static final userGroup = DIKey('USER_GROUP');
+
+  /// A predefined key recommended to use as the theme group key for
+  /// dependencies. This key is suitable for managing theme-related
+  /// services or configurations that control the application's
+  /// visual appearance. It allows for easy access and modification
+  /// of UI themes, such as light or dark modes.
+  static final themeGroup = DIKey('THEME_GROUP');
+
+  /// A predefined key recommended to use as the production group key for
+  /// dependencies. This key is intended for services that are specific
+  /// to the production environment, ensuring that production-only
+  /// configurations or resources are appropriately managed and
+  /// distinguished from other environments (like development or testing).
+  static final prodGroup = DIKey('PROD_GROUP');
+
+  /// A predefined key recommended to use as the development group key for
+  /// dependencies. This key is useful for managing services that are
+  /// intended for development purposes, such as debugging tools,
+  /// mock services, or any other resources that assist during the
+  /// development process. It helps isolate development-specific
+  /// functionality from production code.
+  static final devGroup = DIKey('DEV_GROUP');
+
+  /// A predefined key recommended to use as the test group key for
+  /// dependencies. This key is designated for managing services that
+  /// are utilized during testing, allowing for easy access to mock
+  /// dependencies, test doubles, or any configurations necessary
+  /// for unit tests and integration tests. It ensures that test
+  /// services do not interfere with the application's production or
+  /// development dependencies.
+  static final testGroup = DIKey('TEST_GROUP');
+
+  /// Creates a key string from the given [object] with all spaces removed.
+  static String _makeKey(Object object) => object.toString().replaceAll(' ', '');
+
+  /// The value associated with this DIKey instance.
   final T value;
+
+  /// The key derived from the [value], uniquely identifying this instance.
   late final String _key;
+
+  /// The hash code for this instance, derived from [_key].
   late final int _hashCode;
 
+  /// Creates a new instance of [DIKey] with the specified [value].
   DIKey(this.value) {
-    // Set during initialization for faster lookups.
+    // Initialize the key and hash code during construction for efficiencient
+    // lookups.
     _key = _makeKey(value);
     _hashCode = _key.hashCode;
   }
 
   /// Constructs a `DIKey` representation by replacing occurrences of `Object`
   /// or `dynamic` in the `baseType` with corresponding values from `subTypes`.
-  /// The replacements are applied sequentially based on their order in `subTypes`.
+  /// The replacements are applied sequentially based on their order in
+  /// `subTypes`.
   ///
-  /// If no `subTypes` are provided, the method returns the `baseType` as-is (after trimming spaces).
+  /// If no `subTypes` are provided, the method returns the `baseType` as-is
+  /// (after trimming spaces).
   ///
-  /// Examples:
+  /// ### Examples:
   /// ```dart
   /// // Example 1: Replacing multiple generic placeholders
   /// final type1 = DIKey.type(Map<Object, Object>, [String, int]);
@@ -52,30 +122,28 @@ class DIKey<T extends Object> {
     final objectStr = '$Object';
     final dynamicStr = '$dynamic';
     final cleanBaseType = baseType.toString().replaceAll(' ', '');
-    var i = 0;
-    // Traverse the processed type string and replace each occurrence of 'Object' or 'dynamic'.
+    var subTypeIndex = 0;
+
+    // Build a new type string by replacing 'Object' or 'dynamic' with subTypes.
     final buffer = StringBuffer();
     for (var n = 0; n < cleanBaseType.length; n++) {
-      // Check for 'Object' or 'dynamic' starting at the current position.
-      if (cleanBaseType.startsWith(objectStr, n) ||
-          cleanBaseType.startsWith(dynamicStr, n)) {
+      // Check for 'Object' or 'dynamic' at the current position.
+      if (cleanBaseType.startsWith(objectStr, n) || cleanBaseType.startsWith(dynamicStr, n)) {
         // Replace with the next subtype from subTypes if available.
-        if (i < subTypes.length) {
-          buffer.write(subTypes[i].toString());
-          i++;
+        if (subTypeIndex < subTypes.length) {
+          buffer.write(subTypes[subTypeIndex].toString());
+          subTypeIndex++;
         } else {
-          // If no more subtypes are available, retain 'Object' or 'dynamic'.
+          // Retain 'Object' or 'dynamic' if no subtypes are left.
           buffer.write(
             cleanBaseType.startsWith(objectStr, n) ? objectStr : dynamicStr,
           );
         }
 
-        // Skip ahead over the matched word ('Object' or 'dynamic') dynamically.
-        n += cleanBaseType.startsWith(objectStr, n)
-            ? objectStr.length - 1
-            : dynamicStr.length - 1;
+        // Skip ahead over the matched word.
+        n += cleanBaseType.startsWith(objectStr, n) ? objectStr.length - 1 : dynamicStr.length - 1;
       } else {
-        // Otherwise, just append the current character.
+        // Append the current character if it's not part of 'Object' or 'dynamic'.
         buffer.write(cleanBaseType[n]);
       }
     }
@@ -84,28 +152,6 @@ class DIKey<T extends Object> {
     return DIKey(buffer.toString());
   }
 
-  static final defaultGroup = DIKey('DEFAULT_GROUP');
-  static final globalGroup = DIKey('GLOBAL_GROUP');
-  static final sessionGroup = DIKey('SESSION_USER_GROUP');
-  static final userGroup = DIKey('USER_GROUP');
-  static final themeGroup = DIKey('THEME_GROUP');
-
-  static final prodGroup = DIKey('PROD_GROUP');
-  static final devGroup = DIKey('DEV_GROUP');
-  static final testGroup = DIKey('TEST_GROUP');
-
-  static final $0 = DIKey('0');
-  static final $1 = DIKey('1');
-  static final $2 = DIKey('2');
-  static final $3 = DIKey('3');
-  static final $4 = DIKey('4');
-  static final $5 = DIKey('5');
-  static final $6 = DIKey('6');
-  static final $7 = DIKey('7');
-  static final $8 = DIKey('7');
-  static final $9 = DIKey('7');
-
-  // Two Groups are equal if ther hashCodes are equal.
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
@@ -114,10 +160,6 @@ class DIKey<T extends Object> {
     } else {
       return _key == _makeKey(other);
     }
-  }
-
-  static String _makeKey(Object object) {
-    return object.toString().replaceAll(' ', '');
   }
 
   @override

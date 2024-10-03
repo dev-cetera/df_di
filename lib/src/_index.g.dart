@@ -9,7 +9,7 @@
 
 // --- PUBLIC FILES ---
 export 'core/di.dart.dart';
-export 'core/constructor.dart';
+export 'core/lazy.dart';
 export 'core/di_key.dart';
 export 'exceptions/dependency_already_registered_exception.dart';
 export 'exceptions/dependency_invalid_exception.dart';

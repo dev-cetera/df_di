@@ -21,8 +21,7 @@ base mixin SupportsConstructorsMixin on SupportsRuntimeTypeMixin {
     Type type, {
     DIKey? groupKey,
   }) {
-    (getK(DIKey.type(Lazy, [type]), groupKey: groupKey) as Lazy)
-        .resetSingleton();
+    (getK(DIKey.type(Lazy, [type]), groupKey: groupKey) as Lazy).resetSingleton();
   }
 
   void resetSingleton<T extends Object>({
@@ -32,7 +31,7 @@ base mixin SupportsConstructorsMixin on SupportsRuntimeTypeMixin {
   }
 
   Lazy<T> registerLazy<T extends Object>(
-    Constructor<T> constructor, {
+    TConstructor<T> constructor, {
     DIKey? groupKey,
     bool Function(FutureOr<T> instance)? validator,
     FutureOr<void> Function(FutureOr<T> instance)? onUnregister,
