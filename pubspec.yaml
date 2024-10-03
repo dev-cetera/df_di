@@ -12,7 +12,7 @@
 
 name: df_di
 description: A pragmatic dependency injection (DI) system, coupled with service classes for seamless state management in Dart.
-version: 0.6.7
+version: 0.6.8
 repository: https://github.com/robmllze/df_di
 funding:
   - https://www.buymeacoffee.com/robmllze
@@ -34,7 +34,7 @@ dependencies:
   df_type: ^0.5.18
   df_debouncer: ^0.2.1
   collection: ^1.18.0
-  meta: ^1.16.0
+  meta: ^1.15.0
 
 ## -----------------------------------------------------------------------------
 
