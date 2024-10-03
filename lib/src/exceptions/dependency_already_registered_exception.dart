@@ -10,7 +10,7 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-import '/src/_internal.dart';
+import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -19,8 +19,7 @@ final class DependencyAlreadyRegisteredException extends DFDIPackageException {
     required Object type,
     required DIKey? groupKey,
   }) : super(
-          condition:
-              'Dependency of type "$type" in group "$groupKey" has already been registered.',
+          condition: 'Dependency of type "$type" in group "$groupKey" has already been registered.',
           reason:
               'Thrown to prevent accidental overriding of dependencies of the same type and group.',
           options: [

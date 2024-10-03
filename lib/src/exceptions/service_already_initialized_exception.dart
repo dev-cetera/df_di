@@ -10,7 +10,7 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-import '/src/_internal.dart';
+import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -18,7 +18,6 @@ import '/src/_internal.dart';
 final class ServiceAlreadyInitializedException extends DFDIPackageException {
   ServiceAlreadyInitializedException()
       : super(
-          condition:
-              'Cannot initialize a service that has already been initialized.',
+          condition: 'Cannot initialize a service that has already been initialized.',
         );
 }

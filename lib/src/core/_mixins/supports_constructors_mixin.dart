@@ -12,7 +12,7 @@
 
 // ignore_for_file: invalid_use_of_protected_member
 
-import '/src/_internal.dart';
+import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -21,8 +21,7 @@ base mixin SupportsConstructorsMixin on SupportsRuntimeTypeMixin {
     Type type, {
     DIKey? groupKey,
   }) {
-    (getK(DIKey.type(Lazy, [type]), groupKey: groupKey) as Lazy)
-        .resetSingleton();
+    (getK(DIKey.type(Lazy, [type]), groupKey: groupKey) as Lazy).resetSingleton();
   }
 
   void resetSingleton<T extends Object>({

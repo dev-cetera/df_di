@@ -10,7 +10,7 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-import '/src/_internal.dart';
+import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -21,8 +21,8 @@ import '/src/_internal.dart';
 /// It provides a standardized way to manage a stream and its lifecycle,
 /// ensuring that resources are properly cleaned up when the service is
 /// disposed.
-abstract base class StreamService<TData extends Object?,
-    TParams extends Object?> extends Service<TParams> {
+abstract base class StreamService<TData extends Object?, TParams extends Object?>
+    extends Service<TParams> {
   //
   //
   //
@@ -117,9 +117,3 @@ abstract base class StreamService<TData extends Object?,
     _initialDataCompleter = null;
   }
 }
-
-// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-
-@Deprecated('Use StreamService instead.')
-typedef DataStreamService<TData extends Object?, TParams extends Object?>
-    = StreamService<TData, Object>;

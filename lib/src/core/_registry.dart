@@ -10,7 +10,7 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-import '/src/_internal.dart';
+import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -31,8 +31,8 @@ final class DIRegistry {
   final _OnChangeRegistry? onChange;
 
   /// A snapshot describing the current state of the dependencies.
-  RegistryState get state => RegistryState.unmodifiable(_state)
-      .map((k, v) => MapEntry(k, Map.unmodifiable(v)));
+  RegistryState get state =>
+      RegistryState.unmodifiable(_state).map((k, v) => MapEntry(k, Map.unmodifiable(v)));
 
   /// A snapshot of the current dependencies within [state].
   List<Dependency> get dependencies => List.unmodifiable(
@@ -107,10 +107,7 @@ final class DIRegistry {
   Dependency<T>? getDependencyOrNull<T extends Object>({
     DIKey? groupKey,
   }) {
-    return _state[groupKey]
-        ?.values
-        .firstWhereOrNull((e) => e.value is T)
-        ?.cast<T>();
+    return _state[groupKey]?.values.firstWhereOrNull((e) => e.value is T)?.cast<T>();
   }
 
   /// Returns any dependency with the exact [type] that is associated
@@ -137,9 +134,7 @@ final class DIRegistry {
     DIKey typeKey, {
     DIKey? groupKey,
   }) {
-    return _state[groupKey]
-        ?.values
-        .firstWhereOrNull((e) => e.typeKey == typeKey);
+    return _state[groupKey]?.values.firstWhereOrNull((e) => e.typeKey == typeKey);
   }
 
   /// Removes any [Dependency] of [T] or subtype of [T] that is associated with
@@ -220,8 +215,7 @@ final class DIRegistry {
     DIKey? groupKey,
   }) {
     final currentGroup = _state[groupKey];
-    final equals =
-        const MapEquality<DIKey, Dependency>().equals(currentGroup, group);
+    final equals = const MapEquality<DIKey, Dependency>().equals(currentGroup, group);
     if (!equals) {
       _state[groupKey] = group;
       onChange?.call();

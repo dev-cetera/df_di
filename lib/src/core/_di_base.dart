@@ -12,7 +12,7 @@
 
 // ignore_for_file: invalid_use_of_protected_member
 
-import '/src/_internal.dart';
+import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -68,8 +68,7 @@ base class DIBase {
       index: dependencyCount++,
       groupKey: groupKey1,
       validator: validator != null ? (e) => validator(e as FutureOr<T>) : null,
-      onUnregister:
-          onUnregister != null ? (e) => onUnregister(e as FutureOr<T>) : null,
+      onUnregister: onUnregister != null ? (e) => onUnregister(e as FutureOr<T>) : null,
     );
     completeRegistration(value, groupKey1);
     final registeredDep = _registerDependency(
@@ -219,14 +218,14 @@ base class DIBase {
     ].any((e) => e());
   }
 
-  /// Returns any dependency of type [T] or subtype of [T] that is associated
-  /// with the specified [groupKey].
+  /// Retrieves a dependency of type [T] or subtypes of [T] registered under
+  /// the specified [groupKey].
   ///
-  /// If [traverse] is true, it will also search recursively in parent
-  /// containers.
+  /// If the dependency exists, it is returned; otherwise, a
+  /// [DependencyNotFoundException] is thrown.
   ///
-  /// Throws a [DependencyNotFoundException] if the dependency is not found.
-  /// Throws a [DependencyIsFutureException] if the dependency is a [Future].
+  /// Only use this method if you're certain that the registered dependency
+  /// isn't a [Future]. If it is, a [DependencyIsFutureException] is trown.
   T call<T extends Object>({
     DIKey? groupKey,
     bool traverse = true,
@@ -290,13 +289,20 @@ base class DIBase {
     return value?.asSyncOrNull;
   }
 
-  /// Returns any dependency of type [T] or subtype of [T] that is associated
-  /// with the specified [groupKey].
+  /// Retrieves a dependency of type [T] or subtypes of [T] registered under
+  /// the specified [groupKey].
   ///
-  /// If [traverse] is true, it will also search recursively in parent
-  /// containers.
+  /// If the dependency exists, it is returned; otherwise, a
+  /// [DependencyNotFoundException] is thrown.
   ///
-  /// Throws a [DependencyNotFoundException] if the dependency is not found.
+  /// The return type is a [FutureOr], which means it can either be a
+  /// [Future] or a resolved value.
+  ///
+  /// If the dependency is registered as a non-future, the returned value will
+  /// always be non-future. If it is registered as a future, the returned value
+  /// will initially be a future. Once that future completes, its resolved value
+  /// is re-registered as a non-future, allowing future calls to this method
+  /// to return the resolved value directly.
   FutureOr<T> get<T extends Object>({
     DIKey? groupKey,
     bool traverse = true,
@@ -316,11 +322,22 @@ base class DIBase {
     return value;
   }
 
-  /// Returns any dependency of type [T] or subtype of [T] that is associated
-  /// with the specified [groupKey] if it exists, or `null`.
+  /// Retrieves a dependency of type [T] or subtypes of [T] registered under
+  /// the specified [groupKey].
   ///
-  /// If [traverse] is true, it will also search recursively in parent
+  /// If the dependency exists, it is returned; otherwise, `null` is returned.
+  ///
+  /// If [traverse] is set to `true`, the search will also include all parent
   /// containers.
+  ///
+  /// The return type is a [FutureOr], which means it can either be a
+  /// [Future] or a resolved value.
+  ///
+  /// If the dependency is registered as a non-future, the returned value will
+  /// always be non-future. If it is registered as a future, the returned value
+  /// will initially be a future. Once that future completes, its resolved value
+  /// is re-registered as a non-future, allowing future calls to this method
+  /// to return the resolved value directly.
   FutureOr<T>? getOrNull<T extends Object>({
     DIKey? groupKey,
     bool traverse = true,
@@ -393,11 +410,13 @@ base class DIBase {
     return null;
   }
 
-  /// Returns any dependency of type [T] or subtype of [T] that is associated
-  /// with the specified [groupKey] if it exists, or waits until it is
-  /// registered before returning it.
+  /// Retrieves a dependency of type [T] or subtypes of [T] registered under
+  /// the specified [groupKey.
+  /// 
+  /// If the dependency is found, it is returned; otherwise, this method waits
+  /// until the dependency is registered before returning it.
   ///
-  /// If [traverse] is true, it will also search recursively in parent
+  /// If [traverse] is set to `true`, the search will also include all parent
   /// containers.
   FutureOr<T> until<T extends Object>({
     DIKey? groupKey,

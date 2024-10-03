@@ -10,7 +10,7 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-import '/src/_internal.dart';
+import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -18,7 +18,6 @@ import '/src/_internal.dart';
 final class ServiceNotYetInitializedException extends DFDIPackageException {
   ServiceNotYetInitializedException()
       : super(
-          condition:
-              'Cannot dispose a service that has not yet been initialized.',
+          condition: 'Cannot dispose a service that has not yet been initialized.',
         );
 }

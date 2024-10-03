@@ -10,7 +10,7 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-import '/src/_internal.dart';
+import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -19,8 +19,7 @@ final class DependencyInvalidException extends DFDIPackageException {
     required Object type,
     required DIKey? groupKey,
   }) : super(
-          condition:
-              'Dependency of type "$type" in group "$groupKey" is invalid.',
+          condition: 'Dependency of type "$type" in group "$groupKey" is invalid.',
           reason:
               'Thrown to prevent access to a dependency that is deemed invalid by its specified validator function.',
           options: [

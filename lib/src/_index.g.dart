@@ -20,7 +20,7 @@ export 'exceptions/service_already_disposed_exception.dart';
 export 'exceptions/df_di_package_exception.dart';
 export 'exceptions/dependency_is_future_exception.dart';
 export 'services/service.dart';
-export 'services/data_stream_service.dart';
+export 'services/stream_service.dart';
 
 // --- PRIVATE FILES (EXCLUDED) ---
 // export '_internal.dart';

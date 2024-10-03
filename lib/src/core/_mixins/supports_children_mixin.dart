@@ -12,7 +12,7 @@
 
 // ignore_for_file: invalid_use_of_protected_member
 
-import '/src/_internal.dart';
+import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -21,8 +21,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
   late SupportsChildrenMixin? _children = this;
 
   /// Child containers.
-  List<DI> get children =>
-      List.unmodifiable(registry.dependencies.where((e) => e.value is DI));
+  List<DI> get children => List.unmodifiable(registry.dependencies.where((e) => e.value is DI));
 
   void registerChild({
     DIKey? groupKey,
