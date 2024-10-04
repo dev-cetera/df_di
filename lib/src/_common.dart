@@ -11,9 +11,11 @@
 //.title~
 
 // Common exports for internal use.
+
 export 'dart:async';
-export 'package:df_type/df_type.dart';
+
 export 'package:collection/collection.dart';
+export 'package:df_type/df_type.dart';
 export 'package:meta/meta.dart';
 
 export '_index.g.dart';
