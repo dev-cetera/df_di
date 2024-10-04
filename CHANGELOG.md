@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.7.0]
+
+- Released @ 10/2024 (UTC)
+- breaking: Update dependencies and docs
+
 ## [0.6.9]
 
 - Released @ 10/2024 (UTC)
