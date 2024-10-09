@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.7.1]
+
+- Released @ 10/2024 (UTC)
+- docs: Update readme
+
 ## [0.7.0]
 
 - Released @ 10/2024 (UTC)
