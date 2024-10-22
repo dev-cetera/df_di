@@ -68,8 +68,7 @@ base class DIBase {
       index: dependencyCount++,
       groupKey: groupKey1,
       validator: validator != null ? (e) => validator(e as FutureOr<T>) : null,
-      onUnregister:
-          onUnregister != null ? (e) => onUnregister(e as FutureOr<T>) : null,
+      onUnregister: onUnregister != null ? (e) => onUnregister(e as FutureOr<T>) : null,
     );
     completeRegistration(value, groupKey1);
     final registeredDep = _registerDependency(
@@ -412,7 +411,7 @@ base class DIBase {
   }
 
   /// Retrieves a dependency of type [T] or subtypes of [T] registered under
-  /// the specified [groupKey.
+  /// the specified [groupKey].
   ///
   /// If the dependency is found, it is returned; otherwise, this method waits
   /// until the dependency is registered before returning it.
@@ -463,7 +462,10 @@ base class DIBase {
       completers!.registry.removeDependency<CompleterOr<FutureOr<T>>>(
         groupKey: groupKey1,
       );
-      return value;
+      return get<T>(
+        groupKey: groupKey,
+        traverse: traverse,
+      );
     });
   }
 

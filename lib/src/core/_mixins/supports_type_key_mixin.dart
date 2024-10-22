@@ -338,7 +338,11 @@ base mixin SupportsTypeKeyMixin on DIBase {
         DIKey.type(CompleterOr<FutureOr<Object>>, [typeKey]),
         groupKey: groupKey1,
       );
-      return value;
+      return getK(
+        typeKey,
+        groupKey: groupKey,
+        traverse: traverse,
+      );
     });
   }
 }
