@@ -58,7 +58,7 @@ final class UserStreamingService
 
   @override
   Stream<Map<String, dynamic>> provideInputStream(_) {
-    return StreamUtils.newPoller<Map<String, dynamic>>(
+    return StreamUtility.i.newPoller<Map<String, dynamic>>(
       () async {
         return {'id': 'pu_1s3hs64kshs74bms'};
       },
