@@ -45,8 +45,7 @@ void main() {
         '- The exact registered value is returned by "register"',
         () async {
           final di = DI();
-          final a =
-              Future<int>.delayed(const Duration(milliseconds: 100), () => 1);
+          final a = Future<int>.delayed(const Duration(milliseconds: 100), () => 1);
           final b = di.register(a);
           expect(
             1,
@@ -154,7 +153,7 @@ void main() {
           di.register(value);
           expect(
             1,
-            di.registry.getGroup(groupKey: di.focusGroup).length,
+            di.registry.getGroup(groupEntity: di.focusGroup).length,
           );
           final valueGot = await di.getOrNull<int>();
           expect(
@@ -163,7 +162,7 @@ void main() {
           );
           expect(
             1,
-            di.registry.getGroup(groupKey: di.focusGroup).length,
+            di.registry.getGroup(groupEntity: di.focusGroup).length,
           );
         },
       );
@@ -189,7 +188,7 @@ void main() {
           );
           expect(
             2,
-            di.registry.getGroup(groupKey: di.focusGroup).length,
+            di.registry.getGroup(groupEntity: di.focusGroup).length,
           );
           expect(
             1,
@@ -201,13 +200,13 @@ void main() {
           );
           expect(
             2,
-            di.registry.getGroup(groupKey: di.focusGroup).length,
+            di.registry.getGroup(groupEntity: di.focusGroup).length,
           );
           di.unregister<int>();
           di.unregister<double>();
           expect(
             0,
-            di.registry.getGroup(groupKey: di.focusGroup).length,
+            di.registry.getGroup(groupEntity: di.focusGroup).length,
           );
         },
       );

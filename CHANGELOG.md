@@ -48,7 +48,7 @@
 ## [0.6.4]
 
 - Released @ 11/2024 (UTC)
-- fix: Fix issue with resetService calling unintentionally  dispose
+- fix: Fix issue with resetService calling unintentionally dispose
 
 ## [0.6.3]
 
@@ -143,7 +143,7 @@
 ## [0.2.1]
 
 - Released @ 11/2024 (UTC)
-- refactor: Rename Id to DIKey
+- refactor: Rename Id to Entity
 
 ## [0.2.0]
 

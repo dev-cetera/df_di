@@ -37,9 +37,9 @@ final class Dependency<T extends Object> {
   /// The metadata associated with this [Dependency].
   final DependencyMetadata? metadata;
 
-  /// Returns the `preemptiveTypeKey` of [metadata] if not `null` or the
+  /// Returns the `preemptivetypeEntity` of [metadata] if not `null` or the
   /// runtime type key of [value].
-  DIKey get typeKey => metadata?.preemptiveTypeKey ?? DIKey(value.runtimeType);
+  Entity get typeEntity => metadata?.preemptivetypeEntity ?? Entity(value.runtimeType);
 
   /// Creates a new [Dependency] instance with a different value of type [R],
   /// while retaining the existing [metadata].
@@ -85,8 +85,8 @@ final class Dependency<T extends Object> {
 @internal
 class DependencyMetadata {
   DependencyMetadata({
-    this.groupKey,
-    this.preemptiveTypeKey,
+    this.groupEntity,
+    this.preemptivetypeEntity,
     this.index,
     this.validator,
     this.onUnregister,
@@ -95,11 +95,11 @@ class DependencyMetadata {
   /// The type group to which the [Dependency] belongs. This enables
   /// dependencies of the same type to coexist in the DI container as long as
   /// they are assigned to different groups.
-  final DIKey? groupKey;
+  final Entity? groupEntity;
 
   /// The type key that the dependency is associated with within its group. If
   /// not `null`, it will override the default type key.
-  final DIKey? preemptiveTypeKey;
+  final Entity? preemptivetypeEntity;
 
   /// The type of [Dependency.value] at the time the [Dependency] was registered.
   /// This type remains unchanged even if [Dependency.value] is updated through
@@ -122,16 +122,16 @@ class DependencyMetadata {
   /// Creates a new instance with updated fields, preserving the values of any
   /// fields not explicitly specified.
   DependencyMetadata copyWith({
-    DIKey? groupKey,
-    DIKey? preemptiveTypeKey,
+    Entity? groupEntity,
+    Entity? preemptivetypeEntity,
     Type? initialType,
     int? index,
     DependencyValidator? validator,
     OnUnregisterCallback<Object>? onUnregister,
   }) {
     return DependencyMetadata(
-      groupKey: groupKey ?? this.groupKey,
-      preemptiveTypeKey: preemptiveTypeKey ?? this.preemptiveTypeKey,
+      groupEntity: groupEntity ?? this.groupEntity,
+      preemptivetypeEntity: preemptivetypeEntity ?? this.preemptivetypeEntity,
       index: index ?? this.index,
       validator: validator ?? this.validator,
       onUnregister: onUnregister ?? this.onUnregister,
@@ -147,8 +147,8 @@ class DependencyMetadata {
   @override
   int get hashCode {
     return Object.hashAll([
-      groupKey,
-      preemptiveTypeKey,
+      groupEntity,
+      preemptivetypeEntity,
       index,
       validator,
       onUnregister,

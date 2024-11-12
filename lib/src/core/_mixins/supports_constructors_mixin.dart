@@ -19,27 +19,26 @@ import '/src/_common.dart';
 base mixin SupportsConstructorsMixin on SupportsRuntimeTypeMixin {
   void resetSingletonT(
     Type type, {
-    DIKey? groupKey,
+    Entity? groupEntity,
   }) {
-    (getK(DIKey.type(Lazy, [type]), groupKey: groupKey) as Lazy)
-        .resetSingleton();
+    (getK(Entity.type(Lazy, [type]), groupEntity: groupEntity) as Lazy).resetSingleton();
   }
 
   void resetSingleton<T extends Object>({
-    DIKey? groupKey,
+    Entity? groupEntity,
   }) {
-    get<Lazy<T>>(groupKey: groupKey).asSync.resetSingleton();
+    get<Lazy<T>>(groupEntity: groupEntity).asSync.resetSingleton();
   }
 
   Lazy<T> registerLazy<T extends Object>(
     TConstructor<T> constructor, {
-    DIKey? groupKey,
+    Entity? groupEntity,
     bool Function(FutureOr<T> instance)? validator,
     FutureOr<void> Function(FutureOr<T> instance)? onUnregister,
   }) {
     return register<Lazy<T>>(
       Lazy<T>(constructor),
-      groupKey: groupKey,
+      groupEntity: groupEntity,
       validator: validator != null
           ? (constructor) {
               final instance = constructor.asSync.currentInstance;
@@ -57,30 +56,30 @@ base mixin SupportsConstructorsMixin on SupportsRuntimeTypeMixin {
 
   Future<Object> getSingletonAsyncT(
     Type type, {
-    DIKey? groupKey,
+    Entity? groupEntity,
     bool traverse = true,
   }) async {
     return getSingletonT(
       type,
-      groupKey: groupKey,
+      groupEntity: groupEntity,
       traverse: traverse,
     );
   }
 
   Object getSingletonSyncT(
     Type type, {
-    DIKey? groupKey,
+    Entity? groupEntity,
     bool traverse = true,
   }) {
     final value = getSingletonT(
       type,
-      groupKey: groupKey,
+      groupEntity: groupEntity,
       traverse: traverse,
     );
     if (value is Future) {
       throw DependencyIsFutureException(
         type: type,
-        groupKey: groupKey,
+        groupEntity: groupEntity,
       );
     } else {
       return value;
@@ -89,19 +88,19 @@ base mixin SupportsConstructorsMixin on SupportsRuntimeTypeMixin {
 
   Object? getSingletonSyncOrNullT(
     Type type, {
-    DIKey? groupKey,
+    Entity? groupEntity,
     bool traverse = true,
     bool throwIfAsync = false,
   }) {
     final value = getSingletonOrNullT(
       type,
-      groupKey: groupKey,
+      groupEntity: groupEntity,
       traverse: traverse,
     );
     if (throwIfAsync && value is Future) {
       throw DependencyIsFutureException(
         type: type,
-        groupKey: groupKey,
+        groupEntity: groupEntity,
       );
     }
     return value?.asSyncOrNull;
@@ -109,20 +108,20 @@ base mixin SupportsConstructorsMixin on SupportsRuntimeTypeMixin {
 
   FutureOr<Object> getSingletonT(
     Type type, {
-    DIKey? groupKey,
+    Entity? groupEntity,
     bool traverse = true,
   }) {
-    final groupKey1 = groupKey ?? focusGroup;
+    final groupEntity1 = groupEntity ?? focusGroup;
     final value = getSingletonOrNullT(
       type,
-      groupKey: groupKey1,
+      groupEntity: groupEntity1,
       traverse: traverse,
     );
 
     if (value == null) {
       throw DependencyNotFoundException(
         type: type,
-        groupKey: groupKey1,
+        groupEntity: groupEntity1,
       );
     }
     return value;
@@ -130,39 +129,39 @@ base mixin SupportsConstructorsMixin on SupportsRuntimeTypeMixin {
 
   FutureOr<Object>? getSingletonOrNullT(
     Type type, {
-    DIKey? groupKey,
+    Entity? groupEntity,
     bool traverse = true,
   }) {
     return (getOrNullK(
-      DIKey.type(Lazy, [type]),
-      groupKey: groupKey,
+      Entity.type(Lazy, [type]),
+      groupEntity: groupEntity,
       traverse: traverse,
     ) as Lazy?)
         ?.singleton;
   }
 
   Future<T> getSingletonAsync<T extends Object>({
-    DIKey? groupKey,
+    Entity? groupEntity,
     bool traverse = true,
   }) async {
     return getSingleton<T>(
-      groupKey: groupKey,
+      groupEntity: groupEntity,
       traverse: traverse,
     );
   }
 
   T getSingletonSync<T extends Object>({
-    DIKey? groupKey,
+    Entity? groupEntity,
     bool traverse = true,
   }) {
     final value = getSingleton<T>(
-      groupKey: groupKey,
+      groupEntity: groupEntity,
       traverse: traverse,
     );
     if (value is Future) {
       throw DependencyIsFutureException(
         type: T,
-        groupKey: groupKey,
+        groupEntity: groupEntity,
       );
     } else {
       return value;
@@ -170,78 +169,78 @@ base mixin SupportsConstructorsMixin on SupportsRuntimeTypeMixin {
   }
 
   T? getSingletonSyncOrNull<T extends Object>({
-    DIKey? groupKey,
+    Entity? groupEntity,
     bool traverse = true,
     bool throwIfAsync = false,
   }) {
     final value = getSingletonOrNull<T>(
-      groupKey: groupKey,
+      groupEntity: groupEntity,
       traverse: traverse,
     );
     if (throwIfAsync && value is Future) {
       throw DependencyIsFutureException(
         type: T,
-        groupKey: groupKey,
+        groupEntity: groupEntity,
       );
     }
     return value?.asSyncOrNull;
   }
 
   FutureOr<T> getSingleton<T extends Object>({
-    DIKey? groupKey,
+    Entity? groupEntity,
     bool traverse = true,
   }) {
-    final groupKey1 = groupKey ?? focusGroup;
+    final groupEntity1 = groupEntity ?? focusGroup;
     final value = getSingletonOrNull<T>(
-      groupKey: groupKey1,
+      groupEntity: groupEntity1,
       traverse: traverse,
     );
 
     if (value == null) {
       throw DependencyNotFoundException(
         type: T,
-        groupKey: groupKey1,
+        groupEntity: groupEntity1,
       );
     }
     return value;
   }
 
   FutureOr<T>? getSingletonOrNull<T extends Object>({
-    DIKey? groupKey,
+    Entity? groupEntity,
     bool traverse = true,
   }) {
     return getOrNull<Lazy<T>>(
-      groupKey: groupKey,
+      groupEntity: groupEntity,
       traverse: traverse,
     )?.asSyncOrNull?.singleton;
   }
 
   Future<Object> getFactoryAsyncT(
     Type type, {
-    DIKey? groupKey,
+    Entity? groupEntity,
     bool traverse = true,
   }) async {
     return getFactoryT(
       type,
-      groupKey: groupKey,
+      groupEntity: groupEntity,
       traverse: traverse,
     );
   }
 
   Object getFactorySyncT(
     Type type, {
-    DIKey? groupKey,
+    Entity? groupEntity,
     bool traverse = true,
   }) {
     final value = getFactoryT(
       type,
-      groupKey: groupKey,
+      groupEntity: groupEntity,
       traverse: traverse,
     );
     if (value is Future) {
       throw DependencyIsFutureException(
         type: type,
-        groupKey: groupKey,
+        groupEntity: groupEntity,
       );
     } else {
       return value;
@@ -250,19 +249,19 @@ base mixin SupportsConstructorsMixin on SupportsRuntimeTypeMixin {
 
   Object? getFactorySyncOrNullT(
     Type type, {
-    DIKey? groupKey,
+    Entity? groupEntity,
     bool traverse = true,
     bool throwIfAsync = false,
   }) {
     final value = getFactoryOrNullT(
       type,
-      groupKey: groupKey,
+      groupEntity: groupEntity,
       traverse: traverse,
     );
     if (throwIfAsync && value is Future) {
       throw DependencyIsFutureException(
         type: type,
-        groupKey: groupKey,
+        groupEntity: groupEntity,
       );
     }
     return value?.asSyncOrNull;
@@ -270,19 +269,19 @@ base mixin SupportsConstructorsMixin on SupportsRuntimeTypeMixin {
 
   FutureOr<Object> getFactoryT(
     Type type, {
-    DIKey? groupKey,
+    Entity? groupEntity,
     bool traverse = true,
   }) {
-    final groupKey1 = groupKey ?? focusGroup;
+    final groupEntity1 = groupEntity ?? focusGroup;
     final value = getFactoryOrNullT(
       type,
-      groupKey: groupKey1,
+      groupEntity: groupEntity1,
       traverse: traverse,
     );
     if (value == null) {
       throw DependencyNotFoundException(
         type: type,
-        groupKey: groupKey1,
+        groupEntity: groupEntity1,
       );
     }
     return value;
@@ -290,39 +289,39 @@ base mixin SupportsConstructorsMixin on SupportsRuntimeTypeMixin {
 
   FutureOr<Object>? getFactoryOrNullT(
     Type type, {
-    DIKey? groupKey,
+    Entity? groupEntity,
     bool traverse = true,
   }) {
     return (getOrNullK(
-      DIKey.type(Lazy, [type]),
-      groupKey: groupKey,
+      Entity.type(Lazy, [type]),
+      groupEntity: groupEntity,
       traverse: traverse,
     ) as Lazy?)
         ?.factory;
   }
 
   Future<T> getFactoryAsync<T extends Object>({
-    DIKey? groupKey,
+    Entity? groupEntity,
     bool traverse = true,
   }) async {
     return getFactory<T>(
-      groupKey: groupKey,
+      groupEntity: groupEntity,
       traverse: traverse,
     );
   }
 
   T getFactorySync<T extends Object>({
-    DIKey? groupKey,
+    Entity? groupEntity,
     bool traverse = true,
   }) {
     final value = getFactory<T>(
-      groupKey: groupKey,
+      groupEntity: groupEntity,
       traverse: traverse,
     );
     if (value is Future) {
       throw DependencyIsFutureException(
         type: T,
-        groupKey: groupKey,
+        groupEntity: groupEntity,
       );
     } else {
       return value;
@@ -330,48 +329,48 @@ base mixin SupportsConstructorsMixin on SupportsRuntimeTypeMixin {
   }
 
   T? getFactorySyncOrNull<T extends Object>({
-    DIKey? groupKey,
+    Entity? groupEntity,
     bool traverse = true,
     bool throwIfAsync = false,
   }) {
     final value = getFactoryOrNull<T>(
-      groupKey: groupKey,
+      groupEntity: groupEntity,
       traverse: traverse,
     );
     if (throwIfAsync && value is Future) {
       throw DependencyIsFutureException(
         type: T,
-        groupKey: groupKey,
+        groupEntity: groupEntity,
       );
     }
     return value?.asSyncOrNull;
   }
 
   FutureOr<T> getFactory<T extends Object>({
-    DIKey? groupKey,
+    Entity? groupEntity,
     bool traverse = true,
   }) {
-    final groupKey1 = groupKey ?? focusGroup;
+    final groupEntity1 = groupEntity ?? focusGroup;
     final value = getFactoryOrNull<T>(
-      groupKey: groupKey1,
+      groupEntity: groupEntity1,
       traverse: traverse,
     );
 
     if (value == null) {
       throw DependencyNotFoundException(
         type: T,
-        groupKey: groupKey1,
+        groupEntity: groupEntity1,
       );
     }
     return value;
   }
 
   FutureOr<T>? getFactoryOrNull<T extends Object>({
-    DIKey? groupKey,
+    Entity? groupEntity,
     bool traverse = true,
   }) {
     return getOrNull<Lazy<T>>(
-      groupKey: groupKey,
+      groupEntity: groupEntity,
       traverse: traverse,
     )?.asSyncOrNull?.factory;
   }

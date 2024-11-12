@@ -17,10 +17,10 @@ import '/src/_common.dart';
 final class DependencyAlreadyRegisteredException extends DFDIPackageException {
   DependencyAlreadyRegisteredException({
     required Object type,
-    required DIKey? groupKey,
+    required Entity? groupEntity,
   }) : super(
           condition:
-              'Dependency of type "$type" in group "$groupKey" has already been registered.',
+              'Dependency of type "$type" in group "$groupEntity" has already been registered.',
           reason:
               'Thrown to prevent accidental overriding of dependencies of the same type and group.',
           options: [

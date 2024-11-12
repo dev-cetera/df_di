@@ -18,7 +18,7 @@ import '/src/_common.dart';
 
 final class DI extends DIBase
     with
-        SupportsTypeKeyMixin,
+        SupportstypeEntityMixin,
         SupportsRuntimeTypeMixin,
         SupportsConstructorsMixin,
         SupportsChildrenMixin,
@@ -29,29 +29,29 @@ final class DI extends DIBase
 
   /// A predefined container recommended for global dependencies. This
   /// container is a child of [app].
-  static DI get global => app.child(groupKey: DIKey.globalGroup);
+  static DI get global => app.child(groupEntity: Entity.globalGroup);
 
   /// A predefined container recommended for session-specific dependencies.
   /// This container is a child of [global].
-  static DI get session => global.child(groupKey: DIKey.sessionGroup);
+  static DI get session => global.child(groupEntity: Entity.sessionGroup);
 
   /// A predefined container recommended for user-specific dependencies.
   /// This container is a child of [session].
-  static DI get user => session.child(groupKey: DIKey.userGroup);
+  static DI get user => session.child(groupEntity: Entity.userGroup);
 
   /// A predefined container recommended for theme-related objects.
   /// This container is a child of [app].
-  static DI get theme => app.child(groupKey: DIKey.themeGroup);
+  static DI get theme => app.child(groupEntity: Entity.themeGroup);
 
   /// A predefined container recommended for objects intended for development
   /// environments. This container is a child of [app].
-  static DI get dev => app.child(groupKey: DIKey.devGroup);
+  static DI get dev => app.child(groupEntity: Entity.devGroup);
 
   /// A predefined container recommended for objects intended for production
   /// environments. This container is a child of [app].
-  static DI get prod => app.child(groupKey: DIKey.prodGroup);
+  static DI get prod => app.child(groupEntity: Entity.prodGroup);
 
   /// A predefined container recommended for objects intended for testing
   /// environments. This container is a child of [app].
-  static DI get test => app.child(groupKey: DIKey.testGroup);
+  static DI get test => app.child(groupEntity: Entity.testGroup);
 }

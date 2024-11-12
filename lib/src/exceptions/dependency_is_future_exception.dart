@@ -17,14 +17,14 @@ import '/src/_common.dart';
 final class DependencyIsFutureException extends DFDIPackageException {
   DependencyIsFutureException({
     required Object type,
-    required DIKey? groupKey,
+    required Entity? groupEntity,
   }) : super(
           condition:
-              'Attempted to retrieve a dependency of type "$type" in group "$groupKey", but it is actually a Future<$type>.',
+              'Attempted to retrieve a dependency of type "$type" in group "$groupEntity", but it is actually a Future<$type>.',
           reason:
               'This exception is thrown when trying to access a Future dependency synchronously. Dependencies that are asynchronous should be awaited or resolved using the appropriate method.',
           options: [
-            'Use "await di.get<$type>(groupKey: DIKey($groupKey))" instead of "di<$type>(groupKey: DIKey($groupKey))".',
+            'Use "await di.get<$type>(groupEntity: Entity($groupEntity))" instead of "di<$type>(groupEntity: Entity($groupEntity))".',
           ],
         );
 }

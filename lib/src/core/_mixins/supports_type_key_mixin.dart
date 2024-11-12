@@ -16,7 +16,7 @@ import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-base mixin SupportsTypeKeyMixin on DIBase {
+base mixin SupportstypeEntityMixin on DIBase {
   //
   //
   //
@@ -26,18 +26,18 @@ base mixin SupportsTypeKeyMixin on DIBase {
     required Dependency<FutureOr<Object>> dependency,
     bool checkExisting = false,
   }) {
-    final groupKey1 = dependency.metadata?.groupKey ?? focusGroup;
-    final typeKey = dependency.typeKey;
+    final groupEntity1 = dependency.metadata?.groupEntity ?? focusGroup;
+    final typeEntity = dependency.typeEntity;
     if (checkExisting) {
       final existingDep = _getDependencyOrNullK(
-        typeKey,
-        groupKey: groupKey1,
+        typeEntity,
+        groupEntity: groupEntity1,
         traverse: false,
       );
       if (existingDep != null) {
         throw DependencyAlreadyRegisteredException(
-          groupKey: groupKey1,
-          type: typeKey,
+          groupEntity: groupEntity1,
+          type: typeEntity,
         );
       }
     }
@@ -51,29 +51,29 @@ base mixin SupportsTypeKeyMixin on DIBase {
 
   @protected
   FutureOr<Object> unregisterK(
-    DIKey typeKey, {
-    DIKey? groupKey,
+    Entity typeEntity, {
+    Entity? groupEntity,
     bool skipOnUnregisterCallback = false,
   }) {
-    final groupKey1 = groupKey ?? focusGroup;
+    final groupEntity1 = groupEntity ?? focusGroup;
     final removed = [
       registry.removeDependencyK(
-        typeKey,
-        groupKey: groupKey1,
+        typeEntity,
+        groupEntity: groupEntity1,
       ),
       registry.removeDependencyK(
-        DIKey.type(Future, [typeKey]),
-        groupKey: groupKey1,
+        Entity.type(Future, [typeEntity]),
+        groupEntity: groupEntity1,
       ),
       registry.removeDependencyK(
-        DIKey.type(Lazy, [typeKey]),
-        groupKey: groupKey1,
+        Entity.type(Lazy, [typeEntity]),
+        groupEntity: groupEntity1,
       ),
     ].nonNulls.firstOrNull;
     if (removed == null) {
       throw DependencyNotFoundException(
-        groupKey: groupKey1,
-        type: typeKey,
+        groupEntity: groupEntity1,
+        type: typeEntity,
       );
     }
     final value = removed.value;
@@ -91,35 +91,35 @@ base mixin SupportsTypeKeyMixin on DIBase {
   //
 
   bool isRegisteredK(
-    DIKey typeKey, {
-    DIKey? groupKey,
+    Entity typeEntity, {
+    Entity? groupEntity,
     bool traverse = true,
   }) {
-    final groupKey1 = groupKey ?? focusGroup;
+    final groupEntity1 = groupEntity ?? focusGroup;
     return [
       () =>
           registry.getDependencyOrNullK(
-            typeKey,
-            groupKey: groupKey1,
+            typeEntity,
+            groupEntity: groupEntity1,
           ) !=
           null,
       () =>
           registry.getDependencyOrNullK(
-            DIKey.type(Future, [typeKey]),
-            groupKey: groupKey1,
+            Entity.type(Future, [typeEntity]),
+            groupEntity: groupEntity1,
           ) !=
           null,
       () =>
           registry.getDependencyOrNullK(
-            DIKey.type(Lazy, [typeKey]),
-            groupKey: groupKey1,
+            Entity.type(Lazy, [typeEntity]),
+            groupEntity: groupEntity1,
           ) !=
           null,
       if (traverse)
         () => parents.any(
-              (e) => (e as SupportsTypeKeyMixin).isRegisteredK(
-                typeKey,
-                groupKey: groupKey,
+              (e) => (e as SupportstypeEntityMixin).isRegisteredK(
+                typeEntity,
+                groupEntity: groupEntity,
                 traverse: true,
               ),
             ),
@@ -130,11 +130,11 @@ base mixin SupportsTypeKeyMixin on DIBase {
   //
   //
 
-  /// Retrieves a dependency of the exact type [typeKey] registered under the
-  /// specified [groupKey].
+  /// Retrieves a dependency of the exact type [typeEntity] registered under the
+  /// specified [groupEntity].
   ///
   /// Note that this method will not return instances of subtypes. For example,
-  /// if [typeKey] is `DIKey('List<dynamic>')` and `DIKey('List<String>')` is
+  /// if [typeEntity] is `Entity('List<dynamic>')` and `Entity('List<String>')` is
   /// actually registered, this method will not return that registered
   /// dependency. This limitation arises from the use of runtime types. If you
   /// need to retrieve subtypes, consider using the standard [get] method that
@@ -156,20 +156,20 @@ base mixin SupportsTypeKeyMixin on DIBase {
   /// to return the resolved value directly.
   @protected
   FutureOr<Object> getK(
-    DIKey typeKey, {
-    DIKey? groupKey,
+    Entity typeEntity, {
+    Entity? groupEntity,
     bool traverse = true,
   }) {
-    final groupKey1 = groupKey ?? focusGroup;
+    final groupEntity1 = groupEntity ?? focusGroup;
     final value = getOrNullK(
-      typeKey,
-      groupKey: groupKey1,
+      typeEntity,
+      groupEntity: groupEntity1,
       traverse: traverse,
     );
     if (value == null) {
       throw DependencyNotFoundException(
-        type: typeKey,
-        groupKey: groupKey1,
+        type: typeEntity,
+        groupEntity: groupEntity1,
       );
     }
     return value;
@@ -179,11 +179,11 @@ base mixin SupportsTypeKeyMixin on DIBase {
   //
   //
 
-  /// Retrieves a dependency of the exact type [typeKey] registered under the
-  /// specified [groupKey].
+  /// Retrieves a dependency of the exact type [typeEntity] registered under the
+  /// specified [groupEntity].
   ///
   /// Note that this method will not return instances of subtypes. For example,
-  /// if [typeKey] is `DIKey('List<dynamic>')` and `DIKey('List<String>')` is
+  /// if [typeEntity] is `Entity('List<dynamic>')` and `Entity('List<String>')` is
   /// actually registered, this method will not return that registered
   /// dependency. This limitation arises from the use of runtime types. If you
   /// need to retrieve subtypes, consider using the standard [get] method that
@@ -204,14 +204,14 @@ base mixin SupportsTypeKeyMixin on DIBase {
   /// to return the resolved value directly.
   @protected
   FutureOr<Object>? getOrNullK(
-    DIKey typeKey, {
-    DIKey? groupKey,
+    Entity typeEntity, {
+    Entity? groupEntity,
     bool traverse = true,
   }) {
-    final groupKey1 = groupKey ?? focusGroup;
+    final groupEntity1 = groupEntity ?? focusGroup;
     final existingDep = _getDependencyOrNullK(
-      typeKey,
-      groupKey: groupKey1,
+      typeEntity,
+      groupEntity: groupEntity1,
       traverse: traverse,
     );
     final value = existingDep?.value;
@@ -227,8 +227,8 @@ base mixin SupportsTypeKeyMixin on DIBase {
               checkExisting: false,
             );
             registry.removeDependencyK(
-              typeKey,
-              groupKey: groupKey1,
+              typeEntity,
+              groupEntity: groupEntity1,
             );
             return value;
           },
@@ -245,25 +245,25 @@ base mixin SupportsTypeKeyMixin on DIBase {
   //
 
   Dependency<FutureOr<Object>>? _getDependencyOrNullK(
-    DIKey typeKey, {
-    DIKey? groupKey,
+    Entity typeEntity, {
+    Entity? groupEntity,
     bool traverse = true,
   }) {
-    final groupKey1 = groupKey ?? focusGroup;
+    final groupEntity1 = groupEntity ?? focusGroup;
     var dependency = registry.getDependencyOrNullK(
-          typeKey,
-          groupKey: groupKey1,
+          typeEntity,
+          groupEntity: groupEntity1,
         ) ??
         registry.getDependencyOrNullK(
-          DIKey.type(Future, [typeKey]),
-          groupKey: groupKey1,
+          Entity.type(Future, [typeEntity]),
+          groupEntity: groupEntity1,
         );
 
     if (dependency == null && traverse) {
       for (final parent in parents) {
-        dependency = (parent as SupportsTypeKeyMixin)._getDependencyOrNullK(
-          typeKey,
-          groupKey: groupKey1,
+        dependency = (parent as SupportstypeEntityMixin)._getDependencyOrNullK(
+          typeEntity,
+          groupEntity: groupEntity1,
         );
         if (dependency != null) {
           break;
@@ -277,8 +277,8 @@ base mixin SupportsTypeKeyMixin on DIBase {
         return dependency.cast();
       } else {
         throw DependencyInvalidException(
-          groupKey: groupKey1,
-          type: typeKey,
+          groupEntity: groupEntity1,
+          type: typeEntity,
         );
       }
     }
@@ -292,14 +292,14 @@ base mixin SupportsTypeKeyMixin on DIBase {
 
   @protected
   FutureOr<Object> untilK(
-    DIKey typeKey, {
-    DIKey? groupKey,
+    Entity typeEntity, {
+    Entity? groupEntity,
     bool traverse = true,
   }) {
-    final groupKey1 = groupKey ?? focusGroup;
+    final groupEntity1 = groupEntity ?? focusGroup;
 
     // Check if the dependency is already registered.
-    final test = getOrNullK(typeKey, groupKey: groupKey1);
+    final test = getOrNullK(typeEntity, groupEntity: groupEntity1);
     if (test != null) {
       // Return the dependency if it is already registered.
       return test;
@@ -308,8 +308,8 @@ base mixin SupportsTypeKeyMixin on DIBase {
     CompleterOr<FutureOr<Object>>? completer;
     completer = (completers?.registry
         .getDependencyOrNullK(
-          DIKey.type(CompleterOr<FutureOr<Object>>, [typeKey]),
-          groupKey: groupKey1,
+          Entity.type(CompleterOr<FutureOr<Object>>, [typeEntity]),
+          groupEntity: groupEntity1,
         )
         ?.value as CompleterOr<FutureOr<Object>>?);
     if (completer != null) {
@@ -325,8 +325,8 @@ base mixin SupportsTypeKeyMixin on DIBase {
       Dependency<CompleterOr<FutureOr<Object>>>(
         completer,
         metadata: DependencyMetadata(
-          groupKey: groupKey1,
-          preemptiveTypeKey: DIKey.type(CompleterOr<Future<Object>>, [typeKey]),
+          groupEntity: groupEntity1,
+          preemptivetypeEntity: Entity.type(CompleterOr<Future<Object>>, [typeEntity]),
         ),
       ),
     );
@@ -335,12 +335,12 @@ base mixin SupportsTypeKeyMixin on DIBase {
     // the completer before returning the value.
     return completer.futureOr.thenOr((value) {
       completers!.registry.removeDependencyK(
-        DIKey.type(CompleterOr<FutureOr<Object>>, [typeKey]),
-        groupKey: groupKey1,
+        Entity.type(CompleterOr<FutureOr<Object>>, [typeEntity]),
+        groupEntity: groupEntity1,
       );
       return getK(
-        typeKey,
-        groupKey: groupKey,
+        typeEntity,
+        groupEntity: groupEntity,
         traverse: traverse,
       );
     });

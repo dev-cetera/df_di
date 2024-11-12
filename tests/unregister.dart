@@ -48,7 +48,7 @@ void main() {
           );
           expect(
             2,
-            di.registry.getGroup(groupKey: di.focusGroup).length,
+            di.registry.getGroup(groupEntity: di.focusGroup).length,
           );
           expect(
             1,
@@ -60,13 +60,13 @@ void main() {
           );
           expect(
             2,
-            di.registry.getGroup(groupKey: di.focusGroup).length,
+            di.registry.getGroup(groupEntity: di.focusGroup).length,
           );
           di.unregister<int>();
           di.unregister<double>();
           expect(
             0,
-            di.registry.getGroup(groupKey: di.focusGroup).length,
+            di.registry.getGroup(groupEntity: di.focusGroup).length,
           );
         },
       );
@@ -88,10 +88,10 @@ void main() {
         '- Unregistering all',
         () async {
           final di = DI();
-          di.register<int>(1, groupKey: DIKey(1));
-          di.register<int>(2, groupKey: DIKey(2));
-          di.register<int>(3, groupKey: DIKey(3));
-          di.register<int>(4, groupKey: DIKey(4));
+          di.register<int>(1, groupEntity: Entity(1));
+          di.register<int>(2, groupEntity: Entity(2));
+          di.register<int>(3, groupEntity: Entity(3));
+          di.register<int>(4, groupEntity: Entity(4));
           // final values = di.unregisterAll().thenOr((e) => e.map((e) => e.value).toList());
           // expect(
           //   '[4, 3, 2, 1]',

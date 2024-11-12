@@ -1,4 +1,4 @@
-# DI - DI
+# DF - DI
 
 <a href="https://www.buymeacoffee.com/robmllze" target="_blank"><img align="right" src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
 
@@ -11,16 +11,17 @@ Dart & Flutter Packages by DevCetra.com & contributors.
 
 ## Summary
 
-This package provides a pragmatic dependency injection (DI) system, coupled with service classes for seamless state management in Dart.
+This package provides a pragmatic dependency injection (DI) framework, coupled with service classes for seamless state management in Dart, as well as a new ECS (Entity Component System) build on top of the DI framework.
 
 ## Features
 
 - Robust FutureOr support for handling both synchronous and asynchronous dependencies and callbacks.
-- Register dependencies by type and groupKey, enabling management of multiple dependencies of the same type.
+- Register dependencies by type and groupEntity, enabling management of multiple dependencies of the same type.
 - Hierarchical DI with scoped dependencies through child containers.
 - Retrieve dependencies by runtime type or generic type.
 - Factory dependencies and lazy initialization for singleton dependencies.
 - Service classes that automatically handle cleanup when they are unregistered.
+- Extension of the DI system into an ECS framework called “World.” For an example, see: https://github.com/DevCetra/df_di/blob/main/tests/world.dart
 
 For a full feature set, please refer to the [API reference](https://pub.dev/documentation/df_di/).
 
@@ -36,7 +37,7 @@ DI.global;
 final di = DI();
 
 // Create nested child containers, useful for scoping dependencies in modular apps.
-final scopedDi = di.child().child().child(groupKey: DIKey('moduleGroup'));
+final scopedDi = di.child().child().child(groupEntity: Entity('moduleGroup'));
 ```
 
 ### Registering Dependencies:
@@ -45,8 +46,8 @@ final scopedDi = di.child().child().child(groupKey: DIKey('moduleGroup'));
 // Register the answer to life, the universe and everything.
 di.register<int>(42);
 
-// Register an integer under a specific groupKey, useful in environments like testing.
-di.register<int>(0, groupKey: DIKey.testGroup);
+// Register an integer under a specific groupEntity, useful in environments like testing.
+di.register<int>(0, groupEntity: Entity.testGroup);
 
 // Register a Future as a dependency.
 di.register(Future.value('Hello, DI!'));
@@ -80,8 +81,8 @@ print(di<int>()); // 42
 Type intType = int;
 print(di.getT(intType)); // 42
 
-// Retrieve a dependency registered under a specific groupKey.
-print(di.get<int>(groupKey: DIKey('testGroup'))); // 0
+// Retrieve a dependency registered under a specific groupEntity.
+print(di.get<int>(groupEntity: Entity('testGroup'))); // 0
 
 // Handle asynchronous dependencies.
 final greeting = await di.get<String>();
@@ -184,6 +185,133 @@ print(di.registry.state);
 print(di.isRegistered<int>()); // true
 ```
 
+### Implementing an Entity Component System (ECS) using the DI Framework:
+
+This is especially useful for game development with Flutter but can also be applied to app development, such as managing complex forms with dynamic field visibility or handling multiple user profiles in a customizable app.
+
+#### Create various components that can be applied to entities.
+
+```dart
+class Name extends Component {
+  final String name;
+  const Name(this.name);
+
+  @override
+  List<Object?> get props => [name];
+}
+
+class Vector extends Component {
+  final double x;
+  final double y;
+  const Vector({
+    this.x = 0.0,
+    this.y = 0.0,
+  });
+
+  Vector add(Vector other) {
+    return Vector(
+      x: x + other.x,
+      y: y + other.y,
+    );
+  }
+
+  @override
+  List<Object?> get props => [x, y];
+}
+
+class Position extends Vector {
+  const Position({
+    super.x = 0.0,
+    super.y = 0.0,
+  });
+
+  @override
+  Position add(Vector other) {
+    return Position(
+      x: x + other.x,
+      y: y + other.y,
+    );
+  }
+}
+
+class Velocity extends Vector {
+  const Velocity({
+    super.x = 0.0,
+    super.y = 0.0,
+  });
+
+  @override
+  Velocity add(Vector other) {
+    return Velocity(
+      x: x + other.x,
+      y: y + other.y,
+    );
+  }
+}
+```
+
+#### Create a movement system to update entities in the world.
+
+```dart
+class MovementSystem extends UpdateSystem {
+  @override
+  void update(World world) {
+    // Get all entities with both Position and Velocity components.
+    final entities = world.query2<Position, Velocity>();
+    for (var entity in entities) {
+      // Update the position based on the velocity
+      final Position position = entity.getComponent();
+      final Velocity velocity = entity.getComponent();
+      final result = world.updateComponent(
+        entity,
+        position.add(velocity),
+      );
+      final newPosition = result.unwrap() as Position;
+
+      // Log the updated position.
+      print('Updated Position: (${newPosition.x}, ${newPosition.y})');
+    }
+  }
+}
+
+abstract class UpdateSystem {
+  void update(World world);
+}
+```
+
+#### Move a player in the world.
+
+```dart
+// Create a new world for players or users to exist in.
+final world = World();
+
+// Create a new player in the world.
+final player1 = world.createUniqueEntity();
+
+// Spawn the player in the world with the components Name, Position and Velocity.
+world.addAllComponents(player1, {
+  const Name('Player 1'),
+  const Position(x: 0, y: 0),
+  const Velocity(x: 1, y: 0),
+});
+
+// Print the current position.
+final p0 = player1.getComponent<Position>();
+print('Position 0: (${p0.x}, ${p0.y})');
+
+// Update the movement in the world.
+final movementSystem = MovementSystem();
+movementSystem.update(world);
+
+// Print the position after the world update.
+final p1 = player1.getComponent<Position>();
+print('Position 1: (${p1.x}, ${p1.y})');
+
+// Print the player name.
+final name = player1.getComponent<Name>().name;
+print('Player name: "$name"');
+```
+
 ## Installation
 
 Use this package as a dependency by adding it to your `pubspec.yaml` file (see [here](https://pub.dev/packages/df_di/install)).
@@ -200,7 +328,7 @@ This is an open-source project, and we warmly welcome contributions from everyon
 - **Share your ideas:** Every perspective matters, and your ideas can spark innovation.
 - **Report bugs:** Help us identify and fix issues to make the project more robust.
 - **Suggest improvements or new features:** Your ideas can help shape the future of the project.
-- **Help clarify documentation:** Good documentation is groupKey to accessibility. You can make it easier for others to get started by improving or expanding our documentation.
+- **Help clarify documentation:** Good documentation is groupEntity to accessibility. You can make it easier for others to get started by improving or expanding our documentation.
 - **Write articles:** Share your knowledge by writing tutorials, guides, or blog posts about your experiences with the project. It's a great way to contribute and help others learn.
 
 No matter how you choose to contribute, your involvement is greatly appreciated and valued!

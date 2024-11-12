@@ -30,7 +30,7 @@ base class DIBase {
   final parents = <DIBase>{};
 
   /// A key that identifies the current group in focus for dependency management.
-  DIKey? focusGroup = DIKey.defaultGroup;
+  Entity? focusGroup = Entity.defaultGroup;
 
   /// A container storing Future completions.
   @protected
@@ -40,7 +40,7 @@ base class DIBase {
   @protected
   int dependencyCount = 0;
 
-  /// Register a dependency [value] of type [T] under the specified [groupKey]
+  /// Register a dependency [value] of type [T] under the specified [groupEntity]
   /// in the [registry].
   ///
   /// If the [value] is an instance of [DI], it will be registered as
@@ -59,19 +59,18 @@ base class DIBase {
   /// same type and group is already registered.
   FutureOr<T> register<T extends Object>(
     FutureOr<T> value, {
-    DIKey? groupKey,
+    Entity? groupEntity,
     DependencyValidator<FutureOr<T>>? validator,
     OnUnregisterCallback<FutureOr<T>>? onUnregister,
   }) {
-    final groupKey1 = groupKey ?? focusGroup;
+    final groupEntity1 = groupEntity ?? focusGroup;
     final metadata = DependencyMetadata(
       index: dependencyCount++,
-      groupKey: groupKey1,
+      groupEntity: groupEntity1,
       validator: validator != null ? (e) => validator(e as FutureOr<T>) : null,
-      onUnregister:
-          onUnregister != null ? (e) => onUnregister(e as FutureOr<T>) : null,
+      onUnregister: onUnregister != null ? (e) => onUnregister(e as FutureOr<T>) : null,
     );
-    completeRegistration(value, groupKey1);
+    completeRegistration(value, groupEntity1);
     final registeredDep = _registerDependency(
       dependency: Dependency(
         value,
@@ -85,21 +84,21 @@ base class DIBase {
   @protected
   void completeRegistration<T extends Object>(
     T value,
-    DIKey? groupKey,
+    Entity? groupEntity,
   ) {
     final completer = (completers?.registry
-            .getDependencyOrNull<CompleterOr<FutureOr<T>>>(groupKey: groupKey)
+            .getDependencyOrNull<CompleterOr<FutureOr<T>>>(groupEntity: groupEntity)
             ?.value ??
         completers?.registry
             .getDependencyOrNullK(
-              DIKey.type(CompleterOr<Object>, [value.runtimeType]),
-              groupKey: groupKey,
+              Entity.type(CompleterOr<Object>, [value.runtimeType]),
+              groupEntity: groupEntity,
             )
             ?.value ??
         completers?.registry
             .getDependencyOrNullK(
-              DIKey.type(CompleterOr<Future<Object>>, [value.runtimeType]),
-              groupKey: groupKey,
+              Entity.type(CompleterOr<Future<Object>>, [value.runtimeType]),
+              groupEntity: groupEntity,
             )
             ?.value) as CompleterOr?;
     completer?.complete(value);
@@ -125,15 +124,15 @@ base class DIBase {
   }) {
     // If [checkExisting] is true, throw an exception if the dependency is
     // already registered.
-    final groupKey1 = dependency.metadata?.groupKey ?? focusGroup;
+    final groupEntity1 = dependency.metadata?.groupEntity ?? focusGroup;
     if (checkExisting) {
       final existingDep = _getDependencyOrNull<T>(
-        groupKey: groupKey1,
+        groupEntity: groupEntity1,
         traverse: false,
       );
       if (existingDep != null) {
         throw DependencyAlreadyRegisteredException(
-          groupKey: groupKey1,
+          groupEntity: groupEntity1,
           type: T,
         );
       }
@@ -146,31 +145,31 @@ base class DIBase {
   }
 
   /// Unregisters the dependency of type [T] associated with the specified
-  /// [groupKey] from the [registry], if it exists.
+  /// [groupEntity] from the [registry], if it exists.
   ///
   /// If [skipOnUnregisterCallback] is true, the
   /// [DependencyMetadata.onUnregister] callback will be skipped.
   ///
   /// Throws a [DependencyNotFoundException] if the dependency is not found.
   FutureOr<Object> unregister<T extends Object>({
-    DIKey? groupKey,
+    Entity? groupEntity,
     bool skipOnUnregisterCallback = false,
   }) {
-    final groupKey1 = groupKey ?? focusGroup;
+    final groupEntity1 = groupEntity ?? focusGroup;
     final removed = [
       registry.removeDependency<T>(
-        groupKey: groupKey1,
+        groupEntity: groupEntity1,
       ),
       registry.removeDependency<Future<T>>(
-        groupKey: groupKey1,
+        groupEntity: groupEntity1,
       ),
       registry.removeDependency<Lazy<T>>(
-        groupKey: groupKey1,
+        groupEntity: groupEntity1,
       ),
     ].nonNulls.firstOrNull;
     if (removed == null) {
       throw DependencyNotFoundException(
-        groupKey: groupKey1,
+        groupEntity: groupEntity1,
         type: T,
       );
     }
@@ -189,30 +188,30 @@ base class DIBase {
   /// If [traverse] is true, it will also search recursively in parent
   /// containers.
   bool isRegistered<T extends Object>({
-    DIKey? groupKey,
+    Entity? groupEntity,
     bool traverse = true,
   }) {
-    final groupKey1 = groupKey ?? focusGroup;
+    final groupEntity1 = groupEntity ?? focusGroup;
     return [
       () =>
           registry.getDependencyOrNull<T>(
-            groupKey: groupKey1,
+            groupEntity: groupEntity1,
           ) !=
           null,
       () =>
           registry.getDependencyOrNull<Future<T>>(
-            groupKey: groupKey1,
+            groupEntity: groupEntity1,
           ) !=
           null,
       () =>
           registry.getDependencyOrNull<Lazy<T>>(
-            groupKey: groupKey1,
+            groupEntity: groupEntity1,
           ) !=
           null,
       if (traverse)
         () => parents.any(
               (e) => e.isRegistered(
-                groupKey: groupKey1,
+                groupEntity: groupEntity1,
                 traverse: true,
               ),
             ),
@@ -220,7 +219,7 @@ base class DIBase {
   }
 
   /// Retrieves a dependency of type [T] or subtypes of [T] registered under
-  /// the specified [groupKey].
+  /// the specified [groupEntity].
   ///
   /// If the dependency exists, it is returned; otherwise, a
   /// [DependencyNotFoundException] is thrown.
@@ -228,44 +227,44 @@ base class DIBase {
   /// Only use this method if you're certain that the registered dependency
   /// isn't a [Future]. If it is, a [DependencyIsFutureException] is trown.
   T call<T extends Object>({
-    DIKey? groupKey,
+    Entity? groupEntity,
     bool traverse = true,
   }) {
     final value = get<T>(
-      groupKey: groupKey,
+      groupEntity: groupEntity,
       traverse: traverse,
     );
     if (value is! T) {
       throw DependencyIsFutureException(
         type: T,
-        groupKey: groupKey,
+        groupEntity: groupEntity,
       );
     }
     return value;
   }
 
   Future<T> getAsync<T extends Object>({
-    DIKey? groupKey,
+    Entity? groupEntity,
     bool traverse = true,
   }) async {
     return get<T>(
-      groupKey: groupKey,
+      groupEntity: groupEntity,
       traverse: traverse,
     );
   }
 
   T getSync<T extends Object>({
-    DIKey? groupKey,
+    Entity? groupEntity,
     bool traverse = true,
   }) {
     final value = get<T>(
-      groupKey: groupKey,
+      groupEntity: groupEntity,
       traverse: traverse,
     );
     if (value is Future) {
       throw DependencyIsFutureException(
         type: T,
-        groupKey: groupKey,
+        groupEntity: groupEntity,
       );
     } else {
       return value;
@@ -273,25 +272,25 @@ base class DIBase {
   }
 
   T? getSyncOrNull<T extends Object>({
-    DIKey? groupKey,
+    Entity? groupEntity,
     bool traverse = true,
     bool throwIfAsync = false,
   }) {
     final value = getOrNull<T>(
-      groupKey: groupKey,
+      groupEntity: groupEntity,
       traverse: traverse,
     );
     if (throwIfAsync && value is Future) {
       throw DependencyIsFutureException(
         type: T,
-        groupKey: groupKey,
+        groupEntity: groupEntity,
       );
     }
     return value?.asSyncOrNull;
   }
 
   /// Retrieves a dependency of type [T] or subtypes of [T] registered under
-  /// the specified [groupKey].
+  /// the specified [groupEntity].
   ///
   /// If the dependency exists, it is returned; otherwise, a
   /// [DependencyNotFoundException] is thrown.
@@ -305,26 +304,26 @@ base class DIBase {
   /// is re-registered as a non-future, allowing future calls to this method
   /// to return the resolved value directly.
   FutureOr<T> get<T extends Object>({
-    DIKey? groupKey,
+    Entity? groupEntity,
     bool traverse = true,
   }) {
-    final groupKey1 = groupKey ?? focusGroup;
+    final groupEntity1 = groupEntity ?? focusGroup;
     final value = getOrNull<T>(
-      groupKey: groupKey1,
+      groupEntity: groupEntity1,
       traverse: traverse,
     );
 
     if (value == null) {
       throw DependencyNotFoundException(
         type: T,
-        groupKey: groupKey1,
+        groupEntity: groupEntity1,
       );
     }
     return value;
   }
 
   /// Retrieves a dependency of type [T] or subtypes of [T] registered under
-  /// the specified [groupKey].
+  /// the specified [groupEntity].
   ///
   /// If the dependency exists, it is returned; otherwise, `null` is returned.
   ///
@@ -340,12 +339,12 @@ base class DIBase {
   /// is re-registered as a non-future, allowing future calls to this method
   /// to return the resolved value directly.
   FutureOr<T>? getOrNull<T extends Object>({
-    DIKey? groupKey,
+    Entity? groupEntity,
     bool traverse = true,
   }) {
-    final groupKey1 = groupKey ?? focusGroup;
+    final groupEntity1 = groupEntity ?? focusGroup;
     final existingDep = _getDependencyOrNull<T>(
-      groupKey: groupKey1,
+      groupEntity: groupEntity1,
       traverse: traverse,
     );
     final value = existingDep?.value;
@@ -361,7 +360,7 @@ base class DIBase {
               checkExisting: false,
             );
             registry.removeDependency<Future<T>>(
-              groupKey: groupKey1,
+              groupEntity: groupEntity1,
             );
             return value;
           },
@@ -374,21 +373,21 @@ base class DIBase {
   }
 
   Dependency<FutureOr<T>>? _getDependencyOrNull<T extends Object>({
-    DIKey? groupKey,
+    Entity? groupEntity,
     bool traverse = true,
   }) {
-    final groupKey1 = groupKey ?? focusGroup;
+    final groupEntity1 = groupEntity ?? focusGroup;
     var dependency = registry.getDependencyOrNull<T>(
-          groupKey: groupKey1,
+          groupEntity: groupEntity1,
         ) ??
         registry.getDependencyOrNull<Future<T>>(
-          groupKey: groupKey1,
+          groupEntity: groupEntity1,
         );
 
     if (dependency == null && traverse) {
       for (final parent in parents) {
         dependency = parent._getDependencyOrNull<T>(
-          groupKey: groupKey1,
+          groupEntity: groupEntity1,
         );
         if (dependency != null) {
           break;
@@ -402,7 +401,7 @@ base class DIBase {
         return dependency.cast();
       } else {
         throw DependencyInvalidException(
-          groupKey: groupKey1,
+          groupEntity: groupEntity1,
           type: T,
         );
       }
@@ -412,7 +411,7 @@ base class DIBase {
   }
 
   /// Retrieves a dependency of type [T] or subtypes of [T] registered under
-  /// the specified [groupKey].
+  /// the specified [groupEntity].
   ///
   /// If the dependency is found, it is returned; otherwise, this method waits
   /// until the dependency is registered before returning it.
@@ -420,13 +419,13 @@ base class DIBase {
   /// If [traverse] is set to `true`, the search will also include all parent
   /// containers.
   FutureOr<T> until<T extends Object>({
-    DIKey? groupKey,
+    Entity? groupEntity,
     bool traverse = true,
   }) {
-    final groupKey1 = groupKey ?? focusGroup;
+    final groupEntity1 = groupEntity ?? focusGroup;
 
     // Check if the dependency is already registered.
-    final test = getOrNull<T>(groupKey: groupKey1);
+    final test = getOrNull<T>(groupEntity: groupEntity1);
     if (test != null) {
       // Return the dependency if it is already registered.
       return test;
@@ -435,7 +434,7 @@ base class DIBase {
     CompleterOr<FutureOr<T>>? completer;
     completer = completers?.registry
         .getDependencyOrNull<CompleterOr<FutureOr<T>>>(
-          groupKey: groupKey1,
+          groupEntity: groupEntity1,
         )
         ?.value;
     if (completer != null) {
@@ -452,7 +451,7 @@ base class DIBase {
       Dependency<CompleterOr<FutureOr<T>>>(
         completer,
         metadata: DependencyMetadata(
-          groupKey: groupKey1,
+          groupEntity: groupEntity1,
         ),
       ),
     );
@@ -461,10 +460,10 @@ base class DIBase {
     // the completer before returning the value.
     return completer.futureOr.thenOr((value) {
       completers!.registry.removeDependency<CompleterOr<FutureOr<T>>>(
-        groupKey: groupKey1,
+        groupEntity: groupEntity1,
       );
       return get<T>(
-        groupKey: groupKey,
+        groupEntity: groupEntity,
         traverse: traverse,
       );
     });
@@ -486,8 +485,8 @@ base class DIBase {
       sequential.addAll([
         (_) => onBeforeUnregister?.call(dependency),
         (_) => registry.removeDependencyK(
-              dependency.typeKey,
-              groupKey: dependency.metadata?.groupKey,
+              dependency.typeEntity,
+              groupEntity: dependency.metadata?.groupEntity,
             ),
         (_) => dependency.metadata?.onUnregister?.call(dependency.value),
         (_) => onAfterUnregister?.call(dependency),

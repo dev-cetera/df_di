@@ -17,10 +17,9 @@ import '/src/_common.dart';
 final class DependencyInvalidException extends DFDIPackageException {
   DependencyInvalidException({
     required Object type,
-    required DIKey? groupKey,
+    required Entity? groupEntity,
   }) : super(
-          condition:
-              'Dependency of type "$type" in group "$groupKey" is invalid.',
+          condition: 'Dependency of type "$type" in group "$groupEntity" is invalid.',
           reason:
               'Thrown to prevent access to a dependency that is deemed invalid by its specified validator function.',
           options: [

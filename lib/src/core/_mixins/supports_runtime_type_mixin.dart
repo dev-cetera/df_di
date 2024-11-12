@@ -16,19 +16,19 @@ import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-base mixin SupportsRuntimeTypeMixin on SupportsTypeKeyMixin {
+base mixin SupportsRuntimeTypeMixin on SupportstypeEntityMixin {
   //
   //
   //
 
   Future<Object> getAsyncT(
     Type type, {
-    DIKey? groupKey,
+    Entity? groupEntity,
     bool traverse = true,
   }) async {
     return getT(
       type,
-      groupKey: groupKey,
+      groupEntity: groupEntity,
       traverse: traverse,
     );
   }
@@ -39,18 +39,18 @@ base mixin SupportsRuntimeTypeMixin on SupportsTypeKeyMixin {
 
   Object getSyncT(
     Type type, {
-    DIKey? groupKey,
+    Entity? groupEntity,
     bool traverse = true,
   }) {
     final value = getT(
       type,
-      groupKey: groupKey,
+      groupEntity: groupEntity,
       traverse: traverse,
     );
     if (value is Future) {
       throw DependencyIsFutureException(
         type: type,
-        groupKey: groupKey,
+        groupEntity: groupEntity,
       );
     } else {
       return value;
@@ -63,19 +63,19 @@ base mixin SupportsRuntimeTypeMixin on SupportsTypeKeyMixin {
 
   Object? getSyncOrNullT(
     Type type, {
-    DIKey? groupKey,
+    Entity? groupEntity,
     bool traverse = true,
     bool throwIfAsync = false,
   }) {
     final value = getOrNullT(
       type,
-      groupKey: groupKey,
+      groupEntity: groupEntity,
       traverse: traverse,
     );
     if (throwIfAsync && value is Future) {
       throw DependencyIsFutureException(
         type: type,
-        groupKey: groupKey,
+        groupEntity: groupEntity,
       );
     }
     return value?.asSyncOrNull;
@@ -86,7 +86,7 @@ base mixin SupportsRuntimeTypeMixin on SupportsTypeKeyMixin {
   //
 
   /// Retrieves a dependency of the exact runtime [type] registered under the
-  /// specified [groupKey].
+  /// specified [groupEntity].
   ///
   /// Note that this method will not return instances of subtypes. For example,
   /// if [type] is `List<dynamic>` and `List<String>` is actually registered,
@@ -112,12 +112,12 @@ base mixin SupportsRuntimeTypeMixin on SupportsTypeKeyMixin {
   @protected
   FutureOr<Object> getT(
     Type type, {
-    DIKey? groupKey,
+    Entity? groupEntity,
     bool traverse = true,
   }) {
     return getK(
-      DIKey(type),
-      groupKey: groupKey,
+      Entity(type),
+      groupEntity: groupEntity,
       traverse: traverse,
     );
   }
@@ -128,12 +128,12 @@ base mixin SupportsRuntimeTypeMixin on SupportsTypeKeyMixin {
 
   FutureOr<Object> unregisterT(
     Type type, {
-    DIKey? groupKey,
+    Entity? groupEntity,
     bool skipOnUnregisterCallback = false,
   }) {
     return unregisterK(
-      DIKey(type),
-      groupKey: groupKey,
+      Entity(type),
+      groupEntity: groupEntity,
       skipOnUnregisterCallback: skipOnUnregisterCallback,
     );
   }
@@ -144,12 +144,12 @@ base mixin SupportsRuntimeTypeMixin on SupportsTypeKeyMixin {
 
   bool isRegisteredT(
     Type type, {
-    DIKey? groupKey,
+    Entity? groupEntity,
     bool traverse = true,
   }) {
     return isRegisteredK(
-      DIKey(type),
-      groupKey: groupKey,
+      Entity(type),
+      groupEntity: groupEntity,
       traverse: traverse,
     );
   }
@@ -159,7 +159,7 @@ base mixin SupportsRuntimeTypeMixin on SupportsTypeKeyMixin {
   //
 
   /// Retrieves a dependency of the exact runtime [type] registered under the
-  /// specified [groupKey].
+  /// specified [groupEntity].
   ///
   /// Note that this method will not return instances of subtypes. For example,
   /// if [type] is `List<dynamic>` and `List<String>` is actually registered,
@@ -183,12 +183,12 @@ base mixin SupportsRuntimeTypeMixin on SupportsTypeKeyMixin {
   /// to return the resolved value directly.
   FutureOr<Object>? getOrNullT(
     Type type, {
-    DIKey? groupKey,
+    Entity? groupEntity,
     bool traverse = true,
   }) {
     return getOrNullK(
-      DIKey(type),
-      groupKey: groupKey,
+      Entity(type),
+      groupEntity: groupEntity,
       traverse: traverse,
     );
   }
@@ -199,12 +199,12 @@ base mixin SupportsRuntimeTypeMixin on SupportsTypeKeyMixin {
 
   FutureOr<Object> untilT(
     Type type, {
-    DIKey? groupKey,
+    Entity? groupEntity,
     bool traverse = true,
   }) {
     return untilK(
-      DIKey(type),
-      groupKey: groupKey,
+      Entity(type),
+      groupEntity: groupEntity,
       traverse: traverse,
     );
   }

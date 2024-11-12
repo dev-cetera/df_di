@@ -21,18 +21,17 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
   late SupportsChildrenMixin? _children = this;
 
   /// Child containers.
-  List<DI> get children =>
-      List.unmodifiable(registry.dependencies.where((e) => e.value is DI));
+  List<DI> get children => List.unmodifiable(registry.dependencies.where((e) => e.value is DI));
 
   void registerChild({
-    DIKey? groupKey,
+    Entity? groupEntity,
     bool Function(FutureOr<DI>)? validator,
     OnUnregisterCallback<FutureOr<DI>>? onUnregister,
   }) {
     _children ??= DI() as SupportsChildrenMixin;
     _children!.registerLazy<DI>(
       () => DI()..parents.add(this as DI),
-      groupKey: groupKey,
+      groupEntity: groupEntity,
       validator: validator,
       onUnregister: (e) => consec(
         onUnregister?.call(e),
@@ -42,64 +41,64 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
   }
 
   DI getChild({
-    DIKey? groupKey,
+    Entity? groupEntity,
   }) {
-    final groupKey1 = groupKey ?? focusGroup;
+    final groupEntity1 = groupEntity ?? focusGroup;
     final value = getChildOrNull(
-      groupKey: groupKey1,
+      groupEntity: groupEntity1,
     );
 
     if (value == null) {
       throw DependencyNotFoundException(
         type: DI,
-        groupKey: groupKey1,
+        groupEntity: groupEntity1,
       );
     }
     return value;
   }
 
   DI? getChildOrNull({
-    DIKey? groupKey,
+    Entity? groupEntity,
   }) {
     return _children
         ?.getSingletonOrNull<DI>(
-          groupKey: groupKey,
+          groupEntity: groupEntity,
           traverse: false,
         )
         ?.asSyncOrNull;
   }
 
   FutureOr<Object> unregisterChild({
-    DIKey<Object>? groupKey,
+    Entity<Object>? groupEntity,
     bool skipOnUnregisterCallback = false,
   }) {
-    final groupKey1 = groupKey ?? focusGroup;
+    final groupEntity1 = groupEntity ?? focusGroup;
     if (_children == null) {
       throw DependencyNotFoundException(
         type: DI,
-        groupKey: groupKey1,
+        groupEntity: groupEntity1,
       );
     }
     return _children!.unregister<DI>(
-      groupKey: groupKey1,
+      groupEntity: groupEntity1,
       skipOnUnregisterCallback: skipOnUnregisterCallback,
     );
   }
 
   DI child({
-    DIKey? groupKey,
+    Entity? groupEntity,
     bool Function(FutureOr<DI>)? validator,
     OnUnregisterCallback<FutureOr<DI>>? onUnregister,
   }) {
-    final existingChild = getChildOrNull(groupKey: groupKey);
+    final existingChild = getChildOrNull(groupEntity: groupEntity);
     if (existingChild != null) {
       return existingChild;
     }
     registerChild(
-      groupKey: groupKey,
+      groupEntity: groupEntity,
       validator: validator,
       onUnregister: onUnregister,
     );
-    return getChildOrNull(groupKey: groupKey)!;
+    return getChildOrNull(groupEntity: groupEntity)!;
   }
 }
