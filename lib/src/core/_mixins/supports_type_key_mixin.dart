@@ -326,7 +326,8 @@ base mixin SupportstypeEntityMixin on DIBase {
         completer,
         metadata: DependencyMetadata(
           groupEntity: groupEntity1,
-          preemptivetypeEntity: Entity.type(CompleterOr<Future<Object>>, [typeEntity]),
+          preemptivetypeEntity:
+              Entity.type(CompleterOr<Future<Object>>, [typeEntity]),
         ),
       ),
     );

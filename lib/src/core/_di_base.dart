@@ -68,7 +68,8 @@ base class DIBase {
       index: dependencyCount++,
       groupEntity: groupEntity1,
       validator: validator != null ? (e) => validator(e as FutureOr<T>) : null,
-      onUnregister: onUnregister != null ? (e) => onUnregister(e as FutureOr<T>) : null,
+      onUnregister:
+          onUnregister != null ? (e) => onUnregister(e as FutureOr<T>) : null,
     );
     completeRegistration(value, groupEntity1);
     final registeredDep = _registerDependency(
@@ -87,7 +88,8 @@ base class DIBase {
     Entity? groupEntity,
   ) {
     final completer = (completers?.registry
-            .getDependencyOrNull<CompleterOr<FutureOr<T>>>(groupEntity: groupEntity)
+            .getDependencyOrNull<CompleterOr<FutureOr<T>>>(
+                groupEntity: groupEntity,)
             ?.value ??
         completers?.registry
             .getDependencyOrNullK(

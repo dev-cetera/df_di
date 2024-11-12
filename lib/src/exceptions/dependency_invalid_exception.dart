@@ -19,7 +19,8 @@ final class DependencyInvalidException extends DFDIPackageException {
     required Object type,
     required Entity? groupEntity,
   }) : super(
-          condition: 'Dependency of type "$type" in group "$groupEntity" is invalid.',
+          condition:
+              'Dependency of type "$type" in group "$groupEntity" is invalid.',
           reason:
               'Thrown to prevent access to a dependency that is deemed invalid by its specified validator function.',
           options: [

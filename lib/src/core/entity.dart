@@ -70,7 +70,8 @@ class Entity<T extends Object> {
   static final testGroup = Entity('TEST_GROUP');
 
   /// Creates a key string from the given [object] with all spaces removed.
-  static String _makeKey(Object object) => object.toString().replaceAll(' ', '');
+  static String _makeKey(Object object) =>
+      object.toString().replaceAll(' ', '');
 
   /// The value associated with this Entity instance.
   final T value;
@@ -128,7 +129,8 @@ class Entity<T extends Object> {
     final buffer = StringBuffer();
     for (var n = 0; n < cleanBaseType.length; n++) {
       // Check for 'Object' or 'dynamic' at the current position.
-      if (cleanBaseType.startsWith(objectStr, n) || cleanBaseType.startsWith(dynamicStr, n)) {
+      if (cleanBaseType.startsWith(objectStr, n) ||
+          cleanBaseType.startsWith(dynamicStr, n)) {
         // Replace with the next subtype from subTypes if available.
         if (subTypeIndex < subTypes.length) {
           buffer.write(subTypes[subTypeIndex].toString());
@@ -141,7 +143,9 @@ class Entity<T extends Object> {
         }
 
         // Skip ahead over the matched word.
-        n += cleanBaseType.startsWith(objectStr, n) ? objectStr.length - 1 : dynamicStr.length - 1;
+        n += cleanBaseType.startsWith(objectStr, n)
+            ? objectStr.length - 1
+            : dynamicStr.length - 1;
       } else {
         // Append the current character if it's not part of 'Object' or 'dynamic'.
         buffer.write(cleanBaseType[n]);

@@ -21,7 +21,8 @@ base mixin SupportsConstructorsMixin on SupportsRuntimeTypeMixin {
     Type type, {
     Entity? groupEntity,
   }) {
-    (getK(Entity.type(Lazy, [type]), groupEntity: groupEntity) as Lazy).resetSingleton();
+    (getK(Entity.type(Lazy, [type]), groupEntity: groupEntity) as Lazy)
+        .resetSingleton();
   }
 
   void resetSingleton<T extends Object>({

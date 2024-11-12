@@ -31,8 +31,8 @@ final class DIRegistry {
   final _OnChangeRegistry? onChange;
 
   /// A snapshot describing the current state of the dependencies.
-  RegistryState get state =>
-      RegistryState.unmodifiable(_state).map((k, v) => MapEntry(k, Map.unmodifiable(v)));
+  RegistryState get state => RegistryState.unmodifiable(_state)
+      .map((k, v) => MapEntry(k, Map.unmodifiable(v)));
 
   /// A snapshot of the current dependencies within [state].
   List<Dependency> get dependencies => List.unmodifiable(
@@ -67,7 +67,9 @@ final class DIRegistry {
   Iterable<Dependency> dependenciesWhereTypeK(
     Entity typeEntity,
   ) {
-    return dependencies.map((e) => e.typeEntity == typeEntity ? e : null).nonNulls;
+    return dependencies
+        .map((e) => e.typeEntity == typeEntity ? e : null)
+        .nonNulls;
   }
 
   /// A snapshot of the current group entities within [state].
@@ -132,7 +134,10 @@ final class DIRegistry {
   Dependency<T>? getDependencyOrNull<T extends Object>({
     Entity? groupEntity,
   }) {
-    return _state[groupEntity]?.values.firstWhereOrNull((e) => e.value is T)?.cast<T>();
+    return _state[groupEntity]
+        ?.values
+        .firstWhereOrNull((e) => e.value is T)
+        ?.cast<T>();
   }
 
   /// Returns any dependency with the exact [type] that is associated
@@ -159,7 +164,9 @@ final class DIRegistry {
     Entity typeEntity, {
     Entity? groupEntity,
   }) {
-    return _state[groupEntity]?.values.firstWhereOrNull((e) => e.typeEntity == typeEntity);
+    return _state[groupEntity]
+        ?.values
+        .firstWhereOrNull((e) => e.typeEntity == typeEntity);
   }
 
   /// Removes any [Dependency] of [T] or subtype of [T] that is associated with
@@ -240,7 +247,8 @@ final class DIRegistry {
     Entity? groupEntity,
   }) {
     final currentGroup = _state[groupEntity];
-    final equals = const MapEquality<Entity, Dependency>().equals(currentGroup, group);
+    final equals =
+        const MapEquality<Entity, Dependency>().equals(currentGroup, group);
     if (!equals) {
       _state[groupEntity] = group;
       onChange?.call();

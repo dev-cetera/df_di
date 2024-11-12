@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.8.0]
+
+- Released @ 11/2024 (UTC)
+- breaking: Refactor for clarity and consistency and add a new ECS system called World
+
 ## [0.7.3]
 
 - Released @ 11/2024 (UTC)

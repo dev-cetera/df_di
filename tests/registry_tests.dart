@@ -103,15 +103,21 @@ void main() {
           );
           expect(
             dependency,
-            registry.dependencies.where((test) => test.typeEntity == Entity(int)).firstOrNull,
+            registry.dependencies
+                .where((test) => test.typeEntity == Entity(int))
+                .firstOrNull,
           );
           expect(
             dependency,
-            registry.dependencies.where((test) => test.value.runtimeType == int).firstOrNull,
+            registry.dependencies
+                .where((test) => test.value.runtimeType == int)
+                .firstOrNull,
           );
           expect(
             dependency,
-            registry.dependencies.where((test) => test.value is int).firstOrNull,
+            registry.dependencies
+                .where((test) => test.value is int)
+                .firstOrNull,
           );
           expect(
             true,
@@ -158,12 +164,15 @@ void main() {
           expect(
             dependency,
             registry.dependencies.where((test) {
-              return test.value.runtimeType.toString() == (Future<int>).toString();
+              return test.value.runtimeType.toString() ==
+                  (Future<int>).toString();
             }).firstOrNull,
           );
           expect(
             dependency,
-            registry.dependencies.where((test) => test.value is Future<int>).firstOrNull,
+            registry.dependencies
+                .where((test) => test.value is Future<int>)
+                .firstOrNull,
           );
           expect(
             true,

@@ -131,7 +131,8 @@ base class World {
   }
 
   /// Queries entities that have the specified components [T1], [T2], and [T3].
-  Iterable<WorldEntity> query3<T1 extends Component, T2 extends Component, T3 extends Component>() {
+  Iterable<WorldEntity> query3<T1 extends Component, T2 extends Component,
+      T3 extends Component>() {
     return query([
       withComponent<T1>,
       withComponent<T2>,
@@ -141,8 +142,8 @@ base class World {
 
   /// Queries entities that have the specified components [T1], [T2], [T3], and
   /// [T4].
-  Iterable<WorldEntity> query4<T1 extends Component, T2 extends Component, T3 extends Component,
-      T4 extends Component>() {
+  Iterable<WorldEntity> query4<T1 extends Component, T2 extends Component,
+      T3 extends Component, T4 extends Component>() {
     return query([
       withComponent<T1>,
       withComponent<T2>,
@@ -153,8 +154,8 @@ base class World {
 
   /// Queries entities that have the specified components [T1], [T2], [T3],
   /// [T4], and [T5].
-  Iterable<WorldEntity> query5<T1 extends Component, T2 extends Component, T3 extends Component,
-      T4 extends Component, T5 extends Component>() {
+  Iterable<WorldEntity> query5<T1 extends Component, T2 extends Component,
+      T3 extends Component, T4 extends Component, T5 extends Component>() {
     return query([
       withComponent<T1>,
       withComponent<T2>,
@@ -166,8 +167,13 @@ base class World {
 
   /// Queries entities that have the specified components [T1], [T2], [T3],
   /// [T4], [T5], and [T6].
-  Iterable<WorldEntity> query6<T1 extends Component, T2 extends Component, T3 extends Component,
-      T4 extends Component, T5 extends Component, T6 extends Component>() {
+  Iterable<WorldEntity> query6<
+      T1 extends Component,
+      T2 extends Component,
+      T3 extends Component,
+      T4 extends Component,
+      T5 extends Component,
+      T6 extends Component>() {
     return query([
       withComponent<T1>,
       withComponent<T2>,
@@ -180,8 +186,14 @@ base class World {
 
   /// Queries entities that have the specified components [T1], [T2], [T3],
   /// [T4], [T5], [T6], and [T7].
-  Iterable<WorldEntity> query7<T1 extends Component, T2 extends Component, T3 extends Component,
-      T4 extends Component, T5 extends Component, T6 extends Component, T7 extends Component>() {
+  Iterable<WorldEntity> query7<
+      T1 extends Component,
+      T2 extends Component,
+      T3 extends Component,
+      T4 extends Component,
+      T5 extends Component,
+      T6 extends Component,
+      T7 extends Component>() {
     return query([
       withComponent<T1>,
       withComponent<T2>,
@@ -256,7 +268,8 @@ final class WorldEntity<Y extends Object> extends Entity<Y> {
   }
 
   /// Retrieves the component of type [T] associated with this entity.
-  T getComponent<T extends Object>() => _getDependencies().map((e) => e.value).whereType<T>().first;
+  T getComponent<T extends Object>() =>
+      _getDependencies().map((e) => e.value).whereType<T>().first;
 
   /// Returns the entity itself.
   Entity<Y> getEntity() => this;

@@ -45,7 +45,8 @@ void main() {
         '- The exact registered value is returned by "register"',
         () async {
           final di = DI();
-          final a = Future<int>.delayed(const Duration(milliseconds: 100), () => 1);
+          final a =
+              Future<int>.delayed(const Duration(milliseconds: 100), () => 1);
           final b = di.register(a);
           expect(
             1,
