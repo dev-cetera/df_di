@@ -21,8 +21,8 @@ import '/src/_common.dart';
 /// It provides a standardized way to manage a stream and its lifecycle,
 /// ensuring that resources are properly cleaned up when the service is
 /// disposed.
-abstract base class StreamService<TData extends Object?,
-    TParams extends Object?> extends Service<TParams> {
+abstract base class StreamService<TData extends Object?, TParams extends Object?>
+    extends Service<TParams> {
   //
   //
   //
@@ -37,22 +37,13 @@ abstract base class StreamService<TData extends Object?,
   @override
   List<ServiceCallback<TParams>> provideInitListeners() {
     return [
+      ...super.provideInitListeners(),
       _initListener,
     ];
   }
 
-  @mustCallSuper
-  @override
-  List<ServiceCallback<void>> provideDisposeListeners() {
-    return [
-      _clean,
-    ];
-  }
-
-  /// Initializes the service by setting up the stream controller and starting
-  /// to listen to the input stream.
   FutureOr<void> _initListener(TParams params) async {
-    await _clean(null);
+    await _disposeListener(null);
     _onPushToStreamNotifier.addAllListeners(provideOnPushToStreamListeners());
     _initialDataCompleter = Completer<TData>();
     _streamController = StreamController<TData>.broadcast();
@@ -66,20 +57,30 @@ abstract base class StreamService<TData extends Object?,
     return null;
   }
 
-  Future<void> _clean(void _) async {
+  @mustCallSuper
+  @override
+  List<ServiceCallback<void>> provideDisposeListeners() {
+    return [
+      ...super.provideDisposeListeners(),
+      _disposeListener,
+    ];
+  }
+
+  Future<void> _disposeListener(void _) async {
+    await _onPushToStreamNotifier.last;
+    _onPushToStreamNotifier.removeAllListeners();
     await _streamSubscription?.cancel();
     await _streamController?.close();
     _streamSubscription = null;
     _streamController = null;
     _initialDataCompleter = null;
-    _onPushToStreamNotifier.removeAllListeners();
   }
 
   /// Override this method to provide the input stream that this service will
   /// listen to.
   Stream<TData> provideInputStream(TParams params);
 
-  /// Pushes data into the internal stream and triggers [onPushToStream].
+  /// Pushes data into the internal stream and triggers.
   @nonVirtual
   @mustCallSuper
   void pushToStream(TData data) {
@@ -88,11 +89,11 @@ abstract base class StreamService<TData extends Object?,
     }
     if (shouldAdd(data)) {
       _streamController!.add(data);
-      /*await*/ _onPushToStreamNotifier.notifyListeners(data);
       final completed = _initialDataCompleter?.isCompleted ?? false;
       if (!completed) {
         _initialDataCompleter?.complete(data);
       }
+      /*await*/ _onPushToStreamNotifier.notifyListeners(data);
     }
   }
 

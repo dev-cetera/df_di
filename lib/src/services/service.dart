@@ -16,7 +16,8 @@ import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-/// A base class for services that require initialization and disposal management.
+/// A base class for services that require initialization and disposal
+/// management.
 ///
 /// This class is intended to be used within a Dependency Injection [DI] system.
 ///
@@ -30,17 +31,16 @@ abstract base class Service<TParams extends Object?> {
 
   Service();
 
-  // --- STATE -----------------------------------------------------------------
-
   // Used to avoid concurrent initialization, resetting, and disposal.
   final _sequantial = Sequential();
 
   // --- INITIALIZATION OF SERVICE ---------------------------------------------
 
   /// Whether this service has been initialized.
+  @pragma('vm:prefer-inline')
   bool get initialized => _initCompleter?.isCompleted ?? false;
 
-  /// Completes after initialized via [initService].
+  /// Completes after initialized via [init].
   @pragma('vm:prefer-inline')
   FutureOr<void> get initializedFuture => _initCompleter?.futureOr;
 
@@ -48,7 +48,7 @@ abstract base class Service<TParams extends Object?> {
 
   /// Initializes and re-initializes this service, making it ready for use.
   @nonVirtual
-  FutureOr<void> initService(TParams params) {
+  FutureOr<void> init(TParams params) {
     if (_disposed) {
       throw ServiceAlreadyDisposedException();
     }
@@ -80,12 +80,13 @@ abstract base class Service<TParams extends Object?> {
   final _initNotifier = ServiceChangeNotifier<TParams>();
 
   @mustCallSuper
-  List<ServiceCallback<TParams>> provideInitListeners();
+  List<ServiceCallback<TParams>> provideInitListeners() => [];
 
   // --- RESTARTING OF SERVICE -------------------------------------------------
 
   late TParams _params;
 
+  @pragma('vm:prefer-inline')
   FutureOr<void> restartService(TParams params) async {
     _params = params;
     return _restartDebouncer.call();
@@ -94,12 +95,13 @@ abstract base class Service<TParams extends Object?> {
   // Used to avoid restarting the service multiple times in quick succession.
   late final _restartDebouncer = Debouncer(
     delay: Duration.zero,
-    onWaited: () => initService(_params),
+    onWaited: () => init(_params),
   );
 
   // --- DISPOSAL OF SERVICE ---------------------------------------------------
 
   /// Whether the service has been disposed.
+  @pragma('vm:prefer-inline')
   bool get disposed => _disposed;
 
   bool _disposed = false;
@@ -107,7 +109,7 @@ abstract base class Service<TParams extends Object?> {
   final _disposeNotifier = ServiceChangeNotifier<void>();
 
   @mustCallSuper
-  List<ServiceCallback<void>> provideDisposeListeners();
+  List<ServiceCallback<void>> provideDisposeListeners() => [];
 
   /// Disposes of this service, making it unusable and ready for garbage
   /// collection.

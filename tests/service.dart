@@ -37,14 +37,4 @@ void main() {
   );
 }
 
-base class TestService extends Service {
-  @override
-  List<ServiceCallback<void>> provideDisposeListeners() {
-    return [];
-  }
-
-  @override
-  List<ServiceCallback<void>> provideInitListeners() {
-    return [];
-  }
-}
+base class TestService extends Service {}

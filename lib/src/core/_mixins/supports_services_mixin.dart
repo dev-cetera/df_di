@@ -16,8 +16,7 @@ import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-base mixin SupportsServicesMixin
-    on SupportsConstructorsMixin, SupportsRuntimeTypeMixin {
+base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsRuntimeTypeMixin {
   FutureOr<T> registerService<T extends Service>(
     FutureOr<T> service, {
     Object? params,
@@ -30,7 +29,7 @@ base mixin SupportsServicesMixin
         consec(
           service,
           (e) => consec(
-            e.initialized ? null : e.initService(params),
+            e.initialized ? null : e.init(params),
             (_) => service,
           ),
         ),
@@ -122,8 +121,7 @@ base mixin SupportsServicesMixin
     return value;
   }
 
-  FutureOr<T>
-      getServiceSingletonWithParams<T extends Service<P>, P extends Object?>({
+  FutureOr<T> getServiceSingletonWithParams<T extends Service<P>, P extends Object?>({
     required P params,
     Entity? groupEntity,
     bool traverse = true,
@@ -275,12 +273,11 @@ base mixin SupportsServicesMixin
     final instance = getSingletonOrNullT(type);
     return instance?.thenOr((e) {
       e as Service;
-      return e.initialized ? e : consec(e.initService(params), (_) => e);
+      return e.initialized ? e : consec(e.init(params), (_) => e);
     });
   }
 
-  Future<T> getServiceSingletonWithParamsAsync<T extends Service<P>,
-      P extends Object?>({
+  Future<T> getServiceSingletonWithParamsAsync<T extends Service<P>, P extends Object?>({
     required P params,
     Entity? groupEntity,
     bool traverse = true,
@@ -312,8 +309,7 @@ base mixin SupportsServicesMixin
     return value;
   }
 
-  T? getServiceSingletonWithParamsSyncOrNull<T extends Service<P>,
-      P extends Object?>({
+  T? getServiceSingletonWithParamsSyncOrNull<T extends Service<P>, P extends Object?>({
     required P params,
     Entity? groupEntity,
     bool traverse = true,
@@ -333,15 +329,14 @@ base mixin SupportsServicesMixin
     return value?.asSyncOrNull;
   }
 
-  FutureOr<T>? getServiceSingletonWithParamsOrNull<T extends Service<P>,
-      P extends Object?>({
+  FutureOr<T>? getServiceSingletonWithParamsOrNull<T extends Service<P>, P extends Object?>({
     required P params,
     Entity? groupEntity,
     bool traverse = true,
   }) {
     final instance = getSingletonOrNull<T>();
     return instance?.thenOr(
-      (e) => e.initialized ? e : consec(e.initService(params), (_) => e),
+      (e) => e.initialized ? e : consec(e.init(params), (_) => e),
     );
   }
 
@@ -390,8 +385,7 @@ base mixin SupportsServicesMixin
     return value;
   }
 
-  FutureOr<T>
-      getServiceFactoryWithParams<T extends Service<P>, P extends Object?>({
+  FutureOr<T> getServiceFactoryWithParams<T extends Service<P>, P extends Object?>({
     required P params,
     Entity? groupEntity,
     bool traverse = true,
@@ -542,12 +536,11 @@ base mixin SupportsServicesMixin
     final instance = getFactoryOrNullT(type);
     return instance?.thenOr((e) {
       e as Service;
-      return e.initialized ? e : consec(e.initService(params), (_) => e);
+      return e.initialized ? e : consec(e.init(params), (_) => e);
     });
   }
 
-  Future<T> getServiceFactoryWithParamsAsync<T extends Service<P>,
-      P extends Object?>({
+  Future<T> getServiceFactoryWithParamsAsync<T extends Service<P>, P extends Object?>({
     required P params,
     Entity? groupEntity,
     bool traverse = true,
@@ -579,8 +572,7 @@ base mixin SupportsServicesMixin
     return value;
   }
 
-  T? getServiceFactoryWithParamsSyncOrNull<T extends Service<P>,
-      P extends Object?>({
+  T? getServiceFactoryWithParamsSyncOrNull<T extends Service<P>, P extends Object?>({
     required P params,
     Entity? groupEntity,
     bool traverse = true,
@@ -600,15 +592,14 @@ base mixin SupportsServicesMixin
     return value?.asSyncOrNull;
   }
 
-  FutureOr<T>? getServiceFactoryWithParamsOrNull<T extends Service<P>,
-      P extends Object?>({
+  FutureOr<T>? getServiceFactoryWithParamsOrNull<T extends Service<P>, P extends Object?>({
     required P params,
     Entity? groupEntity,
     bool traverse = true,
   }) {
     final instance = getFactoryOrNull<T>();
     return instance?.thenOr(
-      (e) => e.initialized ? e : consec(e.initService(params), (_) => e),
+      (e) => e.initialized ? e : consec(e.init(params), (_) => e),
     );
   }
 }

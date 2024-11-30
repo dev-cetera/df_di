@@ -38,8 +38,7 @@ void main() async {
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-final class UserStreamingService
-    extends StreamService<Map<String, dynamic>, Object?> {
+final class UserStreamingService extends StreamService<Map<String, dynamic>, Object?> {
   UserStreamingService();
 
   @override
@@ -62,9 +61,9 @@ final class UserStreamingService
 
   @override
   // ignore: invalid_override_of_non_virtual_member
-  FutureOr<void> dispose() {
+  FutureOr<void> dispose() async {
+    await super.dispose();
     print('Done!');
-    return super.dispose();
   }
 
   @override
