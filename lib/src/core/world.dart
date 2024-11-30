@@ -24,7 +24,7 @@ import 'entity.dart';
 /// Manages entities and their associated components,  facilitating the
 /// creation, addition, querying, updating, and removal of components within an
 /// Entity-Component-System (ECS) framework.
-base class World {
+class World {
   /// Internal registry that holds and manages dependencies for components.
   final _di = DIRegistry();
 

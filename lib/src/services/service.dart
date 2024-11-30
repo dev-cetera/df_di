@@ -32,86 +32,55 @@ abstract base class Service<TParams extends Object?> {
 
   // --- STATE -----------------------------------------------------------------
 
-  CompleterOr<void>? _initializedCompleter;
-  bool _disposed = false;
-
   // Used to avoid concurrent initialization, resetting, and disposal.
   final _sequantial = Sequential();
 
   // --- INITIALIZATION OF SERVICE ---------------------------------------------
 
+  /// Whether this service has been initialized.
+  bool get initialized => _initCompleter?.isCompleted ?? false;
+
   /// Completes after initialized via [initService].
   @pragma('vm:prefer-inline')
-  FutureOr<void> get initializedFuture => _initializedCompleter?.futureOr;
+  FutureOr<void> get initializedFuture => _initCompleter?.futureOr;
 
-  /// Whether this service has been initialized.
-  bool get initialized => _initializedCompleter?.isCompleted ?? false;
+  CompleterOr<void>? _initCompleter;
 
-  /// Initializes this service, making it ready for use.
+  /// Initializes and re-initializes this service, making it ready for use.
   @nonVirtual
   FutureOr<void> initService(TParams params) {
-    return _sequantial.add((_) => _initService(params));
-  }
-
-  FutureOr<void> _initService(TParams params) {
-    if (initialized) {
-      throw ServiceAlreadyInitializedException();
+    if (_disposed) {
+      throw ServiceAlreadyDisposedException();
     }
-    _initializedCompleter = CompleterOr<void>();
-    return consec(
-      consec(
-        beforeOnInitService(params),
-        (_) => onInitService(params),
-      ),
-      (_) => _initializedCompleter!.complete(null),
-    );
+    _sequantial.addAll([
+      (_) {
+        // Finish completing previous initialization before starting a new one.
+        return _initCompleter == null || _initCompleter!.isCompleted
+            ? null
+            : _initCompleter!.futureOr;
+      },
+      (_) {
+        // Create a new initialization completer.
+        return _initCompleter = CompleterOr();
+      },
+      (_) {
+        // Initialize the service.
+        _initNotifier.removeAllListeners();
+        _initNotifier.addAllListeners(provideInitListeners());
+        return _initNotifier.notifyListeners(params);
+      },
+      (_) {
+        // Complete the initialization completer.
+        _initCompleter!.complete(null);
+      },
+    ]);
+    return _sequantial.last;
   }
 
-  /// Override to define any necessary initialization to be called immediately
-  /// before [onInitService].
-  ///
-  /// Do not call this method directly.
-  @nonVirtual
-  @protected
-  FutureOr<void> beforeOnInitService(TParams params) {}
+  final _initNotifier = ServiceChangeNotifier<TParams>();
 
-  /// Override to define any necessary initialization to be called immediately
-  /// after [initService].
-  ///
-  /// Do not call this method directly.
-  @protected
-  FutureOr<void> onInitService(TParams params);
-
-  // --- RESETTING OF SERVICE --------------------------------------------------
-
-  /// Resets this service to its initial state.
-  FutureOr<void> resetService(TParams params) {
-    return _sequantial.add((_) => _resetService(params));
-  }
-
-  FutureOr<void> _resetService(TParams params) {
-    _disposed = false;
-    _initializedCompleter = null;
-    return consec(
-      beforeOnResetService(params),
-      (_) => onResetService(params),
-    );
-  }
-
-  /// Override to define any necessary reset to be called immediately after
-  /// [resetService].
-  ///
-  /// Do not call this method directly.
-  @protected
-  FutureOr<void> onResetService(TParams params);
-
-  /// Override to define any necessary reset to be called immediately before
-  /// [onResetService].
-  ///
-  /// Do not call this method directly.
-  @nonVirtual
-  @protected
-  FutureOr<void> beforeOnResetService(TParams params) {}
+  @mustCallSuper
+  List<ServiceCallback<TParams>> provideInitListeners();
 
   // --- RESTARTING OF SERVICE -------------------------------------------------
 
@@ -125,20 +94,20 @@ abstract base class Service<TParams extends Object?> {
   // Used to avoid restarting the service multiple times in quick succession.
   late final _restartDebouncer = Debouncer(
     delay: Duration.zero,
-    onWaited: () {
-      if (_params != null) {
-        consec(
-          resetService(_params),
-          (_) => initService(_params),
-        );
-      }
-    },
+    onWaited: () => initService(_params),
   );
 
   // --- DISPOSAL OF SERVICE ---------------------------------------------------
 
   /// Whether the service has been disposed.
   bool get disposed => _disposed;
+
+  bool _disposed = false;
+
+  final _disposeNotifier = ServiceChangeNotifier<void>();
+
+  @mustCallSuper
+  List<ServiceCallback<void>> provideDisposeListeners();
 
   /// Disposes of this service, making it unusable and ready for garbage
   /// collection.
@@ -147,37 +116,30 @@ abstract base class Service<TParams extends Object?> {
   @protected
   @nonVirtual
   FutureOr<void> dispose() {
-    return _sequantial.add((_) => _dispose());
-  }
-
-  FutureOr<void> _dispose() {
+    // Throw an exception if the service has already been disposed.
     if (_disposed) {
       throw ServiceAlreadyDisposedException();
     }
+    // Throw an exception if the service has not been initialized.
     if (!initialized) {
       throw ServiceNotYetInitializedException();
     }
-    return consec(
-      consec(
-        beforeOnDispose(),
-        (_) => onDispose(),
-      ),
-      (_) => _disposed = true,
-    );
+    _sequantial.addAll([
+      (_) {
+        // Finish initializing the service before attempting to dispose it.
+        return _initNotifier.last;
+      },
+      (_) {
+        // Dispose the service.
+        _disposeNotifier.removeAllListeners();
+        _disposeNotifier.addAllListeners(provideDisposeListeners());
+        return _disposeNotifier.notifyListeners(null);
+      },
+      (_) {
+        // Mark the service as disposed.
+        _disposed = true;
+      }
+    ]);
+    return _sequantial.last;
   }
-
-  /// Override to define any necessary disposal to be called immediately
-  /// before [onDispose].
-  ///
-  /// Do not call this method directly.
-  @nonVirtual
-  @protected
-  FutureOr<void> beforeOnDispose() {}
-
-  /// Override to define any necessary disposal to be called immediately
-  /// after [dispose].
-  ///
-  /// Do not call this method directly.
-  @protected
-  FutureOr<void> onDispose();
 }

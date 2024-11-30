@@ -68,11 +68,12 @@ void main() {
 
 base class TestService extends Service {
   @override
-  FutureOr<void> onResetService(_) {}
+  List<ServiceCallback<void>> provideDisposeListeners() {
+    return [];
+  }
 
   @override
-  FutureOr<void> onInitService(_) {}
-
-  @override
-  FutureOr<void> onDispose() {}
+  List<ServiceCallback<void>> provideInitListeners() {
+    return [];
+  }
 }

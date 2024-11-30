@@ -102,14 +102,15 @@ Future<void> main() async {
 /// - Unregister via `di.unregister<FooBarService>();`
 final class FooBarService extends Service {
   @override
-  void onInitService(_) async {}
+  List<ServiceCallback> provideDisposeListeners() {
+    return [];
+  }
 
   @override
-  FutureOr<void> onResetService(_) {}
-
-  @override
-  FutureOr<void> onDispose() {
-    print('Disposed $FooBarService');
+  List<ServiceCallback> provideInitListeners() {
+    return [
+      (_) => print('Disposed $FooBarService'),
+    ];
   }
 }
 
@@ -125,19 +126,25 @@ final class CountingService extends StreamService<int, bool> {
   }
 
   @override
-  void onPushToStream(int data) {
-    print('[CountingService]: $data');
+  List<ServiceCallback<bool>> provideInitListeners() {
+    return [
+      ...super.provideInitListeners(),
+    ];
   }
 
   @override
-  FutureOr<void> onInitService(_) {}
+  List<ServiceCallback<void>> provideDisposeListeners() {
+    return [
+      ...super.provideDisposeListeners(),
+      (_) => print('Disposed $FooBarService'),
+    ];
+  }
 
   @override
-  FutureOr<void> onResetService(_) {}
-
-  @override
-  FutureOr<void> onDispose() {
-    print('Disposed $CountingService');
+  List<ServiceCallback<int>> provideOnPushToStreamListeners() {
+    return [
+      (data) => print('[CountingService]: $data'),
+    ];
   }
 }
 
@@ -146,13 +153,18 @@ final class CountingService extends StreamService<int, bool> {
 // An example of a service that DI will treat as sync.
 final class SyncServiceExmple extends Service {
   @override
-  void onInitService(_) {}
+  List<ServiceCallback> provideInitListeners() {
+    return [
+      (_) => 1,
+    ];
+  }
 
   @override
-  void onResetService(_) {}
-
-  @override
-  Future<void> onDispose() async {}
+  List<ServiceCallback> provideDisposeListeners() {
+    return [
+      (_) async => 1,
+    ];
+  }
 }
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
@@ -160,15 +172,16 @@ final class SyncServiceExmple extends Service {
 // An example of a service that DI will treat as async.
 final class AsyncServiceExample extends Service {
   @override
-  Future<void> onInitService(_) async {
-    await Future<void>.delayed(
-      const Duration(seconds: 3),
-    );
+  List<ServiceCallback> provideInitListeners() {
+    return [
+      (_) async => 1,
+    ];
   }
 
   @override
-  void onResetService(_) {}
-
-  @override
-  void onDispose() {}
+  List<ServiceCallback> provideDisposeListeners() {
+    return [
+      (_) => 1,
+    ];
+  }
 }

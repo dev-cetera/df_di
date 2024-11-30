@@ -12,8 +12,6 @@
 
 // ignore_for_file: invalid_use_of_protected_member
 
-import 'dart:async';
-
 import 'package:df_di/df_di.dart';
 
 import 'package:test/test.dart';
@@ -41,11 +39,12 @@ void main() {
 
 base class TestService extends Service {
   @override
-  FutureOr<void> onInitService(_) async {}
+  List<ServiceCallback<void>> provideDisposeListeners() {
+    return [];
+  }
 
   @override
-  FutureOr<void> onResetService(_) {}
-
-  @override
-  FutureOr<void> onDispose() {}
+  List<ServiceCallback<void>> provideInitListeners() {
+    return [];
+  }
 }

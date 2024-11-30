@@ -21,7 +21,7 @@ import 'package:df_di/df_di.dart';
 void main() async {
   DI.session.registerLazyService(UserStreamingService.new);
   print(await DI.session.getServiceSingleton<UserStreamingService>());
-  Future.delayed(
+  await Future.delayed(
     const Duration(seconds: 3),
     () => DI.session.unregister<UserStreamingService>(),
   );
@@ -38,22 +38,15 @@ void main() async {
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-final class UserStreamingService
-    extends StreamService<Map<String, dynamic>, Object?> {
+final class UserStreamingService extends StreamService<Map<String, dynamic>, Object?> {
   UserStreamingService();
 
   @override
-  Future<void> onInitService(_) async {
-    await super.initialData;
-  }
-
-  @override
-  FutureOr<void> onResetService(_) {}
-
-  @override
-  void onPushToStream(Map<String, dynamic> data) {
-    print(data);
-    super.onPushToStream(data);
+  List<ServiceCallback<void>> provideInitListeners() {
+    return [
+      ...super.provideInitListeners(),
+      (_) => super.initialData,
+    ];
   }
 
   @override
@@ -67,5 +60,16 @@ final class UserStreamingService
   }
 
   @override
-  FutureOr<void> onDispose() {}
+  // ignore: invalid_override_of_non_virtual_member
+  FutureOr<void> dispose() {
+    print('Done!');
+    return super.dispose();
+  }
+
+  @override
+  List<ServiceCallback<Map<String, dynamic>>> provideOnPushToStreamListeners() {
+    return [
+      (data) => print(data),
+    ];
+  }
 }

@@ -41,3 +41,12 @@ abstract base class DFDIPackageException implements Exception {
     return buffer.toString();
   }
 }
+
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+final class GeneralException extends DFDIPackageException {
+  GeneralException(String condition)
+      : super(
+          condition: condition,
+        );
+}

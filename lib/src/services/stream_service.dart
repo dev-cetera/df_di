@@ -21,28 +21,39 @@ import '/src/_common.dart';
 /// It provides a standardized way to manage a stream and its lifecycle,
 /// ensuring that resources are properly cleaned up when the service is
 /// disposed.
-abstract base class StreamService<TData extends Object?,
-    TParams extends Object?> extends Service<TParams> {
+abstract base class StreamService<TData extends Object?, TParams extends Object?>
+    extends Service<TParams> {
   //
   //
   //
 
   StreamService();
 
-  // --- STATE -----------------------------------------------------------------
-
   Completer<TData>? _initialDataCompleter;
   StreamSubscription<TData>? _streamSubscription;
   StreamController<TData>? _streamController;
 
-  // --- INITIALIZATION OF SERVICE ---------------------------------------------
+  @mustCallSuper
+  @override
+  List<ServiceCallback<TParams>> provideInitListeners() {
+    return [
+      _initListener,
+    ];
+  }
+
+  @mustCallSuper
+  @override
+  List<ServiceCallback<void>> provideDisposeListeners() {
+    return [
+      _clean,
+    ];
+  }
 
   /// Initializes the service by setting up the stream controller and starting
   /// to listen to the input stream.
-  @nonVirtual
-  @override
-  // ignore: invalid_override_of_non_virtual_member
-  FutureOr<void> beforeOnInitService(TParams params) {
+  FutureOr<void> _initListener(TParams params) async {
+    await _clean(null);
+    _onPushToStreamNotifier.addAllListeners(provideOnPushToStreamListeners());
     _initialDataCompleter = Completer<TData>();
     _streamController = StreamController<TData>.broadcast();
     _streamSubscription = provideInputStream(params).listen(
@@ -52,6 +63,15 @@ abstract base class StreamService<TData extends Object?,
       // by onError.
       cancelOnError: false,
     );
+  }
+
+  Future<void> _clean(void _) async {
+    await _streamSubscription?.cancel();
+    await _streamController?.close();
+    _streamSubscription = null;
+    _streamController = null;
+    _initialDataCompleter = null;
+    _onPushToStreamNotifier.removeAllListeners();
   }
 
   /// Override this method to provide the input stream that this service will
@@ -67,7 +87,7 @@ abstract base class StreamService<TData extends Object?,
     }
     if (shouldAdd(data)) {
       _streamController!.add(data);
-      onPushToStream(data);
+      /*await*/ _onPushToStreamNotifier.notifyListeners(data);
       final completed = _initialDataCompleter?.isCompleted ?? false;
       if (!completed) {
         _initialDataCompleter?.complete(data);
@@ -81,9 +101,10 @@ abstract base class StreamService<TData extends Object?,
     print('[$runtimeType] $e');
   }
 
-  /// Override this method to define behavior that should occur immediately
-  /// after data has been pushed to the stream.
-  void onPushToStream(TData data) {}
+  final _onPushToStreamNotifier = ServiceChangeNotifier<TData>();
+
+  @mustCallSuper
+  List<ServiceCallback<TData>> provideOnPushToStreamListeners();
 
   /// Override this method to define the conditions under which a data item
   /// should be added.
@@ -94,26 +115,4 @@ abstract base class StreamService<TData extends Object?,
 
   /// Provides access to the stream managed by this service.
   Stream<TData>? get stream => _streamController?.stream;
-
-  // --- RESETTING OF SERVICE --------------------------------------------------
-
-  @nonVirtual
-  @override
-  // ignore: invalid_override_of_non_virtual_member
-  Future<void> beforeOnResetService(TParams params) async {
-    await beforeOnDispose();
-  }
-
-  // --- DISPOSAL OF SERVICE ---------------------------------------------------
-
-  @nonVirtual
-  @override
-  // ignore: invalid_override_of_non_virtual_member
-  Future<void> beforeOnDispose() async {
-    await _streamSubscription?.cancel();
-    await _streamController?.close();
-    _streamSubscription = null;
-    _streamController = null;
-    _initialDataCompleter = null;
-  }
 }
