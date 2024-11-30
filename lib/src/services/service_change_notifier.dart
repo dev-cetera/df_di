@@ -21,7 +21,8 @@ class ServiceChangeNotifier<T> {
   void _ensureNotDisposed() {
     if (_isDisposed) {
       throw StateError(
-          'Cannot use a ShallowSequentialChangeNotifier after it has been disposed.',);
+        'Cannot use a ShallowSequentialChangeNotifier after it has been disposed.',
+      );
     }
   }
 
