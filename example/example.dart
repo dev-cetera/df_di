@@ -103,12 +103,15 @@ Future<void> main() async {
 final class FooBarService extends Service {
   @override
   List<ServiceCallback> provideDisposeListeners() {
-    return [];
+    return [
+      ...super.provideDisposeListeners(),
+    ];
   }
 
   @override
   List<ServiceCallback> provideInitListeners() {
     return [
+      ...super.provideInitListeners(),
       (_) => print('Disposed $FooBarService'),
     ];
   }
@@ -155,6 +158,7 @@ final class SyncServiceExmple extends Service {
   @override
   List<ServiceCallback> provideInitListeners() {
     return [
+      ...super.provideInitListeners(),
       (_) => 1,
     ];
   }
@@ -162,6 +166,7 @@ final class SyncServiceExmple extends Service {
   @override
   List<ServiceCallback> provideDisposeListeners() {
     return [
+      ...super.provideDisposeListeners(),
       (_) async => 1,
     ];
   }
@@ -174,6 +179,7 @@ final class AsyncServiceExample extends Service {
   @override
   List<ServiceCallback> provideInitListeners() {
     return [
+      ...super.provideInitListeners(),
       (_) async => 1,
     ];
   }
@@ -181,6 +187,7 @@ final class AsyncServiceExample extends Service {
   @override
   List<ServiceCallback> provideDisposeListeners() {
     return [
+      ...super.provideDisposeListeners(),
       (_) => 1,
     ];
   }
