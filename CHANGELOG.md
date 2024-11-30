@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.0]
+
+- Released @ 11/2024 (UTC)
+- breaking: Improve service mechanism
+
 ## [0.8.0]
 
 - Released @ 11/2024 (UTC)

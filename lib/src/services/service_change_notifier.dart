@@ -20,7 +20,8 @@ class ServiceChangeNotifier<T> {
 
   void _ensureNotDisposed() {
     if (_isDisposed) {
-      throw StateError('Cannot use a ShallowSequentialChangeNotifier after it has been disposed.');
+      throw StateError(
+          'Cannot use a ShallowSequentialChangeNotifier after it has been disposed.',);
     }
   }
 
@@ -46,7 +47,8 @@ class ServiceChangeNotifier<T> {
   }
 
   void _resizeListeners(int newSize) {
-    _listeners = List<Function?>.filled(newSize, null)..setRange(0, _count, _listeners);
+    _listeners = List<Function?>.filled(newSize, null)
+      ..setRange(0, _count, _listeners);
   }
 
   void removeListener(ServiceCallback<T> listener) {

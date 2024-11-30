@@ -21,8 +21,8 @@ import '/src/_common.dart';
 /// It provides a standardized way to manage a stream and its lifecycle,
 /// ensuring that resources are properly cleaned up when the service is
 /// disposed.
-abstract base class StreamService<TData extends Object?, TParams extends Object?>
-    extends Service<TParams> {
+abstract base class StreamService<TData extends Object?,
+    TParams extends Object?> extends Service<TParams> {
   //
   //
   //
@@ -63,6 +63,7 @@ abstract base class StreamService<TData extends Object?, TParams extends Object?
       // by onError.
       cancelOnError: false,
     );
+    return null;
   }
 
   Future<void> _clean(void _) async {

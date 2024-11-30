@@ -89,7 +89,8 @@ base class DIBase {
   ) {
     final completer = (completers?.registry
             .getDependencyOrNull<CompleterOr<FutureOr<T>>>(
-                groupEntity: groupEntity,)
+              groupEntity: groupEntity,
+            )
             ?.value ??
         completers?.registry
             .getDependencyOrNullK(
