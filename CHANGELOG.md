@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.3]
+
+- Released @ 12/2024 (UTC)
+- chore: Remove "base" from service classes
+
 ## [0.9.2]
 
 - Released @ 12/2024 (UTC)
