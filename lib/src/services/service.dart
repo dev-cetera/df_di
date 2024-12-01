@@ -36,15 +36,8 @@ abstract base class Service<TParams extends Object?> {
 
   // --- INITIALIZATION OF SERVICE ---------------------------------------------
 
-  /// Whether this service has been initialized.
-  @pragma('vm:prefer-inline')
-  bool get initialized => _initCompleter?.isCompleted ?? false;
-
-  /// Completes after initialized via [init].
-  @pragma('vm:prefer-inline')
-  FutureOr<void> get initializedFuture => _initCompleter?.futureOr;
-
-  CompleterOr<void>? _initCompleter;
+  bool _initialized = false;
+  bool get initialized => _initialized;
 
   /// Initializes and re-initializes this service, making it ready for use.
   @nonVirtual
@@ -53,34 +46,18 @@ abstract base class Service<TParams extends Object?> {
       throw ServiceAlreadyDisposedException();
     }
     _sequantial.addAll([
+      // Call init listeners.
+      ...provideInitListeners().map((e) => (_) => e(params)),
       (_) {
-        // Finish completing previous initialization before starting a new one.
-        return _initCompleter == null || _initCompleter!.isCompleted
-            ? null
-            : _initCompleter!.futureOr;
-      },
-      (_) {
-        // Create a new initialization completer.
-        return _initCompleter = CompleterOr();
-      },
-      (_) {
-        // Initialize the service.
-        _initNotifier.removeAllListeners();
-        _initNotifier.addAllListeners(provideInitListeners());
-        return _initNotifier.notifyListeners(params);
-      },
-      (_) {
-        // Complete the initialization completer.
-        _initCompleter!.complete(null);
-      },
+        // Mark the service as initialized.
+        _initialized = true;
+      }
     ]);
     return _sequantial.last;
   }
 
-  final _initNotifier = ServiceChangeNotifier<TParams>();
-
   @mustCallSuper
-  List<ServiceCallback<TParams>> provideInitListeners() => [];
+  ServiceListeners<TParams> provideInitListeners() => [];
 
   // --- RESTARTING OF SERVICE -------------------------------------------------
 
@@ -106,10 +83,8 @@ abstract base class Service<TParams extends Object?> {
 
   bool _disposed = false;
 
-  final _disposeNotifier = ServiceChangeNotifier<void>();
-
   @mustCallSuper
-  List<ServiceCallback<void>> provideDisposeListeners() => [];
+  ServiceListeners<void> provideDisposeListeners() => [];
 
   /// Disposes of this service, making it unusable and ready for garbage
   /// collection.
@@ -122,21 +97,9 @@ abstract base class Service<TParams extends Object?> {
     if (_disposed) {
       throw ServiceAlreadyDisposedException();
     }
-    // Throw an exception if the service has not been initialized.
-    if (!initialized) {
-      throw ServiceNotYetInitializedException();
-    }
     _sequantial.addAll([
-      (_) {
-        // Finish initializing the service before attempting to dispose it.
-        return _initNotifier.last;
-      },
-      (_) {
-        // Dispose the service.
-        _disposeNotifier.removeAllListeners();
-        _disposeNotifier.addAllListeners(provideDisposeListeners());
-        return _disposeNotifier.notifyListeners(null);
-      },
+      // Call dispose listeners.
+      ...provideDisposeListeners().map((e) => (_) => e(null)),
       (_) {
         // Mark the service as disposed.
         _disposed = true;
@@ -145,3 +108,7 @@ abstract base class Service<TParams extends Object?> {
     return _sequantial.last;
   }
 }
+
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+typedef ServiceListeners<T> = List<FutureOr<void> Function(T data)>;

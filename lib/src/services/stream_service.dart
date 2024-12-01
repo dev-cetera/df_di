@@ -21,21 +21,21 @@ import '/src/_common.dart';
 /// It provides a standardized way to manage a stream and its lifecycle,
 /// ensuring that resources are properly cleaned up when the service is
 /// disposed.
-abstract base class StreamService<TData extends Object?,
-    TParams extends Object?> extends Service<TParams> {
+abstract base class StreamService<TData extends Object?, TParams extends Object?>
+    extends Service<TParams> {
   //
   //
   //
 
   StreamService();
 
-  Completer<TData>? _initialDataCompleter;
+  CompleterOr<TData>? _initialDataCompleter;
   StreamSubscription<TData>? _streamSubscription;
   StreamController<TData>? _streamController;
 
   @mustCallSuper
   @override
-  List<ServiceCallback<TParams>> provideInitListeners() {
+  ServiceListeners<TParams> provideInitListeners() {
     return [
       ...super.provideInitListeners(),
       _initListener,
@@ -44,8 +44,7 @@ abstract base class StreamService<TData extends Object?,
 
   FutureOr<void> _initListener(TParams params) async {
     await _disposeListener(null);
-    _onPushToStreamNotifier.addAllListeners(provideOnPushToStreamListeners());
-    _initialDataCompleter = Completer<TData>();
+    _initialDataCompleter = CompleterOr<TData>();
     _streamController = StreamController<TData>.broadcast();
     _streamSubscription = provideInputStream(params).listen(
       pushToStream,
@@ -59,7 +58,7 @@ abstract base class StreamService<TData extends Object?,
 
   @mustCallSuper
   @override
-  List<ServiceCallback<void>> provideDisposeListeners() {
+  ServiceListeners<void> provideDisposeListeners() {
     return [
       ...super.provideDisposeListeners(),
       _disposeListener,
@@ -67,8 +66,6 @@ abstract base class StreamService<TData extends Object?,
   }
 
   Future<void> _disposeListener(void _) async {
-    await _onPushToStreamNotifier.last;
-    _onPushToStreamNotifier.removeAllListeners();
     await _streamSubscription?.cancel();
     await _streamController?.close();
     _streamSubscription = null;
@@ -93,7 +90,7 @@ abstract base class StreamService<TData extends Object?,
       if (!completed) {
         _initialDataCompleter?.complete(data);
       }
-      /*await*/ _onPushToStreamNotifier.notifyListeners(data);
+      provideOnPushToStreamListeners().forEach((e) => e(data));
     }
   }
 
@@ -103,17 +100,15 @@ abstract base class StreamService<TData extends Object?,
     print('[$runtimeType] $e');
   }
 
-  final _onPushToStreamNotifier = ServiceChangeNotifier<TData>();
-
   @mustCallSuper
-  List<ServiceCallback<TData>> provideOnPushToStreamListeners();
+  ServiceListeners<TData> provideOnPushToStreamListeners();
 
   /// Override this method to define the conditions under which a data item
   /// should be added.
   bool shouldAdd(TData data) => true;
 
   /// Completes with the initial data pushed to the stream.
-  Future<TData>? get initialData => _initialDataCompleter?.future;
+  FutureOr<TData>? get initialData => _initialDataCompleter?.futureOr;
 
   /// Provides access to the stream managed by this service.
   Stream<TData>? get stream => _streamController?.stream;

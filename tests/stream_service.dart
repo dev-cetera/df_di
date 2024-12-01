@@ -38,12 +38,11 @@ void main() async {
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-final class UserStreamingService
-    extends StreamService<Map<String, dynamic>, Object?> {
+final class UserStreamingService extends StreamService<Map<String, dynamic>, Object?> {
   UserStreamingService();
 
   @override
-  List<ServiceCallback<void>> provideInitListeners() {
+  ServiceListeners<Object?> provideInitListeners() {
     return [
       ...super.provideInitListeners(),
       (_) => super.initialData,
@@ -68,7 +67,7 @@ final class UserStreamingService
   }
 
   @override
-  List<ServiceCallback<Map<String, dynamic>>> provideOnPushToStreamListeners() {
+  ServiceListeners<Map<String, dynamic>> provideOnPushToStreamListeners() {
     return [
       (data) => print(data),
     ];
