@@ -10,7 +10,7 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-import 'package:meta/meta.dart';
+import 'package:meta/meta.dart' show protected;
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -29,8 +29,17 @@ class Entity {
   /// The value associated with this Entity instance.
   final int id;
 
-  /// Creates a new instance of [Entity] identified by [id].
-  const Entity(this.id);
+  /// Creates a new instance of [Entity] identified by [id]. The [id] must be 0
+  /// or greater.
+  const Entity(this.id) : assert(id >= 0, 'Entity id must be 0 or greater!');
+
+  /// Creates a new [Entity] with the given [id]. The [id] must be less than 0.
+  ///
+  /// Negative [id] values are reserved exclusively for internal use by the
+  /// df_di package and [UniqueEntity]. They should not be used directly in
+  /// your code.
+  @protected
+  const Entity.reserved(this.id) : assert(id < 0, 'Entity id must be negative!');
 
   /// Creates a new instance of [Entity] from the specified [object]. This
   /// effectively uses [objId] to convert the [object] to an [int] and then

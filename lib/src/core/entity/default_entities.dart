@@ -19,49 +19,49 @@ enum DefaultEntities {
   /// dependencies. This entity can be utilized when no specific group is
   /// defined, allowing for a fallback option that simplifies dependency
   /// retrieval and management in the DI container.
-  DEFAULT_GROUP(Entity(-1)),
+  DEFAULT_GROUP(Entity.reserved(-1001)),
 
   /// A predefined entity recommended to use as the global group entity for
   /// dependencies. Use This entity for dependencies that need to be accessible
   /// throughout the entire application, regardless of the current scope or
   /// context. This is ideal for singleton services or configurations that
   /// should remain consistent across all parts of the application.
-  GLOBAL_GROUP(Entity(-2)),
+  GLOBAL_GROUP(Entity.reserved(-1002)),
 
   /// A predefined entity recommended to use as the session group entity for
   /// dependencies. This entity is intended for dependencies that should be
   /// specific to the current user's session, ensuring that the state
   /// and behavior are isolated from other sessions. It is useful for
   /// services that handle user-specific data or contexts.
-  SESSION_GROUP(Entity(-3)),
+  SESSION_GROUP(Entity.reserved(-1003)),
 
   /// A predefined entity recommended to use as the user group entity for
   /// dependencies. This entity is designed for managing dependencies
   /// that are user-specific, such as user preferences, settings,
   /// or any other data that varies from user to user. It helps
   /// organize services related to user management.
-  USER_GROUP(Entity(-4)),
+  USER_GROUP(Entity.reserved(-1004)),
 
   /// A predefined entity recommended to use as the theme group entity for
   /// dependencies. This entity is suitable for managing theme-related
   /// services or configurations that control the application's
   /// visual appearance. It allows for easy access and modification
   /// of UI themes, such as light or dark modes.
-  THEME_GROUP(Entity(-5)),
+  THEME_GROUP(Entity.reserved(-1005)),
 
   /// A predefined entity recommended to use as the production group entity for
   /// dependencies. This entity is intended for services that are specific
   /// to the production environment, ensuring that production-only
   /// configurations or resources are appropriately managed and
   /// distinguished from other environments (like development or testing).
-  PROD_GROUP(Entity(-6)),
+  PROD_GROUP(Entity.reserved(-1006)),
 
   /// A predefined entity recommended to use as the development group entity for
   /// dependencies. This entity is useful for managing services that are
   /// intended for development purposes, such as debugging tools,
   /// mock services, or any other resources that assist during the
   /// development process. It helps isolate development-specific
-  DEV_GROUP(Entity(-7)),
+  DEV_GROUP(Entity.reserved(-1007)),
 
   /// A predefined entity recommended to use as the test group entity for
   /// dependencies. This entity is designated for managing services that
@@ -70,7 +70,7 @@ enum DefaultEntities {
   /// for unit tests and integration tests. It ensures that test
   /// services do not interfere with the application's production or
   /// development dependencies.
-  TEST_GROUP(Entity(-8));
+  TEST_GROUP(Entity.reserved(-1008));
 
   final Entity entity;
   const DefaultEntities(this.entity);
