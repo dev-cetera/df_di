@@ -62,11 +62,11 @@ base mixin SupportstypeEntityMixin on DIBase {
         groupEntity: groupEntity1,
       ),
       registry.removeDependencyK(
-        Entity.type(Future, [typeEntity]),
+        TypeEntity(Future, [typeEntity]),
         groupEntity: groupEntity1,
       ),
       registry.removeDependencyK(
-        Entity.type(Lazy, [typeEntity]),
+        TypeEntity(Lazy, [typeEntity]),
         groupEntity: groupEntity1,
       ),
     ].nonNulls.firstOrNull;
@@ -105,13 +105,13 @@ base mixin SupportstypeEntityMixin on DIBase {
           null,
       () =>
           registry.getDependencyOrNullK(
-            Entity.type(Future, [typeEntity]),
+            TypeEntity(Future, [typeEntity]),
             groupEntity: groupEntity1,
           ) !=
           null,
       () =>
           registry.getDependencyOrNullK(
-            Entity.type(Lazy, [typeEntity]),
+            TypeEntity(Lazy, [typeEntity]),
             groupEntity: groupEntity1,
           ) !=
           null,
@@ -255,7 +255,7 @@ base mixin SupportstypeEntityMixin on DIBase {
           groupEntity: groupEntity1,
         ) ??
         registry.getDependencyOrNullK(
-          Entity.type(Future, [typeEntity]),
+          TypeEntity(Future, [typeEntity]),
           groupEntity: groupEntity1,
         );
 
@@ -308,7 +308,7 @@ base mixin SupportstypeEntityMixin on DIBase {
     CompleterOr<FutureOr<Object>>? completer;
     completer = (completers?.registry
         .getDependencyOrNullK(
-          Entity.type(CompleterOr<FutureOr<Object>>, [typeEntity]),
+          TypeEntity(CompleterOr<FutureOr<Object>>, [typeEntity]),
           groupEntity: groupEntity1,
         )
         ?.value as CompleterOr<FutureOr<Object>>?);
@@ -326,8 +326,7 @@ base mixin SupportstypeEntityMixin on DIBase {
         completer,
         metadata: DependencyMetadata(
           groupEntity: groupEntity1,
-          preemptivetypeEntity:
-              Entity.type(CompleterOr<Future<Object>>, [typeEntity]),
+          preemptivetypeEntity: TypeEntity(CompleterOr<Future<Object>>, [typeEntity]),
         ),
       ),
     );
@@ -336,7 +335,7 @@ base mixin SupportstypeEntityMixin on DIBase {
     // the completer before returning the value.
     return completer.futureOr.thenOr((value) {
       completers!.registry.removeDependencyK(
-        Entity.type(CompleterOr<FutureOr<Object>>, [typeEntity]),
+        TypeEntity(CompleterOr<FutureOr<Object>>, [typeEntity]),
         groupEntity: groupEntity1,
       );
       return getK(

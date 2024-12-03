@@ -32,13 +32,13 @@ void main() {
               print('CHANGED!!!');
             },
           );
-          registry.setDependency(Dependency(1));
+          registry.setDependency(Dependency<int>(1));
           expect(
             1,
             registry.groupEntities.length,
           );
           expect(
-            "{null: {int: Instance of 'Dependency<int>'}}",
+            "{null: {${Entity.obj(int).id}: Instance of 'Dependency<int>'}}",
             registry.state.toString(),
           );
           registry.removeGroup();
@@ -51,16 +51,16 @@ void main() {
             registry.state.toString(),
           );
           registry.setGroup(
-            {Entity(int): Dependency(1)},
-            groupEntity: Entity.defaultGroup,
+            {Entity.obj(int): Dependency<int>(1)},
+            groupEntity: DefaultEntities.DEFAULT_GROUP.entity,
           );
           expect(
             1,
             registry.groupEntities.length,
           );
           expect(
-            "{int: Instance of 'Dependency<Object>'}",
-            registry.getGroup(groupEntity: Entity.defaultGroup).toString(),
+            "{${Entity.obj(int).id}: Instance of 'Dependency<int>'}",
+            registry.getGroup(groupEntity: DefaultEntities.DEFAULT_GROUP.entity).toString(),
           );
           registry.clear();
           expect(
@@ -95,29 +95,23 @@ void main() {
           );
           expect(
             dependency,
-            registry.getDependencyOrNullK(Entity(int)),
+            registry.getDependencyOrNullK(Entity.obj(int)),
           );
           expect(
             dependency,
-            registry.getDependencyOrNullK(Entity(' i n t ')),
+            registry.getDependencyOrNullK(Entity.obj(' i n t ')),
           );
           expect(
             dependency,
-            registry.dependencies
-                .where((test) => test.typeEntity == Entity(int))
-                .firstOrNull,
+            registry.dependencies.where((test) => test.typeEntity == Entity.obj(int)).firstOrNull,
           );
           expect(
             dependency,
-            registry.dependencies
-                .where((test) => test.value.runtimeType == int)
-                .firstOrNull,
+            registry.dependencies.where((test) => test.value.runtimeType == int).firstOrNull,
           );
           expect(
             dependency,
-            registry.dependencies
-                .where((test) => test.value is int)
-                .firstOrNull,
+            registry.dependencies.where((test) => test.value is int).firstOrNull,
           );
           expect(
             true,
@@ -129,7 +123,7 @@ void main() {
           );
           expect(
             true,
-            registry.containsDependencyK(Entity(int)),
+            registry.containsDependencyK(Entity.obj(int)),
           );
         },
       );
@@ -149,30 +143,27 @@ void main() {
           );
           expect(
             dependency,
-            registry.getDependencyOrNullK(Entity.type(Future, [int])),
+            registry.getDependencyOrNullK(TypeEntity(Future, [int])),
           );
           expect(
             dependency,
-            registry.getDependencyOrNullK(Entity(' F u t u r e < i n t > ')),
+            registry.getDependencyOrNullK(Entity.obj(' F u t u r e < i n t > ')),
           );
           expect(
             dependency,
             registry.dependencies
-                .where((test) => test.typeEntity == Entity.type(Future, [int]))
+                .where((test) => test.typeEntity == TypeEntity(Future, [int]))
                 .firstOrNull,
           );
           expect(
             dependency,
             registry.dependencies.where((test) {
-              return test.value.runtimeType.toString() ==
-                  (Future<int>).toString();
+              return test.value.runtimeType.toString() == (Future<int>).toString();
             }).firstOrNull,
           );
           expect(
             dependency,
-            registry.dependencies
-                .where((test) => test.value is Future<int>)
-                .firstOrNull,
+            registry.dependencies.where((test) => test.value is Future<int>).firstOrNull,
           );
           expect(
             true,
@@ -184,7 +175,7 @@ void main() {
           );
           expect(
             true,
-            registry.containsDependencyK(Entity(Future<int>)),
+            registry.containsDependencyK(Entity.obj(Future<int>)),
           );
         },
       );

@@ -88,10 +88,10 @@ void main() {
         '- Unregistering all',
         () async {
           final di = DI();
-          di.register<int>(1, groupEntity: Entity(1));
-          di.register<int>(2, groupEntity: Entity(2));
-          di.register<int>(3, groupEntity: Entity(3));
-          di.register<int>(4, groupEntity: Entity(4));
+          di.register<int>(1, groupEntity: const Entity(1));
+          di.register<int>(2, groupEntity: const Entity(2));
+          di.register<int>(3, groupEntity: const Entity(3));
+          di.register<int>(4, groupEntity: const Entity(4));
           // final values = di.unregisterAll().thenOr((e) => e.map((e) => e.value).toList());
           // expect(
           //   '[4, 3, 2, 1]',

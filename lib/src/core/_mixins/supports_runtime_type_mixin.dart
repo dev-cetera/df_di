@@ -116,7 +116,7 @@ base mixin SupportsRuntimeTypeMixin on SupportstypeEntityMixin {
     bool traverse = true,
   }) {
     return getK(
-      Entity(type),
+      Entity.obj(type),
       groupEntity: groupEntity,
       traverse: traverse,
     );
@@ -132,7 +132,7 @@ base mixin SupportsRuntimeTypeMixin on SupportstypeEntityMixin {
     bool skipOnUnregisterCallback = false,
   }) {
     return unregisterK(
-      Entity(type),
+      Entity.obj(type),
       groupEntity: groupEntity,
       skipOnUnregisterCallback: skipOnUnregisterCallback,
     );
@@ -148,7 +148,7 @@ base mixin SupportsRuntimeTypeMixin on SupportstypeEntityMixin {
     bool traverse = true,
   }) {
     return isRegisteredK(
-      Entity(type),
+      Entity.obj(type),
       groupEntity: groupEntity,
       traverse: traverse,
     );
@@ -187,7 +187,7 @@ base mixin SupportsRuntimeTypeMixin on SupportstypeEntityMixin {
     bool traverse = true,
   }) {
     return getOrNullK(
-      Entity(type),
+      Entity.obj(type),
       groupEntity: groupEntity,
       traverse: traverse,
     );
@@ -203,7 +203,7 @@ base mixin SupportsRuntimeTypeMixin on SupportstypeEntityMixin {
     bool traverse = true,
   }) {
     return untilK(
-      Entity(type),
+      Entity.obj(type),
       groupEntity: groupEntity,
       traverse: traverse,
     );

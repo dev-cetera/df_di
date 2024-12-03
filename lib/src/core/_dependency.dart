@@ -39,8 +39,7 @@ final class Dependency<T extends Object> {
 
   /// Returns the `preemptivetypeEntity` of [metadata] if not `null` or the
   /// runtime type key of [value].
-  Entity get typeEntity =>
-      metadata?.preemptivetypeEntity ?? Entity(value.runtimeType);
+  Entity get typeEntity => metadata?.preemptivetypeEntity ?? Entity.obj(value.runtimeType);
 
   /// Creates a new [Dependency] instance with a different value of type [R],
   /// while retaining the existing [metadata].

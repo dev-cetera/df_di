@@ -17,7 +17,7 @@ import 'package:equatable/equatable.dart';
 
 import '_dependency.dart';
 import '_registry.dart';
-import 'entity.dart';
+import 'entity/entity.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -258,7 +258,7 @@ class World {
 
 /// Represents an entity with components in the ECS/World system. Manages
 /// dependencies and allows retrieval of a specific component.
-final class WorldEntity<Y extends Object> extends Entity<Y> {
+final class WorldEntity extends Entity {
   final World world;
   WorldEntity._(super.value, this.world);
 
@@ -272,7 +272,7 @@ final class WorldEntity<Y extends Object> extends Entity<Y> {
       _getDependencies().map((e) => e.value).whereType<T>().first;
 
   /// Returns the entity itself.
-  Entity<Y> getEntity() => this;
+  Entity getEntity() => this;
 }
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░

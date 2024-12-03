@@ -30,7 +30,7 @@ base class DIBase {
   final parents = <DIBase>{};
 
   /// A key that identifies the current group in focus for dependency management.
-  Entity? focusGroup = Entity.defaultGroup;
+  Entity? focusGroup = DefaultEntities.DEFAULT_GROUP.entity;
 
   /// A container storing Future completions.
   @protected
@@ -94,13 +94,13 @@ base class DIBase {
             ?.value ??
         completers?.registry
             .getDependencyOrNullK(
-              Entity.type(CompleterOr<Object>, [value.runtimeType]),
+             TypeEntity(CompleterOr<Object>, [value.runtimeType]),
               groupEntity: groupEntity,
             )
             ?.value ??
         completers?.registry
             .getDependencyOrNullK(
-              Entity.type(CompleterOr<Future<Object>>, [value.runtimeType]),
+              TypeEntity(CompleterOr<Future<Object>>, [value.runtimeType]),
               groupEntity: groupEntity,
             )
             ?.value) as CompleterOr?;

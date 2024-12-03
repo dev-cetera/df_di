@@ -70,7 +70,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
   }
 
   FutureOr<Object> unregisterChild({
-    Entity<Object>? groupEntity,
+    Entity? groupEntity,
     bool skipOnUnregisterCallback = false,
   }) {
     final groupEntity1 = groupEntity ?? focusGroup;

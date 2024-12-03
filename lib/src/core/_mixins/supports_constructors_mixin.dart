@@ -21,7 +21,7 @@ base mixin SupportsConstructorsMixin on SupportsRuntimeTypeMixin {
     Type type, {
     Entity? groupEntity,
   }) {
-    (getK(Entity.type(Lazy, [type]), groupEntity: groupEntity) as Lazy)
+    (getK(TypeEntity(Lazy, [type]), groupEntity: groupEntity) as Lazy)
         .resetSingleton();
   }
 
@@ -134,7 +134,7 @@ base mixin SupportsConstructorsMixin on SupportsRuntimeTypeMixin {
     bool traverse = true,
   }) {
     return (getOrNullK(
-      Entity.type(Lazy, [type]),
+      TypeEntity(Lazy, [type]),
       groupEntity: groupEntity,
       traverse: traverse,
     ) as Lazy?)
@@ -294,7 +294,7 @@ base mixin SupportsConstructorsMixin on SupportsRuntimeTypeMixin {
     bool traverse = true,
   }) {
     return (getOrNullK(
-      Entity.type(Lazy, [type]),
+      TypeEntity(Lazy, [type]),
       groupEntity: groupEntity,
       traverse: traverse,
     ) as Lazy?)
