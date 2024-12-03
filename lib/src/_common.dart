@@ -20,8 +20,8 @@ export 'package:meta/meta.dart';
 
 export '_index.g.dart';
 
-export 'core/_registry.dart';
-export 'core/_dependency.dart';
-export 'core/_di_base.dart';
+export 'core/di/_registry.dart';
+export 'core/di/_dependency.dart';
+export 'core/di/_di_base.dart';
 
-export 'core/_mixins/_index.g.dart';
+export 'core/di/_mixins/_index.g.dart';
