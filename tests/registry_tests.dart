@@ -14,7 +14,7 @@
 
 import 'package:df_di/df_di.dart';
 import 'package:df_di/src/core/di/_dependency.dart';
-import 'package:df_di/src/core/di/_registry.dart';
+import 'package:df_di/src/core/di/_di_registry.dart';
 
 import 'package:test/test.dart';
 

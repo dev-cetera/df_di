@@ -16,7 +16,7 @@ import 'package:df_type/df_type.dart';
 import 'package:equatable/equatable.dart';
 
 import '../core/di/_dependency.dart';
-import '../core/di/_registry.dart';
+import '../core/di/_di_registry.dart';
 import '../core/entity/entity.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░

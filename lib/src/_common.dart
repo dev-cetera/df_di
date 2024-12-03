@@ -20,7 +20,7 @@ export 'package:meta/meta.dart';
 
 export '_index.g.dart';
 
-export 'core/di/_registry.dart';
+export 'core/di/_di_registry.dart';
 export 'core/di/_dependency.dart';
 export 'core/di/_di_base.dart';
 
