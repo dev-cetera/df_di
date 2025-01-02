@@ -1,19 +1,5 @@
-<div style="display: flex; align-items: center; justify-content: right; gap: 8px;">
-  <!-- Discord Logo -->
-  <a href="https://discord.gg/8hcxk6ZD" target="_blank">
-    <img src="https://raw.githubusercontent.com/dev-cetera/resources/refs/heads/main/assets/discord_icon/discord_icon.svg" alt="Discord" style="height: 32px;">
-  </a>
-
-  <!-- Medium Logo -->
-  <a href="https://medium.com/@dev-cetera" target="_blank">
-    <img src="https://raw.githubusercontent.com/dev-cetera/resources/refs/heads/main/assets/medium_logo/medium_logo.svg" alt="Medium" style="height: 32px;">
-  </a>
-
-  <!-- Buy Me A Coffee Logo -->
-  <a href="https://www.buymeacoffee.com/robmllze" target="_blank">
-    <img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="32">
-  </a>
-</div>
+<a href="https://www.buymeacoffee.com/robmllze" target="_blank"><img align="right" src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="48"></a>
+<a href="https://discord.gg/8hcxk6ZD" target="_blank"><img align="right" src="https://raw.githubusercontent.com/dev-cetera/resources/refs/heads/main/assets/discord_icon/discord_icon.svg" alt="Discord" height="48"></a>
 
 Dart & Flutter Packages by dev-cetera.com & contributors.
 
@@ -38,6 +24,10 @@ This package provides a pragmatic dependency injection (DI) framework, coupled w
 For a full feature set, please refer to the [API reference](https://pub.dev/documentation/df_di/).
 
 ## Tutorials
+
+<a href="https://medium.com/@dev-cetera" target="_blank" style="display: block; text-align: left; padding-top: 4px; padding-bottom: 8px;">
+  <img src="https://raw.githubusercontent.com/dev-cetera/resources/refs/heads/main/assets/medium_logo/medium_logo.svg" alt="Medium" height="32">
+</a>
 
 [Dependency Injection Tutorial for Flutter]() - This article explains what Dependency Injection (DI) is and how to use it effectively in Flutter, improving code structure and testability by decoupling components.
 
@@ -222,12 +212,10 @@ This is an open-source project, and we warmly welcome contributions from everyon
 
 No matter how you choose to contribute, your involvement is greatly appreciated and valued!
 
-### Fuel the development with a single cup of coffee
-
-Seriously, we drink a lot of it...
+### We drink a lot of coffee...
 
 <a href="https://www.buymeacoffee.com/robmllze" target="_blank" style="display: block; text-align: left; padding-bottom: 8px;">
-  <img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="40">
+  <img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="48">
 </a>
 
 If you're enjoying this package and find it valuable, consider showing your appreciation with a small donation. Every bit helps in supporting future development. You can donate here: https://www.buymeacoffee.com/robmllze
