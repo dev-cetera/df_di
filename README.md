@@ -189,6 +189,8 @@ print(di.isRegistered<int>()); // true
 
 [State Management Done Right in Flutter]() - This article covers showcases techniques to manage app state efficiently and ensuring scalability and maintainability.
 
+---
+
 ## Contributing and Discussions
 
 This is an open-source project, and we warmly welcome contributions from everyone, regardless of experience level. Whether you're a seasoned developer or just starting out, contributing to this project is a fantastic way to learn, share your knowledge, and make a meaningful impact on the community.
@@ -211,8 +213,6 @@ No matter how you choose to contribute, your involvement is greatly appreciated 
 If you're enjoying this package and find it valuable, consider showing your appreciation with a small donation. Every bit helps in supporting future development. You can donate here: https://www.buymeacoffee.com/robmllze
 
 <a href="https://www.buymeacoffee.com/robmllze" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" height="40"></a>
-
----
 
 ## License
 
