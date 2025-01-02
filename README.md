@@ -1,5 +1,5 @@
-<a href="https://www.buymeacoffee.com/robmllze" target="_blank"><img align="right" src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="48"></a>
-<a href="https://discord.gg/8hcxk6ZD" target="_blank"><img align="right" src="https://raw.githubusercontent.com/dev-cetera/resources/refs/heads/main/assets/discord_icon/discord_icon.svg" alt="Discord" height="48"></a>
+<a href="https://www.buymeacoffee.com/robmllze" target="_blank"><img align="right" src="https://cdn.buymeacoffee.com/buttons/default-orange.png" height="48"></a>
+<a href="https://discord.gg/8hcxk6ZD" target="_blank"><img align="right" src="https://raw.githubusercontent.com/dev-cetera/resources/refs/heads/main/assets/discord_icon/discord_icon.svg" height="48"></a>
 
 Dart & Flutter Packages by dev-cetera.com & contributors.
 
@@ -23,9 +23,7 @@ This package provides a pragmatic dependency injection (DI) framework, coupled w
 
 For a full feature set, please refer to the [API reference](https://pub.dev/documentation/df_di/).
 
-<a href="https://medium.com/@dev-cetera" target="_blank" style="display: block; padding-top: 16px; padding-bottom: 16px;">
-  <img src="https://raw.githubusercontent.com/dev-cetera/resources/refs/heads/main/assets/medium_logo/medium_logo.svg" alt="Medium" height="20">
-</a>
+<a href="https://medium.com/@dev-cetera" target="_blank"><img src="https://raw.githubusercontent.com/dev-cetera/resources/refs/heads/main/assets/medium_logo/medium_logo.svg" height="20"></a>
 
 [Dependency Injection Tutorial for Flutter]() - This article explains what Dependency Injection (DI) is and how to use it effectively in Flutter, improving code structure and testability by decoupling components.
 
@@ -216,9 +214,7 @@ No matter how you choose to contribute, your involvement is greatly appreciated 
 
 If you're enjoying this package and find it valuable, consider showing your appreciation with a small donation. Every bit helps in supporting future development. You can donate here: https://www.buymeacoffee.com/robmllze
 
-<a href="https://www.buymeacoffee.com/robmllze" target="_blank" style="display: block; text-align: left;">
-  <img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="40">
-</a>
+<a href="https://www.buymeacoffee.com/robmllze" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" height="40"></a>
 
 ---
 
