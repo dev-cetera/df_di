@@ -23,15 +23,13 @@ This package provides a pragmatic dependency injection (DI) framework, coupled w
 
 For a full feature set, please refer to the [API reference](https://pub.dev/documentation/df_di/).
 
-## Tutorials
+<a href="https://medium.com/@dev-cetera" target="_blank" style="display: block; padding-top: 8px; padding-bottom: 8px;">
+  <img src="https://raw.githubusercontent.com/dev-cetera/resources/refs/heads/main/assets/medium_logo/medium_logo.svg" alt="Medium" height="24">
+</a>
 
 [Dependency Injection Tutorial for Flutter]() - This article explains what Dependency Injection (DI) is and how to use it effectively in Flutter, improving code structure and testability by decoupling components.
 
 [State Management Done Right in Flutter]() - This article covers showcases techniques to manage app state efficiently and ensuring scalability and maintainability.
-
-<a href="https://medium.com/@dev-cetera" target="_blank" style="display: block;">
-  <img src="https://raw.githubusercontent.com/dev-cetera/resources/refs/heads/main/assets/medium_logo/medium_logo.svg" alt="Medium" height="20">
-</a>
 
 ---
 
@@ -221,6 +219,8 @@ If you're enjoying this package and find it valuable, consider showing your appr
 <a href="https://www.buymeacoffee.com/robmllze" target="_blank" style="display: block; text-align: left;">
   <img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="40">
 </a>
+
+---
 
 ## License
 
