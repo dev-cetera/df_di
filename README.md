@@ -217,7 +217,7 @@ No matter how you choose to contribute, your involvement is greatly appreciated 
 If you're enjoying this package and find it valuable, consider showing your appreciation with a small donation. Every bit helps in supporting future development. You can donate here: https://www.buymeacoffee.com/robmllze
 
 <a href="https://www.buymeacoffee.com/robmllze" target="_blank" style="display: block; text-align: left;">
-  <img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="32">
+  <img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="40">
 </a>
 
 ## License
