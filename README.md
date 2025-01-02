@@ -23,12 +23,6 @@ This package provides a pragmatic dependency injection (DI) framework, coupled w
 
 For a full feature set, please refer to the [API reference](https://pub.dev/documentation/df_di/).
 
-<a href="https://medium.com/@dev-cetera" target="_blank"><img src="https://raw.githubusercontent.com/dev-cetera/resources/refs/heads/main/assets/medium_logo/medium_logo.svg" height="20"></a>
-
-[Dependency Injection Tutorial for Flutter]() - This article explains what Dependency Injection (DI) is and how to use it effectively in Flutter, improving code structure and testability by decoupling components.
-
-[State Management Done Right in Flutter]() - This article covers showcases techniques to manage app state efficiently and ensuring scalability and maintainability.
-
 ---
 
 ## Quickstart
@@ -190,6 +184,14 @@ print(di.registry.state);
 // Check if a specific type is registered.
 print(di.isRegistered<int>()); // true
 ```
+
+---
+
+<a href="https://medium.com/@dev-cetera" target="_blank"><img src="https://raw.githubusercontent.com/dev-cetera/resources/refs/heads/main/assets/medium_logo/medium_logo.svg" height="20"></a>
+
+[Dependency Injection Tutorial for Flutter]() - This article explains what Dependency Injection (DI) is and how to use it effectively in Flutter, improving code structure and testability by decoupling components.
+
+[State Management Done Right in Flutter]() - This article covers showcases techniques to manage app state efficiently and ensuring scalability and maintainability.
 
 ---
 
