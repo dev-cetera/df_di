@@ -1,7 +1,7 @@
 //.title
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //
-// Dart/Flutter (DF) Packages by DevCetra.com & contributors. The use of this
+// Dart/Flutter (DF) Packages by dev-cetera.com & contributors. The use of this
 // source code is governed by an MIT-style license described in the LICENSE
 // file located in this project's root directory.
 //
@@ -19,8 +19,7 @@ final class DependencyInvalidException extends DFDIPackageException {
     required Object type,
     required Entity? groupEntity,
   }) : super(
-          condition:
-              'Dependency of type "$type" in group "$groupEntity" is invalid.',
+          condition: 'Dependency of type "$type" in group "$groupEntity" is invalid.',
           reason:
               'Thrown to prevent access to a dependency that is deemed invalid by its specified validator function.',
           options: [

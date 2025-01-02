@@ -1,7 +1,7 @@
 //.title
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //
-// Dart/Flutter (DF) Packages by DevCetra.com & contributors. The use of this
+// Dart/Flutter (DF) Packages by dev-cetera.com & contributors. The use of this
 // source code is governed by an MIT-style license described in the LICENSE
 // file located in this project's root directory.
 //
@@ -68,8 +68,7 @@ base class DIBase {
       index: dependencyCount++,
       groupEntity: groupEntity1,
       validator: validator != null ? (e) => validator(e as FutureOr<T>) : null,
-      onUnregister:
-          onUnregister != null ? (e) => onUnregister(e as FutureOr<T>) : null,
+      onUnregister: onUnregister != null ? (e) => onUnregister(e as FutureOr<T>) : null,
     );
     completeRegistration(value, groupEntity1);
     final registeredDep = _registerDependency(
@@ -94,7 +93,7 @@ base class DIBase {
             ?.value ??
         completers?.registry
             .getDependencyOrNullK(
-             TypeEntity(CompleterOr<Object>, [value.runtimeType]),
+              TypeEntity(CompleterOr<Object>, [value.runtimeType]),
               groupEntity: groupEntity,
             )
             ?.value ??

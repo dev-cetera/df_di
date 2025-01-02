@@ -1,7 +1,7 @@
 //.title
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //
-// Dart/Flutter (DF) Packages by DevCetra.com & contributors. The use of this
+// Dart/Flutter (DF) Packages by dev-cetera.com & contributors. The use of this
 // source code is governed by an MIT-style license described in the LICENSE
 // file located in this project's root directory.
 //
@@ -45,8 +45,7 @@ void main() {
         '- The exact registered value is returned by "register"',
         () async {
           final di = DI();
-          final a =
-              Future<int>.delayed(const Duration(milliseconds: 100), () => 1);
+          final a = Future<int>.delayed(const Duration(milliseconds: 100), () => 1);
           final b = di.register(a);
           expect(
             1,

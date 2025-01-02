@@ -1,7 +1,7 @@
 //.title
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //
-// Dart/Flutter (DF) Packages by DevCetra.com & contributors. The use of this
+// Dart/Flutter (DF) Packages by dev-cetera.com & contributors. The use of this
 // source code is governed by an MIT-style license described in the LICENSE
 // file located in this project's root directory.
 //
@@ -19,8 +19,7 @@ final class DependencyNotFoundException extends DFDIPackageException {
     required Object type,
     required Entity? groupEntity,
   }) : super(
-          condition:
-              'No dependency of type "$type" found in group "$groupEntity".',
+          condition: 'No dependency of type "$type" found in group "$groupEntity".',
           reason:
               'Thrown when attempting to unregister or access a dependency that does not exist.',
           options: [

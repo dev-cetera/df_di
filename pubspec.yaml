@@ -1,7 +1,7 @@
 ##.title
 ## ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 ##
-## Dart/Flutter (DF) Packages by DevCetra.com & contributors. The use of this
+## Dart/Flutter (DF) Packages by dev-cetera.com & contributors. The use of this
 ## source code is governed by an MIT-style license described in the LICENSE
 ## file located in this project's root directory.
 ##
@@ -13,7 +13,7 @@
 name: df_di
 description: A pragmatic dependency injection (DI) system, coupled with service classes for seamless state management in Dart.
 version: 0.10.0
-repository: https://github.com/DevCetra/df_di
+repository: https://github.com/dev_cetera/df_di
 funding:
   - https://www.buymeacoffee.com/robmllze
 topics:
