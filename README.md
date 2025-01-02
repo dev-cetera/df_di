@@ -25,7 +25,7 @@ For a full feature set, please refer to the [API reference](https://pub.dev/docu
 
 ## Tutorials
 
-<a href="https://medium.com/@dev-cetera" target="_blank" style="display: block; text-align: left; padding-top: 4px; padding-bottom: 16px;">
+<a href="https://medium.com/@dev-cetera" target="_blank" style="display: block; padding-top: 4px; padding-bottom: 16px;">
   <img src="https://raw.githubusercontent.com/dev-cetera/resources/refs/heads/main/assets/medium_logo/medium_logo.svg" alt="Medium" height="24">
 </a>
 
@@ -214,11 +214,11 @@ No matter how you choose to contribute, your involvement is greatly appreciated 
 
 ### We drink a lot of coffee...
 
-<a href="https://www.buymeacoffee.com/robmllze" target="_blank" style="display: block; text-align: left; padding-bottom: 12px;">
+If you're enjoying this package and find it valuable, consider showing your appreciation with a small donation. Every bit helps in supporting future development. You can donate here: https://www.buymeacoffee.com/robmllze
+
+<a href="https://www.buymeacoffee.com/robmllze" target="_blank" style="display: block; text-align: left;">
   <img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="32">
 </a>
-
-If you're enjoying this package and find it valuable, consider showing your appreciation with a small donation. Every bit helps in supporting future development. You can donate here: https://www.buymeacoffee.com/robmllze
 
 ## License
 
