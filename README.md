@@ -1,7 +1,7 @@
 <div style="display: flex; align-items: center; justify-content: right; gap: 8px;">
   <!-- Discord Logo -->
   <a href="https://discord.gg/8hcxk6ZD" target="_blank">
-    <img src="https://raw.githubusercontent.com/dev-cetera/resources/refs/heads/main/assets/discord_icon/discord_icon.svg" alt="Discord" style="height: 48px;">
+    <img src="https://raw.githubusercontent.com/dev-cetera/resources/refs/heads/main/assets/discord_icon/discord_icon.svg" alt="Discord" style="height: 32px;">
   </a>
 
   <!-- Medium Logo -->
@@ -11,7 +11,7 @@
 
   <!-- Buy Me A Coffee Logo -->
   <a href="https://www.buymeacoffee.com/robmllze" target="_blank">
-    <img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="40">
+    <img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="32">
   </a>
 </div>
 
@@ -226,7 +226,7 @@ No matter how you choose to contribute, your involvement is greatly appreciated 
 
 Seriously, we drink a lot of it...
 
-<a href="https://www.buymeacoffee.com/robmllze" target="_blank" style="display: block; text-align: left; padding-bottom: 16px;">
+<a href="https://www.buymeacoffee.com/robmllze" target="_blank" style="display: block; text-align: left; padding-bottom: 8px;">
   <img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="40">
 </a>
 
