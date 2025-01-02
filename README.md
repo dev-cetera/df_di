@@ -30,8 +30,10 @@ For a full feature set, please refer to the [API reference](https://pub.dev/docu
 [State Management Done Right in Flutter]() - This article covers showcases techniques to manage app state efficiently and ensuring scalability and maintainability.
 
 <a href="https://medium.com/@dev-cetera" target="_blank" style="display: block;">
-  <img src="https://raw.githubusercontent.com/dev-cetera/resources/refs/heads/main/assets/medium_logo/medium_logo.svg" alt="Medium" height="32">
+  <img src="https://raw.githubusercontent.com/dev-cetera/resources/refs/heads/main/assets/medium_logo/medium_logo.svg" alt="Medium" height="20">
 </a>
+
+---
 
 ## Quickstart
 
