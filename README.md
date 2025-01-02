@@ -25,13 +25,13 @@ For a full feature set, please refer to the [API reference](https://pub.dev/docu
 
 ## Tutorials
 
-<a href="https://medium.com/@dev-cetera" target="_blank" style="display: block; padding-top: 4px; padding-bottom: 16px;">
-  <img src="https://raw.githubusercontent.com/dev-cetera/resources/refs/heads/main/assets/medium_logo/medium_logo.svg" alt="Medium" height="24">
-</a>
-
 [Dependency Injection Tutorial for Flutter]() - This article explains what Dependency Injection (DI) is and how to use it effectively in Flutter, improving code structure and testability by decoupling components.
 
 [State Management Done Right in Flutter]() - This article covers showcases techniques to manage app state efficiently and ensuring scalability and maintainability.
+
+<a href="https://medium.com/@dev-cetera" target="_blank" style="display: block;">
+  <img src="https://raw.githubusercontent.com/dev-cetera/resources/refs/heads/main/assets/medium_logo/medium_logo.svg" alt="Medium" height="32">
+</a>
 
 ## Quickstart
 
