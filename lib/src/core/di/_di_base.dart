@@ -49,7 +49,7 @@ base class DIBase {
   /// unregistration.
   ///
   /// You can provide a [validator] function to validate the dependency before
-  /// it gets retrieved]. If the validation fails [DependencyInvalidException]
+  /// it gets retrieved. If the validation fails [DependencyInvalidException]
   /// will be throw upon retrieval.
   ///
   /// Additionally, an [onUnregister] callback can be specified to execute when
@@ -302,7 +302,12 @@ base class DIBase {
   /// Retrieves a dependency of type [T] or its subtypes registered under
   /// the specified [groupEntity] from the [registry].
   ///
-  /// If the dependency exists, it is returned; otherwise `null` is returned.
+  /// If [traverse] is true, it will also search recursively in parent
+  /// containers.
+  ///
+  /// Throws a [DependencyIsFutureException] if the dependency is a [Future]
+  /// and [throwIfAsync] is true, otherwise returns `null` if the dependency
+  /// is a [Future].
   T? getSyncOrNull<T extends Object>({
     Entity? groupEntity,
     bool traverse = true,
@@ -326,9 +331,6 @@ base class DIBase {
   ///
   /// If the dependency does not exist, a [DependencyNotFoundException] is
   /// thrown.
-  ///
-  /// The return type is a [FutureOr], which means it can either be a
-  /// [Future] or a resolved value.
   ///
   /// If the dependency is registered as a non-future, the returned value will
   /// always be non-future. If it is registered as a future, the returned value
@@ -361,9 +363,6 @@ base class DIBase {
   ///
   /// If [traverse] is set to `true`, the search will also include all parent
   /// containers.
-  ///
-  /// The return type is a [FutureOr], which means it can either be a
-  /// [Future] or a resolved value.
   ///
   /// If the dependency is registered as a non-future, the returned value will
   /// always be non-future. If it is registered as a future, the returned value

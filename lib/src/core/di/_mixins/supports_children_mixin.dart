@@ -27,7 +27,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
   /// [registry].
   ///
   /// You can provide a [validator] function to validate the dependency before
-  /// it gets retrieved]. If the validation fails [DependencyInvalidException]
+  /// it gets retrieved. If the validation fails [DependencyInvalidException]
   /// will be throw upon retrieval.
   ///
   /// Additionally, an [onUnregister] callback can be specified to execute when
@@ -126,7 +126,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
   /// registry, and returns it.
   ///
   /// You can provide a [validator] function to validate the dependency before
-  /// it gets retrieved]. If the validation fails [DependencyInvalidException]
+  /// it gets retrieved. If the validation fails [DependencyInvalidException]
   /// will be throw upon retrieval.
   ///
   /// You can provide an [onUnregister] callback can be specified to execute

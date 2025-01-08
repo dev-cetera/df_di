@@ -36,6 +36,9 @@ base mixin SupportsConstructorsMixinT on SupportsMixinT {
   /// If no instance is cached, a new one is created using the [Lazy]
   /// constructor provided during registration.
   ///
+  /// If [traverse] is set to `true`, the search will also include all parent
+  /// containers.
+  ///
   /// If the dependency does not exist, a [DependencyNotFoundException] is
   /// thrown.
   ///
@@ -61,6 +64,9 @@ base mixin SupportsConstructorsMixinT on SupportsMixinT {
   ///
   /// If no instance is cached, a new one is created using the [Lazy]
   /// constructor provided during registration.
+  ///
+  /// If [traverse] is set to `true`, the search will also include all parent
+  /// containers.
   ///
   /// If the dependency is a [Future], a [DependencyIsFutureException] is
   /// thrown.
@@ -95,10 +101,15 @@ base mixin SupportsConstructorsMixinT on SupportsMixinT {
   /// If no instance is cached, a new one is created using the [Lazy]
   /// constructor provided during registration.
   ///
+  /// If [traverse] is set to `true`, the search will also include all parent
+  /// containers.
+  ///
   /// If the dependency is a [Future], a [DependencyIsFutureException] is
   /// thrown.
   ///
-  /// If the dependency exists, it is returned; otherwise `null` is returned.
+  /// Throws a [DependencyIsFutureException] if the dependency is a [Future]
+  /// and [throwIfAsync] is true, otherwise returns `null` if the dependency
+  /// is a [Future].
   Object? getSingletonSyncOrNullT(
     Type type, {
     Entity? groupEntity,
@@ -127,11 +138,11 @@ base mixin SupportsConstructorsMixinT on SupportsMixinT {
   /// If no instance is cached, a new one is created using the [Lazy]
   /// constructor provided during registration.
   ///
+  /// If [traverse] is set to `true`, the search will also include all parent
+  /// containers.
+  ///
   /// If the dependency does not exist, a [DependencyNotFoundException] is
   /// thrown.
-  ///
-  /// The return type is a [FutureOr], which means it can either be a
-  /// [Future] or a resolved value.
   FutureOr<Object> getSingletonT(
     Type type, {
     Entity? groupEntity,
@@ -161,10 +172,10 @@ base mixin SupportsConstructorsMixinT on SupportsMixinT {
   /// If no instance is cached, a new one is created using the [Lazy]
   /// constructor provided during registration.
   ///
-  /// If the dependency does not exist, `null` is returned.
+  /// If [traverse] is set to `true`, the search will also include all parent
+  /// containers.
   ///
-  /// The return type is a [FutureOr], which means it can either be a
-  /// [Future] or a resolved value.
+  /// If the dependency does not exist, `null` is returned.
   FutureOr<Object>? getSingletonOrNullT(
     Type type, {
     Entity? groupEntity,
@@ -185,6 +196,9 @@ base mixin SupportsConstructorsMixinT on SupportsMixinT {
   ///
   /// The instance is created using the [Lazy] constructor provided during the
   /// registration of the factory dependency.
+  ///
+  /// If [traverse] is set to `true`, the search will also include all parent
+  /// containers.
   ///
   /// If the dependency does not exist, a [DependencyNotFoundException] is
   /// thrown.
@@ -211,6 +225,9 @@ base mixin SupportsConstructorsMixinT on SupportsMixinT {
   ///
   /// The instance is created using the [Lazy] constructor provided during the
   /// registration of the factory dependency.
+  ///
+  /// If [traverse] is set to `true`, the search will also include all parent
+  /// containers.
   ///
   /// If the dependency is a [Future], a [DependencyIsFutureException] is
   /// thrown.
@@ -245,10 +262,15 @@ base mixin SupportsConstructorsMixinT on SupportsMixinT {
   /// The instance is created using the [Lazy] constructor provided during the
   /// registration of the factory dependency.
   ///
+  /// If [traverse] is set to `true`, the search will also include all parent
+  /// containers.
+  ///
   /// If the dependency is a [Future], a [DependencyIsFutureException] is
   /// thrown.
   ///
-  /// If the dependency exists, it is returned; otherwise `null` is returned.
+  /// Throws a [DependencyIsFutureException] if the dependency is a [Future]
+  /// and [throwIfAsync] is true, otherwise returns `null` if the dependency
+  /// is a [Future].
   Object? getFactorySyncOrNullT(
     Type type, {
     Entity? groupEntity,
@@ -277,11 +299,11 @@ base mixin SupportsConstructorsMixinT on SupportsMixinT {
   /// The instance is created using the [Lazy] constructor provided during the
   /// registration of the factory dependency.
   ///
+  /// If [traverse] is set to `true`, the search will also include all parent
+  /// containers.
+  ///
   /// If the dependency does not exist, a [DependencyNotFoundException] is
   /// thrown.
-  ///
-  /// The return type is a [FutureOr], which means it can either be a
-  /// [Future] or a resolved value.
   FutureOr<Object> getFactoryT(
     Type type, {
     Entity? groupEntity,
@@ -310,10 +332,10 @@ base mixin SupportsConstructorsMixinT on SupportsMixinT {
   /// The instance is created using the [Lazy] constructor provided during the
   /// registration of the factory dependency.
   ///
-  /// If the dependency does not exist, `null` is returned.
+  /// If [traverse] is set to `true`, the search will also include all parent
+  /// containers.
   ///
-  /// The return type is a [FutureOr], which means it can either be a
-  /// [Future] or a resolved value.
+  /// If the dependency does not exist, `null` is returned.
   FutureOr<Object>? getFactoryOrNullT(
     Type type, {
     Entity? groupEntity,

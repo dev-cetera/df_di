@@ -20,6 +20,9 @@ base mixin SupportsMixinT on SupportsMixinK {
   /// Retrieves a dependency of the exact runtime [type] registered under the
   /// specified [groupEntity] in the [registry].
   ///
+  /// If [traverse] is set to `true`, the search will also include all parent
+  /// containers.
+  ///
   /// If the dependency does not exist, a [DependencyNotFoundException] is
   /// thrown.
   ///
@@ -40,6 +43,9 @@ base mixin SupportsMixinT on SupportsMixinK {
 
   /// Retrieves a dependency of the exact runtime [type] registered under the
   /// specified [groupEntity] from the [registry].
+  ///
+  /// If [traverse] is set to `true`, the search will also include all parent
+  /// containers.
   ///
   /// If the dependency is a [Future], a [DependencyIsFutureException] is
   /// thrown.
@@ -69,8 +75,15 @@ base mixin SupportsMixinT on SupportsMixinK {
   /// Retrieves a dependency of the exact runtime [type] registered under the
   /// specified [groupEntity] from the [registry].
   ///
+  /// If [traverse] is set to `true`, the search will also include all parent
+  /// containers.
+  ///
   /// If the dependency does not exist, a [DependencyNotFoundException] is
   /// thrown.
+  ///
+  /// Throws a [DependencyIsFutureException] if the dependency is a [Future]
+  /// and [throwIfAsync] is true, otherwise returns `null` if the dependency
+  /// is a [Future].
   Object? getSyncOrNullT(
     Type type, {
     Entity? groupEntity,
@@ -106,9 +119,6 @@ base mixin SupportsMixinT on SupportsMixinK {
   ///
   /// If [traverse] is set to `true`, the search will also include all parent
   /// containers.
-  ///
-  /// The return type is a [FutureOr], which means it can either be a
-  /// [Future] or a resolved value.
   ///
   /// If the dependency is registered as a non-future, the returned value will
   /// always be non-future. If it is registered as a future, the returned value
@@ -178,9 +188,6 @@ base mixin SupportsMixinT on SupportsMixinK {
   ///
   /// If [traverse] is set to `true`, the search will also include all parent
   /// containers.
-  ///
-  /// The return type is a [FutureOr], which means it can either be a
-  /// [Future] or a resolved value.
   ///
   /// If the dependency is registered as a non-future, the returned value will
   /// always be non-future. If it is registered as a future, the returned value

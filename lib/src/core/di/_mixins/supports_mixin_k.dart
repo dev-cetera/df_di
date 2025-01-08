@@ -33,9 +33,6 @@ base mixin SupportsMixinK on DIBase {
   /// If [traverse] is set to `true`, the search will also include all parent
   /// containers.
   ///
-  /// The return type is a [FutureOr], which means it can either be a
-  /// [Future] or a resolved value.
-  ///
   /// If the dependency is registered as a non-future, the returned value will
   /// always be non-future. If it is registered as a future, the returned value
   /// will initially be a future. Once that future completes, its resolved value
@@ -76,9 +73,6 @@ base mixin SupportsMixinK on DIBase {
   ///
   /// If [traverse] is set to `true`, the search will also include all parent
   /// containers.
-  ///
-  /// The return type is a [FutureOr], which means it can either be a
-  /// [Future] or a resolved value.
   ///
   /// If the dependency is registered as a non-future, the returned value will
   /// always be non-future. If it is registered as a future, the returned value

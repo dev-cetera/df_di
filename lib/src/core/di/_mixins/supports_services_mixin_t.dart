@@ -17,8 +17,18 @@ import '/src/_common.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 base mixin SupportsServicesMixinT on SupportsConstructorsMixinT, SupportsMixinT {
-  // --- Singleton ---
-
+  /// Retrieves an instance of the exact [type] under the specified
+  /// [groupEntity] from the [registry].
+  ///
+  /// If no instance is cached, a new one is created using the [Lazy]
+  /// constructor provided during registration.
+  ///
+  /// Calls [Service.init] with the provided [params] on first retrieval.
+  ///
+  /// If [traverse] is true, it will also search recursively in parent
+  /// containers.
+  ///
+  /// Throws a [DependencyNotFoundException] if the dependency does not exist.
   FutureOr<Service> getServiceSingletonT(
     Type type, {
     Object? params,
@@ -42,26 +52,50 @@ base mixin SupportsServicesMixinT on SupportsConstructorsMixinT, SupportsMixinT 
     return value;
   }
 
-  Future<Service> getServiceSingletonAsyncT(
+  /// Retrieves an instance of the exact [type] under the specified
+  /// [groupEntity] from the [registry].
+  ///
+  /// If no instance is cached, a new one is created using the [Lazy]
+  /// constructor provided during registration.
+  ///
+  /// Calls [Service.init] with the provided [params] on first retrieval.
+  ///
+  /// If [traverse] is true, it will also search recursively in parent
+  /// containers.
+  ///
+  /// Throws a [DependencyNotFoundException] if the dependency does not exist.
+  FutureOr<Service>? getServiceSingletonOrNullT(
     Type type, {
     Object? params,
     Entity? groupEntity,
     bool traverse = true,
-  }) async {
-    return getServiceSingletonT(
-      type,
-      params: params,
-      groupEntity: groupEntity,
-      traverse: traverse,
-    );
+  }) {
+    final instance = getSingletonOrNullT(type);
+    return instance?.thenOr((e) {
+      e as Service;
+      return e.initialized ? e : consec(e.init(params), (_) => e);
+    });
   }
 
+  /// Retrieves an instance of the exact [type] under the specified
+  /// [groupEntity] from the [registry].
+  ///
+  /// If no instance is cached, a new one is created using the [Lazy]
+  /// constructor provided during registration.
+  ///
+  /// Calls [Service.init] with the provided [params] on first retrieval.
+  ///
+  /// If [traverse] is true, it will also search recursively in parent
+  /// containers.
+  ///
+  /// Throws a [DependencyNotFoundException] if the dependency does not exist.
+  ///
+  /// Throws a [DependencyIsFutureException] if the dependency is a [Future].
   Service getServiceSingletonSyncT(
     Type type, {
     Object? params,
     Entity? groupEntity,
     bool traverse = true,
-    bool throwIfAsync = false,
   }) {
     final value = getServiceSingletonT(
       type,
@@ -78,6 +112,19 @@ base mixin SupportsServicesMixinT on SupportsConstructorsMixinT, SupportsMixinT 
     return value;
   }
 
+  /// Retrieves an instance of the exact [type] under the specified
+  /// [groupEntity] from the [registry].
+  ///
+  /// If no instance is cached, a new one is created using the [Lazy]
+  /// constructor provided during registration.
+  ///
+  /// Calls [Service.init] with the provided [params] on first retrieval.
+  ///
+  /// Throws a [DependencyIsFutureException] if the dependency is a [Future].
+  ///
+  /// Throws a [DependencyIsFutureException] if the dependency is a [Future]
+  /// and [throwIfAsync] is true, otherwise returns `null` if the dependency
+  /// is a [Future].
   Service? getServiceSingletonSyncOrNullT(
     Type type, {
     Object? params,
@@ -100,21 +147,41 @@ base mixin SupportsServicesMixinT on SupportsConstructorsMixinT, SupportsMixinT 
     return value?.asSyncOrNull;
   }
 
-  FutureOr<Service>? getServiceSingletonOrNullT(
+  /// Retrieves an instance of the exact [type] under the specified
+  /// [groupEntity] from the [registry].
+  ///
+  /// Calls [Service.init] with the provided [params] on first retrieval.
+  ///
+  /// Throws a [DependencyNotFoundException] if the dependency does not exist.
+  ///
+  /// This method always returns a [Future], ensuring compatibility. This
+  /// provides a safe and consistent way to retrieve dependencies, even if the
+  /// registered dependency is not a [Future].
+  Future<Service> getServiceSingletonAsyncT(
     Type type, {
     Object? params,
     Entity? groupEntity,
     bool traverse = true,
-  }) {
-    final instance = getSingletonOrNullT(type);
-    return instance?.thenOr((e) {
-      e as Service;
-      return e.initialized ? e : consec(e.init(params), (_) => e);
-    });
+  }) async {
+    return getServiceSingletonT(
+      type,
+      params: params,
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
   }
 
-  // --- Factory ---
-
+  /// Retrieves a new instance of the exact [type] under the specified
+  /// [groupEntity] from the [registry].
+  ///
+  /// The instance is created using the [Lazy] constructor provided during
+  /// the registration of the factory dependency, then calls [Service.init]
+  /// with the provided [params].
+  ///
+  /// If [traverse] is true, it will also search recursively in parent
+  /// containers.
+  ///
+  /// Throws a [DependencyNotFoundException] if the dependency does not exist.
   FutureOr<Service> getServiceFactoryT(
     Type type, {
     Object? params,
@@ -137,26 +204,48 @@ base mixin SupportsServicesMixinT on SupportsConstructorsMixinT, SupportsMixinT 
     return value;
   }
 
-  Future<Service> getServiceFactoryAsyncT(
+  /// Retrieves a new instance of the exact [type] under the specified
+  /// [groupEntity] from the [registry].
+  ///
+  /// The instance is created using the [Lazy] constructor provided during
+  /// the registration of the factory dependency, then calls [Service.init]
+  /// with the provided [params].
+  ///
+  /// If [traverse] is true, it will also search recursively in parent
+  /// containers.
+  ///
+  /// Returns `null` if the dependency does not exist.
+  FutureOr<Service>? getServiceFactoryOrNullT(
     Type type, {
     Object? params,
     Entity? groupEntity,
     bool traverse = true,
-  }) async {
-    return getServiceFactoryT(
-      type,
-      params: params,
-      groupEntity: groupEntity,
-      traverse: traverse,
-    );
+  }) {
+    final instance = getFactoryOrNullT(type);
+    return instance?.thenOr((e) {
+      e as Service;
+      return e.initialized ? e : consec(e.init(params), (_) => e);
+    });
   }
 
+  /// Retrieves a new instance of the exact [type] under the specified
+  /// [groupEntity] from the [registry].
+  ///
+  /// The instance is created using the [Lazy] constructor provided during
+  /// the registration of the factory dependency, then calls [Service.init]
+  /// with the provided [params].
+  ///
+  /// If [traverse] is true, it will also search recursively in parent
+  /// containers.
+  ///
+  /// Throws a [DependencyNotFoundException] if the dependency does not exist.
+  ///
+  /// Throws a [DependencyIsFutureException] if the dependency is a [Future].
   Service getServiceFactorySyncT(
     Type type, {
     Object? params,
     Entity? groupEntity,
     bool traverse = true,
-    bool throwIfAsync = false,
   }) {
     final value = getServiceFactoryT(
       type,
@@ -173,6 +262,21 @@ base mixin SupportsServicesMixinT on SupportsConstructorsMixinT, SupportsMixinT 
     return value;
   }
 
+  /// Retrieves a new instance of the exact [type] under the specified
+  /// [groupEntity] from the [registry].
+  ///
+  /// The instance is created using the [Lazy] constructor provided during
+  /// the registration of the factory dependency, then calls [Service.init]
+  /// with the provided [params].
+  ///
+  /// If [traverse] is true, it will also search recursively in parent
+  /// containers.
+  ///
+  /// Throws a [DependencyNotFoundException] if the dependency does not exist.
+  ///
+  /// Throws a [DependencyIsFutureException] if the dependency is a [Future]
+  /// and [throwIfAsync] is true, otherwise returns `null` if the dependency
+  /// is a [Future].
   Service? getServiceFactorySyncOrNullT(
     Type type, {
     Object? params,
@@ -195,16 +299,29 @@ base mixin SupportsServicesMixinT on SupportsConstructorsMixinT, SupportsMixinT 
     return value?.asSyncOrNull;
   }
 
-  FutureOr<Service>? getServiceFactoryOrNullT(
+  /// Retrieves a new instance of the exact [type] under the specified
+  /// [groupEntity] from the [registry].
+  ///
+  /// The instance is created using the [Lazy] constructor provided during
+  /// the registration of the factory dependency, then calls [Service.init]
+  /// with the provided [params].
+  ///
+  /// Throws a [DependencyNotFoundException] if the dependency does not exist.
+  ///
+  /// This method always returns a [Future], ensuring compatibility. This
+  /// provides a safe and consistent way to retrieve dependencies, even if the
+  /// registered dependency is not a [Future].
+  Future<Service> getServiceFactoryAsyncT(
     Type type, {
     Object? params,
     Entity? groupEntity,
     bool traverse = true,
-  }) {
-    final instance = getFactoryOrNullT(type);
-    return instance?.thenOr((e) {
-      e as Service;
-      return e.initialized ? e : consec(e.init(params), (_) => e);
-    });
+  }) async {
+    return getServiceFactoryT(
+      type,
+      params: params,
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
   }
 }
