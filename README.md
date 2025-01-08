@@ -10,22 +10,141 @@ Dart & Flutter Packages by dev-cetera.com & contributors.
 
 ## Summary
 
-This package provides a pragmatic dependency injection (DI) framework, coupled with service classes for seamless state management in Dart.
+Efficiently structure and manage the essential dependencies of your code, such as services, data, and utilities. This package helps you organize and access these dependencies using containers that store and provide them when needed, making your app more adaptable, testable, maintainable, and easier to debug.
 
-## Features
-
-- Robust FutureOr support for handling both synchronous and asynchronous dependencies and callbacks.
-- Register dependencies by type and groupEntity, enabling management of multiple dependencies of the same type.
-- Hierarchical DI with scoped dependencies through child containers.
-- Retrieve dependencies by runtime type or generic type.
-- Factory dependencies and lazy initialization for singleton dependencies.
-- Service classes that automatically handle cleanup when they are unregistered.
+Inspired by [get_it](https://pub.dev/packages/get_it/), it offers a flexible, faster solution with enhanced async handling, support for retrieving dependencies by runtime or generic type, and a hierarchical container structure. This approach allows nested child containers that inherit from parent containers, all while providing clearer, more concise documentation.
 
 For a full feature set, please refer to the [API reference](https://pub.dev/documentation/df_di/).
 
+## Use Case 1
+
+Your app probably contains classes that act as managers, helpers, or services, for example:
+
+```dart
+class UserManager {
+  final String uid;
+  const UserManager(this.uid);
+
+  String? _userName;
+  String get userName => _userName ?? 'Guest';
+
+  Future<void> loadUserData() async {
+    // TODO: Implement functionality to load user data here.
+    _userName = 'John Doe'; // Example of loaded data
+
+  }
+}
+```
+
+You can register dependencies like the `UserManager` above in the dedicated `DI.session` container. This container is one of many pre-defined containers you can use and is specifically intended to store dependencies that should persist throughout the app’s session (from login to logout):
+
+```dart
+Future<void> logIn() async {
+  // TODO: Log in and get the current user's uid.
+  final userManger = UserManager(uid);
+  await userManger.loadUserData();
+  // Register the UserManager in the session container once loaded.
+  DI.session.register<UserManager>(userManager);
+}
+```
+
+You can now use the `until` method that will only complete with an instance of `UserManager` once one has been registered in the `DI.session` container:
+
+```dart
+Widget build(BuildContext contect) {
+  return FutureBuilder<UserManager>(
+    future:  DI.session.until<UserManager>(),
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return CircularProgressIndicator();
+      } else if (snapshot.hasError) {
+        return Text('Error: ${snapshot.error}');
+      } else {
+        return Text('Hello, ${snapshot.data?.userName}');
+      }
+    },
+  );
+}
+```
+
+Upon logging out, the `DI.session` ssion container can be cleared and reset for future use. Dependencies are unregistered in the reverse order of their registration, ensuring proper resource cleanup:
+
+```dart
+Future<void> logOut() async {
+  // TODO: Log out the user.r
+  DI.session.unregisterAll();
+}
+```
+
+## Use Case 2
+
+Define a custom type to hold a `String` representing the getConfig API endpoint URL. Avoid registering types like `String` or `Map` in a container, as doing so introduces ambiguity about what will be retrieved.
+
+```dart
+class GetConfigEndpointUrl {
+  final String value;
+  const GetConfigEndpointUrl(this.value);
+}
+
+void setupEndpoints() {
+  DI.global.register<GetConfigEndpointUrl>(
+    GetConfigEndpointUrl('https://api.example.com/getConfig'),
+  );
+}
+```
+
+Define a class that is responsible for loading configuration data from the endpoint provided by `ConfigApiEndpointUrl`.
+
+```dart
+class ConfigManager {
+  Map<String, dynamic> _data = {};
+  Map<String, dynamic> get data => _data;
+
+  Future<void> loadDataFromApi() async {
+      // Don't proceed until ConfigApiEndpointUrl is registered.
+      final endpointUrl = (await DI.global.until<ConfigApiEndpointUrl>()).value;
+      // TODO: Get the data from the API...
+      _data = {'latestVersion': '1.2.3+4'}; // Example of data from API.
+  }
+
+  String? get latestVersion => _data['latestVersion'] as String?;
+}
+```
+
+Configure the app using the provided API and register the `ConfigManager`. This can only be done once thanks to the `isRegistered` check.
+
+```dart
+Future<void> configure() {
+  if (!isRegistered<ConfigManager>()) {
+    final configManager = ConfigManager();
+    await configManager.loadDataFromApi();
+    DI.global.register<ConfigManager>(configManager);
+  }
+}
+```
+
+If you’re confident that `ConfigManager` is already registered in the container, you can fetch it directly. Otherwise, check with `isRegistered` or use the `until` method.
+
+```dart
+Future<void> doStuff() async {
+  final configManager = DI.global<ConfigManager>().latestVersion;
+}
+```
+
 ## Quickstart
 
-### Creating a DI container:
+### Store a dependency in a container:
+
+```dart
+// Access the global DI instance anywhere in your app.
+DI.global;
+
+// Or create your own DI container.
+final di = DI();
+
+// Create nested child containers, useful for scoping dependencies in modular apps.
+final scopedDi = di.child().child().child(groupEntity: Entity('moduleGroup'));
+```
 
 ```dart
 // Access the global DI instance anywhere in your app.
