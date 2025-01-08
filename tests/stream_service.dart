@@ -69,6 +69,7 @@ final class UserStreamingService extends StreamService<Map<String, dynamic>, Obj
   @override
   ServiceListeners<Map<String, dynamic>> provideOnPushToStreamListeners() {
     return [
+      ...super.provideOnPushToStreamListeners(),
       (data) => print(data),
     ];
   }

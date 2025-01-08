@@ -63,6 +63,7 @@ abstract class Service<TParams extends Object?> {
 
   late TParams _params;
 
+  @nonVirtual
   @pragma('vm:prefer-inline')
   FutureOr<void> restartService(TParams params) async {
     _params = params;

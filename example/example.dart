@@ -146,6 +146,7 @@ final class CountingService extends StreamService<int, bool> {
   @override
   ServiceListeners<int> provideOnPushToStreamListeners() {
     return [
+      ...super.provideOnPushToStreamListeners(),
       (data) => print('[CountingService]: $data'),
     ];
   }

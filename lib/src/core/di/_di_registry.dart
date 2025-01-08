@@ -47,7 +47,11 @@ final class DIRegistry {
 
   /// Returns all dependencies witin this [DIRegistry] instance of type
   /// [T].
-  Iterable<Dependency> dependenciesWhereType<T>() {
+  Iterable<Dependency> dependenciesWhereType<T extends Object>() {
+    assert(
+      T != Object,
+      'T must be specified and cannot be Object.',
+    );
     return dependencies.map((e) => e.value is T ? e : null).nonNulls;
   }
 
@@ -85,8 +89,8 @@ final class DIRegistry {
     }
   }
 
-  /// Checks if any dependency of type [T] or subtype of [T] exists that is
-  /// associated with the specified [groupEntity]
+  /// Checks if any dependency of type [T] or subtypes exists under the
+  /// specified [groupEntity]
   ///
   /// Returns `true` if it does and `false` if it doesn't.
   @pragma('vm:prefer-inline')
@@ -96,9 +100,9 @@ final class DIRegistry {
     return getDependencyOrNull<T>(groupEntity: groupEntity) != null;
   }
 
-  /// Checks if any dependency with the exact [type] exists that is
-  /// associated with the specified [groupEntity]. Unlike [containsDependency],
-  /// this will not include subtypes of [type].
+  /// Checks if any dependency with the exact [type] exists under the specified
+  /// [groupEntity]. Unlike [containsDependency], this will not include subtypes
+  /// of [type].
   ///
   /// Returns `true` if it does and `false` if it doesn't.
   @pragma('vm:prefer-inline')
@@ -112,9 +116,9 @@ final class DIRegistry {
     );
   }
 
-  /// Checks if any dependency registered under the exact [typeEntity] exists that
-  /// is associated with the specified [groupEntity]. Unlike [containsDependency],
-  /// this will not include subtypes.
+  /// Checks if any dependency registered under the exact [typeEntity] exists
+  /// under the specified [groupEntity]. Unlike [containsDependency], this will
+  /// not include subtypes.
   ///
   /// Returns `true` if it does and `false` if it doesn't.
   @pragma('vm:prefer-inline')
@@ -125,19 +129,23 @@ final class DIRegistry {
     return getDependencyOrNullK(typeEntity, groupEntity: groupEntity) != null;
   }
 
-  /// Returns any dependency of type [T] or subtype of [T] that is associated
-  /// with the specified [groupEntity] if it exists, or `null`.
+  /// Returns any dependency of type [T] or subtypes under the specified
+  /// [groupEntity] if it exists, or `null`.
   @protected
   @pragma('vm:prefer-inline')
   Dependency<T>? getDependencyOrNull<T extends Object>({
     Entity? groupEntity,
   }) {
+    assert(
+      T != Object,
+      'T must be specified and cannot be Object.',
+    );
     return _state[groupEntity]?.values.firstWhereOrNull((e) => e.value is T)?.cast<T>();
   }
 
-  /// Returns any dependency with the exact [type] that is associated
-  /// with the specified [groupEntity] if it exists, or `null`. Unlike
-  /// [getDependencyOrNull], this will not include subtypes.
+  /// Returns any dependency with the exact [type] under the specified
+  /// [groupEntity] if it exists, or `null`. Unlike [getDependencyOrNull],
+  /// this will not include subtypes.
   @protected
   @pragma('vm:prefer-inline')
   Dependency? getDependencyOrNullT(
@@ -150,9 +158,9 @@ final class DIRegistry {
     );
   }
 
-  /// Returns any dependency with the exact [typeEntity] that is associated with
-  /// the specified [groupEntity] if it exists, or `null`. Unlike
-  /// [getDependencyOrNull], this will not include subtypes.
+  /// Returns any dependency with the exact [typeEntity] under the specified
+  /// [groupEntity] if it exists, or `null`. Unlike [getDependencyOrNull], this
+  /// will not include subtypes.
   @protected
   @pragma('vm:prefer-inline')
   Dependency? getDependencyOrNullK(
@@ -162,8 +170,8 @@ final class DIRegistry {
     return _state[groupEntity]?.values.firstWhereOrNull((e) => e.typeEntity == typeEntity);
   }
 
-  /// Removes any [Dependency] of [T] or subtype of [T] that is associated with
-  /// the specified [groupEntity].
+  /// Removes any [Dependency] of [T] or subtypes under the specified
+  /// [groupEntity].
   ///
   /// Returns the removed [Dependency] of [T], or `null` if it did not exist
   /// within [state].
@@ -182,9 +190,9 @@ final class DIRegistry {
     return null;
   }
 
-  /// Removes any dependency with the exact [type] that is associated
-  /// with the specified [groupEntity]. Unlike [removeDependency], this will not
-  /// include any subtypes.
+  /// Removes any dependency with the exact [type] under the specified
+  /// [groupEntity]. Unlike [removeDependency], this will not include any
+  /// subtypes.
   ///
   /// Returns the removed [Dependency] or `null` if it did not exist within
   /// [state].
@@ -200,9 +208,9 @@ final class DIRegistry {
     );
   }
 
-  /// Removes any dependency with the exact [typeEntity] that is associated with
-  /// the specified [groupEntity]. Unlike [removeDependency], this will not
-  /// include any subtypes.
+  /// Removes any dependency with the exact [typeEntity] under the specified
+  /// [groupEntity]. Unlike [removeDependency], this will not include any
+  /// subtypes.
   ///
   /// Returns the removed [Dependency] or `null` if it did not exist within
   /// [state].
@@ -232,8 +240,8 @@ final class DIRegistry {
     return null;
   }
 
-  /// Updates the [state] by setting or replacing the [group] associated with
-  /// the specified [groupEntity].
+  /// Updates the [state] by setting or replacing the [group] under the
+  /// specified [groupEntity].
   @protected
   void setGroup(
     DependencyGroup<Object> group, {

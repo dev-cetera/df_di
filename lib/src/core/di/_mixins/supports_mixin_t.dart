@@ -16,11 +16,16 @@ import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-base mixin SupportsRuntimeTypeMixin on SupportstypeEntityMixin {
-  //
-  //
-  //
-
+base mixin SupportsMixinT on SupportsMixinK {
+  /// Retrieves a dependency of the exact runtime [type] registered under the
+  /// specified [groupEntity] in the [registry].
+  ///
+  /// If the dependency does not exist, a [DependencyNotFoundException] is
+  /// thrown.
+  ///
+  /// This method always returns a [Future], ensuring compatibility. This
+  /// provides a safe and consistent way to retrieve dependencies, even if the
+  /// registered dependency is not a [Future].
   Future<Object> getAsyncT(
     Type type, {
     Entity? groupEntity,
@@ -33,10 +38,14 @@ base mixin SupportsRuntimeTypeMixin on SupportstypeEntityMixin {
     );
   }
 
-  //
-  //
-  //
-
+  /// Retrieves a dependency of the exact runtime [type] registered under the
+  /// specified [groupEntity] from the [registry].
+  ///
+  /// If the dependency is a [Future], a [DependencyIsFutureException] is
+  /// thrown.
+  ///
+  /// If the dependency does not exist, a [DependencyNotFoundException] is
+  /// thrown.
   Object getSyncT(
     Type type, {
     Entity? groupEntity,
@@ -57,10 +66,11 @@ base mixin SupportsRuntimeTypeMixin on SupportstypeEntityMixin {
     }
   }
 
-  //
-  //
-  //
-
+  /// Retrieves a dependency of the exact runtime [type] registered under the
+  /// specified [groupEntity] from the [registry].
+  ///
+  /// If the dependency does not exist, a [DependencyNotFoundException] is
+  /// thrown.
   Object? getSyncOrNullT(
     Type type, {
     Entity? groupEntity,
@@ -81,12 +91,8 @@ base mixin SupportsRuntimeTypeMixin on SupportstypeEntityMixin {
     return value?.asSyncOrNull;
   }
 
-  //
-  //
-  //
-
   /// Retrieves a dependency of the exact runtime [type] registered under the
-  /// specified [groupEntity].
+  /// specified [groupEntity] from the [registry].
   ///
   /// Note that this method will not return instances of subtypes. For example,
   /// if [type] is `List<dynamic>` and `List<String>` is actually registered,
@@ -95,8 +101,8 @@ base mixin SupportsRuntimeTypeMixin on SupportstypeEntityMixin {
   /// consider using the standard [get] method that employs generics and will
   /// return subtypes.
   ///
-  /// If the dependency exists, it is returned; otherwise,
-  /// a [DependencyNotFoundException] is thrown.
+  /// If the dependency does not exist, a [DependencyNotFoundException] is
+  /// thrown.
   ///
   /// If [traverse] is set to `true`, the search will also include all parent
   /// containers.
@@ -122,10 +128,13 @@ base mixin SupportsRuntimeTypeMixin on SupportstypeEntityMixin {
     );
   }
 
-  //
-  //
-  //
-
+  /// Unregisters a dependency of the exact runtime [type] registered under the
+  /// specified [groupEntity] from the [registry], if it exists.
+  ///
+  /// If [skipOnUnregisterCallback] is true, the
+  /// [DependencyMetadata.onUnregister] callback will be skipped.
+  ///
+  /// Throws a [DependencyNotFoundException] if the dependency is not found.
   FutureOr<Object> unregisterT(
     Type type, {
     Entity? groupEntity,
@@ -138,10 +147,11 @@ base mixin SupportsRuntimeTypeMixin on SupportstypeEntityMixin {
     );
   }
 
-  //
-  //
-  //
-
+  /// Checks whether a dependency of the exact runtime [type] is registered
+  /// under the specified [groupEntity] in the [registry].
+  ///
+  /// If [traverse] is set to `true`, the search will also include all parent
+  /// containers.
   bool isRegisteredT(
     Type type, {
     Entity? groupEntity,
@@ -154,12 +164,8 @@ base mixin SupportsRuntimeTypeMixin on SupportstypeEntityMixin {
     );
   }
 
-  //
-  //
-  //
-
   /// Retrieves a dependency of the exact runtime [type] registered under the
-  /// specified [groupEntity].
+  /// specified [groupEntity] from the [registry].
   ///
   /// Note that this method will not return instances of subtypes. For example,
   /// if [type] is `List<dynamic>` and `List<String>` is actually registered,
@@ -168,7 +174,7 @@ base mixin SupportsRuntimeTypeMixin on SupportstypeEntityMixin {
   /// consider using the standard [get] method that employs generics and will
   /// return subtypes.
   ///
-  /// If the dependency exists, it is returned; otherwise, `null` is returned.
+  /// If the dependency does not exist, `null` is returned.
   ///
   /// If [traverse] is set to `true`, the search will also include all parent
   /// containers.
@@ -193,10 +199,14 @@ base mixin SupportsRuntimeTypeMixin on SupportstypeEntityMixin {
     );
   }
 
-  //
-  //
-  //
-
+  /// Retrieves a dependency of the exact runtime [type] registered under the
+  /// specified [groupEntity] from the [registry].
+  ///
+  /// If the dependency is found, it is returned; otherwise, this method waits
+  /// until the dependency is registered before returning it.
+  ///
+  /// If [traverse] is set to `true`, the search will also include all parent
+  /// containers.
   FutureOr<Object> untilT(
     Type type, {
     Entity? groupEntity,

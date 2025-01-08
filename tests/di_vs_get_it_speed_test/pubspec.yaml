@@ -1,0 +1,7 @@
+name: di_vs_get_it_speed_test
+environment:
+  sdk: ">=3.5.0 <4.0.0"
+dependencies:
+  df_di:
+    path: ../../
+  get_it:

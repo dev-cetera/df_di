@@ -16,122 +16,9 @@ import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-base mixin SupportstypeEntityMixin on DIBase {
-  //
-  //
-  //
-
-  @protected
-  Dependency<FutureOr<Object>> _registerDependencyK({
-    required Dependency<FutureOr<Object>> dependency,
-    bool checkExisting = false,
-  }) {
-    final groupEntity1 = dependency.metadata?.groupEntity ?? focusGroup;
-    final typeEntity = dependency.typeEntity;
-    if (checkExisting) {
-      final existingDep = _getDependencyOrNullK(
-        typeEntity,
-        groupEntity: groupEntity1,
-        traverse: false,
-      );
-      if (existingDep != null) {
-        throw DependencyAlreadyRegisteredException(
-          groupEntity: groupEntity1,
-          type: typeEntity,
-        );
-      }
-    }
-    registry.setDependency(dependency);
-    return dependency;
-  }
-
-  //
-  //
-  //
-
-  @protected
-  FutureOr<Object> unregisterK(
-    Entity typeEntity, {
-    Entity? groupEntity,
-    bool skipOnUnregisterCallback = false,
-  }) {
-    final groupEntity1 = groupEntity ?? focusGroup;
-    final removed = [
-      registry.removeDependencyK(
-        typeEntity,
-        groupEntity: groupEntity1,
-      ),
-      registry.removeDependencyK(
-        TypeEntity(Future, [typeEntity]),
-        groupEntity: groupEntity1,
-      ),
-      registry.removeDependencyK(
-        TypeEntity(Lazy, [typeEntity]),
-        groupEntity: groupEntity1,
-      ),
-    ].nonNulls.firstOrNull;
-    if (removed == null) {
-      throw DependencyNotFoundException(
-        groupEntity: groupEntity1,
-        type: typeEntity,
-      );
-    }
-    final value = removed.value;
-    if (skipOnUnregisterCallback) {
-      return value;
-    }
-    return consec(
-      removed.metadata?.onUnregister?.call(value),
-      (_) => value,
-    );
-  }
-
-  //
-  //
-  //
-
-  bool isRegisteredK(
-    Entity typeEntity, {
-    Entity? groupEntity,
-    bool traverse = true,
-  }) {
-    final groupEntity1 = groupEntity ?? focusGroup;
-    return [
-      () =>
-          registry.getDependencyOrNullK(
-            typeEntity,
-            groupEntity: groupEntity1,
-          ) !=
-          null,
-      () =>
-          registry.getDependencyOrNullK(
-            TypeEntity(Future, [typeEntity]),
-            groupEntity: groupEntity1,
-          ) !=
-          null,
-      () =>
-          registry.getDependencyOrNullK(
-            TypeEntity(Lazy, [typeEntity]),
-            groupEntity: groupEntity1,
-          ) !=
-          null,
-      if (traverse)
-        () => parents.any(
-              (e) => (e as SupportstypeEntityMixin).isRegisteredK(
-                typeEntity,
-                groupEntity: groupEntity,
-                traverse: true,
-              ),
-            ),
-    ].any((e) => e());
-  }
-
-  //
-  //
-  //
-
+base mixin SupportsMixinK on DIBase {
   /// Retrieves a dependency of the exact type [typeEntity] registered under the
-  /// specified [groupEntity].
+  /// specified [groupEntity] from the [registry].
   ///
   /// Note that this method will not return instances of subtypes. For example,
   /// if [typeEntity] is `Entity('List<dynamic>')` and `Entity('List<String>')` is
@@ -140,8 +27,8 @@ base mixin SupportstypeEntityMixin on DIBase {
   /// need to retrieve subtypes, consider using the standard [get] method that
   /// employs generics and will return subtypes.
   ///
-  /// If the dependency exists, it is returned; otherwise, a
-  /// [DependencyNotFoundException] is thrown.
+  /// If the dependency does not exist, a [DependencyNotFoundException] is
+  /// thrown.
   ///
   /// If [traverse] is set to `true`, the search will also include all parent
   /// containers.
@@ -175,12 +62,8 @@ base mixin SupportstypeEntityMixin on DIBase {
     return value;
   }
 
-  //
-  //
-  //
-
   /// Retrieves a dependency of the exact type [typeEntity] registered under the
-  /// specified [groupEntity].
+  /// specified [groupEntity] from the [registry].
   ///
   /// Note that this method will not return instances of subtypes. For example,
   /// if [typeEntity] is `Entity('List<dynamic>')` and `Entity('List<String>')` is
@@ -189,7 +72,7 @@ base mixin SupportstypeEntityMixin on DIBase {
   /// need to retrieve subtypes, consider using the standard [get] method that
   /// employs generics and will return subtypes.
   ///
-  /// If the dependency exists, it is returned; otherwise, `null` is returned.
+  /// If the dependency does not exist, `null` is returned.
   ///
   /// If [traverse] is set to `true`, the search will also include all parent
   /// containers.
@@ -244,6 +127,33 @@ base mixin SupportstypeEntityMixin on DIBase {
   //
   //
 
+  Dependency<FutureOr<Object>> _registerDependencyK({
+    required Dependency<FutureOr<Object>> dependency,
+    bool checkExisting = false,
+  }) {
+    final groupEntity1 = dependency.metadata?.groupEntity ?? focusGroup;
+    final typeEntity = dependency.typeEntity;
+    if (checkExisting) {
+      final existingDep = _getDependencyOrNullK(
+        typeEntity,
+        groupEntity: groupEntity1,
+        traverse: false,
+      );
+      if (existingDep != null) {
+        throw DependencyAlreadyRegisteredException(
+          groupEntity: groupEntity1,
+          type: typeEntity,
+        );
+      }
+    }
+    registry.setDependency(dependency);
+    return dependency;
+  }
+
+  //
+  //
+  //
+
   Dependency<FutureOr<Object>>? _getDependencyOrNullK(
     Entity typeEntity, {
     Entity? groupEntity,
@@ -261,7 +171,7 @@ base mixin SupportstypeEntityMixin on DIBase {
 
     if (dependency == null && traverse) {
       for (final parent in parents) {
-        dependency = (parent as SupportstypeEntityMixin)._getDependencyOrNullK(
+        dependency = (parent as SupportsMixinK)._getDependencyOrNullK(
           typeEntity,
           groupEntity: groupEntity1,
         );
@@ -284,6 +194,88 @@ base mixin SupportstypeEntityMixin on DIBase {
     }
 
     return null;
+  }
+
+  //
+  //
+  //
+
+  @protected
+  FutureOr<Object> unregisterK(
+    Entity typeEntity, {
+    Entity? groupEntity,
+    bool skipOnUnregisterCallback = false,
+  }) {
+    final groupEntity1 = groupEntity ?? focusGroup;
+    final removed = [
+      registry.removeDependencyK(
+        typeEntity,
+        groupEntity: groupEntity1,
+      ),
+      registry.removeDependencyK(
+        TypeEntity(Future, [typeEntity]),
+        groupEntity: groupEntity1,
+      ),
+      registry.removeDependencyK(
+        TypeEntity(Lazy, [typeEntity]),
+        groupEntity: groupEntity1,
+      ),
+    ].nonNulls.firstOrNull;
+    if (removed == null) {
+      throw DependencyNotFoundException(
+        groupEntity: groupEntity1,
+        type: typeEntity,
+      );
+    }
+    final value = removed.value;
+    if (skipOnUnregisterCallback) {
+      return value;
+    }
+    return consec(
+      removed.metadata?.onUnregister?.call(value),
+      (_) => value,
+    );
+  }
+
+  //
+  //
+  //
+
+  @protected
+  bool isRegisteredK(
+    Entity typeEntity, {
+    Entity? groupEntity,
+    bool traverse = true,
+  }) {
+    final groupEntity1 = groupEntity ?? focusGroup;
+    return [
+      () =>
+          registry.getDependencyOrNullK(
+            typeEntity,
+            groupEntity: groupEntity1,
+          ) !=
+          null,
+      () =>
+          registry.getDependencyOrNullK(
+            TypeEntity(Future, [typeEntity]),
+            groupEntity: groupEntity1,
+          ) !=
+          null,
+      () =>
+          registry.getDependencyOrNullK(
+            TypeEntity(Lazy, [typeEntity]),
+            groupEntity: groupEntity1,
+          ) !=
+          null,
+      if (traverse)
+        () => parents.any(
+              (e) => (e as SupportsMixinK).isRegisteredK(
+                typeEntity,
+                groupEntity: groupEntity,
+                traverse: true,
+              ),
+            ),
+    ].any((e) => e());
   }
 
   //

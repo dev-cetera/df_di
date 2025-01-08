@@ -18,11 +18,13 @@ import '/src/_common.dart';
 
 final class DI extends DIBase
     with
-        SupportstypeEntityMixin,
-        SupportsRuntimeTypeMixin,
+        SupportsMixinK,
+        SupportsMixinT,
         SupportsConstructorsMixin,
+        SupportsConstructorsMixinT,
         SupportsChildrenMixin,
-        SupportsServicesMixin {
+        SupportsServicesMixin,
+        SupportsServicesMixinT {
   /// A predefined container recommended for application-wide dependencies.
   /// This container serves as the parent for other containers.
   static final app = DI();

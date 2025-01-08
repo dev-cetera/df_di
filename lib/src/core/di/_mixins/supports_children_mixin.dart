@@ -23,6 +23,15 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
   /// Child containers.
   List<DI> get children => List.unmodifiable(registry.dependencies.where((e) => e.value is DI));
 
+  /// Registers a new child container under the specified [groupEntity] in the
+  /// [registry].
+  ///
+  /// You can provide a [validator] function to validate the dependency before
+  /// it gets retrieved]. If the validation fails [DependencyInvalidException]
+  /// will be throw upon retrieval.
+  ///
+  /// Additionally, an [onUnregister] callback can be specified to execute when
+  /// the dependency is unregistered via [unregister].
   void registerChild({
     Entity? groupEntity,
     bool Function(FutureOr<DI>)? validator,
@@ -40,6 +49,11 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     );
   }
 
+  /// Retrieves the child container registered under the specified
+  /// [groupEntity] from the [registry].
+  ///
+  /// If the child exists, it is returned; otherwise, a
+  /// [DependencyNotFoundException] is thrown.
   DI getChild({
     Entity? groupEntity,
   }) {
@@ -57,6 +71,10 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     return value;
   }
 
+  /// Retrieves the child container registered under the specified
+  /// [groupEntity] from the [registry].
+  ///
+  /// If the dependency does not exist, `null` is returned.
   DI? getChildOrNull({
     Entity? groupEntity,
   }) {
@@ -68,6 +86,13 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
         ?.asSyncOrNull;
   }
 
+  /// Unregisters the child container registered under the specified
+  /// [groupEntity] in the [registry].
+  ///
+  /// If [skipOnUnregisterCallback] is true,
+  /// the [DependencyMetadata.onUnregister] callback will be skipped.
+  ///
+  /// Throws a [DependencyNotFoundException] if the dependency is not found.
   FutureOr<Object> unregisterChild({
     Entity? groupEntity,
     bool skipOnUnregisterCallback = false,
@@ -85,6 +110,27 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     );
   }
 
+  /// Checks whether a child container is registered under the specified
+  /// [groupEntity] in the [registry].
+  bool isChildRegistered({
+    Entity? groupEntity,
+  }) {
+    final groupEntity1 = groupEntity ?? focusGroup;
+    if (registry.getDependencyOrNull<DI>(groupEntity: groupEntity1) != null) {
+      return true;
+    }
+    return false;
+  }
+
+  /// Registers a new child container under the specified [groupEntity] in the
+  /// registry, and returns it.
+  ///
+  /// You can provide a [validator] function to validate the dependency before
+  /// it gets retrieved]. If the validation fails [DependencyInvalidException]
+  /// will be throw upon retrieval.
+  ///
+  /// You can provide an [onUnregister] callback can be specified to execute
+  /// when the dependency is unregistered via [unregister].
   DI child({
     Entity? groupEntity,
     bool Function(FutureOr<DI>)? validator,

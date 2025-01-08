@@ -16,55 +16,22 @@ import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-base mixin SupportsConstructorsMixin on SupportsMixinT {
-  /// Registers a [Lazy] dependency with the specified [groupEntity] in the
-  /// [registry].
+base mixin SupportsConstructorsMixinT on SupportsMixinT {
+  /// Removes the cached instance of the exact [type] with the specified
+  /// [groupEntity] in the [registry].
   ///
-  /// Lazy dependencies are created by the provided [constructor] function by
-  /// either [getSingleton] or [getFactory].
-  ///
-  /// You can provide a [validator] function to validate the dependency before
-  /// it gets retrieved]. If the validation fails [DependencyInvalidException]
-  /// will be throw upon retrieval.
-  ///
-  /// Additionally, an [onUnregister] callback can be specified to execute when
-  /// the dependency is unregistered via [unregister].
-  Lazy<T> registerLazy<T extends Object>(
-    TConstructor<T> constructor, {
-    Entity? groupEntity,
-    bool Function(FutureOr<T> instance)? validator,
-    FutureOr<void> Function(FutureOr<T> instance)? onUnregister,
-  }) {
-    return register<Lazy<T>>(
-      Lazy<T>(constructor),
-      groupEntity: groupEntity,
-      validator: validator != null
-          ? (constructor) {
-              final instance = constructor.asSync.currentInstance;
-              return instance != null ? validator(instance) : true;
-            }
-          : null,
-      onUnregister: onUnregister != null
-          ? (constructor) {
-              final instance = constructor.asSync.currentInstance;
-              return instance != null ? onUnregister(instance) : null;
-            }
-          : null,
-    ).asSync;
-  }
-
-  /// Removes the cached instance of type [T] or its subtypes with the
-  /// specified [groupEntity] in the [registry].
-  ///
-  /// This allows it to be re-created via [getSingleton].
-  void resetSingleton<T extends Object>({
+  /// This allows it to be re-created via [getSingletonT].
+  void resetSingletonT(
+    Type type, {
     Entity? groupEntity,
   }) {
-    get<Lazy<T>>(groupEntity: groupEntity).asSync.resetSingleton();
+    (getK(TypeEntity(Lazy, [type]), groupEntity: groupEntity) as Lazy).resetSingleton();
   }
 
-  /// Retrieves a singleton instance of type [T] or its subtypes under the
-  /// specified [groupEntity] from the [registry].
+  /// Retrieves a singleton instance of the exact [type] under the specified
+  /// [groupEntity] from the [registry].
+  ///
+  /// Upon result, the [Object] can be cast [type].
   ///
   /// If no instance is cached, a new one is created using the [Lazy]
   /// constructor provided during registration.
@@ -75,18 +42,22 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
   /// This method always returns a [Future], ensuring compatibility. This
   /// provides a safe and consistent way to retrieve dependencies, even if the
   /// registered dependency is not a [Future].
-  Future<T> getSingletonAsync<T extends Object>({
+  Future<Object> getSingletonAsyncT(
+    Type type, {
     Entity? groupEntity,
     bool traverse = true,
   }) async {
-    return getSingleton<T>(
+    return getSingletonT(
+      type,
       groupEntity: groupEntity,
       traverse: traverse,
     );
   }
 
-  /// Retrieves a singleton instance of type [T] or its subtypes under the
+  /// Retrieves a singleton instance of the exact [type] under the
   /// specified [groupEntity] from the [registry].
+  ///
+  /// Upon result, the [Object] can be cast [type].
   ///
   /// If no instance is cached, a new one is created using the [Lazy]
   /// constructor provided during registration.
@@ -96,17 +67,19 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
   ///
   /// If the dependency does not exist, a [DependencyNotFoundException] is
   /// thrown.
-  T getSingletonSync<T extends Object>({
+  Object getSingletonSyncT(
+    Type type, {
     Entity? groupEntity,
     bool traverse = true,
   }) {
-    final value = getSingleton<T>(
+    final value = getSingletonT(
+      type,
       groupEntity: groupEntity,
       traverse: traverse,
     );
     if (value is Future) {
       throw DependencyIsFutureException(
-        type: T,
+        type: type,
         groupEntity: groupEntity,
       );
     } else {
@@ -114,8 +87,10 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
     }
   }
 
-  /// Retrieves a singleton instance of type [T] or its subtypes under the
+  /// Retrieves a singleton instance of  of the exact [type] under the
   /// specified [groupEntity] from the [registry].
+  ///
+  /// Upon result, the [Object] can be cast [type].
   ///
   /// If no instance is cached, a new one is created using the [Lazy]
   /// constructor provided during registration.
@@ -124,26 +99,30 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
   /// thrown.
   ///
   /// If the dependency exists, it is returned; otherwise `null` is returned.
-  T? getSingletonSyncOrNull<T extends Object>({
+  Object? getSingletonSyncOrNullT(
+    Type type, {
     Entity? groupEntity,
     bool traverse = true,
     bool throwIfAsync = false,
   }) {
-    final value = getSingletonOrNull<T>(
+    final value = getSingletonOrNullT(
+      type,
       groupEntity: groupEntity,
       traverse: traverse,
     );
     if (throwIfAsync && value is Future) {
       throw DependencyIsFutureException(
-        type: T,
+        type: type,
         groupEntity: groupEntity,
       );
     }
     return value?.asSyncOrNull;
   }
 
-  /// Retrieves a singleton instance of type [T] or its subtypes under the
+  /// Retrieves a singleton instance of the exact type  under the
   /// specified [groupEntity] from the [registry].
+  ///
+  /// Upon result, the [Object] can be cast [type].
   ///
   /// If no instance is cached, a new one is created using the [Lazy]
   /// constructor provided during registration.
@@ -153,27 +132,31 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
   ///
   /// The return type is a [FutureOr], which means it can either be a
   /// [Future] or a resolved value.
-  FutureOr<T> getSingleton<T extends Object>({
+  FutureOr<Object> getSingletonT(
+    Type type, {
     Entity? groupEntity,
     bool traverse = true,
   }) {
     final groupEntity1 = groupEntity ?? focusGroup;
-    final value = getSingletonOrNull<T>(
+    final value = getSingletonOrNullT(
+      type,
       groupEntity: groupEntity1,
       traverse: traverse,
     );
 
     if (value == null) {
       throw DependencyNotFoundException(
-        type: T,
+        type: type,
         groupEntity: groupEntity1,
       );
     }
     return value;
   }
 
-  /// Retrieves a singleton instance of type [T] or its subtypes under the
+  /// Retrieves a singleton instance of the exact [type] under the
   /// specified [groupEntity] from the [registry].
+  ///
+  /// Upon result, the [Object] can be cast [type].
   ///
   /// If no instance is cached, a new one is created using the [Lazy]
   /// constructor provided during registration.
@@ -182,18 +165,23 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
   ///
   /// The return type is a [FutureOr], which means it can either be a
   /// [Future] or a resolved value.
-  FutureOr<T>? getSingletonOrNull<T extends Object>({
+  FutureOr<Object>? getSingletonOrNullT(
+    Type type, {
     Entity? groupEntity,
     bool traverse = true,
   }) {
-    return getOrNull<Lazy<T>>(
+    return (getOrNullK(
+      TypeEntity(Lazy, [type]),
       groupEntity: groupEntity,
       traverse: traverse,
-    )?.asSyncOrNull?.singleton;
+    ) as Lazy?)
+        ?.singleton;
   }
 
-  /// Retrieves a new instance of type [T] or its subtypes from the [registry]
-  /// under the specified [groupEntity] from the [registry].
+  /// Retrieves a new instance of the exact [type] from the [registry] under
+  /// the specified [groupEntity] from the [registry].
+  ///
+  /// Upon result, the [Object] can be cast [type].
   ///
   /// The instance is created using the [Lazy] constructor provided during the
   /// registration of the factory dependency.
@@ -204,18 +192,22 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
   /// This method always returns a [Future], ensuring compatibility. This
   /// provides a safe and consistent way to retrieve dependencies, even if the
   /// registered dependency is not a [Future].
-  Future<T> getFactoryAsync<T extends Object>({
+  Future<Object> getFactoryAsyncT(
+    Type type, {
     Entity? groupEntity,
     bool traverse = true,
   }) async {
-    return getFactory<T>(
+    return getFactoryT(
+      type,
       groupEntity: groupEntity,
       traverse: traverse,
     );
   }
 
-  /// Retrieves a new instance of type [T] or its subtypes from the [registry]
-  /// under the specified [groupEntity] from the [registry].
+  /// Retrieves a new instance of the exact [type] from the [registry] under
+  /// the specified [groupEntity] from the [registry].
+  ///
+  /// Upon result, the [Object] can be cast [type].
   ///
   /// The instance is created using the [Lazy] constructor provided during the
   /// registration of the factory dependency.
@@ -225,17 +217,19 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
   ///
   /// If the dependency does not exist, a [DependencyNotFoundException] is
   /// thrown.
-  T getFactorySync<T extends Object>({
+  Object getFactorySyncT(
+    Type type, {
     Entity? groupEntity,
     bool traverse = true,
   }) {
-    final value = getFactory<T>(
+    final value = getFactoryT(
+      type,
       groupEntity: groupEntity,
       traverse: traverse,
     );
     if (value is Future) {
       throw DependencyIsFutureException(
-        type: T,
+        type: type,
         groupEntity: groupEntity,
       );
     } else {
@@ -243,8 +237,10 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
     }
   }
 
-  /// Retrieves a new instance of type [T] or its subtypes from the [registry]
-  /// under the specified [groupEntity] from the [registry].
+  /// Retrieves a new instance of the exact [type] from the [registry] under the
+  /// specified [groupEntity] from the [registry].
+  ///
+  /// Upon result, the [Object] can be cast [type].
   ///
   /// The instance is created using the [Lazy] constructor provided during the
   /// registration of the factory dependency.
@@ -253,26 +249,30 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
   /// thrown.
   ///
   /// If the dependency exists, it is returned; otherwise `null` is returned.
-  T? getFactorySyncOrNull<T extends Object>({
+  Object? getFactorySyncOrNullT(
+    Type type, {
     Entity? groupEntity,
     bool traverse = true,
     bool throwIfAsync = false,
   }) {
-    final value = getFactoryOrNull<T>(
+    final value = getFactoryOrNullT(
+      type,
       groupEntity: groupEntity,
       traverse: traverse,
     );
     if (throwIfAsync && value is Future) {
       throw DependencyIsFutureException(
-        type: T,
+        type: type,
         groupEntity: groupEntity,
       );
     }
     return value?.asSyncOrNull;
   }
 
-  /// Retrieves a new instance of type [T] or its subtypes from the [registry]
-  /// under the specified [groupEntity] from the [registry].
+  /// Retrieves a new instance of the exact [type] from the [registry] under
+  /// the specified [groupEntity] from the [registry].
+  ///
+  /// Upon result, the [Object] can be cast [type].
   ///
   /// The instance is created using the [Lazy] constructor provided during the
   /// registration of the factory dependency.
@@ -282,27 +282,30 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
   ///
   /// The return type is a [FutureOr], which means it can either be a
   /// [Future] or a resolved value.
-  FutureOr<T> getFactory<T extends Object>({
+  FutureOr<Object> getFactoryT(
+    Type type, {
     Entity? groupEntity,
     bool traverse = true,
   }) {
     final groupEntity1 = groupEntity ?? focusGroup;
-    final value = getFactoryOrNull<T>(
+    final value = getFactoryOrNullT(
+      type,
       groupEntity: groupEntity1,
       traverse: traverse,
     );
-
     if (value == null) {
       throw DependencyNotFoundException(
-        type: T,
+        type: type,
         groupEntity: groupEntity1,
       );
     }
     return value;
   }
 
-  /// Retrieves a new instance of type [T] or its subtypes from the [registry]
-  /// under the specified [groupEntity] from the [registry].
+  /// Retrieves a new instance of the exact [type] from the [registry] under
+  /// the specified [groupEntity] from the [registry].
+  ///
+  /// Upon result, the [Object] can be cast [type].
   ///
   /// The instance is created using the [Lazy] constructor provided during the
   /// registration of the factory dependency.
@@ -311,13 +314,16 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
   ///
   /// The return type is a [FutureOr], which means it can either be a
   /// [Future] or a resolved value.
-  FutureOr<T>? getFactoryOrNull<T extends Object>({
+  FutureOr<Object>? getFactoryOrNullT(
+    Type type, {
     Entity? groupEntity,
     bool traverse = true,
   }) {
-    return getOrNull<Lazy<T>>(
+    return (getOrNullK(
+      TypeEntity(Lazy, [type]),
       groupEntity: groupEntity,
       traverse: traverse,
-    )?.asSyncOrNull?.factory;
+    ) as Lazy?)
+        ?.factory;
   }
 }

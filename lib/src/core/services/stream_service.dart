@@ -101,7 +101,7 @@ abstract class StreamService<TData extends Object?, TParams extends Object?>
   }
 
   @mustCallSuper
-  ServiceListeners<TData> provideOnPushToStreamListeners();
+  ServiceListeners<TData> provideOnPushToStreamListeners() => [];
 
   /// Override this method to define the conditions under which a data item
   /// should be added.

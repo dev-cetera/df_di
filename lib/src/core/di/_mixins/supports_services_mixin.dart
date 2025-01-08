@@ -16,7 +16,9 @@ import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsRuntimeTypeMixin {
+base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
+  /// Register a [Service] and calls [Service.init] with the provided [params]
+  /// under the specified [groupEntity] in the [registry].
   FutureOr<T> registerService<T extends Service>(
     FutureOr<T> service, {
     Object? params,
@@ -92,29 +94,6 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsRuntimeTy
     if (value == null) {
       throw DependencyNotFoundException(
         type: T,
-        groupEntity: groupEntity1,
-      );
-    }
-    return value;
-  }
-
-  FutureOr<Service> getServiceSingletonT(
-    Type type, {
-    Object? params,
-    Entity? groupEntity,
-    bool traverse = true,
-  }) {
-    final groupEntity1 = groupEntity ?? focusGroup;
-    final value = getServiceSingletonOrNullT(
-      type,
-      params: params,
-      groupEntity: groupEntity1,
-      traverse: traverse,
-    );
-
-    if (value == null) {
-      throw DependencyNotFoundException(
-        type: type,
         groupEntity: groupEntity1,
       );
     }
@@ -206,77 +185,6 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsRuntimeTy
     );
   }
 
-  Future<Service> getServiceSingletonAsyncT(
-    Type type, {
-    Object? params,
-    Entity? groupEntity,
-    bool traverse = true,
-  }) async {
-    return getServiceSingletonT(
-      type,
-      params: params,
-      groupEntity: groupEntity,
-      traverse: traverse,
-    );
-  }
-
-  Service getServiceSingletonSyncT(
-    Type type, {
-    Object? params,
-    Entity? groupEntity,
-    bool traverse = true,
-    bool throwIfAsync = false,
-  }) {
-    final value = getServiceSingletonT(
-      type,
-      params: params,
-      groupEntity: groupEntity,
-      traverse: traverse,
-    );
-    if (value is Future) {
-      throw DependencyIsFutureException(
-        type: type,
-        groupEntity: groupEntity,
-      );
-    }
-    return value;
-  }
-
-  Service? getServiceSingletonSyncOrNullT(
-    Type type, {
-    Object? params,
-    Entity? groupEntity,
-    bool traverse = true,
-    bool throwIfAsync = false,
-  }) {
-    final value = getServiceSingletonOrNullT(
-      type,
-      params: params,
-      groupEntity: groupEntity,
-      traverse: traverse,
-    );
-    if (throwIfAsync && value is Future) {
-      throw DependencyIsFutureException(
-        type: type,
-        groupEntity: groupEntity,
-      );
-    }
-    return value?.asSyncOrNull;
-  }
-
-  FutureOr<Service>? getServiceSingletonOrNullT(
-    Type type, {
-    Object? params,
-    Entity? groupEntity,
-    bool traverse = true,
-  }) {
-    final instance = getSingletonOrNullT(type);
-    return instance?.thenOr((e) {
-      e as Service;
-      return e.initialized ? e : consec(e.init(params), (_) => e);
-    });
-  }
-
   Future<T> getServiceSingletonWithParamsAsync<T extends Service<P>, P extends Object?>({
     required P params,
     Entity? groupEntity,
@@ -357,28 +265,6 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsRuntimeTy
     if (value == null) {
       throw DependencyNotFoundException(
         type: T,
-        groupEntity: groupEntity1,
-      );
-    }
-    return value;
-  }
-
-  FutureOr<Service> getServiceFactoryT(
-    Type type, {
-    Object? params,
-    Entity? groupEntity,
-    bool traverse = true,
-  }) {
-    final groupEntity1 = groupEntity ?? focusGroup;
-    final value = getServiceFactoryOrNullT(
-      type,
-      params: params,
-      groupEntity: groupEntity1,
-      traverse: traverse,
-    );
-    if (value == null) {
-      throw DependencyNotFoundException(
-        type: type,
         groupEntity: groupEntity1,
       );
     }
@@ -467,77 +353,6 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsRuntimeTy
       groupEntity: groupEntity,
       traverse: traverse,
     );
-  }
-
-  Future<Service> getServiceFactoryAsyncT(
-    Type type, {
-    Object? params,
-    Entity? groupEntity,
-    bool traverse = true,
-  }) async {
-    return getServiceFactoryT(
-      type,
-      params: params,
-      groupEntity: groupEntity,
-      traverse: traverse,
-    );
-  }
-
-  Service getServiceFactorySyncT(
-    Type type, {
-    Object? params,
-    Entity? groupEntity,
-    bool traverse = true,
-    bool throwIfAsync = false,
-  }) {
-    final value = getServiceFactoryT(
-      type,
-      params: params,
-      groupEntity: groupEntity,
-      traverse: traverse,
-    );
-    if (value is Future) {
-      throw DependencyIsFutureException(
-        type: type,
-        groupEntity: groupEntity,
-      );
-    }
-    return value;
-  }
-
-  Service? getServiceFactorySyncOrNullT(
-    Type type, {
-    Object? params,
-    Entity? groupEntity,
-    bool traverse = true,
-    bool throwIfAsync = false,
-  }) {
-    final value = getServiceFactoryOrNullT(
-      type,
-      params: params,
-      groupEntity: groupEntity,
-      traverse: traverse,
-    );
-    if (throwIfAsync && value is Future) {
-      throw DependencyIsFutureException(
-        type: type,
-        groupEntity: groupEntity,
-      );
-    }
-    return value?.asSyncOrNull;
-  }
-
-  FutureOr<Service>? getServiceFactoryOrNullT(
-    Type type, {
-    Object? params,
-    Entity? groupEntity,
-    bool traverse = true,
-  }) {
-    final instance = getFactoryOrNullT(type);
-    return instance?.thenOr((e) {
-      e as Service;
-      return e.initialized ? e : consec(e.init(params), (_) => e);
-    });
   }
 
   Future<T> getServiceFactoryWithParamsAsync<T extends Service<P>, P extends Object?>({

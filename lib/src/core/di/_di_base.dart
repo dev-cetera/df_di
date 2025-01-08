@@ -40,8 +40,8 @@ base class DIBase {
   @protected
   int dependencyCount = 0;
 
-  /// Register a dependency [value] of type [T] under the specified [groupEntity]
-  /// in the [registry].
+  /// Registers a dependency [value] of type [T] under the specified
+  /// [groupEntity] in the [registry].
   ///
   /// If the [value] is an instance of [DI], it will be registered as
   /// a child of this container. This action sets the child’s parent to this
@@ -49,8 +49,8 @@ base class DIBase {
   /// unregistration.
   ///
   /// You can provide a [validator] function to validate the dependency before
-  /// it is returned by [getOrNull] or [untilOrNull]. If the validation fails,
-  /// these methods will throw a [DependencyInvalidException].
+  /// it gets retrieved]. If the validation fails [DependencyInvalidException]
+  /// will be throw upon retrieval.
   ///
   /// Additionally, an [onUnregister] callback can be specified to execute when
   /// the dependency is unregistered via [unregister].
@@ -86,27 +86,28 @@ base class DIBase {
     T value,
     Entity? groupEntity,
   ) {
-    final completer = (completers?.registry
-            .getDependencyOrNull<CompleterOr<FutureOr<T>>>(
-              groupEntity: groupEntity,
-            )
-            ?.value ??
-        completers?.registry
-            .getDependencyOrNullK(
-              TypeEntity(CompleterOr<Object>, [value.runtimeType]),
-              groupEntity: groupEntity,
-            )
-            ?.value ??
-        completers?.registry
-            .getDependencyOrNullK(
-              TypeEntity(CompleterOr<Future<Object>>, [value.runtimeType]),
-              groupEntity: groupEntity,
-            )
-            ?.value) as CompleterOr?;
-    completer?.complete(value);
+    Object? completer;
+    completer = completers?.registry
+        .getDependencyOrNull<CompleterOr<FutureOr<T>>>(
+          groupEntity: groupEntity,
+        )
+        ?.value;
+    completer ??= completers?.registry
+        .getDependencyOrNullK(
+          TypeEntity(CompleterOr<Object>, [value.runtimeType]),
+          groupEntity: groupEntity,
+        )
+        ?.value;
+    completer ??= completers?.registry
+        .getDependencyOrNullK(
+          TypeEntity(CompleterOr<Future<Object>>, [value.runtimeType]),
+          groupEntity: groupEntity,
+        )
+        ?.value;
+    (completer as CompleterOr?)?.complete(value);
   }
 
-  /// Register a [dependency] of type [T] in the [registry].
+  /// Registers a [dependency] of type [T] in the [registry].
   ///
   /// If the value of [dependency] is an instance of [DI], it will be
   /// registered as a child of this container. This action sets the child’s
@@ -124,6 +125,10 @@ base class DIBase {
     required Dependency<T> dependency,
     bool checkExisting = false,
   }) {
+    assert(
+      T != Object,
+      'T must be specified and cannot be Object.',
+    );
     // If [checkExisting] is true, throw an exception if the dependency is
     // already registered.
     final groupEntity1 = dependency.metadata?.groupEntity ?? focusGroup;
@@ -185,7 +190,8 @@ base class DIBase {
     );
   }
 
-  /// Checks whether dependency of type [T] or subtype of [T] is registered.
+  /// Checks whether dependency of type [T] or subtype of [T] is registered
+  /// under the specified [groupEntity] in the [registry].
   ///
   /// If [traverse] is true, it will also search recursively in parent
   /// containers.
@@ -194,40 +200,37 @@ base class DIBase {
     bool traverse = true,
   }) {
     final groupEntity1 = groupEntity ?? focusGroup;
-    return [
-      () =>
-          registry.getDependencyOrNull<T>(
-            groupEntity: groupEntity1,
-          ) !=
-          null,
-      () =>
-          registry.getDependencyOrNull<Future<T>>(
-            groupEntity: groupEntity1,
-          ) !=
-          null,
-      () =>
-          registry.getDependencyOrNull<Lazy<T>>(
-            groupEntity: groupEntity1,
-          ) !=
-          null,
-      if (traverse)
-        () => parents.any(
-              (e) => e.isRegistered(
-                groupEntity: groupEntity1,
-                traverse: true,
-              ),
-            ),
-    ].any((e) => e());
+    if (registry.getDependencyOrNull<T>(groupEntity: groupEntity1) != null) {
+      return true;
+    }
+    if (registry.getDependencyOrNull<Future<T>>(groupEntity: groupEntity1) != null) {
+      return true;
+    }
+    if (registry.getDependencyOrNull<Lazy<T>>(groupEntity: groupEntity1) != null) {
+      return true;
+    }
+    if (traverse) {
+      for (final parent in parents) {
+        if (parent.isRegistered<T>(groupEntity: groupEntity1, traverse: true)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
   }
 
-  /// Retrieves a dependency of type [T] or subtypes of [T] registered under
-  /// the specified [groupEntity].
+  /// Retrieves a dependency of type [T] or its subtypes registered under
+  /// the specified [groupEntity] from the [registry].
   ///
-  /// If the dependency exists, it is returned; otherwise, a
-  /// [DependencyNotFoundException] is thrown.
+  /// If [traverse] is true, it will also search recursively in parent
+  /// containers.
   ///
-  /// Only use this method if you're certain that the registered dependency
-  /// isn't a [Future]. If it is, a [DependencyIsFutureException] is trown.
+  /// If the dependency does not exist, a [DependencyNotFoundException] is
+  /// thrown.
+  ///
+  /// If the dependency is a [Future], a [DependencyIsFutureException] is
+  /// thrown.
   T call<T extends Object>({
     Entity? groupEntity,
     bool traverse = true,
@@ -245,6 +248,18 @@ base class DIBase {
     return value;
   }
 
+  /// Retrieves a dependency of type [T] or its subtypes registered under
+  /// the specified [groupEntity] from the [registry].
+  ///
+  /// If [traverse] is true, it will also search recursively in parent
+  /// containers.
+  ///
+  /// If the dependency does not exist, a [DependencyNotFoundException] is
+  /// thrown.
+  ///
+  /// This method always returns a [Future], ensuring compatibility. This
+  /// provides a safe and consistent way to retrieve dependencies, even if the
+  /// registered dependency is not a [Future].
   Future<T> getAsync<T extends Object>({
     Entity? groupEntity,
     bool traverse = true,
@@ -255,6 +270,17 @@ base class DIBase {
     );
   }
 
+  /// Retrieves a dependency of type [T] or its subtypes registered under
+  /// the specified [groupEntity] from the [registry].
+  ///
+  /// If [traverse] is true, it will also search recursively in parent
+  /// containers.
+  ///
+  /// If the dependency is a [Future], a [DependencyIsFutureException] is
+  /// thrown.
+  ///
+  /// If the dependency does not exist, a [DependencyNotFoundException] is
+  /// thrown.
   T getSync<T extends Object>({
     Entity? groupEntity,
     bool traverse = true,
@@ -273,6 +299,10 @@ base class DIBase {
     }
   }
 
+  /// Retrieves a dependency of type [T] or its subtypes registered under
+  /// the specified [groupEntity] from the [registry].
+  ///
+  /// If the dependency exists, it is returned; otherwise `null` is returned.
   T? getSyncOrNull<T extends Object>({
     Entity? groupEntity,
     bool traverse = true,
@@ -291,11 +321,11 @@ base class DIBase {
     return value?.asSyncOrNull;
   }
 
-  /// Retrieves a dependency of type [T] or subtypes of [T] registered under
-  /// the specified [groupEntity].
+  /// Retrieves a dependency of type [T] or its subtypes registered under
+  /// the specified [groupEntity] from the [registry].
   ///
-  /// If the dependency exists, it is returned; otherwise, a
-  /// [DependencyNotFoundException] is thrown.
+  /// If the dependency does not exist, a [DependencyNotFoundException] is
+  /// thrown.
   ///
   /// The return type is a [FutureOr], which means it can either be a
   /// [Future] or a resolved value.
@@ -324,10 +354,10 @@ base class DIBase {
     return value;
   }
 
-  /// Retrieves a dependency of type [T] or subtypes of [T] registered under
-  /// the specified [groupEntity].
+  /// Retrieves a dependency of type [T] or its subtypes registered under
+  /// the specified [groupEntity] from the [registry].
   ///
-  /// If the dependency exists, it is returned; otherwise, `null` is returned.
+  /// If the dependency does not exist, `null` is returned.
   ///
   /// If [traverse] is set to `true`, the search will also include all parent
   /// containers.
@@ -412,8 +442,8 @@ base class DIBase {
     return null;
   }
 
-  /// Retrieves a dependency of type [T] or subtypes of [T] registered under
-  /// the specified [groupEntity].
+  /// Retrieves a dependency of type [T] or its subtypes registered under
+  /// the specified [groupEntity] from the [registry].
   ///
   /// If the dependency is found, it is returned; otherwise, this method waits
   /// until the dependency is registered before returning it.
