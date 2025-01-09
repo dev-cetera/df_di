@@ -1,4 +1,5 @@
 import 'package:df_di/df_di.dart';
+import 'package:df_safer_dart/df_safer_dart.dart';
 import 'package:get_it/get_it.dart';
 
 import 'run_benchmark_comparison.dart';
@@ -14,7 +15,7 @@ Future<void> b1() async {
       container1.get<Map<int, String>>();
     },
     di: () {
-      container2.get<Map<int, String>>();
+      container2.get<Map<int, String>>().unwrap();
     },
   );
 }

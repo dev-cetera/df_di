@@ -85,7 +85,7 @@ final class DIRegistry {
     final groupEntity = dependency.metadata.fold((e) => e.groupEntity, () => const Entity.zero());
     final typeEntity = dependency.typeEntity;
     final currentDep = Option(_state[groupEntity]?[typeEntity]);
-    if (currentDep.isSome && currentDep.unwrap() != dependency) {
+    if (currentDep.isNone || currentDep.unwrap() != dependency) {
       (_state[groupEntity] ??= {})[typeEntity] = dependency;
       onChange.map((e) => e());
     }
@@ -131,7 +131,6 @@ final class DIRegistry {
       T != Object,
       'T must be specified and cannot be Object.',
     );
-
     return Option(_state[groupEntity]?.values.firstWhereOrNull((e) => e.value is T)?.cast<T>());
   }
 

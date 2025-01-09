@@ -277,7 +277,7 @@ base class DIBase {
   /// If the dependency is a [Future], a [DependencyIsFutureException] is
   /// thrown.
   Result<Option<T>> call<T extends Object>({
-    Entity? groupEntity,
+    Entity groupEntity = const Entity.zero(),
     bool traverse = true,
   }) {
     return getSync<T>(
@@ -299,7 +299,7 @@ base class DIBase {
   /// provides a safe and consistent way to retrieve dependencies, even if the
   /// registered dependency is not a [Future].
   Option<Future<T>> getAsync<T extends Object>({
-    Entity? groupEntity,
+    Entity groupEntity = const Entity.zero(),
     bool traverse = true,
   }) {
     return get<T>(
@@ -320,7 +320,7 @@ base class DIBase {
   /// If the dependency does not exist, a [DependencyNotFoundException] is
   /// thrown.
   Result<Option<T>> getSync<T extends Object>({
-    Entity? groupEntity,
+    Entity groupEntity = const Entity.zero(),
     bool traverse = true,
   }) {
     final value = get<T>(
@@ -347,10 +347,10 @@ base class DIBase {
   /// is re-registered as a non-future, allowing future calls to this method
   /// to return the resolved value directly.
   Option<FutureOr<T>> get<T extends Object>({
-    Entity? groupEntity,
+    Entity groupEntity = const Entity.zero(),
     bool traverse = true,
   }) {
-    final groupEntity1 = groupEntity ?? focusGroup;
+    final groupEntity1 = groupEntity.isZero() ? focusGroup : groupEntity;
     final existingDep = _getDependency<T>(
       groupEntity: groupEntity1,
       traverse: traverse,
@@ -358,6 +358,7 @@ base class DIBase {
     if (existingDep.isNone) {
       return const None();
     }
+
     final unwrapped = existingDep.unwrap();
     final value = unwrapped.value;
     switch (value) {
@@ -385,10 +386,10 @@ base class DIBase {
   }
 
   Option<Dependency<FutureOr<T>>> _getDependency<T extends Object>({
-    Entity? groupEntity,
+    Entity groupEntity = const Entity.zero(),
     bool traverse = true,
   }) {
-    final groupEntity1 = groupEntity ?? focusGroup;
+    final groupEntity1 = groupEntity.isZero() ? focusGroup : groupEntity;
     Option<Dependency> dependency = registry.getDependency<T>(
       groupEntity: groupEntity1,
     );
@@ -402,7 +403,7 @@ base class DIBase {
         dependency = parent._getDependency<T>(
           groupEntity: groupEntity1,
         );
-        if (dependency.isNone) {
+        if (dependency.isSome) {
           break;
         }
       }
@@ -414,8 +415,9 @@ base class DIBase {
 
       if (metadata.isSome) {
         final valid = metadata.unwrap().validator.map((e) => e(dependency1));
-        if (valid.isSome && valid.unwrap()) {
-          return dependency.map((e) => e.cast());
+        if (valid.isSome && !valid.unwrap()) {
+          // error
+          return const None();
         } else {
           // TODO!!!
           // throw DependencyInvalidException(
@@ -424,6 +426,8 @@ base class DIBase {
           // );
         }
       }
+
+      return dependency.map((e) => e.cast());
     }
 
     return const None();
