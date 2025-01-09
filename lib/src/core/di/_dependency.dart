@@ -21,9 +21,14 @@ import '/src/_common.dart';
 final class Dependency<T extends Object> {
   Dependency(
     this.value, {
-    this.metadata,
+    this.metadata = const None(),
   }) {
-    this.metadata?._initialType = value.runtimeType;
+    if (this.metadata.isSome) {
+      final a = this.metadata.unwrap();
+      if (a._initialType.isSome) {
+        a._initialType = Some(value.runtimeType);
+      }
+    }
   }
 
   Dependency._internal(
@@ -35,11 +40,17 @@ final class Dependency<T extends Object> {
   final T value;
 
   /// The metadata associated with this [Dependency].
-  final DependencyMetadata? metadata;
+  final Option<DependencyMetadata> metadata;
 
   /// Returns the `preemptivetypeEntity` of [metadata] if not `null` or the
   /// runtime type key of [value].
-  Entity get typeEntity => metadata?.preemptivetypeEntity ?? Entity.obj(value.runtimeType);
+  Entity get typeEntity {
+    return metadata.fold(
+      (e) =>
+          e.preemptivetypeEntity.isZero() ? Entity.obj(value.runtimeType) : e.preemptivetypeEntity,
+      () => Entity.obj(value.runtimeType),
+    );
+  }
 
   /// Creates a new [Dependency] instance with a different value of type [R],
   /// while retaining the existing [metadata].
@@ -55,11 +66,11 @@ final class Dependency<T extends Object> {
   /// fields not explicitly specified.
   Dependency<T> copyWith({
     T? value,
-    DependencyMetadata? metadata,
+    Option<DependencyMetadata> metadata = const None(),
   }) {
     return Dependency<T>(
       value ?? this.value,
-      metadata: metadata ?? this.metadata,
+      metadata: metadata,
     );
   }
 
@@ -85,57 +96,58 @@ final class Dependency<T extends Object> {
 @internal
 class DependencyMetadata {
   DependencyMetadata({
-    this.groupEntity,
-    this.preemptivetypeEntity,
-    this.index,
-    this.validator,
-    this.onUnregister,
+    this.groupEntity = const Entity.zero(),
+    this.preemptivetypeEntity = const Entity.zero(),
+    this.index = const None(),
+    this.validator = const None(),
+    this.onUnregister = const None(),
   });
 
   /// The type group to which the [Dependency] belongs. This enables
   /// dependencies of the same type to coexist in the DI container as long as
   /// they are assigned to different groups.
-  final Entity? groupEntity;
+  final Entity groupEntity;
 
   /// The type key that the dependency is associated with within its group. If
   /// not `null`, it will override the default type key.
-  final Entity? preemptivetypeEntity;
+  final Entity preemptivetypeEntity;
 
   /// The type of [Dependency.value] at the time the [Dependency] was registered.
   /// This type remains unchanged even if [Dependency.value] is updated through
   /// [Dependency.passNewValue]. This property consistently reflects the original type
   /// with which the dependency was registered.
-  Type get initialType => _initialType!;
-  Type? _initialType;
+  Option<Type> get initialType => _initialType;
+  Option<Type> _initialType = const None();
 
   /// The index at which this dependency was registered in the dependency
   /// injection container. This helps in tracking the order of registration
   /// and ensuring proper management of dependencies.
-  final int? index;
+  final Option<int> index;
 
   /// A function that evaluates the validity of a dependency.
-  final DependencyValidator? validator;
+  final Option<DependencyValidator> validator;
 
   /// A callback to be invoked when this dependency is unregistered.
-  final OnUnregisterCallback<Object>? onUnregister;
+  final Option<OnUnregisterCallback<Object>> onUnregister;
 
   /// Creates a new instance with updated fields, preserving the values of any
   /// fields not explicitly specified.
   DependencyMetadata copyWith({
-    Entity? groupEntity,
-    Entity? preemptivetypeEntity,
-    Type? initialType,
-    int? index,
-    DependencyValidator? validator,
-    OnUnregisterCallback<Object>? onUnregister,
+    Entity groupEntity = const Entity.zero(),
+    Entity preemptivetypeEntity = const Entity.zero(),
+    Option<Type> initialType = const None(),
+    Option<int> index = const None(),
+    Option<DependencyValidator> validator = const None(),
+    Option<OnUnregisterCallback<Object>> onUnregister = const None(),
   }) {
     return DependencyMetadata(
-      groupEntity: groupEntity ?? this.groupEntity,
-      preemptivetypeEntity: preemptivetypeEntity ?? this.preemptivetypeEntity,
-      index: index ?? this.index,
-      validator: validator ?? this.validator,
-      onUnregister: onUnregister ?? this.onUnregister,
-    ).._initialType = initialType ?? _initialType;
+      groupEntity: groupEntity.isNotZero() ? groupEntity : this.groupEntity,
+      preemptivetypeEntity:
+          preemptivetypeEntity.isNotZero() ? preemptivetypeEntity : this.preemptivetypeEntity,
+      index: index.isSome ? index : this.index,
+      validator: validator.isSome ? validator : this.validator,
+      onUnregister: onUnregister.isSome ? onUnregister : this.onUnregister,
+    ).._initialType = initialType.isSome ? initialType : _initialType;
   }
 
   @override

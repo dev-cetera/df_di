@@ -22,4 +22,3 @@ export 'core/exceptions/dependency_is_future_exception.dart';
 export 'core/services/service.dart';
 export 'core/services/stream_service.dart';
 export 'additional/world.dart';
-export 'additional/lazy.dart';

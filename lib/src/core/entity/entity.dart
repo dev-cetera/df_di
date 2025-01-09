@@ -23,6 +23,7 @@ class Entity {
   /// converted to a string with spaces removed, then the [hashCode] is
   /// calculated and returned.
   @protected
+  @pragma('vm:prefer-inline')
   static int objId(Object object) =>
       object is int ? object : object.toString().replaceAll(' ', '').hashCode;
 
@@ -32,6 +33,14 @@ class Entity {
   /// Creates a new instance of [Entity] identified by [id]. The [id] must be 0
   /// or greater.
   const Entity(this.id) : assert(id >= 0, 'Entity id must be 0 or greater!');
+
+  const Entity.zero() : this(0);
+
+  @pragma('vm:prefer-inline')
+  bool isZero() => id == 0;
+
+  @pragma('vm:prefer-inline')
+  bool isNotZero() => !isZero();
 
   /// Creates a new [Entity] with the given [id]. The [id] must be less than 0.
   ///
@@ -57,8 +66,10 @@ class Entity {
   }
 
   @override
+  @pragma('vm:prefer-inline')
   int get hashCode => id;
 
   @override
+  @pragma('vm:prefer-inline')
   String toString() => id.toString();
 }

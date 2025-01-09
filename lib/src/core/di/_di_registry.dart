@@ -21,14 +21,14 @@ final class DIRegistry {
   //
   //
 
-  DIRegistry({this.onChange});
+  DIRegistry({this.onChange = const None()});
 
   /// Represents the internal state of this [DIRegistry] instance, stored as a
   /// map.
   final RegistryState _state = {};
 
   /// A callback invoked whenever the [state] is updated.
-  final _OnChangeRegistry? onChange;
+  final Option<_OnChangeRegistry> onChange;
 
   /// A snapshot describing the current state of the dependencies.
   RegistryState get state =>
@@ -39,9 +39,11 @@ final class DIRegistry {
         _state.entries.expand((e) => e.value.values).toList()
           // Sort by descending indexes, i.e. largest index is first element.
           ..sort((d1, d2) {
-            final index1 = d1.metadata?.index ?? -1;
-            final index2 = d2.metadata?.index ?? -1;
-            return index2.compareTo(index1);
+            final index1 =
+                d1.metadata.fold((e) => e.index.isSome ? e.index.unwrap() : -1, () => -1);
+            final index2 =
+                d2.metadata.fold((e) => e.index.isSome ? e.index.unwrap() : -1, () => -1);
+            return index1.compareTo(index2);
           }),
       );
 
@@ -75,17 +77,17 @@ final class DIRegistry {
   }
 
   /// A snapshot of the current group entities within [state].
-  List<Entity?> get groupEntities => List.unmodifiable(_state.keys);
+  List<Entity> get groupEntities => List.unmodifiable(_state.keys);
 
   /// Updates the [state] by setting or updating [dependency].
   @protected
   void setDependency(Dependency dependency) {
-    final groupEntity = dependency.metadata?.groupEntity;
+    final groupEntity = dependency.metadata.fold((e) => e.groupEntity, () => const Entity.zero());
     final typeEntity = dependency.typeEntity;
-    final currentDep = _state[groupEntity]?[typeEntity];
-    if (currentDep != dependency) {
+    final currentDep = Option(_state[groupEntity]?[typeEntity]);
+    if (currentDep.isSome && currentDep.unwrap() != dependency) {
       (_state[groupEntity] ??= {})[typeEntity] = dependency;
-      onChange?.call();
+      onChange.map((e) => e());
     }
   }
 
@@ -94,10 +96,8 @@ final class DIRegistry {
   ///
   /// Returns `true` if it does and `false` if it doesn't.
   @pragma('vm:prefer-inline')
-  bool containsDependency<T extends Object>({
-    Entity? groupEntity,
-  }) {
-    return getDependencyOrNull<T>(groupEntity: groupEntity) != null;
+  bool containsDependency<T extends Object>({Entity groupEntity = const Entity.zero()}) {
+    return _state[groupEntity]?.values.any((e) => e.value is T) == true;
   }
 
   /// Checks if any dependency with the exact [type] exists under the specified
@@ -106,10 +106,7 @@ final class DIRegistry {
   ///
   /// Returns `true` if it does and `false` if it doesn't.
   @pragma('vm:prefer-inline')
-  bool containsDependencyT(
-    Type type, {
-    Entity? groupEntity,
-  }) {
+  bool containsDependencyT(Type type, {Entity groupEntity = const Entity.zero()}) {
     return containsDependencyK(
       Entity.obj(type),
       groupEntity: groupEntity,
@@ -122,52 +119,41 @@ final class DIRegistry {
   ///
   /// Returns `true` if it does and `false` if it doesn't.
   @pragma('vm:prefer-inline')
-  bool containsDependencyK(
-    Entity typeEntity, {
-    Entity? groupEntity,
-  }) {
-    return getDependencyOrNullK(typeEntity, groupEntity: groupEntity) != null;
+  bool containsDependencyK(Entity typeEntity, {Entity groupEntity = const Entity.zero()}) {
+    return _state[groupEntity]?.values.any((e) => e.typeEntity == typeEntity) == true;
   }
 
   /// Returns any dependency of type [T] or subtypes under the specified
-  /// [groupEntity] if it exists, or `null`.
-  @protected
-  @pragma('vm:prefer-inline')
-  Dependency<T>? getDependencyOrNull<T extends Object>({
-    Entity? groupEntity,
-  }) {
+  /// [groupEntity].
+  Option<Dependency<T>> getDependency<T extends Object>(
+      {Entity groupEntity = const Entity.zero()}) {
     assert(
       T != Object,
       'T must be specified and cannot be Object.',
     );
-    return _state[groupEntity]?.values.firstWhereOrNull((e) => e.value is T)?.cast<T>();
+
+    return Option(_state[groupEntity]?.values.firstWhereOrNull((e) => e.value is T)?.cast<T>());
   }
 
   /// Returns any dependency with the exact [type] under the specified
-  /// [groupEntity] if it exists, or `null`. Unlike [getDependencyOrNull],
-  /// this will not include subtypes.
+  /// [groupEntity]. Unlike [getDependency], this will not include subtypes.
   @protected
   @pragma('vm:prefer-inline')
-  Dependency? getDependencyOrNullT(
-    Type type, {
-    Entity? groupEntity,
-  }) {
-    return getDependencyOrNullK(
+  Option<Dependency> getDependencyT(Type type, {Entity groupEntity = const Entity.zero()}) {
+    return getDependencyK(
       Entity.obj(type),
       groupEntity: groupEntity,
     );
   }
 
   /// Returns any dependency with the exact [typeEntity] under the specified
-  /// [groupEntity] if it exists, or `null`. Unlike [getDependencyOrNull], this
-  /// will not include subtypes.
+  /// [groupEntity]. Unlike [getDependency], this will not include subtypes.
   @protected
   @pragma('vm:prefer-inline')
-  Dependency? getDependencyOrNullK(
-    Entity typeEntity, {
-    Entity? groupEntity,
-  }) {
-    return _state[groupEntity]?.values.firstWhereOrNull((e) => e.typeEntity == typeEntity);
+  Option<Dependency> getDependencyK(Entity typeEntity, {Entity groupEntity = const Entity.zero()}) {
+    return Option(
+      _state[groupEntity]?.values.firstWhereOrNull((e) => e.typeEntity == typeEntity),
+    );
   }
 
   /// Removes any [Dependency] of [T] or subtypes under the specified
@@ -176,18 +162,17 @@ final class DIRegistry {
   /// Returns the removed [Dependency] of [T], or `null` if it did not exist
   /// within [state].
   @protected
-  Dependency<T>? removeDependency<T extends Object>({
-    Entity? groupEntity,
-  }) {
-    final dependency = getDependencyOrNull<T>(groupEntity: groupEntity);
-    if (dependency != null) {
+  Option<Dependency<T>> removeDependency<T extends Object>(
+      {Entity groupEntity = const Entity.zero()}) {
+    final dependency = getDependency<T>(groupEntity: groupEntity);
+    if (dependency.isSome) {
       final removed = removeDependencyK(
-        dependency.typeEntity,
+        dependency.unwrap().typeEntity,
         groupEntity: groupEntity,
       );
-      return removed?.cast();
+      return removed.map((e) => e.cast<T>());
     }
-    return null;
+    return const None();
   }
 
   /// Removes any dependency with the exact [type] under the specified
@@ -198,10 +183,7 @@ final class DIRegistry {
   /// [state].
   @protected
   @pragma('vm:prefer-inline')
-  Dependency? removeDependencyT(
-    Type type, {
-    Entity? groupEntity,
-  }) {
+  Option<Dependency> removeDependencyT(Type type, {Entity groupEntity = const Entity.zero()}) {
     return removeDependencyK(
       Entity.obj(type),
       groupEntity: groupEntity,
@@ -215,14 +197,12 @@ final class DIRegistry {
   /// Returns the removed [Dependency] or `null` if it did not exist within
   /// [state].
   @protected
-  Dependency? removeDependencyK(
-    Entity typeEntity, {
-    Entity? groupEntity,
-  }) {
+  Option<Dependency> removeDependencyK(Entity typeEntity,
+      {Entity groupEntity = const Entity.zero()}) {
     final group = _state[groupEntity];
     if (group != null) {
-      final removed = group.remove(typeEntity);
-      if (removed != null) {
+      final removed = Option(group.remove(typeEntity));
+      if (removed.isSome) {
         if (group.isEmpty) {
           removeGroup(
             groupEntity: groupEntity,
@@ -233,34 +213,29 @@ final class DIRegistry {
             groupEntity: groupEntity,
           );
         }
-        onChange?.call();
+        onChange.map((e) => e());
         return removed;
       }
     }
-    return null;
+    return const None();
   }
 
   /// Updates the [state] by setting or replacing the [group] under the
   /// specified [groupEntity].
   @protected
-  void setGroup(
-    DependencyGroup<Object> group, {
-    Entity? groupEntity,
-  }) {
+  void setGroup(DependencyGroup<Object> group, {Entity groupEntity = const Entity.zero()}) {
     final currentGroup = _state[groupEntity];
     final equals = const MapEquality<Entity, Dependency>().equals(currentGroup, group);
     if (!equals) {
       _state[groupEntity] = group;
-      onChange?.call();
+      onChange.map((e) => e());
     }
   }
 
   /// Gets the [DependencyGroup] with the specified [groupEntity] from the [state]
   /// or `null` if none exist.
   @pragma('vm:prefer-inline')
-  DependencyGroup<Object> getGroup({
-    Entity? groupEntity,
-  }) {
+  DependencyGroup<Object> getGroup({Entity groupEntity = const Entity.zero()}) {
     return DependencyGroup.unmodifiable(_state[groupEntity] ?? {});
   }
 
@@ -268,11 +243,9 @@ final class DIRegistry {
   /// [state].
   @protected
   @pragma('vm:prefer-inline')
-  void removeGroup({
-    Entity? groupEntity,
-  }) {
+  void removeGroup({Entity groupEntity = const Entity.zero()}) {
     _state.remove(groupEntity);
-    onChange?.call();
+    onChange.map((e) => e());
   }
 
   /// Clears the [state], resetting the registry and effectively restoring it
@@ -280,14 +253,14 @@ final class DIRegistry {
   @pragma('vm:prefer-inline')
   void clear() {
     _state.clear();
-    onChange?.call();
+    onChange.map((e) => e());
   }
 }
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 /// A typedef for a Map representing the state of a [DIRegistry].
-typedef RegistryState = Map<Entity?, DependencyGroup<Object>>;
+typedef RegistryState = Map<Entity, DependencyGroup<Object>>;
 
 /// A typedef for a Map representing a group of dependencies organized by a
 /// group entity.
