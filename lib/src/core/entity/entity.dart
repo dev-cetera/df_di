@@ -57,8 +57,10 @@ class Entity {
   }
 
   @override
+  @pragma('vm:prefer-inline')
   int get hashCode => id;
 
   @override
+  @pragma('vm:prefer-inline')
   String toString() => id.toString();
 }

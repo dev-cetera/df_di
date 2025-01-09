@@ -12,7 +12,7 @@
 
 // ignore_for_file: invalid_use_of_protected_member
 
-import 'package:df_type/df_type.dart';
+import 'package:df_safer_dart/df_safer_dart.dart';
 import 'package:equatable/equatable.dart';
 import 'package:meta/meta.dart';
 
@@ -71,7 +71,7 @@ class World {
   /// Updates the component of type [T] for the given entity.
   /// Returns an [Ok] with the updated component or an [Err] if the component
   /// does not exist.
-  Result<Component, String> updateComponent<T extends Component>(
+  Result<Component> updateComponent<T extends Component>(
     Entity entity,
     T newComponent,
   ) {

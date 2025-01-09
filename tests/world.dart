@@ -13,6 +13,7 @@
 // ignore_for_file: omit_local_variable_types, invalid_use_of_visible_for_testing_member
 
 import 'package:df_di/df_di.dart';
+import 'package:df_safer_dart/df_safer_dart.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
