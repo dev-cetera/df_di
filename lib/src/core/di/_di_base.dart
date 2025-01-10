@@ -50,20 +50,18 @@ base class DIBase {
     final metadata = DependencyMetadata(
       index: Some(dependencyCount++),
       groupEntity: g,
-      validator:
-          validator.isSome ? Some((e) => validator.unwrap()(e as FutureOr<T>)) : const None(),
-      onUnregister:
-          onUnregister.isSome ? Some((e) => onUnregister.unwrap()(e as FutureOr<T>)) : const None(),
+      validator: validator.map((f) => (e) => f(e as FutureOr<T>)),
+      onUnregister: onUnregister.map((f) => (e) => f(e as FutureOr<T>)),
     );
     completeRegistration(value, g);
-    final registeredDep = _registerDependency(
+    final d = _registerDependency(
       dependency: Dependency(
         value,
         metadata: Some(metadata),
       ),
       checkExisting: true,
     );
-    return registeredDep.map((e) => e.map((e) => e.value));
+    return d.map((e) => e.map((e) => e.value));
   }
 
   @protected

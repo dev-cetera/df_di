@@ -13,7 +13,6 @@
 // ignore_for_file: invalid_use_of_protected_member, strict_raw_type
 
 import 'dart:async';
-import 'dart:math';
 
 import 'package:df_di/df_di.dart';
 
@@ -22,8 +21,12 @@ import 'package:df_di/df_di.dart';
 Future<void> main() async {
   final di = DI();
   print(1);
-  final value =
-      await di.register<int>(Future.delayed(const Duration(seconds: 3), () => 2)).unwrap().unwrap();
+  final value = await di
+      .register<int>(
+        Future.delayed(const Duration(seconds: 3), () => 2),
+      )
+      .unwrap()
+      .unwrap();
 
   print(di.registry.state);
 
