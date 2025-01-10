@@ -161,8 +161,9 @@ final class DIRegistry {
   /// Returns the removed [Dependency] of [T], or `null` if it did not exist
   /// within [state].
   @protected
-  Option<Dependency<T>> removeDependency<T extends Object>(
-      {Entity groupEntity = const Entity.zero()}) {
+  Option<Dependency<T>> removeDependency<T extends Object>({
+    Entity groupEntity = const Entity.zero(),
+  }) {
     final dependency = getDependency<T>(groupEntity: groupEntity);
     if (dependency.isSome) {
       final removed = removeDependencyK(
