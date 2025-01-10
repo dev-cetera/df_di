@@ -23,7 +23,7 @@ base mixin SupportsConstructorsMixinT on SupportsMixinT {
   // /// This allows it to be re-created via [getSingletonT].
   // void resetSingletonT(
   //   Type type, {
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   // }) {
   //   (getK(TypeEntity(Lazy, [type]), groupEntity: groupEntity) as Lazy).resetSingleton();
   // }
@@ -47,7 +47,7 @@ base mixin SupportsConstructorsMixinT on SupportsMixinT {
   // /// registered dependency is not a [Future].
   // Future<Object> getSingletonAsyncT(
   //   Type type, {
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   // }) async {
   //   return getSingletonT(
@@ -75,7 +75,7 @@ base mixin SupportsConstructorsMixinT on SupportsMixinT {
   // /// thrown.
   // Object getSingletonSyncT(
   //   Type type, {
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   // }) {
   //   final value = getSingletonT(
@@ -112,7 +112,7 @@ base mixin SupportsConstructorsMixinT on SupportsMixinT {
   // /// is a [Future].
   // Object? getSingletonSyncOrNullT(
   //   Type type, {
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   //   bool throwIfAsync = false,
   // }) {
@@ -145,7 +145,7 @@ base mixin SupportsConstructorsMixinT on SupportsMixinT {
   // /// thrown.
   // FutureOr<Object> getSingletonT(
   //   Type type, {
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   // }) {
   //   final groupEntity1 = groupEntity ?? focusGroup;
@@ -178,7 +178,7 @@ base mixin SupportsConstructorsMixinT on SupportsMixinT {
   // /// If the dependency does not exist, `null` is returned.
   // FutureOr<Object>? getSingletonOrNullT(
   //   Type type, {
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   // }) {
   //   return (getOrNullK(
@@ -208,7 +208,7 @@ base mixin SupportsConstructorsMixinT on SupportsMixinT {
   // /// registered dependency is not a [Future].
   // Future<Object> getFactoryAsyncT(
   //   Type type, {
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   // }) async {
   //   return getFactoryT(
@@ -236,7 +236,7 @@ base mixin SupportsConstructorsMixinT on SupportsMixinT {
   // /// thrown.
   // Object getFactorySyncT(
   //   Type type, {
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   // }) {
   //   final value = getFactoryT(
@@ -273,7 +273,7 @@ base mixin SupportsConstructorsMixinT on SupportsMixinT {
   // /// is a [Future].
   // Object? getFactorySyncOrNullT(
   //   Type type, {
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   //   bool throwIfAsync = false,
   // }) {
@@ -306,7 +306,7 @@ base mixin SupportsConstructorsMixinT on SupportsMixinT {
   // /// thrown.
   // FutureOr<Object> getFactoryT(
   //   Type type, {
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   // }) {
   //   final groupEntity1 = groupEntity ?? focusGroup;
@@ -338,7 +338,7 @@ base mixin SupportsConstructorsMixinT on SupportsMixinT {
   // /// If the dependency does not exist, `null` is returned.
   // FutureOr<Object>? getFactoryOrNullT(
   //   Type type, {
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   // }) {
   //   return (getOrNullK(

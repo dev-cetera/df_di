@@ -83,7 +83,7 @@ final class DIRegistry {
   @protected
   void setDependency(Dependency dependency) {
     final groupEntity =
-        dependency.metadata.fold((e) => e.groupEntity, () => const Entity.fallback());
+        dependency.metadata.fold((e) => e.groupEntity, () => const Entity.defaultEntity());
     final typeEntity = dependency.typeEntity;
     final currentDep = Option(_state[groupEntity]?[typeEntity]);
     if (currentDep.isNone || currentDep.unwrap() != dependency) {
@@ -97,7 +97,7 @@ final class DIRegistry {
   ///
   /// Returns `true` if it does and `false` if it doesn't.
   @pragma('vm:prefer-inline')
-  bool containsDependency<T extends Object>({Entity groupEntity = const Entity.fallback()}) {
+  bool containsDependency<T extends Object>({Entity groupEntity = const Entity.defaultEntity()}) {
     return _state[groupEntity]?.values.any((e) => e.value is T) == true;
   }
 
@@ -107,7 +107,7 @@ final class DIRegistry {
   ///
   /// Returns `true` if it does and `false` if it doesn't.
   @pragma('vm:prefer-inline')
-  bool containsDependencyT(Type type, {Entity groupEntity = const Entity.fallback()}) {
+  bool containsDependencyT(Type type, {Entity groupEntity = const Entity.defaultEntity()}) {
     return containsDependencyK(
       Entity.obj(type),
       groupEntity: groupEntity,
@@ -120,14 +120,15 @@ final class DIRegistry {
   ///
   /// Returns `true` if it does and `false` if it doesn't.
   @pragma('vm:prefer-inline')
-  bool containsDependencyK(Entity typeEntity, {Entity groupEntity = const Entity.fallback()}) {
+  bool containsDependencyK(Entity typeEntity, {Entity groupEntity = const Entity.defaultEntity()}) {
     return _state[groupEntity]?.values.any((e) => e.typeEntity == typeEntity) == true;
   }
 
   /// Returns any dependency of type [T] or subtypes under the specified
   /// [groupEntity].
-  Option<Dependency<T>> getDependency<T extends Object>(
-      {Entity groupEntity = const Entity.fallback()}) {
+  Option<Dependency<T>> getDependency<T extends Object>({
+    Entity groupEntity = const Entity.defaultEntity(),
+  }) {
     assert(
       T != Object,
       'T must be specified and cannot be Object.',
@@ -139,7 +140,10 @@ final class DIRegistry {
   /// [groupEntity]. Unlike [getDependency], this will not include subtypes.
   @protected
   @pragma('vm:prefer-inline')
-  Option<Dependency> getDependencyT(Type type, {Entity groupEntity = const Entity.fallback()}) {
+  Option<Dependency> getDependencyT(
+    Type type, {
+    Entity groupEntity = const Entity.defaultEntity(),
+  }) {
     return getDependencyK(
       Entity.obj(type),
       groupEntity: groupEntity,
@@ -150,8 +154,10 @@ final class DIRegistry {
   /// [groupEntity]. Unlike [getDependency], this will not include subtypes.
   @protected
   @pragma('vm:prefer-inline')
-  Option<Dependency> getDependencyK(Entity typeEntity,
-      {Entity groupEntity = const Entity.fallback()}) {
+  Option<Dependency> getDependencyK(
+    Entity typeEntity, {
+    Entity groupEntity = const Entity.defaultEntity(),
+  }) {
     return Option(
       _state[groupEntity]?.values.firstWhereOrNull((e) => e.typeEntity == typeEntity),
     );
@@ -164,7 +170,7 @@ final class DIRegistry {
   /// within [state].
   @protected
   Option<Dependency<T>> removeDependency<T extends Object>({
-    Entity groupEntity = const Entity.fallback(),
+    Entity groupEntity = const Entity.defaultEntity(),
   }) {
     final dependency = getDependency<T>(groupEntity: groupEntity);
     if (dependency.isSome) {
@@ -185,7 +191,10 @@ final class DIRegistry {
   /// [state].
   @protected
   @pragma('vm:prefer-inline')
-  Option<Dependency> removeDependencyT(Type type, {Entity groupEntity = const Entity.fallback()}) {
+  Option<Dependency> removeDependencyT(
+    Type type, {
+    Entity groupEntity = const Entity.defaultEntity(),
+  }) {
     return removeDependencyK(
       Entity.obj(type),
       groupEntity: groupEntity,
@@ -199,8 +208,10 @@ final class DIRegistry {
   /// Returns the removed [Dependency] or `null` if it did not exist within
   /// [state].
   @protected
-  Option<Dependency> removeDependencyK(Entity typeEntity,
-      {Entity groupEntity = const Entity.fallback()}) {
+  Option<Dependency> removeDependencyK(
+    Entity typeEntity, {
+    Entity groupEntity = const Entity.defaultEntity(),
+  }) {
     final group = _state[groupEntity];
     if (group != null) {
       final removed = Option(group.remove(typeEntity));
@@ -225,7 +236,10 @@ final class DIRegistry {
   /// Updates the [state] by setting or replacing the [group] under the
   /// specified [groupEntity].
   @protected
-  void setGroup(DependencyGroup<Object> group, {Entity groupEntity = const Entity.fallback()}) {
+  void setGroup(
+    DependencyGroup<Object> group, {
+    Entity groupEntity = const Entity.defaultEntity(),
+  }) {
     final currentGroup = _state[groupEntity];
     final equals = const MapEquality<Entity, Dependency>().equals(currentGroup, group);
     if (!equals) {
@@ -237,7 +251,7 @@ final class DIRegistry {
   /// Gets the [DependencyGroup] with the specified [groupEntity] from the [state]
   /// or `null` if none exist.
   @pragma('vm:prefer-inline')
-  DependencyGroup<Object> getGroup({Entity groupEntity = const Entity.fallback()}) {
+  DependencyGroup<Object> getGroup({Entity groupEntity = const Entity.defaultEntity()}) {
     return DependencyGroup.unmodifiable(_state[groupEntity] ?? {});
   }
 
@@ -245,7 +259,7 @@ final class DIRegistry {
   /// [state].
   @protected
   @pragma('vm:prefer-inline')
-  void removeGroup({Entity groupEntity = const Entity.fallback()}) {
+  void removeGroup({Entity groupEntity = const Entity.defaultEntity()}) {
     _state.remove(groupEntity);
     onChange.map((e) => e());
   }

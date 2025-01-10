@@ -33,7 +33,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
   // /// Additionally, an [onUnregister] callback can be specified to execute when
   // /// the dependency is unregistered via [unregister].
   // void registerChild({
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool Function(FutureOr<DI>)? validator,
   //   OnUnregisterCallback<FutureOr<DI>>? onUnregister,
   // }) {
@@ -55,7 +55,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
   // /// If the child exists, it is returned; otherwise, a
   // /// [DependencyNotFoundException] is thrown.
   // DI getChild({
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   // }) {
   //   final groupEntity1 = groupEntity ?? focusGroup;
   //   final value = getChildOrNull(
@@ -76,7 +76,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
   // ///
   // /// If the dependency does not exist, `null` is returned.
   // DI? getChildOrNull({
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   // }) {
   //   return _children
   //       ?.getSingletonOrNull<DI>(
@@ -94,7 +94,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
   // ///
   // /// Throws a [DependencyNotFoundException] if the dependency is not found.
   // FutureOr<Object> unregisterChild({
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool skipOnUnregisterCallback = false,
   // }) {
   //   final groupEntity1 = groupEntity ?? focusGroup;
@@ -113,7 +113,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
   // /// Checks whether a child container is registered under the specified
   // /// [groupEntity] in the [registry].
   // bool isChildRegistered({
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   // }) {
   //   final groupEntity1 = groupEntity ?? focusGroup;
   //   if (registry.containsDependency<DI>(groupEntity: groupEntity1)) {
@@ -132,7 +132,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
   // /// You can provide an [onUnregister] callback can be specified to execute
   // /// when the dependency is unregistered via [unregister].
   // DI child({
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool Function(FutureOr<DI>)? validator,
   //   OnUnregisterCallback<FutureOr<DI>>? onUnregister,
   // }) {

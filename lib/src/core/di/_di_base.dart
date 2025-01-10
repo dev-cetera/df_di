@@ -30,7 +30,7 @@ base class DIBase {
   final parents = <DIBase>{};
 
   /// A key that identifies the current group in focus for dependency management.
-  Entity focusGroup = DefaultEntities.FALLBACK_GROUP.entity;
+  Entity focusGroup = DefaultEntities.DEFAULT_GROUP.entity;
 
   /// A container storing Future completions.
   @protected
@@ -40,28 +40,28 @@ base class DIBase {
   @protected
   int dependencyCount = 0;
 
-  Result<Option<FutureOr<T>>> register<T extends Object>(
-    FutureOr<T> value, {
-    Entity groupEntity = const Entity.fallback(),
-    Option<DependencyValidator<FutureOr<T>>> validator = const None(),
-    Option<OnUnregisterCallback<FutureOr<T>>> onUnregister = const None(),
+  Result<Option<Concur<T>>> register<T extends Object>(
+    Concur<T> value, {
+    Entity groupEntity = const Entity.defaultEntity(),
+    Option<DependencyValidator<Concur<T>>> validator = const None(),
+    Option<OnUnregisterCallback<Concur<T>>> onUnregister = const None(),
   }) {
-    final g = groupEntity.isFallback() ? focusGroup : groupEntity;
+    final g = groupEntity.isDefault() ? focusGroup : groupEntity;
     final metadata = DependencyMetadata(
       index: Some(dependencyCount++),
       groupEntity: g,
-      validator: validator.map((f) => (e) => f(e as FutureOr<T>)),
-      onUnregister: onUnregister.map((f) => (e) => f(e as FutureOr<T>)),
+      validator: validator.map((f) => (e) => f(e as Concur<T>)),
+      onUnregister: onUnregister.map((f) => (e) => f(e as Concur<T>)),
     );
     completeRegistration(value, g);
-    final d = _registerDependency(
+    final dep = _registerDependency(
       dependency: Dependency(
         value,
         metadata: Some(metadata),
       ),
       checkExisting: true,
     );
-    return d.map((e) => e.map((e) => e.value));
+    return dep.map((e) => e.map((e) => e.value));
   }
 
   @protected
@@ -72,7 +72,7 @@ base class DIBase {
     if (completers.isSome) {
       final a = completers.unwrap();
       final b = a.registry
-          .getDependency<CompleterOr<FutureOr<T>>>(groupEntity: groupEntity)
+          .getDependency<CompleterOr<Concur<T>>>(groupEntity: groupEntity)
           .or(
             a.registry.getDependencyK(
               TypeEntity(CompleterOr<Object>, [value.runtimeType]),
@@ -92,28 +92,25 @@ base class DIBase {
     }
   }
 
-  Result<Option<Dependency<T>>> _registerDependency<T extends FutureOr<Object>>({
-    required Dependency<T> dependency,
+  Result<Option<Dependency<Concur<T>>>> _registerDependency<T extends Concur<Object>>({
+    required Dependency<Concur<T>> dependency,
     bool checkExisting = false,
   }) {
     assert(
       T != Object,
       'T must be specified and cannot be Object.',
     );
-
-    // If [checkExisting] is true, throw an exception if the dependency is
-    // already registered.
     final g = dependency.metadata.fold((e) => e.groupEntity, () => focusGroup);
     if (checkExisting) {
-      final existingDep = _getDependency<T>(
+      final dep = _getDependency<T>(
         groupEntity: g,
         traverse: false,
         validate: false,
       );
-      if (existingDep.isErr) {
-        return existingDep.err.cast();
+      if (dep.isErr) {
+        return dep.err.cast();
       }
-      if (existingDep.unwrap().isSome) {
+      if (dep.unwrap().isSome) {
         return const Err('Dependency already registered.');
       }
     }
@@ -121,11 +118,11 @@ base class DIBase {
     return Ok(Some(dependency));
   }
 
-  Option<FutureOr<Object>> unregister<T extends Object>({
-    Entity groupEntity = const Entity.fallback(),
+  Option<Concur<Object>> unregister<T extends Object>({
+    Entity groupEntity = const Entity.defaultEntity(),
     bool skipOnUnregisterCallback = false,
   }) {
-    final g = groupEntity.isFallback() ? focusGroup : groupEntity;
+    final g = groupEntity.isDefault() ? focusGroup : groupEntity;
     final removed = registry
         .removeDependency<T>(groupEntity: g)
         .or(registry.removeDependency<Future<T>>(groupEntity: g))
@@ -135,7 +132,7 @@ base class DIBase {
     }
     final removedDependency = removed.unwrap() as Dependency;
     if (skipOnUnregisterCallback) {
-      return Some(removedDependency.value);
+      return Some(Sync(removedDependency.value));
     }
     final metadata = removedDependency.metadata;
     if (metadata.isSome) {
@@ -153,10 +150,10 @@ base class DIBase {
   }
 
   bool isRegistered<T extends Object>({
-    Entity groupEntity = const Entity.fallback(),
+    Entity groupEntity = const Entity.defaultEntity(),
     bool traverse = true,
   }) {
-    final g = groupEntity.isFallback() ? focusGroup : groupEntity;
+    final g = groupEntity.isDefault() ? focusGroup : groupEntity;
     if (registry.containsDependency<T>(groupEntity: g) ||
         registry.containsDependency<Future<T>>(groupEntity: g) ||
         registry.containsDependency<Lazy<T>>(groupEntity: g)) {
@@ -174,7 +171,7 @@ base class DIBase {
   }
 
   Result<Option<T>> call<T extends Object>({
-    Entity groupEntity = const Entity.fallback(),
+    Entity groupEntity = const Entity.defaultEntity(),
     bool traverse = true,
   }) {
     return getSync<T>(
@@ -183,18 +180,8 @@ base class DIBase {
     );
   }
 
-  Future<T> getAsyncUnsafe<T extends Object>({
-    Entity groupEntity = const Entity.fallback(),
-    bool traverse = true,
-  }) {
-    return getAsync<T>(
-      groupEntity: groupEntity,
-      traverse: traverse,
-    ).unwrap().unwrap();
-  }
-
   Result<Option<Future<T>>> getAsync<T extends Object>({
-    Entity groupEntity = const Entity.fallback(),
+    Entity groupEntity = const Entity.defaultEntity(),
     bool traverse = true,
   }) {
     return get<T>(
@@ -204,7 +191,7 @@ base class DIBase {
   }
 
   Result<Option<T>> getSync<T extends Object>({
-    Entity groupEntity = const Entity.fallback(),
+    Entity groupEntity = const Entity.defaultEntity(),
     bool traverse = true,
   }) {
     final value = get<T>(
@@ -225,22 +212,22 @@ base class DIBase {
     );
   }
 
-  Result<Option<FutureOr<T>>> get<T extends Object>({
-    Entity groupEntity = const Entity.fallback(),
+  Result<Option<Concur<T>>> get<T extends Object>({
+    Entity groupEntity = const Entity.defaultEntity(),
     bool traverse = true,
   }) {
-    final g = groupEntity.isFallback() ? focusGroup : groupEntity;
-    final existingDep = _getDependency<T>(
+    final g = groupEntity.isDefault() ? focusGroup : groupEntity;
+    final dep = _getDependency<T>(
       groupEntity: g,
       traverse: traverse,
     );
-    if (existingDep.isErr) {
-      return existingDep.err.cast();
+    if (dep.isErr) {
+      return dep.err.cast();
     }
-    if (existingDep.unwrap().isNone) {
+    if (dep.unwrap().isNone) {
       return const Ok(None());
     }
-    final value = existingDep.unwrap().unwrap().value;
+    final value = dep.unwrap().unwrap().value;
     switch (value) {
       case Future<T> futureValue:
         return Ok(
@@ -249,7 +236,7 @@ base class DIBase {
             _registerDependency<T>(
               dependency: Dependency<T>(
                 value,
-                metadata: existingDep.unwrap().unwrap().metadata,
+                metadata: dep.unwrap().unwrap().metadata,
               ),
               checkExisting: false,
             );
@@ -264,16 +251,16 @@ base class DIBase {
     }
   }
 
-  Result<Option<Dependency<FutureOr<T>>>> _getDependency<T extends Object>({
-    Entity groupEntity = const Entity.fallback(),
+  Result<Option<Dependency<Concur<T>>>> _getDependency<T extends Object>({
+    Entity groupEntity = const Entity.defaultEntity(),
     bool traverse = true,
     bool validate = true,
   }) {
-    final g = groupEntity.isFallback() ? focusGroup : groupEntity;
-    var a = registry
+    final g = groupEntity.isDefault() ? focusGroup : groupEntity;
+    var dep = registry
         .getDependency<T>(groupEntity: g)
         .or(registry.getDependency<Future<T>>(groupEntity: g));
-    if (a.isNone && traverse) {
+    if (dep.isNone && traverse) {
       for (final parent in parents) {
         final test = parent._getDependency<T>(
           groupEntity: g,
@@ -281,14 +268,14 @@ base class DIBase {
         if (test.isErr) {
           return test;
         }
-        a = test.unwrap();
-        if (a.isSome) {
+        dep = test.unwrap();
+        if (dep.isSome) {
           break;
         }
       }
     }
-    if (a.isSome) {
-      final dependency = a.unwrap() as Dependency;
+    if (dep.isSome) {
+      final dependency = dep.unwrap() as Dependency;
       if (validate) {
         final metadata = dependency.metadata;
         if (metadata.isSome) {
@@ -303,11 +290,11 @@ base class DIBase {
     return const Ok(None());
   }
 
-  Result<Option<FutureOr<T>>> until<T extends Object>({
-    Entity groupEntity = const Entity.fallback(),
+  Result<Option<Concur<T>>> until<T extends Object>({
+    Entity groupEntity = const Entity.defaultEntity(),
     bool traverse = true,
   }) {
-    final g = groupEntity.isFallback() ? focusGroup : groupEntity;
+    final g = groupEntity.isDefault() ? focusGroup : groupEntity;
     final test = get<T>(groupEntity: g);
     if (test.isErr) {
       return test.err.cast();
@@ -316,10 +303,10 @@ base class DIBase {
       return test;
     }
     if (completers.isSome) {
-      final d = completers.unwrap().registry.getDependency<CompleterOr<FutureOr<T>>>(
+      final dep = completers.unwrap().registry.getDependency<CompleterOr<Concur<T>>>(
             groupEntity: g,
           );
-      final completer = d.unwrap().value;
+      final completer = dep.unwrap().value;
       return Ok(Some(completer.futureOr.thenOr((e) => e)));
     }
 
@@ -327,9 +314,9 @@ base class DIBase {
       completers = Some(DIBase());
     }
 
-    final completer = CompleterOr<FutureOr<T>>();
+    final completer = CompleterOr<Concur<T>>();
     completers.unwrap().registry.setDependency(
-          Dependency<CompleterOr<FutureOr<T>>>(
+          Dependency<CompleterOr<Concur<T>>>(
             completer,
             metadata: Some(
               DependencyMetadata(
@@ -342,7 +329,7 @@ base class DIBase {
     return Ok(
       Some(
         completer.futureOr.thenOr((value) {
-          completers.unwrap().registry.removeDependency<CompleterOr<FutureOr<T>>>(
+          completers.unwrap().registry.removeDependency<CompleterOr<Concur<T>>>(
                 groupEntity: g,
               );
           return get<T>(
@@ -354,7 +341,7 @@ base class DIBase {
     );
   }
 
-  FutureOr<List<Dependency>> unregisterAll({
+  Concur<List<Dependency>> unregisterAll({
     Option<OnUnregisterCallback<Dependency>> onBeforeUnregister = const None(),
     Option<OnUnregisterCallback<Dependency>> onAfterUnregister = const None(),
   }) {
@@ -365,8 +352,9 @@ base class DIBase {
         (_) => onBeforeUnregister.ifSome((e) => e(dependency)),
         (_) => registry.removeDependencyK(
               dependency.typeEntity,
-              groupEntity:
-                  dependency.metadata.map((e) => e.groupEntity).unwrapOr(const Entity.fallback()),
+              groupEntity: dependency.metadata
+                  .map((e) => e.groupEntity)
+                  .unwrapOr(const Entity.defaultEntity()),
             ),
         (_) => dependency.metadata.map((e) => e.onUnregister.ifSome((e) => e(dependency))),
         (_) => onAfterUnregister.ifSome((e) => e(dependency)),

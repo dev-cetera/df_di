@@ -46,7 +46,7 @@ final class Dependency<T extends Object> {
   /// runtime type key of [value].
   Entity get typeEntity {
     return metadata.fold(
-      (e) => e.preemptivetypeEntity.isFallback()
+      (e) => e.preemptivetypeEntity.isDefault()
           ? Entity.obj(value.runtimeType)
           : e.preemptivetypeEntity,
       () => Entity.obj(value.runtimeType),
@@ -97,8 +97,8 @@ final class Dependency<T extends Object> {
 @internal
 class DependencyMetadata {
   DependencyMetadata({
-    this.groupEntity = const Entity.fallback(),
-    this.preemptivetypeEntity = const Entity.fallback(),
+    this.groupEntity = const Entity.defaultEntity(),
+    this.preemptivetypeEntity = const Entity.defaultEntity(),
     this.index = const None(),
     this.validator = const None(),
     this.onUnregister = const None(),
@@ -134,17 +134,17 @@ class DependencyMetadata {
   /// Creates a new instance with updated fields, preserving the values of any
   /// fields not explicitly specified.
   DependencyMetadata copyWith({
-    Entity groupEntity = const Entity.fallback(),
-    Entity preemptivetypeEntity = const Entity.fallback(),
+    Entity groupEntity = const Entity.defaultEntity(),
+    Entity preemptivetypeEntity = const Entity.defaultEntity(),
     Option<Type> initialType = const None(),
     Option<int> index = const None(),
     Option<DependencyValidator> validator = const None(),
     Option<OnUnregisterCallback<Object>> onUnregister = const None(),
   }) {
     return DependencyMetadata(
-      groupEntity: groupEntity.isNoFallback() ? groupEntity : this.groupEntity,
+      groupEntity: groupEntity.isNotDefault() ? groupEntity : this.groupEntity,
       preemptivetypeEntity:
-          preemptivetypeEntity.isNoFallback() ? preemptivetypeEntity : this.preemptivetypeEntity,
+          preemptivetypeEntity.isNotDefault() ? preemptivetypeEntity : this.preemptivetypeEntity,
       index: index.isSome ? index : this.index,
       validator: validator.isSome ? validator : this.validator,
       onUnregister: onUnregister.isSome ? onUnregister : this.onUnregister,
@@ -177,7 +177,7 @@ class DependencyMetadata {
 /// in order to facilitate any necessary cleanup or additional processing
 /// that might be required for the [value].
 @internal
-typedef OnUnregisterCallback<T extends Object> = FutureOr<void> Function(
+typedef OnUnregisterCallback<T extends Object> = Concur<void> Function(
   T value,
 );
 

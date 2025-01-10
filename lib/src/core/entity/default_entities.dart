@@ -19,7 +19,7 @@ enum DefaultEntities {
   /// dependencies. This entity can be utilized when no specific group is
   /// defined, allowing for a fallback option that simplifies dependency
   /// retrieval and management in the DI container.
-  FALLBACK_GROUP(Entity.fallback()),
+  DEFAULT_GROUP(Entity.defaultEntity()),
 
   /// A predefined entity recommended to use as the global group entity for
   /// dependencies. Use This entity for dependencies that need to be accessible

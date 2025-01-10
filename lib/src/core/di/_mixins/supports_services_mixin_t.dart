@@ -32,7 +32,7 @@ base mixin SupportsServicesMixinT on SupportsConstructorsMixinT, SupportsMixinT 
   // FutureOr<Service> getServiceSingletonT(
   //   Type type, {
   //   Object? params,
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   // }) {
   //   final groupEntity1 = groupEntity ?? focusGroup;
@@ -67,7 +67,7 @@ base mixin SupportsServicesMixinT on SupportsConstructorsMixinT, SupportsMixinT 
   // FutureOr<Service>? getServiceSingletonOrNullT(
   //   Type type, {
   //   Object? params,
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   // }) {
   //   final instance = getSingletonOrNullT(type);
@@ -94,7 +94,7 @@ base mixin SupportsServicesMixinT on SupportsConstructorsMixinT, SupportsMixinT 
   // Service getServiceSingletonSyncT(
   //   Type type, {
   //   Object? params,
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   // }) {
   //   final value = getServiceSingletonT(
@@ -128,7 +128,7 @@ base mixin SupportsServicesMixinT on SupportsConstructorsMixinT, SupportsMixinT 
   // Service? getServiceSingletonSyncOrNullT(
   //   Type type, {
   //   Object? params,
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   //   bool throwIfAsync = false,
   // }) {
@@ -160,7 +160,7 @@ base mixin SupportsServicesMixinT on SupportsConstructorsMixinT, SupportsMixinT 
   // Future<Service> getServiceSingletonAsyncT(
   //   Type type, {
   //   Object? params,
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   // }) async {
   //   return getServiceSingletonT(
@@ -185,7 +185,7 @@ base mixin SupportsServicesMixinT on SupportsConstructorsMixinT, SupportsMixinT 
   // FutureOr<Service> getServiceFactoryT(
   //   Type type, {
   //   Object? params,
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   // }) {
   //   final groupEntity1 = groupEntity ?? focusGroup;
@@ -218,7 +218,7 @@ base mixin SupportsServicesMixinT on SupportsConstructorsMixinT, SupportsMixinT 
   // FutureOr<Service>? getServiceFactoryOrNullT(
   //   Type type, {
   //   Object? params,
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   // }) {
   //   final instance = getFactoryOrNullT(type);
@@ -244,7 +244,7 @@ base mixin SupportsServicesMixinT on SupportsConstructorsMixinT, SupportsMixinT 
   // Service getServiceFactorySyncT(
   //   Type type, {
   //   Object? params,
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   // }) {
   //   final value = getServiceFactoryT(
@@ -280,7 +280,7 @@ base mixin SupportsServicesMixinT on SupportsConstructorsMixinT, SupportsMixinT 
   // Service? getServiceFactorySyncOrNullT(
   //   Type type, {
   //   Object? params,
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   //   bool throwIfAsync = false,
   // }) {
@@ -314,7 +314,7 @@ base mixin SupportsServicesMixinT on SupportsConstructorsMixinT, SupportsMixinT 
   // Future<Service> getServiceFactoryAsyncT(
   //   Type type, {
   //   Object? params,
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   // }) async {
   //   return getServiceFactoryT(

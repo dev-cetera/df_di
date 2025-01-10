@@ -33,7 +33,7 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
   // FutureOr<TService> registerService<TService extends Service>(
   //   FutureOr<TService> service, {
   //   Object? params,
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool Function(FutureOr<TService> instance)? validator,
   //   FutureOr<void> Function(FutureOr<TService> instance)? onUnregister,
   // }) {
@@ -76,7 +76,7 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
   // /// the dependency is unregistered via [unregister].
   // void registerLazyService<TService extends Service>(
   //   TConstructor<TService> constructor, {
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool Function(FutureOr<TService> instance)? validator,
   //   FutureOr<void> Function(FutureOr<TService> instance)? onUnregister,
   // }) {
@@ -114,7 +114,7 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
   // /// Throws a [DependencyNotFoundException] if the dependency does not exist.
   // FutureOr<TService> getServiceSingleton<TService extends Service>({
   //   Object? params,
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   // }) {
   //   final groupEntity1 = groupEntity ?? focusGroup;
@@ -147,7 +147,7 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
   // /// Throws a [DependencyNotFoundException] if the dependency does not exist.
   // FutureOr<TService>? getServiceSingletonOrNull<TService extends Service>({
   //   Object? params,
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   // }) {
   //   return getServiceSingletonWithParamsOrNull<TService, Object?>(
@@ -172,7 +172,7 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
   // FutureOr<TService>
   //     getServiceSingletonWithParams<TService extends Service<TParams>, TParams extends Object?>({
   //   required TParams params,
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   // }) {
   //   final groupEntity1 = groupEntity ?? focusGroup;
@@ -209,7 +209,7 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
   // FutureOr<TService>? getServiceSingletonWithParamsOrNull<TService extends Service<TParams>,
   //     TParams extends Object?>({
   //   required TParams params,
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   // }) {
   //   final instance = getSingletonOrNull<TService>();
@@ -234,7 +234,7 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
   // /// Throws a [DependencyIsFutureException] if the dependency is a [Future].
   // TService getServiceSingletonSync<TService extends Service>({
   //   Object? params,
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   // }) {
   //   final value = getServiceSingleton<TService>(
@@ -266,7 +266,7 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
   // /// is a [Future].
   // TService? getServiceSingletonSyncOrNull<TService extends Service>({
   //   Object? params,
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   //   bool throwIfAsync = false,
   // }) {
@@ -298,7 +298,7 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
   // TService getServiceSingletonWithParamsSync<TService extends Service<TParams>,
   //     TParams extends Object?>({
   //   required TParams params,
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   // }) {
   //   final value = getServiceSingletonWithParams<TService, TParams>(
@@ -328,7 +328,7 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
   // TService? getServiceSingletonWithParamsSyncOrNull<TService extends Service<TParams>,
   //     TParams extends Object?>({
   //   required TParams params,
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   //   bool throwIfAsync = false,
   // }) {
@@ -358,7 +358,7 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
   // /// registered dependency is not a [Future].
   // Future<TService> getServiceSingletonAsync<TService extends Service>({
   //   Object? params,
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   // }) async {
   //   return getServiceSingleton<TService>(
@@ -381,7 +381,7 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
   // Future<TService> getServiceSingletonWithParamsAsync<TService extends Service<TParams>,
   //     TParams extends Object?>({
   //   required TParams params,
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   // }) async {
   //   return getServiceSingletonWithParams<TService, TParams>(
@@ -404,7 +404,7 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
   // /// Throws a [DependencyNotFoundException] if the dependency does not exist.
   // FutureOr<TService> getServiceFactory<TService extends Service>({
   //   Object? params,
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   // }) {
   //   final groupEntity1 = groupEntity ?? focusGroup;
@@ -436,7 +436,7 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
   // /// Returns `null` if the dependency does not exist.
   // FutureOr<TService>? getServiceFactoryOrNull<TService extends Service>({
   //   Object? params,
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   // }) {
   //   return getServiceFactoryWithParamsOrNull<TService, Object?>(
@@ -460,7 +460,7 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
   // FutureOr<TService>
   //     getServiceFactoryWithParams<TService extends Service<TParams>, TParams extends Object?>({
   //   required TParams params,
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   // }) {
   //   final groupEntity1 = groupEntity ?? focusGroup;
@@ -492,7 +492,7 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
   // FutureOr<TService>? getServiceFactoryWithParamsOrNull<TService extends Service<TParams>,
   //     TParams extends Object?>({
   //   required TParams params,
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   // }) {
   //   final instance = getFactoryOrNull<TService>();
@@ -516,7 +516,7 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
   // /// Throws a [DependencyIsFutureException] if the dependency is a [Future].
   // TService getServiceFactorySync<TService extends Service>({
   //   Object? params,
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   // }) {
   //   final value = getServiceFactory<TService>(
@@ -550,7 +550,7 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
   // /// is a [Future].
   // TService? getServiceFactorySyncOrNull<TService extends Service>({
   //   Object? params,
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   //   bool throwIfAsync = false,
   // }) {
@@ -581,7 +581,7 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
   // TService
   //     getServiceFactoryWithParamsSync<TService extends Service<TParams>, TParams extends Object?>({
   //   required TParams params,
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   // }) {
   //   final value = getServiceFactoryWithParams<TService, TParams>(
@@ -613,7 +613,7 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
   // TService? getServiceFactoryWithParamsSyncOrNull<TService extends Service<TParams>,
   //     TParams extends Object?>({
   //   required TParams params,
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   //   bool throwIfAsync = false,
   // }) {
@@ -645,7 +645,7 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
   // /// registered dependency is not a [Future].
   // Future<TService> getServiceFactoryAsync<TService extends Service>({
   //   Object? params,
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   // }) async {
   //   return getServiceFactory<TService>(
@@ -670,7 +670,7 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
   // Future<TService>
   //     getServiceFactoryWithParamsAsync<TService extends Service<TParams>, TParams extends Object?>({
   //   required TParams params,
-  //   Entity? groupEntity,
+  //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   // }) async {
   //   return getServiceFactoryWithParams<TService, TParams>(

@@ -33,7 +33,8 @@ environment:
 dependencies:
   df_safer_dart:
     path: ../df_safer_dart
-  df_type: ^0.8.0
+  df_type:
+    path: ../df_type
 
   collection: ^1.18.0
   meta: ^1.15.0
