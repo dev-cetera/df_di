@@ -1,5 +1,4 @@
 import 'package:df_di/df_di.dart';
-import 'package:df_safer_dart/df_safer_dart.dart';
 import 'package:get_it/get_it.dart';
 
 import 'run_benchmark_comparison.dart';

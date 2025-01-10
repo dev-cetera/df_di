@@ -1,25 +1,39 @@
-// //.title
-// // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-// //
-// // Dart/Flutter (DF) Packages by dev-cetera.com & contributors. The use of this
-// // source code is governed by an MIT-style license described in the LICENSE
-// // file located in this project's root directory.
-// //
-// // See: https://opensource.org/license/mit
-// //
-// // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-// //.title~
+//.title
+// ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+//
+// Dart/Flutter (DF) Packages by dev-cetera.com & contributors. The use of this
+// source code is governed by an MIT-style license described in the LICENSE
+// file located in this project's root directory.
+//
+// See: https://opensource.org/license/mit
+//
+// ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+//.title~
 
-// // ignore_for_file: invalid_use_of_protected_member, strict_raw_type
+// ignore_for_file: invalid_use_of_protected_member, strict_raw_type
 
-// import 'dart:async';
-// import 'dart:math';
+import 'dart:async';
+import 'dart:math';
 
-// import 'package:df_di/df_di.dart';
+import 'package:df_di/df_di.dart';
 
-// // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-// Future<void> main() async {
+Future<void> main() async {
+  final di = DI();
+  print(1);
+  final value =
+      await di.register<int>(Future.delayed(const Duration(seconds: 3), () => 2)).unwrap().unwrap();
+
+  print(di.registry.state);
+
+  //di.registry.removeDependency<Future<int>>();
+
+  print(di.get<int>().unwrap().isSome);
+  di.unregister<int>().ifSome((e) => print('SOME $e'));
+  print(di.get<int>().unwrap().isNone);
+  print(di.registry.state);
+}
 //   print('\n# Get access to the global DI container:\n');
 //   final di = DI();
 //   print('DI.global == di: ${DI.global == di}');

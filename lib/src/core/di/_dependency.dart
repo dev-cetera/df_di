@@ -46,8 +46,9 @@ final class Dependency<T extends Object> {
   /// runtime type key of [value].
   Entity get typeEntity {
     return metadata.fold(
-      (e) =>
-          e.preemptivetypeEntity.isZero() ? Entity.obj(value.runtimeType) : e.preemptivetypeEntity,
+      (e) => e.preemptivetypeEntity.isFallback()
+          ? Entity.obj(value.runtimeType)
+          : e.preemptivetypeEntity,
       () => Entity.obj(value.runtimeType),
     );
   }
@@ -96,8 +97,8 @@ final class Dependency<T extends Object> {
 @internal
 class DependencyMetadata {
   DependencyMetadata({
-    this.groupEntity = const Entity.zero(),
-    this.preemptivetypeEntity = const Entity.zero(),
+    this.groupEntity = const Entity.fallback(),
+    this.preemptivetypeEntity = const Entity.fallback(),
     this.index = const None(),
     this.validator = const None(),
     this.onUnregister = const None(),
@@ -133,17 +134,17 @@ class DependencyMetadata {
   /// Creates a new instance with updated fields, preserving the values of any
   /// fields not explicitly specified.
   DependencyMetadata copyWith({
-    Entity groupEntity = const Entity.zero(),
-    Entity preemptivetypeEntity = const Entity.zero(),
+    Entity groupEntity = const Entity.fallback(),
+    Entity preemptivetypeEntity = const Entity.fallback(),
     Option<Type> initialType = const None(),
     Option<int> index = const None(),
     Option<DependencyValidator> validator = const None(),
     Option<OnUnregisterCallback<Object>> onUnregister = const None(),
   }) {
     return DependencyMetadata(
-      groupEntity: groupEntity.isNotZero() ? groupEntity : this.groupEntity,
+      groupEntity: groupEntity.isNoFallback() ? groupEntity : this.groupEntity,
       preemptivetypeEntity:
-          preemptivetypeEntity.isNotZero() ? preemptivetypeEntity : this.preemptivetypeEntity,
+          preemptivetypeEntity.isNoFallback() ? preemptivetypeEntity : this.preemptivetypeEntity,
       index: index.isSome ? index : this.index,
       validator: validator.isSome ? validator : this.validator,
       onUnregister: onUnregister.isSome ? onUnregister : this.onUnregister,

@@ -5,4 +5,3 @@ dependencies:
   df_di:
     path: ../../
   get_it:
-  df_safer_dart:

@@ -30,7 +30,7 @@ base class DIBase {
   final parents = <DIBase>{};
 
   /// A key that identifies the current group in focus for dependency management.
-  Entity focusGroup = DefaultEntities.DEFAULT_GROUP.entity;
+  Entity focusGroup = DefaultEntities.FALLBACK_GROUP.entity;
 
   /// A container storing Future completions.
   @protected
@@ -40,39 +40,22 @@ base class DIBase {
   @protected
   int dependencyCount = 0;
 
-  /// Registers a dependency [value] of type [T] under the specified
-  /// [groupEntity] in the [registry].
-  ///
-  /// If the [value] is an instance of [DI], it will be registered as
-  /// a child of this container. This action sets the child’s parent to this
-  /// [DI] and ensures that the child's [registry] is cleared upon
-  /// unregistration.
-  ///
-  /// You can provide a [validator] function to validate the dependency before
-  /// it gets retrieved. If the validation fails [DependencyInvalidException]
-  /// will be throw upon retrieval.
-  ///
-  /// Additionally, an [onUnregister] callback can be specified to execute when
-  /// the dependency is unregistered via [unregister].
-  ///
-  /// Throws a [DependencyAlreadyRegisteredException] if a dependency of the
-  /// same type and group is already registered.
   Result<Option<FutureOr<T>>> register<T extends Object>(
     FutureOr<T> value, {
-    Entity groupEntity = const Entity.zero(),
+    Entity groupEntity = const Entity.fallback(),
     Option<DependencyValidator<FutureOr<T>>> validator = const None(),
     Option<OnUnregisterCallback<FutureOr<T>>> onUnregister = const None(),
   }) {
-    final groupEntity1 = groupEntity.isZero() ? focusGroup : groupEntity;
+    final g = groupEntity.isFallback() ? focusGroup : groupEntity;
     final metadata = DependencyMetadata(
       index: Some(dependencyCount++),
-      groupEntity: groupEntity1,
+      groupEntity: g,
       validator:
           validator.isSome ? Some((e) => validator.unwrap()(e as FutureOr<T>)) : const None(),
       onUnregister:
           onUnregister.isSome ? Some((e) => onUnregister.unwrap()(e as FutureOr<T>)) : const None(),
     );
-    completeRegistration(value, groupEntity1);
+    completeRegistration(value, g);
     final registeredDep = _registerDependency(
       dependency: Dependency(
         value,
@@ -111,20 +94,6 @@ base class DIBase {
     }
   }
 
-  /// Registers a [dependency] of type [T] in the [registry].
-  ///
-  /// If the value of [dependency] is an instance of [DI], it will be
-  /// registered as a child of this container. This action sets the child’s
-  /// parent to this [DI] and ensures that the child's registry is
-  /// cleared upon unregistration.
-  ///
-  /// Throws a [DependencyAlreadyRegisteredException] if a dependency of the
-  /// same type and group is already registered and [checkExisting] is set
-  /// to `true`. If [checkExisting] is set to `false`, any existing dependency
-  /// of the same type and group is replaced.
-  ///
-  /// Returns the registered [Dependency] object as a [FutureOr] that
-  /// completes with the [dependency] object once it is registered.
   Result<Option<Dependency<T>>> _registerDependency<T extends FutureOr<Object>>({
     required Dependency<T> dependency,
     bool checkExisting = false,
@@ -136,10 +105,10 @@ base class DIBase {
 
     // If [checkExisting] is true, throw an exception if the dependency is
     // already registered.
-    final groupEntity1 = dependency.metadata.fold((e) => e.groupEntity, () => focusGroup);
+    final g = dependency.metadata.fold((e) => e.groupEntity, () => focusGroup);
     if (checkExisting) {
       final existingDep = _getDependency<T>(
-        groupEntity: groupEntity1,
+        groupEntity: g,
         traverse: false,
         validate: false,
       );
@@ -150,28 +119,19 @@ base class DIBase {
         return const Err('Dependency already registered.');
       }
     }
-
-    // If [dependency] is not a [DIContainer], register it as a normal
-    // dependency.
     registry.setDependency(dependency);
     return Ok(Some(dependency));
   }
 
-  /// Unregisters the dependency of type [T] associated with the specified
-  /// [groupEntity] from the [registry], if it exists.
-  ///
-  /// If [skipOnUnregisterCallback] is true, the
-  /// [DependencyMetadata.onUnregister] callback will be skipped.
-
   Option<FutureOr<Object>> unregister<T extends Object>({
-    Entity? groupEntity,
+    Entity groupEntity = const Entity.fallback(),
     bool skipOnUnregisterCallback = false,
   }) {
-    final groupEntity1 = groupEntity ?? focusGroup;
+    final g = groupEntity.isFallback() ? focusGroup : groupEntity;
     final removed = registry
-        .removeDependency<T>(groupEntity: groupEntity1)
-        .or(registry.removeDependency<T>(groupEntity: groupEntity1))
-        .or(registry.removeDependency<Lazy<T>>(groupEntity: groupEntity1));
+        .removeDependency<T>(groupEntity: g)
+        .or(registry.removeDependency<Future<T>>(groupEntity: g))
+        .or(registry.removeDependency<Lazy<T>>(groupEntity: g));
     if (removed.isNone) {
       return const None();
     }
@@ -191,27 +151,22 @@ base class DIBase {
         );
       }
     }
-    return const None();
+    return Some(removedDependency.value);
   }
 
-  /// Checks whether dependency of type [T] or subtype of [T] is registered
-  /// under the specified [groupEntity] in the [registry].
-  ///
-  /// If [traverse] is true, it will also search recursively in parent
-  /// containers.
   bool isRegistered<T extends Object>({
-    Entity groupEntity = const Entity.zero(),
+    Entity groupEntity = const Entity.fallback(),
     bool traverse = true,
   }) {
-    final groupEntity1 = groupEntity.isZero() ? focusGroup : groupEntity;
-    if (registry.containsDependency<T>(groupEntity: groupEntity1) ||
-        registry.containsDependency<Future<T>>(groupEntity: groupEntity1) ||
-        registry.containsDependency<Lazy<T>>(groupEntity: groupEntity1)) {
+    final g = groupEntity.isFallback() ? focusGroup : groupEntity;
+    if (registry.containsDependency<T>(groupEntity: g) ||
+        registry.containsDependency<Future<T>>(groupEntity: g) ||
+        registry.containsDependency<Lazy<T>>(groupEntity: g)) {
       return true;
     }
     if (traverse) {
       for (final parent in parents) {
-        if (parent.isRegistered<T>(groupEntity: groupEntity1, traverse: true)) {
+        if (parent.isRegistered<T>(groupEntity: g, traverse: true)) {
           return true;
         }
       }
@@ -220,19 +175,8 @@ base class DIBase {
     return false;
   }
 
-  /// Retrieves a dependency of type [T] or its subtypes registered under
-  /// the specified [groupEntity] from the [registry].
-  ///
-  /// If [traverse] is true, it will also search recursively in parent
-  /// containers.
-  ///
-  /// If the dependency does not exist, a [DependencyNotFoundException] is
-  /// thrown.
-  ///
-  /// If the dependency is a [Future], a [DependencyIsFutureException] is
-  /// thrown.
   Result<Option<T>> call<T extends Object>({
-    Entity groupEntity = const Entity.zero(),
+    Entity groupEntity = const Entity.fallback(),
     bool traverse = true,
   }) {
     return getSync<T>(
@@ -241,20 +185,18 @@ base class DIBase {
     );
   }
 
-  /// Retrieves a dependency of type [T] or its subtypes registered under
-  /// the specified [groupEntity] from the [registry].
-  ///
-  /// If [traverse] is true, it will also search recursively in parent
-  /// containers.
-  ///
-  /// If the dependency does not exist, a [DependencyNotFoundException] is
-  /// thrown.
-  ///
-  /// This method always returns a [Future], ensuring compatibility. This
-  /// provides a safe and consistent way to retrieve dependencies, even if the
-  /// registered dependency is not a [Future].
+  Future<T> getAsyncUnsafe<T extends Object>({
+    Entity groupEntity = const Entity.fallback(),
+    bool traverse = true,
+  }) {
+    return getAsync<T>(
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).unwrap().unwrap();
+  }
+
   Result<Option<Future<T>>> getAsync<T extends Object>({
-    Entity groupEntity = const Entity.zero(),
+    Entity groupEntity = const Entity.fallback(),
     bool traverse = true,
   }) {
     return get<T>(
@@ -263,19 +205,8 @@ base class DIBase {
     ).map((e) => e.map((e) async => e));
   }
 
-  /// Retrieves a dependency of type [T] or its subtypes registered under
-  /// the specified [groupEntity] from the [registry].
-  ///
-  /// If [traverse] is true, it will also search recursively in parent
-  /// containers.
-  ///
-  /// If the dependency is a [Future], a [DependencyIsFutureException] is
-  /// thrown.
-  ///
-  /// If the dependency does not exist, a [DependencyNotFoundException] is
-  /// thrown.
   Result<Option<T>> getSync<T extends Object>({
-    Entity groupEntity = const Entity.zero(),
+    Entity groupEntity = const Entity.fallback(),
     bool traverse = true,
   }) {
     final value = get<T>(
@@ -296,70 +227,58 @@ base class DIBase {
     );
   }
 
-  /// Retrieves a dependency of type [T] or its subtypes registered under
-  /// the specified [groupEntity] from the [registry].
-  ///
-  /// If [traverse] is set to `true`, the search will also include all parent
-  /// containers.
-  ///
-  /// If the dependency is registered as a non-future, the returned value will
-  /// always be non-future. If it is registered as a future, the returned value
-  /// will initially be a future. Once that future completes, its resolved value
-  /// is re-registered as a non-future, allowing future calls to this method
-  /// to return the resolved value directly.
   Result<Option<FutureOr<T>>> get<T extends Object>({
-    Entity groupEntity = const Entity.zero(),
+    Entity groupEntity = const Entity.fallback(),
     bool traverse = true,
   }) {
-    final groupEntity1 = groupEntity.isZero() ? focusGroup : groupEntity;
+    final g = groupEntity.isFallback() ? focusGroup : groupEntity;
     final existingDep = _getDependency<T>(
-      groupEntity: groupEntity1,
+      groupEntity: g,
       traverse: traverse,
     );
     if (existingDep.isErr) {
       return existingDep.err.cast();
     }
-
     if (existingDep.unwrap().isNone) {
       return const Ok(None());
     }
-
-    final existingDep1 = existingDep.unwrap().unwrap();
-    final value = existingDep1.value;
+    final value = existingDep.unwrap().unwrap().value;
     switch (value) {
       case Future<T> futureValue:
-        return Result(() async {
-          final value = await futureValue;
-          _registerDependency<T>(
-            dependency: Dependency<T>(
-              value,
-              metadata: existingDep1.metadata,
-            ),
-            checkExisting: false,
-          );
-          registry.removeDependency<Future<T>>(
-            groupEntity: groupEntity1,
-          );
-          return Some(value);
-        });
+        return Ok(
+          Some(() async {
+            final value = await futureValue;
+            _registerDependency<T>(
+              dependency: Dependency<T>(
+                value,
+                metadata: existingDep.unwrap().unwrap().metadata,
+              ),
+              checkExisting: false,
+            );
+            registry.removeDependency<Future<T>>(
+              groupEntity: g,
+            );
+            return value;
+          }()),
+        );
       case T _:
         return Ok(Some(value));
     }
   }
 
   Result<Option<Dependency<FutureOr<T>>>> _getDependency<T extends Object>({
-    Entity groupEntity = const Entity.zero(),
+    Entity groupEntity = const Entity.fallback(),
     bool traverse = true,
     bool validate = true,
   }) {
-    final groupEntity1 = groupEntity.isZero() ? focusGroup : groupEntity;
+    final g = groupEntity.isFallback() ? focusGroup : groupEntity;
     var a = registry
-        .getDependency<T>(groupEntity: groupEntity1)
-        .or(registry.getDependency<Future<T>>(groupEntity: groupEntity1));
+        .getDependency<T>(groupEntity: g)
+        .or(registry.getDependency<Future<T>>(groupEntity: g));
     if (a.isNone && traverse) {
       for (final parent in parents) {
         final test = parent._getDependency<T>(
-          groupEntity: groupEntity1,
+          groupEntity: g,
         );
         if (test.isErr) {
           return test;
@@ -386,19 +305,11 @@ base class DIBase {
     return const Ok(None());
   }
 
-  /// Retrieves a dependency of type [T] or its subtypes registered under
-  /// the specified [groupEntity] from the [registry].
-  ///
-  /// If the dependency is found, it is returned; otherwise, this method waits
-  /// until the dependency is registered before returning it.
-  ///
-  /// If [traverse] is set to `true`, the search will also include all parent
-  /// containers.
   Result<Option<FutureOr<T>>> until<T extends Object>({
-    Entity groupEntity = const Entity.zero(),
+    Entity groupEntity = const Entity.fallback(),
     bool traverse = true,
   }) {
-    final g = groupEntity.isZero() ? focusGroup : groupEntity;
+    final g = groupEntity.isFallback() ? focusGroup : groupEntity;
     final test = get<T>(groupEntity: g);
     if (test.isErr) {
       return test.err.cast();
@@ -418,10 +329,7 @@ base class DIBase {
       completers = Some(DIBase());
     }
 
-    // If it's not already registered, register a Completer for the type
-    // inside the untilsContainer.
     final completer = CompleterOr<FutureOr<T>>();
-
     completers.unwrap().registry.setDependency(
           Dependency<CompleterOr<FutureOr<T>>>(
             completer,
@@ -433,8 +341,6 @@ base class DIBase {
           ),
         );
 
-    // Wait for the register function to complete the Completer, then unregister
-    // the completer before returning the value.
     return Ok(
       Some(
         completer.futureOr.thenOr((value) {
@@ -450,12 +356,6 @@ base class DIBase {
     );
   }
 
-  /// Unregisters all dependencies in the reverse order they were registered.
-  ///
-  /// If [onBeforeUnregister] is provided, it will be called before each
-  /// dependency is unregistered. If [onAfterUnregister] is provided, it will
-  /// be called after each dependency is unregistered. These methods are
-  /// particularly useful for debugging, logging and additional cleanup logic.
   FutureOr<List<Dependency>> unregisterAll({
     Option<OnUnregisterCallback<Dependency>> onBeforeUnregister = const None(),
     Option<OnUnregisterCallback<Dependency>> onAfterUnregister = const None(),
@@ -468,7 +368,7 @@ base class DIBase {
         (_) => registry.removeDependencyK(
               dependency.typeEntity,
               groupEntity:
-                  dependency.metadata.map((e) => e.groupEntity).unwrapOr(const Entity.zero()),
+                  dependency.metadata.map((e) => e.groupEntity).unwrapOr(const Entity.fallback()),
             ),
         (_) => dependency.metadata.map((e) => e.onUnregister.ifSome((e) => e(dependency))),
         (_) => onAfterUnregister.ifSome((e) => e(dependency)),

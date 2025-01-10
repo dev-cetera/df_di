@@ -34,13 +34,13 @@ class Entity {
   /// or greater.
   const Entity(this.id) : assert(id >= 0, 'Entity id must be 0 or greater!');
 
-  const Entity.zero() : this(0);
+  const Entity.fallback() : this.reserved(-1001);
 
   @pragma('vm:prefer-inline')
-  bool isZero() => id == 0;
+  bool isFallback() => id == const Entity.fallback().id;
 
   @pragma('vm:prefer-inline')
-  bool isNotZero() => !isZero();
+  bool isNoFallback() => !isFallback();
 
   /// Creates a new [Entity] with the given [id]. The [id] must be less than 0.
   ///
