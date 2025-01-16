@@ -39,11 +39,17 @@ final class DIRegistry {
         _state.entries.expand((e) => e.value.values).toList()
           // Sort by descending indexes, i.e. largest index is first element.
           ..sort((d1, d2) {
-            final index1 =
-                d1.metadata.fold((e) => e.index.isSome ? e.index.unwrap() : -1, () => -1);
-            final index2 =
-                d2.metadata.fold((e) => e.index.isSome ? e.index.unwrap() : -1, () => -1);
-            return index1.compareTo(index2);
+            final i1 = d1.metadata.isSome()
+                ? d1.metadata.unwrap().index.isSome()
+                    ? d1.metadata.unwrap().index.unwrap()
+                    : -1
+                : -1;
+            final i2 = d2.metadata.isSome()
+                ? d2.metadata.unwrap().index.isSome()
+                    ? d2.metadata.unwrap().index.unwrap()
+                    : -1
+                : -1;
+            return i1.compareTo(i2);
           }),
       );
 
@@ -82,13 +88,15 @@ final class DIRegistry {
   /// Updates the [state] by setting or updating [dependency].
   @protected
   void setDependency(Dependency dependency) {
-    final groupEntity =
-        dependency.metadata.fold((e) => e.groupEntity, () => const Entity.defaultEntity());
+    final groupEntity = dependency.metadata.isSome()
+        ? dependency.metadata.unwrap().groupEntity
+        : const Entity.defaultEntity();
     final typeEntity = dependency.typeEntity;
-    final currentDep = Option(_state[groupEntity]?[typeEntity]);
-    if (currentDep.isNone || currentDep.unwrap() != dependency) {
+    final currentDep = Option.fromNullable(_state[groupEntity]?[typeEntity]);
+    // ignore: invalid_use_of_visible_for_testing_member
+    if (currentDep.isNone() || currentDep.unwrap() != dependency) {
       (_state[groupEntity] ??= {})[typeEntity] = dependency;
-      onChange.map((e) => e());
+      onChange.ifSome((e) => e.unwrap()());
     }
   }
 
@@ -133,7 +141,9 @@ final class DIRegistry {
       T != Object,
       'T must be specified and cannot be Object.',
     );
-    return Option(_state[groupEntity]?.values.firstWhereOrNull((e) => e.value is T)?.cast<T>());
+    return Option.fromNullable(
+      _state[groupEntity]?.values.firstWhereOrNull((e) => e.value is Resolvable<T>)?.cast<T>(),
+    );
   }
 
   /// Returns any dependency with the exact [type] under the specified
@@ -158,7 +168,7 @@ final class DIRegistry {
     Entity typeEntity, {
     Entity groupEntity = const Entity.defaultEntity(),
   }) {
-    return Option(
+    return Option.fromNullable(
       _state[groupEntity]?.values.firstWhereOrNull((e) => e.typeEntity == typeEntity),
     );
   }
@@ -173,8 +183,9 @@ final class DIRegistry {
     Entity groupEntity = const Entity.defaultEntity(),
   }) {
     final dependency = getDependency<T>(groupEntity: groupEntity);
-    if (dependency.isSome) {
+    if (dependency.isSome()) {
       final removed = removeDependencyK(
+        // ignore: invalid_use_of_visible_for_testing_member
         dependency.unwrap().typeEntity,
         groupEntity: groupEntity,
       );
@@ -214,8 +225,8 @@ final class DIRegistry {
   }) {
     final group = _state[groupEntity];
     if (group != null) {
-      final removed = Option(group.remove(typeEntity));
-      if (removed.isSome) {
+      final removed = Option.fromNullable(group.remove(typeEntity));
+      if (removed.isSome()) {
         if (group.isEmpty) {
           removeGroup(
             groupEntity: groupEntity,
@@ -226,7 +237,7 @@ final class DIRegistry {
             groupEntity: groupEntity,
           );
         }
-        onChange.map((e) => e());
+        onChange.ifSome((e) => e.unwrap()());
         return removed;
       }
     }
@@ -244,7 +255,7 @@ final class DIRegistry {
     final equals = const MapEquality<Entity, Dependency>().equals(currentGroup, group);
     if (!equals) {
       _state[groupEntity] = group;
-      onChange.map((e) => e());
+      onChange.ifSome((e) => e.unwrap()());
     }
   }
 
@@ -261,7 +272,7 @@ final class DIRegistry {
   @pragma('vm:prefer-inline')
   void removeGroup({Entity groupEntity = const Entity.defaultEntity()}) {
     _state.remove(groupEntity);
-    onChange.map((e) => e());
+    onChange.ifSome((e) => e.unwrap()());
   }
 
   /// Clears the [state], resetting the registry and effectively restoring it
@@ -269,7 +280,7 @@ final class DIRegistry {
   @pragma('vm:prefer-inline')
   void clear() {
     _state.clear();
-    onChange.map((e) => e());
+    onChange.ifSome((e) => e.unwrap()());
   }
 }
 

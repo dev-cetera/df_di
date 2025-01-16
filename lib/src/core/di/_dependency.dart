@@ -23,9 +23,10 @@ final class Dependency<T extends Object> {
     this.value, {
     this.metadata = const None(),
   }) {
-    if (this.metadata.isSome) {
+    if (this.metadata.isSome()) {
+      // ignore: invalid_use_of_visible_for_testing_member
       final a = this.metadata.unwrap();
-      if (a._initialType.isSome) {
+      if (a._initialType.isSome()) {
         a._initialType = Some(value.runtimeType);
       }
     }
@@ -37,7 +38,7 @@ final class Dependency<T extends Object> {
   });
 
   /// The value contained within this [Dependency].
-  final T value;
+  final Resolvable<T> value;
 
   /// The metadata associated with this [Dependency].
   final Option<DependencyMetadata> metadata;
@@ -45,32 +46,34 @@ final class Dependency<T extends Object> {
   /// Returns the `preemptivetypeEntity` of [metadata] if not `null` or the
   /// runtime type key of [value].
   Entity get typeEntity {
-    return metadata.fold(
-      (e) => e.preemptivetypeEntity.isDefault()
-          ? Entity.obj(value.runtimeType)
-          : e.preemptivetypeEntity,
-      () => Entity.obj(value.runtimeType),
-    );
+    // ignore: invalid_use_of_visible_for_testing_member
+    final preemptivetypeEntity = metadata.unwrap().preemptivetypeEntity;
+    if (preemptivetypeEntity.isDefault()) {
+      return Entity.obj(value.runtimeType);
+    } else {
+      return preemptivetypeEntity;
+    }
   }
 
   /// Creates a new [Dependency] instance with a different value of type [R],
   /// while retaining the existing [metadata].
-  Dependency<R> passNewValue<R extends Object>(R newValue) {
+  Dependency<R> passNewValue<R extends Object>(Resolvable<R> newValue) {
     return Dependency<R>._internal(newValue, metadata: metadata);
   }
 
   /// Returns a new [Dependency] instance where the current [value] is cast
   /// to type [R], while retaining the existing [metadata].
-  Dependency<R> cast<R extends Object>() => passNewValue(value as R);
+  Dependency<R> cast<R extends Object>() => passNewValue(value.cast());
 
   /// Creates a new instance with updated fields, preserving the values of any
   /// fields not explicitly specified.
   Dependency<T> copyWith({
-    T? value,
+    Option<Resolvable<T>> value = const None(),
     Option<DependencyMetadata> metadata = const None(),
   }) {
     return Dependency<T>(
-      value ?? this.value,
+      // ignore: invalid_use_of_visible_for_testing_member
+      value.isNone() ? this.value : value.unwrap(),
       metadata: metadata,
     );
   }
@@ -145,10 +148,10 @@ class DependencyMetadata {
       groupEntity: groupEntity.isNotDefault() ? groupEntity : this.groupEntity,
       preemptivetypeEntity:
           preemptivetypeEntity.isNotDefault() ? preemptivetypeEntity : this.preemptivetypeEntity,
-      index: index.isSome ? index : this.index,
-      validator: validator.isSome ? validator : this.validator,
-      onUnregister: onUnregister.isSome ? onUnregister : this.onUnregister,
-    ).._initialType = initialType.isSome ? initialType : _initialType;
+      index: index.isSome() ? index : this.index,
+      validator: validator.isSome() ? validator : this.validator,
+      onUnregister: onUnregister.isSome() ? onUnregister : this.onUnregister,
+    ).._initialType = initialType.isSome() ? initialType : _initialType;
   }
 
   @override
@@ -177,7 +180,7 @@ class DependencyMetadata {
 /// in order to facilitate any necessary cleanup or additional processing
 /// that might be required for the [value].
 @internal
-typedef OnUnregisterCallback<T extends Object> = Concur<void> Function(
+typedef OnUnregisterCallback<T extends Object> = Resolvable<void> Function(
   T value,
 );
 

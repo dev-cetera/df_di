@@ -15,27 +15,32 @@
 import 'dart:async';
 
 import 'package:df_di/df_di.dart';
+import 'package:df_di/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 Future<void> main() async {
   final di = DI();
-  print(1);
-  final value = await di
-      .register<int>(
-        Future.delayed(const Duration(seconds: 3), () => 2),
-      )
-      .unwrap()
-      .unwrap();
+  di.register<int>(unsafe: () => Future.delayed(const Duration(seconds: 3), () => 2));
 
+  // print(value.ifAsync((e) => e.value.then((e) => e.ifOk((e) => print(e.value)))));
   print(di.registry.state);
 
   //di.registry.removeDependency<Future<int>>();
 
-  print(di.get<int>().unwrap().isSome);
-  di.unregister<int>().ifSome((e) => print('SOME $e'));
-  print(di.get<int>().unwrap().isNone);
-  print(di.registry.state);
+  final a = di.getDependency<int>().unwrap().unwrap();
+  print(a);
+  print(a.value.ifAsync((e) async => print((await e.value).unwrap())));
+
+  // print(di
+  //     .get<int>()
+  //     .async()
+  //     .unwrap()
+  //     .value
+  //     .then((e) => e.ifOk((e) => e.value.ifSome((e) => print(e.unwrap())))));
+  //di.unregister<int>().ifSome((e) => print('SOME $e'));
+  //print(di.get<int>().unwrap().isNone());
+  //print(di.registry.state);
 }
 //   print('\n# Get access to the global DI container:\n');
 //   final di = DI();

@@ -29,17 +29,17 @@ base mixin SupportsMixinT on SupportsMixinK {
   /// This method always returns a [Future], ensuring compatibility. This
   /// provides a safe and consistent way to retrieve dependencies, even if the
   /// registered dependency is not a [Future].
-  Result<Option<Future<Object>>> getAsyncT(
-    Type type, {
-    Entity groupEntity = const Entity.defaultEntity(),
-    bool traverse = true,
-  }) {
-    return getT(
-      type,
-      groupEntity: groupEntity,
-      traverse: traverse,
-    ).map((e) => e.map((e) async => e));
-  }
+  // Result<Option<Future<Object>>> getAsyncT(
+  //   Type type, {
+  //   Entity groupEntity = const Entity.defaultEntity(),
+  //   bool traverse = true,
+  // }) {
+  //   return getT(
+  //     type,
+  //     groupEntity: groupEntity,
+  //     traverse: traverse,
+  //   ).map((e) => e.map((e) async => e));
+  // }
 
   /// Retrieves a dependency of the exact runtime [type] registered under the
   /// specified [groupEntity] from the [registry].
@@ -52,29 +52,29 @@ base mixin SupportsMixinT on SupportsMixinK {
   ///
   /// If the dependency does not exist, a [DependencyNotFoundException] is
   /// thrown.
-  Object getSyncT(
-    Type type, {
-    Entity groupEntity = const Entity.defaultEntity(),
-    bool traverse = true,
-  }) {
-    final value = getT(
-      type,
-      groupEntity: groupEntity,
-      traverse: traverse,
-    );
-    if (value.isErr) {
-      return value.err;
-    }
-    return Result(
-      () {
-        PanicIf(
-          value.unwrap().isSome && value.unwrap() is Future,
-          'getSyncT cannot return a Future.',
-        );
-        return value.unwrap();
-      },
-    );
-  }
+  // Object getSyncT(
+  //   Type type, {
+  //   Entity groupEntity = const Entity.defaultEntity(),
+  //   bool traverse = true,
+  // }) {
+  //   final value = getT(
+  //     type,
+  //     groupEntity: groupEntity,
+  //     traverse: traverse,
+  //   );
+  //   if (value.isErr) {
+  //     return value.err;
+  //   }
+  //   return Result(
+  //     () {
+  //       PanicIf(
+  //         value.unwrap().isSome && value.unwrap() is Future,
+  //         'getSyncT cannot return a Future.',
+  //       );
+  //       return value.unwrap();
+  //     },
+  //   );
+  // }
 
   // /// Retrieves a dependency of the exact runtime [type] registered under the
   /// specified [groupEntity] from the [registry].
@@ -98,17 +98,17 @@ base mixin SupportsMixinT on SupportsMixinK {
   /// is re-registered as a non-future, allowing future calls to this method
   /// to return the resolved value directly.
   @protected
-  Result<Option<Concur<Object>>> getT(
-    Type type, {
-    Entity groupEntity = const Entity.defaultEntity(),
-    bool traverse = true,
-  }) {
-    return getK(
-      Entity.obj(type),
-      groupEntity: groupEntity,
-      traverse: traverse,
-    );
-  }
+  // Result<Option<Resolvable<Object>>> getT(
+  //   Type type, {
+  //   Entity groupEntity = const Entity.defaultEntity(),
+  //   bool traverse = true,
+  // }) {
+  //   return getK(
+  //     Entity.obj(type),
+  //     groupEntity: groupEntity,
+  //     traverse: traverse,
+  //   );
+  // }
 
   /// Unregisters a dependency of the exact runtime [type] registered under the
   /// specified [groupEntity] from the [registry], if it exists.
@@ -117,17 +117,17 @@ base mixin SupportsMixinT on SupportsMixinK {
   /// [DependencyMetadata.onUnregister] callback will be skipped.
   ///
   /// Throws a [DependencyNotFoundException] if the dependency is not found.
-  Option<Concur<Object>> unregisterT(
-    Type type, {
-    Entity groupEntity = const Entity.defaultEntity(),
-    bool skipOnUnregisterCallback = false,
-  }) {
-    return unregisterK(
-      Entity.obj(type),
-      groupEntity: groupEntity,
-      skipOnUnregisterCallback: skipOnUnregisterCallback,
-    );
-  }
+  // Option<Resolvable<Object>> unregisterT(
+  //   Type type, {
+  //   Entity groupEntity = const Entity.defaultEntity(),
+  //   bool skipOnUnregisterCallback = false,
+  // }) {
+  //   return unregisterK(
+  //     Entity.obj(type),
+  //     groupEntity: groupEntity,
+  //     skipOnUnregisterCallback: skipOnUnregisterCallback,
+  //   );
+  // }
 
   /// Checks whether a dependency of the exact runtime [type] is registered
   /// under the specified [groupEntity] in the [registry].
@@ -154,15 +154,15 @@ base mixin SupportsMixinT on SupportsMixinK {
   ///
   /// If [traverse] is set to `true`, the search will also include all parent
   /// containers.
-  Result<Option<Concur<Object>>> untilT(
-    Type type, {
-    Entity groupEntity = const Entity.defaultEntity(),
-    bool traverse = true,
-  }) {
-    return untilK(
-      Entity.obj(type),
-      groupEntity: groupEntity,
-      traverse: traverse,
-    );
-  }
+  // Result<Option<Resolvable<Object>>> untilT(
+  //   Type type, {
+  //   Entity groupEntity = const Entity.defaultEntity(),
+  //   bool traverse = true,
+  // }) {
+  //   return untilK(
+  //     Entity.obj(type),
+  //     groupEntity: groupEntity,
+  //     traverse: traverse,
+  //   );
+  // }
 }

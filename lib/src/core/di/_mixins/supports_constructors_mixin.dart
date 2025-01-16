@@ -31,35 +31,35 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
   /// the dependency is unregistered via [unregister].
   //Lazy<T>
 
-  Result<void> registerLazy<T extends Object>(
-    TConstructor<T> constructor, {
-    Entity groupEntity = const Entity.defaultEntity(),
-    Option<DependencyValidator<Concur<T>>> validator = const None(),
-    Option<OnUnregisterCallback<Concur<T>>> onUnregister = const None(),
-  }) {
-    return register<Lazy<T>>(
-      Sync(Lazy<T>(constructor)),
-      groupEntity: groupEntity,
-      validator: validator.map(
-        (f) => (e) => e.sync.value.currentInstance.fold((instance) => f(instance), () => true),
-      ),
-      onUnregister: onUnregister.map(
-        (f) => (e) =>
-            e.sync.value.currentInstance.fold((instance) => f(instance), () => Concur<void>(null)),
-      ),
-    ).asSync;
-  }
+  // Result<void> registerLazy<T extends Object>(
+  //   TConstructor<T> constructor, {
+  //   Entity groupEntity = const Entity.defaultEntity(),
+  //   Option<DependencyValidator<Resolvable<T>>> validator = const None(),
+  //   Option<OnUnregisterCallback<Resolvable<T>>> onUnregister = const None(),
+  // }) {
+  //   return register<Lazy<T>>(
+  //     Sync(Lazy<T>(constructor)),
+  //     groupEntity: groupEntity,
+  //     validator: validator.map(
+  //       (f) => (e) => e.sync.value.currentInstance.fold((instance) => f(instance), () => true),
+  //     ),
+  //     onUnregister: onUnregister.map(
+  //       (f) => (e) => e.sync.value.currentInstance
+  //           .fold((instance) => f(instance), () => Resolvable<void>(null)),
+  //     ),
+  //   ).asSync;
+  // }
 
-  /// Removes the cached instance of type [T] or its subtypes with the
-  /// specified [groupEntity] in the [registry].
-  ///
-  /// This allows it to be re-created via [getSingleton].
-  Result<void> resetSingleton<T extends Object>({
-    Entity groupEntity = const Entity.defaultEntity(),
-  }) {
-    return get<Lazy<T>>(groupEntity: groupEntity)
-        .map((e) => e.map((e) => e.map((e) => e.resetSingleton())));
-  }
+  // /// Removes the cached instance of type [T] or its subtypes with the
+  // /// specified [groupEntity] in the [registry].
+  // ///
+  // /// This allows it to be re-created via [getSingleton].
+  // Result<void> resetSingleton<T extends Object>({
+  //   Entity groupEntity = const Entity.defaultEntity(),
+  // }) {
+  //   return get<Lazy<T>>(groupEntity: groupEntity)
+  //       .map((e) => e.map((e) => e.map((e) => e.resetSingleton())));
+  // }
 
   // /// Retrieves a singleton instance of type [T] or its subtypes under the
   // /// specified [groupEntity] from the [registry].
@@ -191,15 +191,15 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
   /// containers.
   ///
   /// If the dependency does not exist, `null` is returned.
-  Result<Option<Concur<T>>> getSingleton<T extends Object>({
-    Entity groupEntity = const Entity.defaultEntity(),
-    bool traverse = true,
-  }) {
-    return get<Lazy<T>>(
-      groupEntity: groupEntity,
-      traverse: traverse,
-    ).map((e) => e.map((e) => flattenConcur(e.map((e) => e.singleton))));
-  }
+  // Result<Option<Resolvable<T>>> getSingleton<T extends Object>({
+  //   Entity groupEntity = const Entity.defaultEntity(),
+  //   bool traverse = true,
+  // }) {
+  //   return get<Lazy<T>>(
+  //     groupEntity: groupEntity,
+  //     traverse: traverse,
+  //   ).map((e) => e.map((e) => flattenConcur(e.map((e) => e.singleton))));
+  // }
 
   // /// Retrieves a new instance of type [T] or its subtypes from the [registry]
   // /// under the specified [groupEntity] from the [registry].
@@ -330,14 +330,14 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
   /// If [traverse] is true, it will also search recursively in parent
   /// containers.
   ///
-  /// If the dependency does not exist, `null` is returned.
-  Result<Option<Concur<T>>> getFactory<T extends Object>({
-    Entity groupEntity = const Entity.defaultEntity(),
-    bool traverse = true,
-  }) {
-    return get<Lazy<T>>(
-      groupEntity: groupEntity,
-      traverse: traverse,
-    ).map((e) => e.map((e) => flattenConcur(e.map((e) => e.singleton))));
-  }
+  // /// If the dependency does not exist, `null` is returned.
+  // Result<Option<Resolvable<T>>> getFactory<T extends Object>({
+  //   Entity groupEntity = const Entity.defaultEntity(),
+  //   bool traverse = true,
+  // }) {
+  //   return get<Lazy<T>>(
+  //     groupEntity: groupEntity,
+  //     traverse: traverse,
+  //   ).map((e) => e.map((e) => flattenConcur(e.map((e) => e.singleton))));
+  // }
 }

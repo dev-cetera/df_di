@@ -15,7 +15,7 @@ description: A pragmatic dependency injection (DI) system, coupled with service 
 version: 0.10.0
 repository: https://github.com/dev_cetera/df_di
 funding:
-  - https://www.buymeacoffee.com/robmllze
+  - https://www.buymeacoffee.com/dev_cetera
 topics:
   - get-it
   - dependency-injection
