@@ -100,8 +100,8 @@ final class Dependency<T extends Object> {
 @internal
 class DependencyMetadata {
   DependencyMetadata({
-    this.groupEntity = const Entity.defaultEntity(),
-    this.preemptivetypeEntity = const Entity.defaultEntity(),
+    this.groupEntity = const DefaultEntity(),
+    this.preemptivetypeEntity = const DefaultEntity(),
     this.index = const None(),
     this.validator = const None(),
     this.onUnregister = const None(),
@@ -137,8 +137,8 @@ class DependencyMetadata {
   /// Creates a new instance with updated fields, preserving the values of any
   /// fields not explicitly specified.
   DependencyMetadata copyWith({
-    Entity groupEntity = const Entity.defaultEntity(),
-    Entity preemptivetypeEntity = const Entity.defaultEntity(),
+    Entity groupEntity = const DefaultEntity(),
+    Entity preemptivetypeEntity = const DefaultEntity(),
     Option<Type> initialType = const None(),
     Option<int> index = const None(),
     Option<DependencyValidator> validator = const None(),

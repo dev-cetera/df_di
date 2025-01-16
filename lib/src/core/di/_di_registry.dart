@@ -90,7 +90,7 @@ final class DIRegistry {
   void setDependency(Dependency dependency) {
     final groupEntity = dependency.metadata.isSome()
         ? dependency.metadata.unwrap().groupEntity
-        : const Entity.defaultEntity();
+        : const DefaultEntity();
     final typeEntity = dependency.typeEntity;
     final currentDep = Option.fromNullable(_state[groupEntity]?[typeEntity]);
     // ignore: invalid_use_of_visible_for_testing_member
@@ -105,8 +105,8 @@ final class DIRegistry {
   ///
   /// Returns `true` if it does and `false` if it doesn't.
   @pragma('vm:prefer-inline')
-  bool containsDependency<T extends Object>({Entity groupEntity = const Entity.defaultEntity()}) {
-    return _state[groupEntity]?.values.any((e) => e.value is T) == true;
+  bool containsDependency<T extends Object>({Entity groupEntity = const DefaultEntity()}) {
+    return _state[groupEntity]?.values.any((e) => e.value is Resolvable<T>) == true;
   }
 
   /// Checks if any dependency with the exact [type] exists under the specified
@@ -115,9 +115,9 @@ final class DIRegistry {
   ///
   /// Returns `true` if it does and `false` if it doesn't.
   @pragma('vm:prefer-inline')
-  bool containsDependencyT(Type type, {Entity groupEntity = const Entity.defaultEntity()}) {
+  bool containsDependencyT(Type type, {Entity groupEntity = const DefaultEntity()}) {
     return containsDependencyK(
-      Entity.obj(type),
+      TypeEntity(Resolvable, [type]),
       groupEntity: groupEntity,
     );
   }
@@ -128,14 +128,14 @@ final class DIRegistry {
   ///
   /// Returns `true` if it does and `false` if it doesn't.
   @pragma('vm:prefer-inline')
-  bool containsDependencyK(Entity typeEntity, {Entity groupEntity = const Entity.defaultEntity()}) {
+  bool containsDependencyK(Entity typeEntity, {Entity groupEntity = const DefaultEntity()}) {
     return _state[groupEntity]?.values.any((e) => e.typeEntity == typeEntity) == true;
   }
 
   /// Returns any dependency of type [T] or subtypes under the specified
   /// [groupEntity].
   Option<Dependency<T>> getDependency<T extends Object>({
-    Entity groupEntity = const Entity.defaultEntity(),
+    Entity groupEntity = const DefaultEntity(),
   }) {
     assert(
       T != Object,
@@ -152,10 +152,10 @@ final class DIRegistry {
   @pragma('vm:prefer-inline')
   Option<Dependency> getDependencyT(
     Type type, {
-    Entity groupEntity = const Entity.defaultEntity(),
+    Entity groupEntity = const DefaultEntity(),
   }) {
     return getDependencyK(
-      Entity.obj(type),
+      TypeEntity(Resolvable, [type]),
       groupEntity: groupEntity,
     );
   }
@@ -166,7 +166,7 @@ final class DIRegistry {
   @pragma('vm:prefer-inline')
   Option<Dependency> getDependencyK(
     Entity typeEntity, {
-    Entity groupEntity = const Entity.defaultEntity(),
+    Entity groupEntity = const DefaultEntity(),
   }) {
     return Option.fromNullable(
       _state[groupEntity]?.values.firstWhereOrNull((e) => e.typeEntity == typeEntity),
@@ -180,7 +180,7 @@ final class DIRegistry {
   /// within [state].
   @protected
   Option<Dependency<T>> removeDependency<T extends Object>({
-    Entity groupEntity = const Entity.defaultEntity(),
+    Entity groupEntity = const DefaultEntity(),
   }) {
     final dependency = getDependency<T>(groupEntity: groupEntity);
     if (dependency.isSome()) {
@@ -204,10 +204,10 @@ final class DIRegistry {
   @pragma('vm:prefer-inline')
   Option<Dependency> removeDependencyT(
     Type type, {
-    Entity groupEntity = const Entity.defaultEntity(),
+    Entity groupEntity = const DefaultEntity(),
   }) {
     return removeDependencyK(
-      Entity.obj(type),
+      TypeEntity(Resolvable, [type]),
       groupEntity: groupEntity,
     );
   }
@@ -221,7 +221,7 @@ final class DIRegistry {
   @protected
   Option<Dependency> removeDependencyK(
     Entity typeEntity, {
-    Entity groupEntity = const Entity.defaultEntity(),
+    Entity groupEntity = const DefaultEntity(),
   }) {
     final group = _state[groupEntity];
     if (group != null) {
@@ -249,7 +249,7 @@ final class DIRegistry {
   @protected
   void setGroup(
     DependencyGroup<Object> group, {
-    Entity groupEntity = const Entity.defaultEntity(),
+    Entity groupEntity = const DefaultEntity(),
   }) {
     final currentGroup = _state[groupEntity];
     final equals = const MapEquality<Entity, Dependency>().equals(currentGroup, group);
@@ -262,7 +262,7 @@ final class DIRegistry {
   /// Gets the [DependencyGroup] with the specified [groupEntity] from the [state]
   /// or `null` if none exist.
   @pragma('vm:prefer-inline')
-  DependencyGroup<Object> getGroup({Entity groupEntity = const Entity.defaultEntity()}) {
+  DependencyGroup<Object> getGroup({Entity groupEntity = const DefaultEntity()}) {
     return DependencyGroup.unmodifiable(_state[groupEntity] ?? {});
   }
 
@@ -270,7 +270,7 @@ final class DIRegistry {
   /// [state].
   @protected
   @pragma('vm:prefer-inline')
-  void removeGroup({Entity groupEntity = const Entity.defaultEntity()}) {
+  void removeGroup({Entity groupEntity = const DefaultEntity()}) {
     _state.remove(groupEntity);
     onChange.ifSome((e) => e.unwrap()());
   }

@@ -10,10 +10,10 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-/// A pragmatic dependency injection (DI) system, coupled with service classes for seamless state management in Dart.
-library;
+import 'entity.dart';
 
-export 'src/_index.g.dart';
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-export 'package:df_type/df_type.dart' hide Sequential;
-export 'package:df_safer_dart/df_safer_dart.dart';
+final class DefaultEntity extends Entity {
+  const DefaultEntity() : super.reserved(-1001);
+}

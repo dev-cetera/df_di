@@ -93,7 +93,7 @@ base mixin SupportsMixinK on DIBase {
 
   Result<Option<Dependency<Resolvable<Object>>>> _getDependencyK(
     Entity typeEntity, {
-    Entity groupEntity = const Entity.defaultEntity(),
+    Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
     bool validate = true,
   }) {
@@ -179,7 +179,7 @@ base mixin SupportsMixinK on DIBase {
   @protected
   bool isRegisteredK(
     Entity typeEntity, {
-    Entity groupEntity = const Entity.defaultEntity(),
+    Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
     final g = groupEntity.isDefault() ? focusGroup : groupEntity;

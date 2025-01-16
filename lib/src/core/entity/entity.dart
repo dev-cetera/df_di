@@ -12,6 +12,8 @@
 
 import 'package:meta/meta.dart' show protected;
 
+import 'default_entity.dart';
+
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 /// An entity is a uniquely identifiable object that serves as a container or
@@ -34,10 +36,8 @@ class Entity {
   /// or greater.
   const Entity(this.id) : assert(id >= 0, 'Entity id must be 0 or greater!');
 
-  const Entity.defaultEntity() : this.reserved(-1001);
-
   @pragma('vm:prefer-inline')
-  bool isDefault() => id == const Entity.defaultEntity().id;
+  bool isDefault() => id == const DefaultEntity().id;
 
   @pragma('vm:prefer-inline')
   bool isNotDefault() => !isDefault();

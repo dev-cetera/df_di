@@ -44,7 +44,7 @@ base class DIBase {
 
   Result<Option<Resolvable<T>>> register<T extends Object>({
     required FutureOr<T> Function() unsafe,
-    Entity groupEntity = const Entity.defaultEntity(),
+    Entity groupEntity = const DefaultEntity(),
     Option<DependencyValidator<Resolvable<T>>> validator = const None(),
     Option<OnUnregisterCallback<Resolvable<T>>> onUnregister = const None(),
   }) {
@@ -127,7 +127,7 @@ base class DIBase {
   }
 
   Option<Resolvable<Object>> unregister<T extends Object>({
-    Entity groupEntity = const Entity.defaultEntity(),
+    Entity groupEntity = const DefaultEntity(),
     bool skipOnUnregisterCallback = false,
   }) {
     final g = groupEntity.isDefault() ? focusGroup : groupEntity;
@@ -155,12 +155,11 @@ base class DIBase {
   }
 
   bool isRegistered<T extends Object>({
-    Entity groupEntity = const Entity.defaultEntity(),
+    Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
     final g = groupEntity.isDefault() ? focusGroup : groupEntity;
     if (registry.containsDependency<T>(groupEntity: g) ||
-        registry.containsDependency<Future<T>>(groupEntity: g) ||
         registry.containsDependency<Lazy<T>>(groupEntity: g)) {
       return true;
     }
@@ -218,7 +217,7 @@ base class DIBase {
   // }
 
   ResolvableOption<T> get<T extends Object>({
-    Entity groupEntity = const Entity.defaultEntity(),
+    Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
     final g = groupEntity.isDefault() ? focusGroup : groupEntity;
@@ -258,7 +257,7 @@ base class DIBase {
   }
 
   Result<Option<Dependency<T>>> getDependency<T extends Object>({
-    Entity groupEntity = const Entity.defaultEntity(),
+    Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
     bool validate = true,
   }) {
@@ -359,9 +358,8 @@ base class DIBase {
         (_) => onBeforeUnregister.ifSome((e) => e.unwrap()(dependency)),
         (_) => registry.removeDependencyK(
               dependency.typeEntity,
-              groupEntity: dependency.metadata
-                  .map((e) => e.groupEntity)
-                  .unwrapOr(const Entity.defaultEntity()),
+              groupEntity:
+                  dependency.metadata.map((e) => e.groupEntity).unwrapOr(const DefaultEntity()),
             ),
         (_) => dependency.metadata.map((e) => e.onUnregister.ifSome((e) => e.unwrap()(dependency))),
         (_) => onAfterUnregister.ifSome((e) => e.unwrap()(dependency)),

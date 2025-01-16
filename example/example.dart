@@ -15,7 +15,6 @@
 import 'dart:async';
 
 import 'package:df_di/df_di.dart';
-import 'package:df_di/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -28,9 +27,8 @@ Future<void> main() async {
 
   //di.registry.removeDependency<Future<int>>();
 
-  final a = di.getDependency<int>().unwrap().unwrap();
+  final a = await di.get<int>().unwrapAsync();
   print(a);
-  print(a.value.ifAsync((e) async => print((await e.value).unwrap())));
 
   // print(di
   //     .get<int>()

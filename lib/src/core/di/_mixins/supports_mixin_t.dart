@@ -136,7 +136,7 @@ base mixin SupportsMixinT on SupportsMixinK {
   /// containers.
   bool isRegisteredT(
     Type type, {
-    Entity groupEntity = const Entity.defaultEntity(),
+    Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
     return isRegisteredK(
