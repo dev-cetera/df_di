@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.9.5]
+
+- Released @ 1/2025 (UTC)
+- fix: Bugfix with StreamService
+
 ## [0.9.4]
 
 - Released @ 1/2025 (UTC)
