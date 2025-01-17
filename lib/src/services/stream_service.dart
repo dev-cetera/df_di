@@ -56,7 +56,7 @@ abstract class StreamService<TData extends Object?, TParams extends Object?>
 
   FutureOr<void> _initListener(TParams params) async {
     await _disposeListener(null);
-    _initialCompleter = CompleterOr<TData>();
+    _initialCompleter = CompleterOr<void>();
     _streamController = StreamController<TData>.broadcast();
     _streamSubscription = provideInputStream(params).listen(
       pushToStream,
