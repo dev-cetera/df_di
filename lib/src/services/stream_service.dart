@@ -29,9 +29,21 @@ abstract class StreamService<TData extends Object?, TParams extends Object?>
 
   StreamService();
 
-  CompleterOr<TData>? _initialDataCompleter;
+  CompleterOr<void>? _initialCompleter;
+
   StreamSubscription<TData>? _streamSubscription;
+
   StreamController<TData>? _streamController;
+
+  /// Provides access to the stream managed by this service.
+  Stream<TData>? get stream => _streamController?.stream;
+
+  /// Provides access to the stream controller managed by this service.
+  StreamController<TData>? get streamController => _streamController;
+
+  void pause() => _streamSubscription?.pause();
+
+  void resume() => _streamSubscription?.resume();
 
   @mustCallSuper
   @override
@@ -44,7 +56,7 @@ abstract class StreamService<TData extends Object?, TParams extends Object?>
 
   FutureOr<void> _initListener(TParams params) async {
     await _disposeListener(null);
-    _initialDataCompleter = CompleterOr<TData>();
+    _initialCompleter = CompleterOr<TData>();
     _streamController = StreamController<TData>.broadcast();
     _streamSubscription = provideInputStream(params).listen(
       pushToStream,
@@ -70,7 +82,7 @@ abstract class StreamService<TData extends Object?, TParams extends Object?>
     await _streamController?.close();
     _streamSubscription = null;
     _streamController = null;
-    _initialDataCompleter = null;
+    _initialCompleter = null;
   }
 
   /// Override this method to provide the input stream that this service will
@@ -86,9 +98,9 @@ abstract class StreamService<TData extends Object?, TParams extends Object?>
     }
     if (shouldAdd(data)) {
       _streamController!.add(data);
-      final completed = _initialDataCompleter?.isCompleted ?? false;
+      final completed = _initialCompleter?.isCompleted ?? false;
       if (!completed) {
-        _initialDataCompleter?.complete(data);
+        _initialCompleter?.complete(null);
       }
       provideOnPushToStreamListeners().forEach((e) => e(data));
     }
@@ -107,9 +119,6 @@ abstract class StreamService<TData extends Object?, TParams extends Object?>
   /// should be added.
   bool shouldAdd(TData data) => true;
 
-  /// Completes with the initial data pushed to the stream.
-  FutureOr<TData>? get initialData => _initialDataCompleter?.futureOr;
-
-  /// Provides access to the stream managed by this service.
-  Stream<TData>? get stream => _streamController?.stream;
+  /// Completes once the intial data is ready.
+  FutureOr<void>? get initial => _initialCompleter?.futureOr;
 }

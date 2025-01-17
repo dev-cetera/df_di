@@ -80,15 +80,18 @@ Future<void> main() async {
   //await di.unregister<Constructor<FooBarService>>();
   print('TIME TO UNREG 4');
 
-  await di.unregisterAll(
-    onAfterUnregister: (dependency) {
-      print('Unregistered: ${dependency.value}');
-    },
-  ).thenOr((_) {
-    // Completes when all dependencies are unregistered and removed
-    // from di.
-    print('Unregistered all!');
-  });
+  await consec(
+    di.unregisterAll(
+      onAfterUnregister: (dependency) {
+        print('Unregistered: ${dependency.value}');
+      },
+    ),
+    ((_) {
+      // Completes when all dependencies are unregistered and removed
+      // from di.
+      print('Unregistered all!');
+    }),
+  );
 
   print('TIME TO UNREG 5');
 }

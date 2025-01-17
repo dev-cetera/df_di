@@ -38,15 +38,14 @@ void main() async {
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-final class UserStreamingService
-    extends StreamService<Map<String, dynamic>, Object?> {
+final class UserStreamingService extends StreamService<Map<String, dynamic>, Object?> {
   UserStreamingService();
 
   @override
   ServiceListeners<Object?> provideInitListeners() {
     return [
       ...super.provideInitListeners(),
-      (_) => super.initialData,
+      (_) => super.initial,
     ];
   }
 

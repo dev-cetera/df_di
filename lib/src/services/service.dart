@@ -32,7 +32,7 @@ abstract class Service<TParams extends Object?> {
   Service();
 
   // Used to avoid concurrent initialization, resetting, and disposal.
-  final _sequantial = Sequential();
+  final _sequential = Sequential();
 
   // --- INITIALIZATION OF SERVICE ---------------------------------------------
 
@@ -45,7 +45,7 @@ abstract class Service<TParams extends Object?> {
     if (_disposed) {
       throw ServiceAlreadyDisposedException();
     }
-    _sequantial.addAll([
+    _sequential.addAll([
       // Call init listeners.
       ...provideInitListeners().map((e) => (_) => e(params)),
       (_) {
@@ -53,7 +53,7 @@ abstract class Service<TParams extends Object?> {
         _initialized = true;
       }
     ]);
-    return _sequantial.last;
+    return _sequential.last;
   }
 
   @mustCallSuper
@@ -97,7 +97,7 @@ abstract class Service<TParams extends Object?> {
     if (_disposed) {
       throw ServiceAlreadyDisposedException();
     }
-    _sequantial.addAll([
+    _sequential.addAll([
       // Call dispose listeners.
       ...provideDisposeListeners().map((e) => (_) => e(null)),
       (_) {
@@ -105,7 +105,7 @@ abstract class Service<TParams extends Object?> {
         _disposed = true;
       }
     ]);
-    return _sequantial.last;
+    return _sequential.last;
   }
 }
 
