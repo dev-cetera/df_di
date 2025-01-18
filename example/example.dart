@@ -27,7 +27,8 @@ Future<void> main() async {
 
   //di.registry.removeDependency<Future<int>>();
 
-  final a = await di.get<int>().unwrapAsync();
+  final a = await di.getAsync<int>().then((e) => e.unwrapOr(const Some(1)).unwrap());
+
   print(a);
 
   // print(di

@@ -32,7 +32,7 @@ base class DIBase {
   final parents = <DIBase>{};
 
   /// A key that identifies the current group in focus for dependency management.
-  Entity focusGroup = DefaultEntities.DEFAULT_GROUP.entity;
+  Entity focusGroup = const DefaultEntity();
 
   /// A container storing Future completions.
   @protected
@@ -116,8 +116,8 @@ base class DIBase {
         return dep.err().cast();
       }
       if (dep.unwrap().isSome()) {
-        return Err(
-          stack: [DIBase, _registerDependency],
+        return const Err(
+          stack: ['DIBase', '_registerDependency'],
           error: 'Dependency already registered.',
         );
       }
@@ -174,25 +174,25 @@ base class DIBase {
     return false;
   }
 
-  // Result<Option<T>> call<T extends Object>({
-  //   Entity groupEntity = const Entity.defaultEntity(),
-  //   bool traverse = true,
-  // }) {
-  //   return getSync<T>(
-  //     groupEntity: groupEntity,
-  //     traverse: traverse,
-  //   );
-  // }
+  Future<T> getAsyncUnsafe<T extends Object>({
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return getAsync<T>(
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).then((e) => e.unwrap().unwrap());
+  }
 
-  // Result<Option<Future<T>>> getAsync<T extends Object>({
-  //   Entity groupEntity = const Entity.defaultEntity(),
-  //   bool traverse = true,
-  // }) {
-  //   return get<T>(
-  //     groupEntity: groupEntity,
-  //     traverse: traverse,
-  //   ).map((e) => e.map((e) async => e));
-  // }
+  Future<Result<Option<T>>> getAsync<T extends Object>({
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return get<T>(
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).toAsync().value;
+  }
 
   // Result<Option<T>> getSync<T extends Object>({
   //   Entity groupEntity = const Entity.defaultEntity(),
@@ -256,6 +256,7 @@ base class DIBase {
     }
   }
 
+  @protected
   Result<Option<Dependency<T>>> getDependency<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
@@ -285,7 +286,7 @@ base class DIBase {
           final valid = metadata.unwrap().validator.map((e) => e(dependency));
           if (valid.isSome() && !valid.unwrap()) {
             return const Err(
-              stack: [DIBase, '_getDependency'],
+              stack: ['DIBase', '_getDependency'],
               error: 'Dependency validation failed.',
             );
           }
@@ -355,14 +356,25 @@ base class DIBase {
     final sequential = Sequential();
     for (final dependency in results) {
       sequential.addAll([
-        (_) => onBeforeUnregister.ifSome((e) => e.unwrap()(dependency)),
-        (_) => registry.removeDependencyK(
-              dependency.typeEntity,
-              groupEntity:
-                  dependency.metadata.map((e) => e.groupEntity).unwrapOr(const DefaultEntity()),
-            ),
-        (_) => dependency.metadata.map((e) => e.onUnregister.ifSome((e) => e.unwrap()(dependency))),
-        (_) => onAfterUnregister.ifSome((e) => e.unwrap()(dependency)),
+        (_) {
+          onBeforeUnregister.ifSome((e) => e.unwrap()(dependency));
+          return const None();
+        },
+        (_) {
+          return registry.removeDependencyK(
+            dependency.typeEntity,
+            groupEntity:
+                dependency.metadata.map((e) => e.groupEntity).unwrapOr(const DefaultEntity()),
+          );
+        },
+        (_) {
+          return dependency.metadata
+              .map((e) => e.onUnregister.ifSome((e) => e.unwrap()(dependency)));
+        },
+        (_) {
+          onAfterUnregister.ifSome((e) => e.unwrap()(dependency));
+          return const None();
+        },
       ]);
     }
     return sequential.add((_) => Some(results));

@@ -123,8 +123,8 @@ base mixin SupportsMixinK on DIBase {
         if (metadata.isSome()) {
           final valid = metadata.unwrap().validator.map((e) => e(dependency));
           if (valid.isSome() && !valid.unwrap()) {
-            return Err(
-              stack: [SupportsMixinK, _getDependencyK],
+            return const Err(
+              stack: ['SupportsMixinK', '_getDependencyK'],
               error: 'Dependency validation failed.',
             );
           }
