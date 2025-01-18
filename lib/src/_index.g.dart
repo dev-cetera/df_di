@@ -8,8 +8,7 @@
 //.title~
 
 export './core/di/di.dart.dart';
-export './core/entity/default_entities.dart';
-export './core/entity/default_entity.dart';
+export 'core/entity/reserved_entities.dart';
 export './core/entity/type_entity.dart';
 export './core/entity/entity.dart';
 export './core/entity/unique_entity.dart';

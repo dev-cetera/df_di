@@ -12,7 +12,7 @@
 
 import 'package:meta/meta.dart' show protected;
 
-import 'default_entity.dart';
+import 'reserved_entities.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -38,6 +38,10 @@ class Entity {
 
   @pragma('vm:prefer-inline')
   bool isDefault() => id == const DefaultEntity().id;
+
+  /// Returns [other] if `this` is [DefaultEntity], otherwise returns `this`.
+  @pragma('vm:prefer-inline')
+  Entity preferOverDefault(Entity other) => isDefault() ? other : this;
 
   @pragma('vm:prefer-inline')
   bool isNotDefault() => !isDefault();

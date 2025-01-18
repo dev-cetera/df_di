@@ -23,7 +23,7 @@ base mixin SupportsMixinK on DIBase {
   //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   // }) {
-  //   final g = groupEntity.isDefault() ? focusGroup : groupEntity;
+  //   final g = groupEntity.preferOverDefault(focusGroup);
   //   final dep = _getDependencyK(
   //     typeEntity,
   //     groupEntity: g,
@@ -97,7 +97,7 @@ base mixin SupportsMixinK on DIBase {
     bool traverse = true,
     bool validate = true,
   }) {
-    final g = groupEntity.isDefault() ? focusGroup : groupEntity;
+    final g = groupEntity.preferOverDefault(focusGroup);
     var dep = registry
         .getDependencyK(typeEntity, groupEntity: g)
         .or(registry.getDependencyK(TypeEntity(Future, [typeEntity]), groupEntity: g));
@@ -145,7 +145,7 @@ base mixin SupportsMixinK on DIBase {
   //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool skipOnUnregisterCallback = false,
   // }) {
-  //   final g = groupEntity.isDefault() ? focusGroup : groupEntity;
+  //   final g = groupEntity.preferOverDefault(focusGroup);
   //   final removed = registry
   //       .removeDependencyK(typeEntity, groupEntity: g)
   //       .or(registry.removeDependencyK(TypeEntity(Future, [typeEntity]), groupEntity: g))
@@ -182,7 +182,7 @@ base mixin SupportsMixinK on DIBase {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    final g = groupEntity.isDefault() ? focusGroup : groupEntity;
+    final g = groupEntity.preferOverDefault(focusGroup);
     if (registry.containsDependencyK(typeEntity, groupEntity: g) ||
         registry.containsDependencyK(TypeEntity(Future, [typeEntity]), groupEntity: g) ||
         registry.containsDependencyK(TypeEntity(Lazy, [typeEntity]), groupEntity: g)) {
@@ -207,7 +207,7 @@ base mixin SupportsMixinK on DIBase {
   //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   // }) {
-  //   final g = groupEntity.isDefault() ? focusGroup : groupEntity;
+  //   final g = groupEntity.preferOverDefault(focusGroup);
   //   final test = getK(typeEntity, groupEntity: g);
   //   if (test.isErr) {
   //     return test.err.cast();

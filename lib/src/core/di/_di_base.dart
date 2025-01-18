@@ -48,7 +48,7 @@ base class DIBase {
     Option<DependencyValidator<Resolvable<T>>> validator = const None(),
     Option<OnUnregisterCallback<Resolvable<T>>> onUnregister = const None(),
   }) {
-    final g = groupEntity.isDefault() ? focusGroup : groupEntity;
+    final g = groupEntity.preferOverDefault(focusGroup);
     final metadata = DependencyMetadata(
       index: Some(dependencyCount++),
       groupEntity: g,
@@ -130,7 +130,7 @@ base class DIBase {
     Entity groupEntity = const DefaultEntity(),
     bool skipOnUnregisterCallback = false,
   }) {
-    final g = groupEntity.isDefault() ? focusGroup : groupEntity;
+    final g = groupEntity.preferOverDefault(focusGroup);
     final removed = registry
         .removeDependency<T>(groupEntity: g)
         .or(registry.removeDependency<Future<T>>(groupEntity: g))
@@ -158,7 +158,7 @@ base class DIBase {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    final g = groupEntity.isDefault() ? focusGroup : groupEntity;
+    final g = groupEntity.preferOverDefault(focusGroup);
     if (registry.containsDependency<T>(groupEntity: g) ||
         registry.containsDependency<Lazy<T>>(groupEntity: g)) {
       return true;
@@ -174,14 +174,14 @@ base class DIBase {
     return false;
   }
 
-  Future<T> getAsyncUnsafe<T extends Object>({
+  Result<Option<T>> getSync<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getAsync<T>(
+    return get<T>(
       groupEntity: groupEntity,
       traverse: traverse,
-    ).then((e) => e.unwrap().unwrap());
+    ).sync().map((e) => e.value.unwrap());
   }
 
   Future<Result<Option<T>>> getAsync<T extends Object>({
@@ -194,33 +194,11 @@ base class DIBase {
     ).toAsync().value;
   }
 
-  // Result<Option<T>> getSync<T extends Object>({
-  //   Entity groupEntity = const Entity.defaultEntity(),
-  //   bool traverse = true,
-  // }) {
-  //   final value = get<T>(
-  //     groupEntity: groupEntity,
-  //     traverse: traverse,
-  //   );
-  //   if (value.isErr) {
-  //     return value.err.cast();
-  //   }
-  //   return Result(
-  //     () {
-  //       PanicIf(
-  //         value.unwrap().isSome && value.unwrap() is Future,
-  //         'getSync cannot return a Future.',
-  //       );
-  //       return value.unwrap().map((e) => e as T);
-  //     },
-  //   );
-  // }
-
   ResolvableOption<T> get<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    final g = groupEntity.isDefault() ? focusGroup : groupEntity;
+    final g = groupEntity.preferOverDefault(focusGroup);
     final dep = getDependency<T>(
       groupEntity: g,
       traverse: traverse,
@@ -262,7 +240,7 @@ base class DIBase {
     bool traverse = true,
     bool validate = true,
   }) {
-    final g = groupEntity.isDefault() ? focusGroup : groupEntity;
+    final g = groupEntity.preferOverDefault(focusGroup);
     var dep = registry.getDependency<T>(groupEntity: g);
     if (dep.isNone() && traverse) {
       for (final parent in parents) {
@@ -301,7 +279,7 @@ base class DIBase {
   //   Entity groupEntity = const Entity.defaultEntity(),
   //   bool traverse = true,
   // }) {
-  //   final g = groupEntity.isDefault() ? focusGroup : groupEntity;
+  //   final g = groupEntity.preferOverDefault(focusGroup);
   //   final test = get<T>(groupEntity: g);
   //   if (test.isErr()) {
   //     return test.err().cast();
