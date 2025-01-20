@@ -22,14 +22,26 @@ Future<void> main() async {
   final di = DI();
   di.register<int>(unsafe: () => Future.delayed(const Duration(seconds: 3), () => 2));
 
+  Future.delayed(const Duration(seconds: 4), () {
+    di.register<String>(unsafe: () => 'Hello World!');
+    print(di.completers.unwrap().registry.state);
+  });
+
+  di.until<String>().map((e) {
+    print(e);
+    return e;
+  });
+
+  print(di.completers.unwrap().registry.state);
+
   // print(value.ifAsync((e) => e.value.then((e) => e.ifOk((e) => print(e.value)))));
-  print(di.registry.state);
+  //print(di.registry.state);
 
   //di.registry.removeDependency<Future<int>>();
 
-  final a = await di.getAsync<int>().then((e) => e.unwrapOr(const Some(1)).unwrap());
+  final a = await di.get<int>().map((e) => e.value).unwrap();
 
-  print(a);
+  print(a.unwrap());
 
   // print(di
   //     .get<int>()

@@ -11,10 +11,10 @@ Future<void> b1() async {
   await runBenchmarkComparison(
     'Comparing - get:',
     getIt: () {
-      container1.get<Map<int, String>>();
+      final a = container1.get<Map<int, String>>();
     },
     di: () {
-      container2.get<Map<int, String>>().unwrap();
+      final a = container2.getSync<Map<int, String>>().unwrap().unwrap();
     },
   );
 }

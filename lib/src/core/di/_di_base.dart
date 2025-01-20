@@ -38,11 +38,10 @@ base class DIBase {
   @protected
   Option<DIBase> completers = const None();
 
-  /// Returns the total number of registered dependencies.
   @protected
-  int dependencyCount = 0;
+  int _indexIncrementer = 0;
 
-  Result<Option<Resolvable<T>>> register<T extends Object>({
+  Result<Resolvable<T>> register<T extends Object>({
     required FutureOr<T> Function() unsafe,
     Entity groupEntity = const DefaultEntity(),
     Option<DependencyValidator<Resolvable<T>>> validator = const None(),
@@ -50,52 +49,72 @@ base class DIBase {
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
     final metadata = DependencyMetadata(
-      index: Some(dependencyCount++),
+      index: Some(_indexIncrementer++),
       groupEntity: g,
       validator: validator.map((f) => (e) => f(e as Resolvable<T>)),
       onUnregister: onUnregister.map((f) => (e) => f(e as Resolvable<T>)),
     );
     final value = Resolvable.unsafe(unsafe);
-    completeRegistration(value, g);
-    final dep = _registerDependency(
+    final check = completeRegistration(value, g);
+    if (check.isErr()) {
+      return check.err().castErr();
+    }
+    final result = _registerDependency(
       dependency: Dependency(
         value,
         metadata: Some(metadata),
       ),
       checkExisting: true,
     );
-    return dep.map((e) => e.map((e) => e.value));
+    return result.map((e) => e.value);
   }
 
   @protected
-  void completeRegistration<T extends Object>(
-    T value,
+  Result<None> completeRegistration<T extends Object>(
+    Resolvable<T> value,
     Entity groupEntity,
   ) {
     if (completers.isSome()) {
       final a = completers.unwrap();
-      final b = a.registry
-          .getDependency<CompleterOr<Resolvable<T>>>(groupEntity: groupEntity)
-          .or(
-            a.registry.getDependencyK(
-              TypeEntity(CompleterOr<Object>, [value.runtimeType]),
-              groupEntity: groupEntity,
-            ),
-          )
-          .or(
-            a.registry.getDependencyK(
-              TypeEntity(CompleterOr<Future<Object>>, [value.runtimeType]),
-              groupEntity: groupEntity,
-            ),
-          );
+      final b = a.registry.getDependency<SafeCompleter<T>>(groupEntity: groupEntity)
+          // .or(
+          //   a.registry.getDependencyK(
+          //     TypeEntity(SafeCompleter<Object>, [value.runtimeType]), // TODO: SAME?
+          //     groupEntity: groupEntity,
+          //   ),
+          // )
+          // .or(
+          //   a.registry.getDependencyK(
+          //     TypeEntity(SafeCompleter<Lazy<Object>>,
+          //         [value.runtimeType]), // TODO: TEST UNTIL WITH LAZY!!!
+          //     groupEntity: groupEntity,
+          //   ),
+          // )
+          // .or(
+          //   a.registry.getDependencyK(
+          //     TypeEntity(SafeCompleter<Object>, [value.runtimeType]), // TODO: SAME?
+          //     groupEntity: groupEntity,
+          //   ),
+          // )
+
+          ;
 
       if (b.isSome()) {
-        (b.unwrap() as CompleterOr?)?.complete(value);
+        final test = b.unwrap().value.sync().unwrap().value;
+        if (test.isErr()) {
+          // TODO:
+          return Err(
+            stack: [],
+            error: '',
+          );
+        }
+        test.unwrap().resolve(value);
       }
     }
+    return const Ok(None());
   }
 
-  Result<Option<Dependency<T>>> _registerDependency<T extends Object>({
+  Result<Dependency<T>> _registerDependency<T extends Object>({
     required Dependency<T> dependency,
     bool checkExisting = false,
   }) {
@@ -107,15 +126,12 @@ base class DIBase {
     // ignore: invalid_use_of_visible_for_testing_member
     final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
     if (checkExisting) {
-      final dep = getDependency<T>(
+      final test = getDependency<T>(
         groupEntity: g,
         traverse: false,
         validate: false,
       );
-      if (dep.isErr()) {
-        return dep.err().cast();
-      }
-      if (dep.unwrap().isSome()) {
+      if (test.isSome()) {
         return const Err(
           stack: ['DIBase', '_registerDependency'],
           error: 'Dependency already registered.',
@@ -123,7 +139,7 @@ base class DIBase {
       }
     }
     registry.setDependency(dependency);
-    return Ok(Some(dependency));
+    return Ok(dependency);
   }
 
   Option<Resolvable<Object>> unregister<T extends Object>({
@@ -133,7 +149,7 @@ base class DIBase {
     final g = groupEntity.preferOverDefault(focusGroup);
     final removed = registry
         .removeDependency<T>(groupEntity: g)
-        .or(registry.removeDependency<Future<T>>(groupEntity: g))
+        //.or(registry.removeDependency<Future<T>>(groupEntity: g)) // TODO???
         .or(registry.removeDependency<Lazy<T>>(groupEntity: g));
     if (removed.isNone()) {
       return const None();
@@ -174,51 +190,64 @@ base class DIBase {
     return false;
   }
 
-  Result<Option<T>> getSync<T extends Object>({
+  Option<Sync<T>> getSync<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
     return get<T>(
       groupEntity: groupEntity,
       traverse: traverse,
-    ).sync().map((e) => e.value.unwrap());
+    ).map(
+      (e) => e.isSync()
+          ? e.sync().unwrap()
+          : Sync(
+              Err<T>(
+                stack: ['DIBase', 'getSync'],
+                error: 'Called getSync() an async dependency.',
+              ),
+            ),
+    );
   }
 
-  Future<Result<Option<T>>> getAsync<T extends Object>({
+  Option<Async<T>> getAsync<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
     return get<T>(
       groupEntity: groupEntity,
       traverse: traverse,
-    ).toAsync().value;
+    ).map((e) => e.toAsync());
   }
 
-  ResolvableOption<T> get<T extends Object>({
+  Option<Resolvable<T>> get<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
-    final dep = getDependency<T>(
+    final test = getDependency<T>(
       groupEntity: g,
       traverse: traverse,
     );
+    if (test.isNone()) {
+      return const None();
+    }
+    final result = test.unwrap();
+    if (result.isErr()) {
+      return Some(Sync(result.err().castErr()));
+    }
+    final value = result.unwrap().value;
+    if (value.isSync()) {
+      return Some(value);
+    }
 
-    if (dep.isErr()) {
-      return Sync(dep.err().cast());
-    }
-    if (dep.unwrap().isNone()) {
-      return const Sync(Ok(None()));
-    }
-    final value = dep.unwrap().unwrap().value;
-    if (value.isAsync()) {
-      return Async.unsafe(() {
-        final futureValue = value.async().unwrap().value.then((e) {
+    return Some(
+      Async.unsafe(
+        () => value.async().unwrap().value.then((e) {
           final value = e.unwrap();
           _registerDependency<T>(
             dependency: Dependency<T>(
               Sync(Ok(value)),
-              metadata: dep.unwrap().unwrap().metadata,
+              metadata: test.unwrap().unwrap().metadata,
             ),
             checkExisting: false,
           );
@@ -226,105 +255,115 @@ base class DIBase {
             groupEntity: g,
           );
           return value;
-        });
-        return futureValue.then((e) => Some(e));
-      });
-    } else {
-      return value.map((e) => Some(e));
-    }
+        }),
+      ),
+    );
   }
 
   @protected
-  Result<Option<Dependency<T>>> getDependency<T extends Object>({
+  Option<Result<Dependency<T>>> getDependency<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
     bool validate = true,
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
-    var dep = registry.getDependency<T>(groupEntity: g);
-    if (dep.isNone() && traverse) {
+    final test = registry.getDependency<T>(groupEntity: g);
+    var temp = test.map((e) => Ok(e).result());
+    if (test.isNone() && traverse) {
       for (final parent in parents) {
-        final test = parent.getDependency<T>(
+        temp = parent.getDependency<T>(
           groupEntity: g,
         );
-        if (test.isErr()) {
-          return test;
-        }
-        dep = test.unwrap();
-        if (dep.isSome()) {
+        if (temp.isSome()) {
           break;
         }
       }
     }
-    if (dep.isSome()) {
-      final dependency = dep.unwrap() as Dependency;
+
+    if (temp.isSome()) {
       if (validate) {
+        final result = temp.unwrap();
+        if (result.isErr()) {
+          return Some(result);
+        }
+        final dependency = result.unwrap();
         final metadata = dependency.metadata;
         if (metadata.isSome()) {
           final valid = metadata.unwrap().validator.map((e) => e(dependency));
           if (valid.isSome() && !valid.unwrap()) {
-            return const Err(
-              stack: ['DIBase', '_getDependency'],
-              error: 'Dependency validation failed.',
+            return const Some(
+              Err(
+                stack: ['DIBase', 'getDependency'],
+                error: 'Dependency validation failed.',
+              ),
             );
           }
         }
       }
-      return Ok(Some(dependency.cast()));
     }
-    return const Ok(None());
+    return temp;
   }
 
-  // Result<Option<Resolvable<T>>> until<T extends Object>({
-  //   Entity groupEntity = const Entity.defaultEntity(),
-  //   bool traverse = true,
-  // }) {
-  //   final g = groupEntity.preferOverDefault(focusGroup);
-  //   final test = get<T>(groupEntity: g);
-  //   if (test.isErr()) {
-  //     return test.err().cast();
-  //   }
-  //   if (test.unwrap().isSome()) {
-  //     return test;
-  //   }
-  //   if (completers.isSome()) {
-  //     final dep = completers.unwrap().registry.getDependency<CompleterOr<Resolvable<T>>>(
-  //           groupEntity: g,
-  //         );
-  //     final completer = dep.unwrap().value;
-  //     return Ok(Some(Resolvable.unsafe(functionCanThrow)));
-  //   }
+  Resolvable<T> until<T extends Object>({
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    final g = groupEntity.preferOverDefault(focusGroup);
+    final test = get<T>(groupEntity: g);
 
-  //   if (completers.isNone()) {
-  //     completers = Some(DIBase());
-  //   }
+    if (test.isSome()) {
+      return test.some().unwrap().value;
+    }
 
-  //   final completer = CompleterOr<Resolvable<T>>();
-  //   completers.unwrap().registry.setDependency(
-  //         Dependency<CompleterOr<Resolvable<T>>>(
-  //           completer,
-  //           metadata: Some(
-  //             DependencyMetadata(
-  //               groupEntity: g,
-  //             ),
-  //           ),
-  //         ),
-  //       );
+    if (completers.isSome()) {
+      final test = completers.unwrap().registry.getDependency<SafeCompleter<T>>(
+            groupEntity: g,
+          );
 
-  //   return Ok(
-  //     Some(
-  //       completer.futureOr.thenOr((value) {
-  //         completers.unwrap().registry.removeDependency<CompleterOr<Resolvable<T>>>(
-  //               groupEntity: g,
-  //             );
-  //         return get<T>(
-  //           groupEntity: groupEntity,
-  //           traverse: traverse,
-  //         ).unwrap().unwrap();
-  //       }),
-  //     ),
-  //   );
-  // }
+      if (test.isSome()) {
+        final some = test.unwrap();
+        final completer = some.value.sync().unwrap().value.unwrap();
+        return completer.resolvable;
+      }
+    } else {
+      completers = Some(DIBase());
+    }
+
+    final completer = SafeCompleter<T>();
+
+    completers.unwrap().registry.setDependency(
+          Dependency<SafeCompleter<T>>(
+            Sync(Ok(completer)),
+            metadata: Some(
+              DependencyMetadata(
+                groupEntity: g,
+              ),
+            ),
+          ),
+        );
+
+    return completer.resolvable.map((e) {
+      completers.unwrap().registry.removeDependency<SafeCompleter<T>>(
+            groupEntity: g,
+          );
+      return e;
+      //return get<T>();
+    });
+
+    // return Ok(
+    //   Some(
+    //     completer.futureOr.thenOr((value) {
+    //       completers.unwrap().registry.removeDependency<CompleterOr<Resolvable<T>>>(
+    //             groupEntity: g,
+    //           );
+    //       return get<T>(
+    //         groupEntity: groupEntity,
+    //         traverse: traverse,
+    //       ).unwrap().unwrap();
+    //     }),
+    //   ),
+    // );
+  }
 
   Resolvable<List<Dependency>> unregisterAll({
     Option<OnUnregisterCallback<Dependency>> onBeforeUnregister = const None(),
