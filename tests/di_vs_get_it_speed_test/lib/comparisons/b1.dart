@@ -14,7 +14,7 @@ Future<void> b1() async {
       final a = container1.get<Map<int, String>>();
     },
     di: () {
-      final a = container2.getSync<Map<int, String>>().unwrap().unwrap();
+      final a = container2.getSync<Map<int, String>>().unwrap().value;
     },
   );
 }

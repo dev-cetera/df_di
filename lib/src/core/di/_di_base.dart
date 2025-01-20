@@ -31,6 +31,11 @@ base class DIBase {
   @protected
   final parents = <DIBase>{};
 
+  // TODO:
+  // Iterable<DIBase> get children {
+  //    registry.dependencies.whereType<Dependency<DIBase>>().map((e) => e.value);
+  // }
+
   /// A key that identifies the current group in focus for dependency management.
   Entity focusGroup = const DefaultEntity();
 
@@ -76,6 +81,7 @@ base class DIBase {
   ) {
     if (completers.isSome()) {
       final a = completers.unwrap();
+      // TODO: MUST ALSO LOOK AT CHILDREN AND COMPLETE ALL COMPLETERS, could be more than 1.
       final b = a.registry.getDependency<SafeCompleter<T>>(groupEntity: groupEntity)
           // .or(
           //   a.registry.getDependencyK(
@@ -310,11 +316,9 @@ base class DIBase {
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
     final test = get<T>(groupEntity: g);
-
     if (test.isSome()) {
       return test.some().unwrap().value;
     }
-
     if (completers.isSome()) {
       final test = completers.unwrap().registry.getDependency<SafeCompleter<T>>(
             groupEntity: g,
@@ -328,9 +332,7 @@ base class DIBase {
     } else {
       completers = Some(DIBase());
     }
-
     final completer = SafeCompleter<T>();
-
     completers.unwrap().registry.setDependency(
           Dependency<SafeCompleter<T>>(
             Sync(Ok(completer)),
@@ -341,7 +343,6 @@ base class DIBase {
             ),
           ),
         );
-
     return completer.resolvable.map((e) {
       completers.unwrap().registry.removeDependency<SafeCompleter<T>>(
             groupEntity: g,
