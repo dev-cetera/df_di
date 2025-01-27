@@ -116,10 +116,9 @@ final class DIRegistry {
   /// Returns `true` if it does and `false` if it doesn't.
   @pragma('vm:prefer-inline')
   bool containsDependencyT(Type type, {Entity groupEntity = const DefaultEntity()}) {
-    return containsDependencyK(
-      TypeEntity(Resolvable, [type]),
-      groupEntity: groupEntity,
-    );
+    final a = TypeEntity(Sync, [type]);
+    final b = TypeEntity(Async, [type]);
+    return _state[groupEntity]?.values.any((e) => e.typeEntity == a || e.typeEntity == b) == true;
   }
 
   /// Checks if any dependency registered under the exact [typeEntity] exists
@@ -129,7 +128,9 @@ final class DIRegistry {
   /// Returns `true` if it does and `false` if it doesn't.
   @pragma('vm:prefer-inline')
   bool containsDependencyK(Entity typeEntity, {Entity groupEntity = const DefaultEntity()}) {
-    return _state[groupEntity]?.values.any((e) => e.typeEntity == typeEntity) == true;
+    final a = TypeEntity(Sync, [typeEntity]);
+    final b = TypeEntity(Async, [typeEntity]);
+    return _state[groupEntity]?.values.any((e) => e.typeEntity == a || e.typeEntity == b) == true;
   }
 
   /// Returns any dependency of type [T] or subtypes under the specified

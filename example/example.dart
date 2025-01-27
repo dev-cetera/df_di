@@ -19,6 +19,12 @@ import 'package:df_di/df_di.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 Future<void> main() async {
+  // // TODO: THESE TWO SHOULD BE THE SAME
+  // final a = TypeEntity(List, [int]);
+  // final c = TypeEntity(List, [TypeEntity(TypeEntity(TypeEntity(int)))]);
+  // print(a);
+  // print(c);
+
   final di = DI();
   di.register<int>(unsafe: () => Future.delayed(const Duration(seconds: 3), () => 2));
 
@@ -39,19 +45,17 @@ Future<void> main() async {
 
   //di.registry.removeDependency<Future<int>>();
 
-  print(
-    di.isRegisteredK(TypeEntity(Resolvable, [int])),
-  );
+  print(di.isRegisteredK(TypeEntity(int)));
 
-  print(
-    di.isRegisteredK(TypeEntity(Async, [int])),
-  );
+  // print(
+  //   di.isRegisteredK(TypeEntity(Async, [int])),
+  // );
 
-  final a = await di.get<int>().unwrap().value;
-  print(a.unwrap());
+  // final a = await di.get<int>().unwrap().value;
+  // print(a.unwrap());
 
-  final b = await di.getK(TypeEntity(Async, [int])).unwrap().value;
-  print(b.unwrap());
+  // final b = await di.getK(TypeEntity(Async, [int])).unwrap().value;
+  // print(b.unwrap());
 
   //final a = await di.getK(TypeEntity(int)).map((e) => e.value).unwrap();
 

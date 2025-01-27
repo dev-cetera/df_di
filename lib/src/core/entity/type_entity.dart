@@ -15,7 +15,12 @@ import 'entity.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 final class TypeEntity extends Entity {
-  TypeEntity._obj(Object object) : super(Entity.objId(object));
+  final String _typeString;
+
+  static String _getTypeString(Object object) =>
+      object is TypeEntity ? object._typeString : object.toString();
+
+  TypeEntity._obj(Object object, this._typeString) : super(Entity.objId(object));
 
   /// Constructs a `Entity` representation by replacing occurrences of `Object`
   /// or `dynamic` in the `baseType` with corresponding values from `subTypes`.
@@ -49,7 +54,7 @@ final class TypeEntity extends Entity {
   ]) {
     final objectStr = '$Object';
     final dynamicStr = '$dynamic';
-    final cleanBaseType = baseType.toString().replaceAll(' ', '');
+    final cleanBaseType = _getTypeString(baseType).replaceAll(' ', '');
     var subTypeIndex = 0;
 
     // Build a new type string by replacing 'Object' or 'dynamic' with subTypes.
@@ -59,7 +64,7 @@ final class TypeEntity extends Entity {
       if (cleanBaseType.startsWith(objectStr, n) || cleanBaseType.startsWith(dynamicStr, n)) {
         // Replace with the next subtype from subTypes if available.
         if (subTypeIndex < subTypes.length) {
-          buffer.write(subTypes[subTypeIndex].toString());
+          buffer.write(_getTypeString(subTypes[subTypeIndex]));
           subTypeIndex++;
         } else {
           // Retain 'Object' or 'dynamic' if no subtypes are left.
@@ -77,6 +82,10 @@ final class TypeEntity extends Entity {
     }
 
     // Return the constructed type string wrapped in a Entity object.
-    return TypeEntity._obj(buffer.toString());
+    final buffer1 = buffer.toString();
+    return TypeEntity._obj(
+      buffer1,
+      buffer1,
+    );
   }
 }
