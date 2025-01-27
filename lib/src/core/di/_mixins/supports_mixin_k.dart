@@ -18,121 +18,126 @@ import '/src/_common.dart';
 
 base mixin SupportsMixinK on DIBase {
   @protected
-  // Result<Option<Resolvable<Object>>> getK(
-  //   Entity typeEntity, {
-  //   Entity groupEntity = const Entity.defaultEntity(),
-  //   bool traverse = true,
-  // }) {
-  //   final g = groupEntity.preferOverDefault(focusGroup);
-  //   final dep = _getDependencyK(
-  //     typeEntity,
-  //     groupEntity: g,
-  //     traverse: traverse,
-  //   );
-  //   if (dep.isErr) {
-  //     return dep.err;
-  //   }
-  //   if (dep.unwrap().isNone) {
-  //     return const Ok(None<Object>());
-  //   }
-  //   final value = dep.unwrap().unwrap().value;
-  //   switch (value) {
-  //     case Future<Object> futureValue:
-  //       return Ok(
-  //         Some(() async {
-  //           final value = await futureValue;
-  //           _registerDependencyK(
-  //             dependency: Dependency(
-  //               value,
-  //               metadata: dep.unwrap().unwrap().metadata,
-  //             ),
-  //             checkExisting: false,
-  //           );
-  //           registry.removeDependencyK(
-  //             typeEntity,
-  //             groupEntity: g,
-  //           );
-  //           return value;
-  //         }()),
-  //       );
-  //     case Object _:
-  //       return Ok(Some(value));
-  //   }
-  // }
+  Option<Resolvable<Object>> getK(
+    Entity typeEntity, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    final g = groupEntity.preferOverDefault(focusGroup);
+    final test = getDependencyK(
+      typeEntity,
+      groupEntity: g,
+      traverse: traverse,
+    );
+    if (test.isNone()) {
+      return const None();
+    }
+    final result = test.unwrap();
+    if (result.isErr()) {
+      return Some(Sync(result.err().castErr()));
+    }
+    final value = result.unwrap().value;
+    if (value.isSync()) {
+      return Some(value);
+    }
+
+    return Some(
+      Async.unsafe(
+        () => value.async().unwrap().value.then((e) {
+          final value = e.unwrap();
+          _registerDependencyK(
+            dependency: Dependency(
+              Sync(Ok(value)),
+              metadata: test.unwrap().unwrap().metadata,
+            ),
+            checkExisting: false,
+          );
+          registry.removeDependencyK(
+            TypeEntity(Async<Object>, [value.runtimeType]),
+            groupEntity: g,
+          );
+          return value;
+        }),
+      ),
+    );
+  }
 
   //
   //
   //
 
-  // Result<Option<Dependency<Object>>> _registerDependencyK({
-  //   required Dependency<Object> dependency,
-  //   bool checkExisting = false,
-  // }) {
-  //   final g = dependency.metadata.fold((e) => e.groupEntity, () => focusGroup);
-  //   final typeEntity = dependency.typeEntity;
-  //   if (checkExisting) {
-  //     final dep = _getDependencyK(
-  //       typeEntity,
-  //       groupEntity: g,
-  //       traverse: false,
-  //     );
-  //     if (dep.isErr()) {
-  //       return dep.err().cast();
-  //     }
-  //     if (dep.unwrap().isSome()) {
-  //       return const Err('Dependency already registered.');
-  //     }
-  //   }
-  //   registry.setDependency(dependency);
-  //   return Ok(Some(dependency));
-  // }
-
-  //
-  //
-  //
-
-  Result<Option<Dependency<Resolvable<Object>>>> _getDependencyK(
+  @protected
+  Option<Result<Dependency<Object>>> getDependencyK(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
     bool validate = true,
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
-    var dep = registry
-        .getDependencyK(typeEntity, groupEntity: g)
-        .or(registry.getDependencyK(TypeEntity(Future, [typeEntity]), groupEntity: g));
-    if (dep.isNone() && traverse) {
+    final test = registry.getDependencyK(typeEntity, groupEntity: g);
+    var temp = test.map((e) => Ok(e).result());
+    if (test.isNone() && traverse) {
       for (final parent in parents) {
-        final test = (parent as SupportsMixinK)._getDependencyK(
+        temp = (parent as SupportsMixinK).getDependencyK(
           typeEntity,
           groupEntity: g,
         );
-        if (test.isErr()) {
-          return test;
-        }
-        dep = test.unwrap();
-        if (dep.isSome()) {
+        if (temp.isSome()) {
           break;
         }
       }
     }
-    if (dep.isSome()) {
-      final dependency = dep.unwrap() as Dependency;
+
+    if (temp.isSome()) {
       if (validate) {
+        final result = temp.unwrap();
+        if (result.isErr()) {
+          return Some(result);
+        }
+        final dependency = result.unwrap();
         final metadata = dependency.metadata;
         if (metadata.isSome()) {
           final valid = metadata.unwrap().validator.map((e) => e(dependency));
           if (valid.isSome() && !valid.unwrap()) {
-            return const Err(
-              stack: ['SupportsMixinK', '_getDependencyK'],
-              error: 'Dependency validation failed.',
+            return const Some(
+              Err(
+                stack: ['SupportsMixinK', 'getDependencyK'],
+                error: 'Dependency validation failed.',
+              ),
             );
           }
         }
       }
-      return Ok(Some(dependency.cast()));
     }
-    return const Ok(None());
+    return temp;
+  }
+
+  //
+  //
+  //
+
+  Result<Dependency<Object>> _registerDependencyK({
+    required Dependency<Object> dependency,
+    bool checkExisting = false,
+  }) {
+    // ignore: invalid_use_of_visible_for_testing_member
+    final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
+    if (checkExisting) {
+      final test = getDependencyK(
+        dependency.typeEntity,
+        groupEntity: g,
+        traverse: false,
+        validate: false,
+      );
+      if (test.isSome()) {
+        return const Err(
+          stack: ['DIBase', '_registerDependency'],
+          error: 'Dependency already registered.',
+        );
+      }
+    }
+    registry.setDependency(dependency);
+    return Ok(dependency);
   }
 
   //
@@ -183,9 +188,10 @@ base mixin SupportsMixinK on DIBase {
     bool traverse = true,
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
-    if (registry.containsDependencyK(typeEntity, groupEntity: g) ||
-        registry.containsDependencyK(TypeEntity(Future, [typeEntity]), groupEntity: g) ||
-        registry.containsDependencyK(TypeEntity(Lazy, [typeEntity]), groupEntity: g)) {
+    if (registry.containsDependencyK(typeEntity, groupEntity: g)
+        // TODO:
+        //|| registry.containsDependencyK(TypeEntity(Lazy, [typeEntity]), groupEntity: g)
+        ) {
       return true;
     }
     if (traverse) {

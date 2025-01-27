@@ -83,19 +83,7 @@ base class DIBase {
       final a = completers.unwrap();
       // TODO: MUST ALSO LOOK AT CHILDREN AND COMPLETE ALL COMPLETERS, could be more than 1.
       final b = a.registry.getDependency<SafeCompleter<T>>(groupEntity: groupEntity)
-          // .or(
-          //   a.registry.getDependencyK(
-          //     TypeEntity(SafeCompleter<Object>, [value.runtimeType]), // TODO: SAME?
-          //     groupEntity: groupEntity,
-          //   ),
-          // )
-          // .or(
-          //   a.registry.getDependencyK(
-          //     TypeEntity(SafeCompleter<Lazy<Object>>,
-          //         [value.runtimeType]), // TODO: TEST UNTIL WITH LAZY!!!
-          //     groupEntity: groupEntity,
-          //   ),
-          // )
+
           // .or(
           //   a.registry.getDependencyK(
           //     TypeEntity(SafeCompleter<Object>, [value.runtimeType]), // TODO: SAME?
@@ -181,8 +169,13 @@ base class DIBase {
     bool traverse = true,
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
-    if (registry.containsDependency<T>(groupEntity: g) ||
-        registry.containsDependency<Lazy<T>>(groupEntity: g)) {
+    if (registry.containsDependency<T>(groupEntity: g)
+
+        // TODO:
+        // ||
+        //     registry.containsDependency<Lazy<T>>(groupEntity: g),
+
+        ) {
       return true;
     }
     if (traverse) {
