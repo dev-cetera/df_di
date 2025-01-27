@@ -18,6 +18,7 @@ import 'package:df_di/df_di.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
+// TODO: SHOULD HAVE A MECHANISM TO LOOK INTO CHILDREN AND NOT JUST PARENTS
 Future<void> main() async {
   // // TODO: THESE TWO SHOULD BE THE SAME
   // final a = TypeEntity(List, [int]);
@@ -27,6 +28,12 @@ Future<void> main() async {
 
   final di = DI();
   di.register<int>(unsafe: () => Future.delayed(const Duration(seconds: 3), () => 2));
+  di.register<String>(unsafe: () => Future.delayed(const Duration(seconds: 3), () => 'hello'));
+
+  // print((await di.untilK(TypeEntity(int)).value).ok().unwrap());
+  // print((await di.untilK(TypeEntity(String)).value).ok().unwrap());
+  // print((await di.until<int>().value).ok().unwrap());
+  // print((await di.until<String>().value).ok().unwrap());
 
   // Future.delayed(const Duration(seconds: 4), () {
   //   di.register<String>(unsafe: () => 'Hello World!');
@@ -45,7 +52,7 @@ Future<void> main() async {
 
   //di.registry.removeDependency<Future<int>>();
 
-  print(di.isRegisteredK(TypeEntity(int)));
+  //print(di.isRegisteredK(TypeEntity(int)));
 
   // print(
   //   di.isRegisteredK(TypeEntity(Async, [int])),

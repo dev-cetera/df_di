@@ -156,7 +156,7 @@ final class DIRegistry {
     Entity groupEntity = const DefaultEntity(),
   }) {
     return getDependencyK(
-      TypeEntity(Resolvable, [type]),
+      TypeEntity(type),
       groupEntity: groupEntity,
     );
   }
@@ -169,8 +169,10 @@ final class DIRegistry {
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
   }) {
+    final a = TypeEntity(Sync, [typeEntity]);
+    final b = TypeEntity(Async, [typeEntity]);
     return Option.fromNullable(
-      _state[groupEntity]?.values.firstWhereOrNull((e) => e.typeEntity == typeEntity),
+      _state[groupEntity]?.values.firstWhereOrNull((e) => e.typeEntity == a || e.typeEntity == b),
     );
   }
 

@@ -17,6 +17,39 @@ import '/src/_common.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 base mixin SupportsMixinK on DIBase {
+  Option<Sync<Object>> getSyncK(
+    Entity typeEntity, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return getK(
+      typeEntity,
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).map(
+      (e) => e.isSync()
+          ? e.sync().unwrap()
+          : const Sync(
+              Err(
+                stack: ['SupportsMixinK', 'getSyncK'],
+                error: 'Called getSyncK() an async dependency.',
+              ),
+            ),
+    );
+  }
+
+  Option<Async<Object>> getAsyncK(
+    Entity typeEntity, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return getK(
+      typeEntity,
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).map((e) => e.toAsync());
+  }
+
   @protected
   Option<Resolvable<Object>> getK(
     Entity typeEntity, {
@@ -61,10 +94,6 @@ base mixin SupportsMixinK on DIBase {
       ),
     );
   }
-
-  //
-  //
-  //
 
   @protected
   Option<Result<Dependency<Object>>> getDependencyK(
@@ -140,46 +169,42 @@ base mixin SupportsMixinK on DIBase {
     return Ok(dependency);
   }
 
-  //
-  //
-  //
+  Option<Resolvable<Object>> unregisterK<T extends Object>(
+    Entity typeEntity, {
+    Entity groupEntity = const DefaultEntity(),
+    bool skipOnUnregisterCallback = false,
+  }) {
+    final removed = removeDependencyK(typeEntity, groupEntity: groupEntity);
+    if (removed.isNone()) {
+      return const None();
+    }
+    final removedDependency = removed.unwrap() as Dependency;
+    if (skipOnUnregisterCallback) {
+      return Some(Sync(Ok(removedDependency.value)));
+    }
+    final metadata = removedDependency.metadata;
+    if (metadata.isSome()) {
+      final onUnregister = metadata.unwrap().onUnregister;
+      if (onUnregister.isSome()) {
+        return Some(
+          onUnregister.unwrap()(removedDependency).map((_) => removedDependency),
+        );
+      }
+    }
+    return Some(Sync(Ok(removedDependency.value)));
+  }
 
-  // @protected
-  // Option<Resolvable<Object>> unregisterK(
-  //   Entity typeEntity, {
-  //   Entity groupEntity = const Entity.defaultEntity(),
-  //   bool skipOnUnregisterCallback = false,
-  // }) {
-  //   final g = groupEntity.preferOverDefault(focusGroup);
-  //   final removed = registry
-  //       .removeDependencyK(typeEntity, groupEntity: g)
-  //       .or(registry.removeDependencyK(TypeEntity(Future, [typeEntity]), groupEntity: g))
-  //       .or(registry.removeDependencyK(TypeEntity(Lazy, [typeEntity]), groupEntity: g));
-  //   if (removed.isNone) {
-  //     return const None();
-  //   }
-  //   final removedDependency = removed.unwrap() as Dependency;
-  //   if (skipOnUnregisterCallback) {
-  //     return Some(removedDependency.value);
-  //   }
-  //   final metadata = removedDependency.metadata;
-  //   if (metadata.isSome) {
-  //     final onUnregister = metadata.unwrap().onUnregister;
-  //     if (onUnregister.isSome) {
-  //       return Some(
-  //         consec(
-  //           onUnregister.unwrap()(removedDependency),
-  //           (_) => removedDependency,
-  //         ),
-  //       );
-  //     }
-  //   }
-  //   return Some(removedDependency.value);
-  // }
-
-  //
-  //
-  //
+  @protected
+  @pragma('vm:prefer-inline')
+  Option<Object> removeDependencyK(
+    Entity typeEntity, {
+    Entity groupEntity = const DefaultEntity(),
+  }) {
+    final g = groupEntity.preferOverDefault(focusGroup);
+    return registry
+        .removeDependencyK(typeEntity, groupEntity: g)
+        .or(registry.removeDependencyK(TypeEntity(Lazy, [typeEntity]), groupEntity: g));
+  }
 
   @protected
   bool isRegisteredK(
@@ -188,10 +213,8 @@ base mixin SupportsMixinK on DIBase {
     bool traverse = true,
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
-    if (registry.containsDependencyK(typeEntity, groupEntity: g)
-        // TODO:
-        //|| registry.containsDependencyK(TypeEntity(Lazy, [typeEntity]), groupEntity: g)
-        ) {
+    if (registry.containsDependencyK(typeEntity, groupEntity: g) ||
+        registry.containsDependencyK(TypeEntity(Lazy, [typeEntity]), groupEntity: g)) {
       return true;
     }
     if (traverse) {
@@ -208,58 +231,48 @@ base mixin SupportsMixinK on DIBase {
   //
   //
 
-  // Result<Option<Resolvable<Object>>> untilK(
-  //   Entity typeEntity, {
-  //   Entity groupEntity = const Entity.defaultEntity(),
-  //   bool traverse = true,
-  // }) {
-  //   final g = groupEntity.preferOverDefault(focusGroup);
-  //   final test = getK(typeEntity, groupEntity: g);
-  //   if (test.isErr) {
-  //     return test.err.cast();
-  //   }
-  //   if (test.unwrap().isSome) {
-  //     return test;
-  //   }
-  //   if (completers.isSome) {
-  //     final dep = completers.unwrap().registry.getDependencyK(
-  //           TypeEntity(CompleterOr<Resolvable<Object>>, [typeEntity]),
-  //           groupEntity: g,
-  //         );
-  //     final completer = dep.unwrap().value as CompleterOr<Resolvable<Object>>;
-  //     return Ok(Some(completer.futureOr.thenOr((e) => e)));
-  //   }
+  Resolvable<Object> untilK(
+    Entity typeEntity, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    final g = groupEntity.preferOverDefault(focusGroup);
+    final test = getK(typeEntity, groupEntity: g);
+    if (test.isSome()) {
+      return test.some().unwrap().value;
+    }
+    if (completers.isSome()) {
+      final test = completers.unwrap().registry.getDependencyK(
+            TypeEntity(SafeCompleter, [typeEntity]),
+            groupEntity: g,
+          );
 
-  //   if (completers.isNone) {
-  //     completers = Some(DIBase());
-  //   }
-
-  //   final completer = CompleterOr<Resolvable<Object>>();
-  //   completers.unwrap().registry.setDependency(
-  //         Dependency<CompleterOr<Resolvable<Object>>>(
-  //           completer,
-  //           metadata: Some(
-  //             DependencyMetadata(
-  //               groupEntity: g,
-  //             ),
-  //           ),
-  //         ),
-  //       );
-
-  //   return Ok(
-  //     Some(
-  //       completer.futureOr.thenOr((value) {
-  //         completers.unwrap().registry.removeDependencyK(
-  //               TypeEntity(CompleterOr<Resolvable<Object>>, [typeEntity]),
-  //               groupEntity: g,
-  //             );
-  //         return getK(
-  //           typeEntity,
-  //           groupEntity: groupEntity,
-  //           traverse: traverse,
-  //         ).unwrap().unwrap();
-  //       }),
-  //     ),
-  //   );
-  // }
+      if (test.isSome()) {
+        final some = test.unwrap();
+        final completer = some.value.sync().unwrap().value.unwrap();
+        return (completer as SafeCompleter).resolvable;
+      }
+    } else {
+      completers = Some(DIBase());
+    }
+    final completer = SafeCompleter();
+    completers.unwrap().registry.setDependency(
+          Dependency<SafeCompleter>(
+            Sync(Ok(completer)),
+            metadata: Some(
+              DependencyMetadata(
+                groupEntity: g,
+              ),
+            ),
+          ),
+        );
+    return completer.resolvable.map((e) {
+      completers.unwrap().registry.removeDependencyK(
+            TypeEntity(SafeCompleter, [typeEntity]),
+            groupEntity: g,
+          );
+      return e;
+      //return get<T>();
+    });
+  }
 }

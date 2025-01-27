@@ -82,19 +82,16 @@ base class DIBase {
     if (completers.isSome()) {
       final a = completers.unwrap();
       // TODO: MUST ALSO LOOK AT CHILDREN AND COMPLETE ALL COMPLETERS, could be more than 1.
-      final b = a.registry.getDependency<SafeCompleter<T>>(groupEntity: groupEntity)
-
-          // .or(
-          //   a.registry.getDependencyK(
-          //     TypeEntity(SafeCompleter<Object>, [value.runtimeType]), // TODO: SAME?
-          //     groupEntity: groupEntity,
-          //   ),
-          // )
-
-          ;
+      final b = a.registry.getDependency<SafeCompleter<T>>(groupEntity: groupEntity).or(
+            // MAY NOT WORK!!!
+            a.registry.getDependencyK(
+              TypeEntity(SafeCompleter<Object>, [value.runtimeType]),
+              groupEntity: groupEntity,
+            ),
+          );
 
       if (b.isSome()) {
-        final test = b.unwrap().value.sync().unwrap().value;
+        final test = (b.unwrap() as Dependency).value.sync().unwrap().value;
         if (test.isErr()) {
           // TODO:
           return Err(
@@ -102,7 +99,7 @@ base class DIBase {
             error: '',
           );
         }
-        test.unwrap().resolve(value);
+        (test.unwrap() as SafeCompleter).resolve(value);
       }
     }
     return const Ok(None());
@@ -140,11 +137,7 @@ base class DIBase {
     Entity groupEntity = const DefaultEntity(),
     bool skipOnUnregisterCallback = false,
   }) {
-    final g = groupEntity.preferOverDefault(focusGroup);
-    final removed = registry
-        .removeDependency<T>(groupEntity: g)
-        //.or(registry.removeDependency<Future<T>>(groupEntity: g)) // TODO???
-        .or(registry.removeDependency<Lazy<T>>(groupEntity: g));
+    final removed = removeDependency<T>(groupEntity: groupEntity);
     if (removed.isNone()) {
       return const None();
     }
@@ -164,18 +157,22 @@ base class DIBase {
     return Some(Sync(Ok(removedDependency.value)));
   }
 
+  @protected
+  @pragma('vm:prefer-inline')
+  Option<Object> removeDependency<T extends Object>({Entity groupEntity = const DefaultEntity()}) {
+    final g = groupEntity.preferOverDefault(focusGroup);
+    return registry
+        .removeDependency<T>(groupEntity: g)
+        .or(registry.removeDependency<Lazy<T>>(groupEntity: g));
+  }
+
   bool isRegistered<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
-    if (registry.containsDependency<T>(groupEntity: g)
-
-        // TODO:
-        // ||
-        //     registry.containsDependency<Lazy<T>>(groupEntity: g),
-
-        ) {
+    if (registry.containsDependency<T>(groupEntity: g) ||
+        registry.containsDependency<Lazy<T>>(groupEntity: g)) {
       return true;
     }
     if (traverse) {
@@ -343,20 +340,6 @@ base class DIBase {
       return e;
       //return get<T>();
     });
-
-    // return Ok(
-    //   Some(
-    //     completer.futureOr.thenOr((value) {
-    //       completers.unwrap().registry.removeDependency<CompleterOr<Resolvable<T>>>(
-    //             groupEntity: g,
-    //           );
-    //       return get<T>(
-    //         groupEntity: groupEntity,
-    //         traverse: traverse,
-    //       ).unwrap().unwrap();
-    //     }),
-    //   ),
-    // );
   }
 
   Resolvable<List<Dependency>> unregisterAll({
