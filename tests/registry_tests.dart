@@ -38,7 +38,7 @@
 //             registry.groupEntities.length,
 //           );
 //           expect(
-//             "{null: {${Entity.obj(int).id}: Instance of 'Dependency<int>'}}",
+//             "{null: {${TypeEntity(int).id}: Instance of 'Dependency<int>'}}",
 //             registry.state.toString(),
 //           );
 //           registry.removeGroup();
@@ -51,7 +51,7 @@
 //             registry.state.toString(),
 //           );
 //           registry.setGroup(
-//             {Entity.obj(int): Dependency<int>(1)},
+//             {TypeEntity(int): Dependency<int>(1)},
 //             groupEntity: DefaultEntities.DEFAULT_GROUP.entity,
 //           );
 //           expect(
@@ -59,7 +59,7 @@
 //             registry.groupEntities.length,
 //           );
 //           expect(
-//             "{${Entity.obj(int).id}: Instance of 'Dependency<int>'}",
+//             "{${TypeEntity(int).id}: Instance of 'Dependency<int>'}",
 //             registry.getGroup(groupEntity: DefaultEntities.DEFAULT_GROUP.entity).toString(),
 //           );
 //           registry.clear();
@@ -95,15 +95,15 @@
 //           );
 //           expect(
 //             dependency,
-//             registry.getDependencyOrNullK(Entity.obj(int)),
+//             registry.getDependencyOrNullK(TypeEntity(int)),
 //           );
 //           expect(
 //             dependency,
-//             registry.getDependencyOrNullK(Entity.obj(' i n t ')),
+//             registry.getDependencyOrNullK(TypeEntity(' i n t ')),
 //           );
 //           expect(
 //             dependency,
-//             registry.dependencies.where((test) => test.typeEntity == Entity.obj(int)).firstOrNull,
+//             registry.dependencies.where((test) => test.typeEntity == TypeEntity(int)).firstOrNull,
 //           );
 //           expect(
 //             dependency,
@@ -123,7 +123,7 @@
 //           );
 //           expect(
 //             true,
-//             registry.containsDependencyK(Entity.obj(int)),
+//             registry.containsDependencyK(TypeEntity(int)),
 //           );
 //         },
 //       );
@@ -147,7 +147,7 @@
 //           );
 //           expect(
 //             dependency,
-//             registry.getDependencyOrNullK(Entity.obj(' F u t u r e < i n t > ')),
+//             registry.getDependencyOrNullK(TypeEntity(' F u t u r e < i n t > ')),
 //           );
 //           expect(
 //             dependency,
@@ -175,7 +175,7 @@
 //           );
 //           expect(
 //             true,
-//             registry.containsDependencyK(Entity.obj(Future<int>)),
+//             registry.containsDependencyK(TypeEntity(Future<int>)),
 //           );
 //         },
 //       );

@@ -49,7 +49,7 @@ final class Dependency<T extends Object> {
     // ignore: invalid_use_of_visible_for_testing_member
     final preemptivetypeEntity = metadata.unwrap().preemptivetypeEntity;
     if (preemptivetypeEntity.isDefault()) {
-      return Entity.obj(value.runtimeType);
+      return TypeEntity(value.runtimeType);
     } else {
       return preemptivetypeEntity;
     }

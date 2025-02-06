@@ -15,25 +15,66 @@
 import 'dart:async';
 
 import 'package:df_di/df_di.dart';
+import 'package:df_di/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
+Iterable<int> sort(Iterable<int> values) sync* {
+  for (final e in values) {}
+}
+
 // TODO: SHOULD HAVE A MECHANISM TO LOOK INTO CHILDREN AND NOT JUST PARENTS
 Future<void> main() async {
-  // // TODO: THESE TWO SHOULD BE THE SAME
+  final di = DI();
+  // di.register<int>(unsafe: () async => 1);
+  // print(di.registry.state);
+  // print(await di.getUnsafeK(TypeEntity(int)));
+  // print(di.registry.state);
+  // print(await di.getUnsafeK(TypeEntity(int)));
+  // print(di.registry.state);
+
+  di.registerLazy<List<int>>(() => Async.unsafe(() async => [123]));
+  print(di.registry.state);
+  final value = await di.getSingleton<List<int>>().unwrapAsync();
+  print(value);
+
+  // await di.getSingleton<List<int>>().value;
+  // final a = await l.unwrapAsync();
+  // print(a);
+  // final l2 = di.getSingleton<List<int>>();
+  // final b = await l2.unwrapAsync();
+  // print(a == b);
+  // di.resetSingleton<List<int>>().value;
+  // final l3 = di.getSingleton<List<int>>();
+  // final c = await l3.unwrapAsync();
+  // final l4 = di.getSingleton<List<int>>();
+  // await l4.value;
+  // final d = l4.unwrapSync();
+  // print(di.registry.state);
+  // print(a == c);
+  // final a = await l.unwrapAsync();
+  // print(await l.unwrapAsync());
+  // print(di.getSingletonUnsafe<List<int>>() == l.unwrapSync());
+
   // final a = TypeEntity(List, [int]);
   // final c = TypeEntity(List, [TypeEntity(TypeEntity(TypeEntity(int)))]);
   // print(a);
   // print(c);
 
-  final di = DI();
-  di.register<int>(unsafe: () => Future.delayed(const Duration(seconds: 3), () => 2));
-  di.register<String>(unsafe: () => Future.delayed(const Duration(seconds: 3), () => 'hello'));
+  // final di = DI();
+  // final a = di.register<int>(unsafe: () => Future.delayed(const Duration(seconds: 3), () => 2));
+  // // print(a);
+  // final b =
+  //     di.register<String>(unsafe: () => Future.delayed(const Duration(seconds: 3), () => 'hello'));
+  // // print(b);
+  // final parent = DI();
+  // parent.register<DIBase>(unsafe: () => di);
+  //di.register<DIBase>(unsafe: () => child);
 
-  // print((await di.untilK(TypeEntity(int)).value).ok().unwrap());
-  // print((await di.untilK(TypeEntity(String)).value).ok().unwrap());
-  // print((await di.until<int>().value).ok().unwrap());
-  // print((await di.until<String>().value).ok().unwrap());
+  // print((await parent.untilK(TypeEntity(int)).value).ok().unwrap());
+  // print((await parent.untilK(TypeEntity(String)).value).ok().unwrap());
+  // print((await parent.until<int>().value).ok().unwrap());
+  // print((await parent.until<String>().value).ok().unwrap());
 
   // Future.delayed(const Duration(seconds: 4), () {
   //   di.register<String>(unsafe: () => 'Hello World!');

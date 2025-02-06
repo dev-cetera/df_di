@@ -34,24 +34,50 @@ final class DIRegistry {
   RegistryState get state =>
       RegistryState.unmodifiable(_state).map((k, v) => MapEntry(k, Map.unmodifiable(v)));
 
-  /// A snapshot of the current dependencies within [state].
-  List<Dependency> get dependencies => List.unmodifiable(
-        _state.entries.expand((e) => e.value.values).toList()
-          // Sort by descending indexes, i.e. largest index is first element.
-          ..sort((d1, d2) {
-            final i1 = d1.metadata.isSome()
-                ? d1.metadata.unwrap().index.isSome()
-                    ? d1.metadata.unwrap().index.unwrap()
-                    : -1
-                : -1;
-            final i2 = d2.metadata.isSome()
-                ? d2.metadata.unwrap().index.isSome()
-                    ? d2.metadata.unwrap().index.unwrap()
-                    : -1
-                : -1;
-            return i1.compareTo(i2);
-          }),
-      );
+  // TODO!
+  @protected
+  @pragma('vm:prefer-inline')
+  Iterable<Dependency> get unsortedDependencies => _state.entries.expand((e) => e.value.values);
+
+  // TODO!
+  @visibleForTesting
+  List<Dependency> get dependencies {
+    final entries = _state.entries.expand((e) => e.value.values);
+
+    // Extract indices once to avoid recalculating during sort.
+    final sortedEntries = entries.map((d) {
+      final metadata = d.metadata;
+      final index = metadata.isSome() && metadata.unwrap().index.isSome()
+          ? metadata.unwrap().index.unwrap()
+          : -1;
+      return (index, d);
+    }).toList();
+
+    // Sort based on pre-extracted indices.
+    sortedEntries.sort((a, b) => b.$1.compareTo(a.$1));
+
+    // Return dependencies sorted.
+    return List.unmodifiable(sortedEntries.map((e) => e.$2));
+  }
+
+  // /// A snapshot of the current dependencies within [state].
+  // List<Dependency> get dependencies => List.unmodifiable(
+  //       _state.entries.expand((e) => e.value.values).toList()
+  //         // Sort by descending indexes, i.e. largest index is first element.
+  //         ..sort((d1, d2) {
+  //           final i1 = d1.metadata.isSome()
+  //               ? d1.metadata.unwrap().index.isSome()
+  //                   ? d1.metadata.unwrap().index.unwrap()
+  //                   : -1
+  //               : -1;
+  //           final i2 = d2.metadata.isSome()
+  //               ? d2.metadata.unwrap().index.isSome()
+  //                   ? d2.metadata.unwrap().index.unwrap()
+  //                   : -1
+  //               : -1;
+  //           return i1.compareTo(i2);
+  //         }),
+  //     );
 
   /// Returns all dependencies witin this [DIRegistry] instance of type
   /// [T].
@@ -69,7 +95,7 @@ final class DIRegistry {
   Iterable<Dependency> dependenciesWhereTypeT(
     Type type,
   ) {
-    return dependenciesWhereTypeK(Entity.obj(type));
+    return dependenciesWhereTypeK(TypeEntity(type));
   }
 
   /// Returns all dependencies witin this [DIRegistry] instance of type
@@ -187,7 +213,7 @@ final class DIRegistry {
   }) {
     final dependency = getDependency<T>(groupEntity: groupEntity);
     if (dependency.isSome()) {
-      final removed = removeDependencyK(
+      final removed = _removeDependencyK(
         // ignore: invalid_use_of_visible_for_testing_member
         dependency.unwrap().typeEntity,
         groupEntity: groupEntity,
@@ -210,7 +236,24 @@ final class DIRegistry {
     Entity groupEntity = const DefaultEntity(),
   }) {
     return removeDependencyK(
-      TypeEntity(Resolvable, [type]),
+      TypeEntity(type),
+      groupEntity: groupEntity,
+    );
+  }
+
+  Option<Dependency> removeDependencyK(
+    Entity typeEntity, {
+    Entity groupEntity = const DefaultEntity(),
+  }) {
+    final a = _removeDependencyK(
+      TypeEntity(Sync, [typeEntity]),
+      groupEntity: groupEntity,
+    );
+    if (a.isSome()) {
+      return a;
+    }
+    return _removeDependencyK(
+      TypeEntity(Async, [typeEntity]),
       groupEntity: groupEntity,
     );
   }
@@ -222,7 +265,7 @@ final class DIRegistry {
   /// Returns the removed [Dependency] or `null` if it did not exist within
   /// [state].
   @protected
-  Option<Dependency> removeDependencyK(
+  Option<Dependency> _removeDependencyK(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
   }) {

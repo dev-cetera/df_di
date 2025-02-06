@@ -17,11 +17,6 @@ import '/src/_common.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
-  // /// A container for storing children.
-  // late SupportsChildrenMixin? _children = this;
-
-  // /// Child containers.
-  // List<DI> get children => List.unmodifiable(registry.dependencies.where((e) => e.value is DI));
 
   // /// Registers a new child container under the specified [groupEntity] in the
   // /// [registry].
