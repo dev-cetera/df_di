@@ -28,20 +28,20 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
     return register<Lazy<T>>(
       unsafe: () => Lazy<T>(constructor),
       groupEntity: groupEntity,
-      validator: validator.isSome()
-          ? Some((e) {
-              // TODO: MAY THROW!!!
-              final temp = e.map((e) => e.currentInstance).reduce<T>().map((e) => e.unwrap());
-              return validator.some().unwrap().value(temp);
-            })
-          : const None(),
-      onUnregister: onUnregister.isSome()
-          ? Some((e) {
-              // TODO: MAY THROW!!!
-              final temp = e.map((e) => e.currentInstance).reduce<T>().map((e) => e.unwrap());
-              return onUnregister.some().unwrap().value(temp);
-            })
-          : const None(),
+      // validator: validator.isSome()
+      //     ? Some((e) {
+      //         // TODO: MAY THROW!!!
+      //         final temp = e.map((e) => e.currentInstance).reduce<T>().map((e) => e.unwrap());
+      //         return validator.some().unwrap().value(temp);
+      //       })
+      //     : const None(),
+      // onUnregister: onUnregister.isSome()
+      //     ? Some((e) {
+      //         // TODO: MAY THROW!!!
+      //         final temp = e.map((e) => e.currentInstance).reduce<T>().map((e) => e.unwrap());
+      //         return onUnregister.some().unwrap().value(temp);
+      //       })
+      //     : const None(),
     );
   }
 

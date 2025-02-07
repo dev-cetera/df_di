@@ -48,15 +48,16 @@ base class DIBase {
   Result<Resolvable<T>> register<T extends Object>({
     required FutureOr<T> Function() unsafe,
     Entity groupEntity = const DefaultEntity(),
-    Option<DependencyValidator<Resolvable<T>>> validator = const None(),
-    Option<OnUnregisterCallback<Resolvable<T>>> onUnregister = const None(),
+    DependencyValidator<Resolvable<T>>? validator,
+    OnUnregisterCallback<Resolvable<T>>? onUnregister,
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
     final metadata = DependencyMetadata(
       index: Some(_indexIncrementer++),
       groupEntity: g,
-      validator: validator.map((f) => (e) => f(e as Resolvable<T>)),
-      onUnregister: onUnregister.map((f) => (e) => f(e as Resolvable<T>)),
+      validator: validator != null ? Some((e) => validator(e as Resolvable<T>)) : const None(),
+      onUnregister:
+          onUnregister != null ? Some((e) => onUnregister(e as Resolvable<T>)) : const None(),
     );
     final value = Resolvable.unsafe(unsafe);
     final check = completeRegistration(value, g);
@@ -278,7 +279,22 @@ base class DIBase {
     if (result.isErr()) {
       return Some(Sync(result.err().castErr()));
     }
-    final value = result.unwrap().value;
+    final dependency = result.unwrap();
+    // if (dependency.metadata.isSome()) {
+    //   final metadata = dependency.metadata.unwrap();
+    //   final passing = metadata.validator.mapOr((e) => e(dependency), true);
+    //   if (!passing) {
+    //     return const Some(
+    //       Sync(
+    //         Err(
+    //           stack: ['DIBase', 'get'],
+    //           error: 'Dependency validation failed.',
+    //         ),
+    //       ),
+    //     );
+    //   }
+    // }
+    final value = dependency.value;
     if (value.isSync()) {
       return Some(value);
     }
@@ -391,7 +407,7 @@ base class DIBase {
     Option<OnUnregisterCallback<Dependency>> onBeforeUnregister = const None(),
     Option<OnUnregisterCallback<Dependency>> onAfterUnregister = const None(),
   }) {
-    final results = List.of(registry.dependencies);
+    final results = List.of(registry.sortedDependencies);
     final sequential = Sequential();
     for (final dependency in results) {
       sequential.addAll([
