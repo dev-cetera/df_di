@@ -43,6 +43,17 @@ base class DIBase {
   @protected
   int _indexIncrementer = 0;
 
+  @pragma('vm:prefer-inline')
+  Result<Resolvable<T>> registerValue<T extends Object>(
+    FutureOr<T> value, {
+    Entity groupEntity = const DefaultEntity(),
+  }) {
+    return register(
+      unsafe: () => value,
+      groupEntity: groupEntity,
+    );
+  }
+
   Result<Resolvable<T>> register<T extends Object>({
     required FutureOr<T> Function() unsafe,
     Entity groupEntity = const DefaultEntity(),
@@ -136,18 +147,6 @@ base class DIBase {
       return const None();
     }
     final removedDependency = removed.unwrap() as Dependency;
-    if (skipOnUnregisterCallback) {
-      return Some(Sync(Ok(removedDependency.value)));
-    }
-    final metadata = removedDependency.metadata;
-    if (metadata.isSome()) {
-      final onUnregister = metadata.unwrap().onUnregister;
-      if (onUnregister.isSome()) {
-        return Some(
-          onUnregister.unwrap()(removedDependency).map((_) => removedDependency),
-        );
-      }
-    }
     return Some(Sync(Ok(removedDependency.value)));
   }
 
@@ -276,20 +275,6 @@ base class DIBase {
       return Some(Sync(result.err().castErr()));
     }
     final dependency = result.unwrap();
-    // if (dependency.metadata.isSome()) {
-    //   final metadata = dependency.metadata.unwrap();
-    //   final passing = metadata.validator.mapOr((e) => e(dependency), true);
-    //   if (!passing) {
-    //     return const Some(
-    //       Sync(
-    //         Err(
-    //           stack: ['DIBase', 'get'],
-    //           error: 'Dependency validation failed.',
-    //         ),
-    //       ),
-    //     );
-    //   }
-    // }
     final value = dependency.value;
     if (value.isSync()) {
       return Some(value);
@@ -334,27 +319,27 @@ base class DIBase {
       }
     }
 
-    if (temp.isSome()) {
-      if (validate) {
-        final result = temp.unwrap();
-        if (result.isErr()) {
-          return Some(result);
-        }
-        final dependency = result.unwrap();
-        final metadata = dependency.metadata;
-        if (metadata.isSome()) {
-          final valid = metadata.unwrap().validator.map((e) => e(dependency));
-          if (valid.isSome() && !valid.unwrap()) {
-            return const Some(
-              Err(
-                stack: ['DIBase', 'getDependency'],
-                error: 'Dependency validation failed.',
-              ),
-            );
-          }
-        }
-      }
-    }
+    // if (temp.isSome()) {
+    //   if (validate) {
+    //     final result = temp.unwrap();
+    //     if (result.isErr()) {
+    //       return Some(result);
+    //     }
+    //     final dependency = result.unwrap();
+    //     final metadata = dependency.metadata;
+    //     if (metadata.isSome()) {
+    //       final valid = metadata.unwrap().validator.map((e) => e(dependency));
+    //       if (valid.isSome() && !valid.unwrap()) {
+    //         return const Some(
+    //           Err(
+    //             stack: ['DIBase', 'getDependency'],
+    //             error: 'Dependency validation failed.',
+    //           ),
+    //         );
+    //       }
+    //     }
+    //   }
+    // }
     return temp;
   }
 

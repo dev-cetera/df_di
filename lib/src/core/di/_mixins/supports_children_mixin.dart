@@ -31,28 +31,32 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
         );
   }
 
-  Option<Result<T>> getChildOrNone<T extends Object>({
+  Option<DI> getChildOrNone({
     Entity groupEntity = const DefaultEntity(),
   }) {
-    final g = groupEntity.preferOverDefault(focusGroup);
-    if (_children.isNone()) {
+    final option = getChild(groupEntity: groupEntity);
+    if (option.isNone()) {
       return const None();
     }
-    final raw = _children.unwrap().get<T>(groupEntity: g);
-    // ignore: invalid_use_of_visible_for_testing_member
-    return raw.map((e) => e.sync().unwrap().value);
+    final result = option.unwrap();
+    if (result.isErr()) {
+      return const None();
+    }
+    return Some(result.unwrap());
   }
 
-  Option<Result<T>> getChild<T extends Object>({
+  Option<Result<DI>> getChild({
     Entity groupEntity = const DefaultEntity(),
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
     if (_children.isNone()) {
       return const None();
     }
-    final raw = _children.unwrap().get<T>(groupEntity: g);
-    // ignore: invalid_use_of_visible_for_testing_member
-    return raw.map((e) => e.sync().unwrap().value);
+    final raw = _children.unwrap().getSingleton<DI>(groupEntity: g).sync();
+    if (raw.isErr()) {
+      return Some(raw.err().castErr());
+    }
+    return Some(Ok(raw.ok().unwrap().unwrapSync()));
   }
 
   Option<Resolvable<Object>> unregisterChild({
@@ -89,6 +93,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
       return existingChild.unwrap();
     }
     registerChild(groupEntity: groupEntity);
-    return getSingleton<DI>(groupEntity: groupEntity).unwrapSync();
+    return getChild(groupEntity: groupEntity).unwrap().unwrap();
+    //return getSingleton<DI>(groupEntity: groupEntity).unwrapSync();
   }
 }

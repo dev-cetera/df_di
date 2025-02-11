@@ -183,11 +183,7 @@ final class DIRegistry {
   Option<Dependency<T>> removeDependency<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
   }) {
-    final removed = _removeDependencyK(
-      TypeEntity(T),
-      groupEntity: groupEntity,
-    );
-
+    final removed = removeDependencyT(T, groupEntity: groupEntity);
     return removed.map((e) => e.cast<T>());
   }
 

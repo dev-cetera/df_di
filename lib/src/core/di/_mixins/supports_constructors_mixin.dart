@@ -21,8 +21,8 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
     LazyConstructor<T> constructor, {
     Entity groupEntity = const DefaultEntity(),
   }) {
-    return register<Lazy<T>>(
-      unsafe: () => Lazy<T>(constructor),
+    return registerValue<Lazy<T>>(
+      Lazy<T>(constructor),
       groupEntity: groupEntity,
     );
   }
