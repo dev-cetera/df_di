@@ -17,50 +17,24 @@ import '/src/_common.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
-  /// Registers a dependency of type [TService] under the specified
-  /// [groupEntity] in the [registry]  and calls [Service.init] with the
-  /// provided [params].
-  ///
-  /// You can provide a [validator] function to validate the dependency before
-  /// it gets retrieved. If the validation fails [DependencyInvalidException]
-  /// will be throw upon retrieval.
-  ///
-  /// Additionally, an [onUnregister] callback can be specified to execute when
-  /// the dependency is unregistered via [unregister].
-  ///
-  /// Throws a [DependencyAlreadyRegisteredException] if a dependency of the
-  /// same type and group is already registered.
-  // FutureOr<TService> registerService<TService extends Service>(
-  //   FutureOr<TService> service, {
-  //   Object? params,
-  //   Entity groupEntity = const Entity.defaultEntity(),
-  //   bool Function(FutureOr<TService> instance)? validator,
-  //   FutureOr<void> Function(FutureOr<TService> instance)? onUnregister,
-  // }) {
-  //   return consec(
-  //     register<TService>(
-  //       consec(
-  //         service,
-  //         (e) => consec(
-  //           e.init(params),
-  //           (_) => service,
-  //         ),
-  //       ),
-  //       groupEntity: groupEntity,
-  //       validator: validator,
-  //       onUnregister: (e) => consec(
-  //         e,
-  //         (service) => consec(
-  //           onUnregister?.call(service),
-  //           (_) => service.dispose(),
-  //         ),
-  //       ),
-  //     ),
-  //     (_) => getOrNull<TService>(
-  //       groupEntity: groupEntity,
-  //     )!,
-  //   );
-  // }
+  Result<Resolvable<TService>> registerService<TService extends Service>({
+    required FutureOr<TService> Function() unsafe,
+    Object? params,
+    Entity groupEntity = const DefaultEntity(),
+  }) {
+    return register<TService>(
+      unsafe: () {
+        return consec(
+          unsafe(),
+          (e) => consec(
+            e.init(params),
+            (_) => e,
+          ),
+        );
+      },
+      groupEntity: groupEntity,
+    );
+  }
 
   // /// Registers a [Lazy] dependency of type [TService] under the specified
   // /// [groupEntity] in the [registry].

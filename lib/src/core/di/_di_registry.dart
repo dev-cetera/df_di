@@ -183,16 +183,12 @@ final class DIRegistry {
   Option<Dependency<T>> removeDependency<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
   }) {
-    final dependency = getDependency<T>(groupEntity: groupEntity);
-    if (dependency.isSome()) {
-      final removed = _removeDependencyK(
-        // ignore: invalid_use_of_visible_for_testing_member
-        dependency.unwrap().typeEntity,
-        groupEntity: groupEntity,
-      );
-      return removed.map((e) => e.cast<T>());
-    }
-    return const None();
+    final removed = _removeDependencyK(
+      TypeEntity(T),
+      groupEntity: groupEntity,
+    );
+
+    return removed.map((e) => e.cast<T>());
   }
 
   /// Removes any dependency with the exact [type] under the specified

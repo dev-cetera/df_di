@@ -17,129 +17,78 @@ import '/src/_common.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
+  Option<SupportsConstructorsMixin> _children = const None();
 
-  // /// Registers a new child container under the specified [groupEntity] in the
-  // /// [registry].
-  // ///
-  // /// You can provide a [validator] function to validate the dependency before
-  // /// it gets retrieved. If the validation fails [DependencyInvalidException]
-  // /// will be throw upon retrieval.
-  // ///
-  // /// Additionally, an [onUnregister] callback can be specified to execute when
-  // /// the dependency is unregistered via [unregister].
-  // void registerChild({
-  //   Entity groupEntity = const Entity.defaultEntity(),
-  //   bool Function(FutureOr<DI>)? validator,
-  //   OnUnregisterCallback<FutureOr<DI>>? onUnregister,
-  // }) {
-  //   _children ??= DI() as SupportsChildrenMixin;
-  //   _children!.registerLazy<DI>(
-  //     () => DI()..parents.add(this as DI),
-  //     groupEntity: groupEntity,
-  //     validator: validator,
-  //     onUnregister: (e) => consec(
-  //       onUnregister?.call(e),
-  //       (_) => e.asSync.unregisterAll(),
-  //     ),
-  //   );
-  // }
+  Result<void> registerChild({
+    Entity groupEntity = const DefaultEntity(),
+  }) {
+    if (_children.isNone()) {
+      _children = Some(DI() as SupportsChildrenMixin);
+    }
+    return _children.unwrap().registerLazy<DI>(
+          () => Sync(Ok(DI()..parents.add(this as DI))),
+          groupEntity: groupEntity,
+        );
+  }
 
-  // /// Retrieves the child container registered under the specified
-  // /// [groupEntity] from the [registry].
-  // ///
-  // /// If the child exists, it is returned; otherwise, a
-  // /// [DependencyNotFoundException] is thrown.
-  // DI getChild({
-  //   Entity groupEntity = const Entity.defaultEntity(),
-  // }) {
-  //   final groupEntity1 = groupEntity ?? focusGroup;
-  //   final value = getChildOrNull(
-  //     groupEntity: groupEntity1,
-  //   );
+  Option<Result<T>> getChildOrNone<T extends Object>({
+    Entity groupEntity = const DefaultEntity(),
+  }) {
+    final g = groupEntity.preferOverDefault(focusGroup);
+    if (_children.isNone()) {
+      return const None();
+    }
+    final raw = _children.unwrap().get<T>(groupEntity: g);
+    // ignore: invalid_use_of_visible_for_testing_member
+    return raw.map((e) => e.sync().unwrap().value);
+  }
 
-  //   if (value == null) {
-  //     throw DependencyNotFoundException(
-  //       type: DI,
-  //       groupEntity: groupEntity1,
-  //     );
-  //   }
-  //   return value;
-  // }
+  Option<Result<T>> getChild<T extends Object>({
+    Entity groupEntity = const DefaultEntity(),
+  }) {
+    final g = groupEntity.preferOverDefault(focusGroup);
+    if (_children.isNone()) {
+      return const None();
+    }
+    final raw = _children.unwrap().get<T>(groupEntity: g);
+    // ignore: invalid_use_of_visible_for_testing_member
+    return raw.map((e) => e.sync().unwrap().value);
+  }
 
-  // /// Retrieves the child container registered under the specified
-  // /// [groupEntity] from the [registry].
-  // ///
-  // /// If the dependency does not exist, `null` is returned.
-  // DI? getChildOrNull({
-  //   Entity groupEntity = const Entity.defaultEntity(),
-  // }) {
-  //   return _children
-  //       ?.getSingletonOrNull<DI>(
-  //         groupEntity: groupEntity,
-  //         traverse: false,
-  //       )
-  //       ?.asSyncOrNull;
-  // }
+  Option<Resolvable<Object>> unregisterChild({
+    Entity groupEntity = const DefaultEntity(),
+    bool skipOnUnregisterCallback = false,
+  }) {
+    final g = groupEntity.preferOverDefault(focusGroup);
+    if (_children.isNone()) {
+      return const None();
+    }
+    return _children.unwrap().unregister<DI>(
+          groupEntity: g,
+          skipOnUnregisterCallback: skipOnUnregisterCallback,
+        );
+  }
 
-  // /// Unregisters the child container registered under the specified
-  // /// [groupEntity] in the [registry].
-  // ///
-  // /// If [skipOnUnregisterCallback] is true,
-  // /// the [DependencyMetadata.onUnregister] callback will be skipped.
-  // ///
-  // /// Throws a [DependencyNotFoundException] if the dependency is not found.
-  // FutureOr<Object> unregisterChild({
-  //   Entity groupEntity = const Entity.defaultEntity(),
-  //   bool skipOnUnregisterCallback = false,
-  // }) {
-  //   final groupEntity1 = groupEntity ?? focusGroup;
-  //   if (_children == null) {
-  //     throw DependencyNotFoundException(
-  //       type: DI,
-  //       groupEntity: groupEntity1,
-  //     );
-  //   }
-  //   return _children!.unregister<DI>(
-  //     groupEntity: groupEntity1,
-  //     skipOnUnregisterCallback: skipOnUnregisterCallback,
-  //   );
-  // }
+  bool isChildRegistered({
+    Entity groupEntity = const DefaultEntity(),
+  }) {
+    final g = groupEntity.preferOverDefault(focusGroup);
+    if (_children.isNone()) {
+      return false;
+    }
+    return _children.unwrap().isRegistered(groupEntity: g);
+  }
 
-  // /// Checks whether a child container is registered under the specified
-  // /// [groupEntity] in the [registry].
-  // bool isChildRegistered({
-  //   Entity groupEntity = const Entity.defaultEntity(),
-  // }) {
-  //   final groupEntity1 = groupEntity ?? focusGroup;
-  //   if (registry.containsDependency<DI>(groupEntity: groupEntity1)) {
-  //     return true;
-  //   }
-  //   return false;
-  // }
-
-  // /// Registers a new child container under the specified [groupEntity] in the
-  // /// registry, and returns it.
-  // ///
-  // /// You can provide a [validator] function to validate the dependency before
-  // /// it gets retrieved. If the validation fails [DependencyInvalidException]
-  // /// will be throw upon retrieval.
-  // ///
-  // /// You can provide an [onUnregister] callback can be specified to execute
-  // /// when the dependency is unregistered via [unregister].
-  // DI child({
-  //   Entity groupEntity = const Entity.defaultEntity(),
-  //   bool Function(FutureOr<DI>)? validator,
-  //   OnUnregisterCallback<FutureOr<DI>>? onUnregister,
-  // }) {
-  //   final existingChild = getChildOrNull(groupEntity: groupEntity);
-  //   if (existingChild != null) {
-  //     return existingChild;
-  //   }
-  //   registerChild(
-  //     groupEntity: groupEntity,
-  //     validator: validator,
-  //     onUnregister: onUnregister,
-  //   );
-  //   return getChildOrNull(groupEntity: groupEntity)!;
-  // }
+  DI child({
+    Entity groupEntity = const DefaultEntity(),
+    bool Function(FutureOr<DI>)? validator,
+    OnUnregisterCallback<FutureOr<DI>>? onUnregister,
+  }) {
+    final existingChild = getOrNone<DI>(groupEntity: groupEntity);
+    if (existingChild.isSome()) {
+      return existingChild.unwrap();
+    }
+    registerChild(groupEntity: groupEntity);
+    return getSingleton<DI>(groupEntity: groupEntity).unwrapSync();
+  }
 }

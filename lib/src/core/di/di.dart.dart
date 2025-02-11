@@ -21,6 +21,7 @@ final class DI extends DIBase
         SupportsMixinK,
         SupportsMixinT,
         SupportsConstructorsMixin,
+        SupportsConstructorsMixinK,
         SupportsConstructorsMixinT,
         SupportsChildrenMixin,
         SupportsServicesMixin,

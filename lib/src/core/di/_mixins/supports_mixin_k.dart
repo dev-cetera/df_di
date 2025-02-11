@@ -64,6 +64,7 @@ base mixin SupportsMixinK on DIBase {
         typeEntity,
         groupEntity: groupEntity,
         traverse: traverse,
+        // ignore: invalid_use_of_visible_for_testing_member
       ).unwrap().value,
       (e) => e.unwrap(),
     );
@@ -95,6 +96,7 @@ base mixin SupportsMixinK on DIBase {
 
     return Some(
       Async.unsafe(
+        // ignore: invalid_use_of_visible_for_testing_member
         () => value.async().unwrap().value.then((e) {
           final value = e.unwrap();
           registry.removeDependencyK(typeEntity, groupEntity: g);
@@ -262,6 +264,7 @@ base mixin SupportsMixinK on DIBase {
 
       if (option.isSome()) {
         final some = option.unwrap();
+        // ignore: invalid_use_of_visible_for_testing_member
         final completer = some.value.sync().unwrap().value.unwrap();
         return (completer as SafeCompleter).resolvable;
       }

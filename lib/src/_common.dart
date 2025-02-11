@@ -12,9 +12,11 @@
 
 // Common exports for internal use.
 
+export 'dart:async';
+
 export 'package:collection/collection.dart';
 export 'package:df_safer_dart/df_safer_dart.dart';
-export 'package:df_type/df_type.dart' hide Sequential;
+export 'package:df_type/df_type.dart';
 export 'package:meta/meta.dart';
 
 export '_index.g.dart';

@@ -18,54 +18,61 @@ import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-base mixin SupportsConstructorsMixinT on SupportsConstructorsMixinK {
-  @pragma('vm:prefer-inline')
-  Resolvable<void> resetSingletonT(
-    Type type, {
+base mixin SupportsConstructorsMixinK on SupportsMixinK {
+  Resolvable<void> resetSingletonK(
+    Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
   }) {
-    return resetSingletonK(
-      TypeEntity(type),
+    final temp = getK(
+      TypeEntity(Lazy, [typeEntity]),
       groupEntity: groupEntity,
     );
+    if (temp.isSome()) {
+      return temp.unwrap().map((e) => (e as Lazy)..resetSingleton());
+    }
+    return const Sync(Ok(Object()));
   }
 
-  @pragma('vm:prefer-inline')
-  Resolvable<Option<Object>> getSingletonT(
-    Type type, {
+  Resolvable<Option<Object>> getSingletonK(
+    Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getSingletonT(
-      type,
+    return getK(
+      TypeEntity(Lazy, [typeEntity]),
       groupEntity: groupEntity,
       traverse: traverse,
-    );
+    ).map((e) => e.map((e) => (e as Lazy).singleton)).reduce<Object>();
   }
 
-  @pragma('vm:prefer-inline')
-  FutureOr<Object> getSingletonUnsafeT(
-    Type type, {
+  FutureOr<Object> getSingletonUnsafeK(
+    Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getSingletonUnsafeK(
-      TypeEntity(type),
-      groupEntity: groupEntity,
-      traverse: traverse,
+    return consec(
+      getUnsafeK(
+        TypeEntity(Lazy, [typeEntity]),
+        groupEntity: groupEntity,
+        traverse: traverse,
+      ),
+      (e) => consec(
+        // ignore: invalid_use_of_visible_for_testing_member
+        (e as Lazy).singleton.value,
+        (e) => e.unwrap(),
+      ),
     );
   }
 
-  @pragma('vm:prefer-inline')
-  Resolvable<Option<Object>> getFactoryT(
-    Type type, {
+  Resolvable<Option<Object>> getFactoryK(
+    Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getFactoryK(
-      TypeEntity(type),
+    return getK(
+      TypeEntity(Lazy, [typeEntity]),
       groupEntity: groupEntity,
       traverse: traverse,
-    );
+    ).map((e) => e.map((e) => (e as Lazy).factory)).reduce<Object>();
   }
 }

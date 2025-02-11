@@ -26,8 +26,8 @@
 //         () async {
 //           final di = DI();
 //           final child = DI();
-//           di.register(child);
-//           final gotChild = di.getSync<DI>().unwrap().unwrap();
+//           di.register(unsafe: () => child);
+//           final gotChild = di.getSync<DI>().unwrap().value.unwrap();
 //           expect(
 //             child,
 //             gotChild,
@@ -39,10 +39,10 @@
 //         '- Testing singletons',
 //         () async {
 //           final di = DI();
-//           di.registerLazy<int>(() => 1);
+//           di.registerLazy<int>(() => const Sync(Ok(1)));
 //           expect(
 //             1,
-//             di.getSingletonOrNull<int>(),
+//             di.getSingleton<int>().sync().unwrap().value.unwrap().unwrap(),
 //           );
 //         },
 //       );
@@ -50,11 +50,11 @@
 //         '- Testing singletons',
 //         () async {
 //           final c1 = DI();
-//           c1.register<int>(1);
+//           c1.register<int>(unsafe: () => 1);
 //           final c4 = c1.child().child().child().child();
 //           expect(
 //             1,
-//             c4.getOrNull<int>(),
+//             c4.getOrNone<int>().unwrap(),
 //           );
 //           //c1.unregisterConstructor<DIContainer>();
 //         },

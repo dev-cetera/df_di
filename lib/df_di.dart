@@ -15,5 +15,5 @@ library;
 
 export 'src/_index.g.dart';
 
-export 'package:df_type/df_type.dart' hide Sequential;
+export 'package:df_type/df_type.dart';
 export 'package:df_safer_dart/df_safer_dart.dart';

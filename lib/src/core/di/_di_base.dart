@@ -48,16 +48,11 @@ base class DIBase {
   Result<Resolvable<T>> register<T extends Object>({
     required FutureOr<T> Function() unsafe,
     Entity groupEntity = const DefaultEntity(),
-    DependencyValidator<Resolvable<T>>? validator,
-    OnUnregisterCallback<Resolvable<T>>? onUnregister,
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
     final metadata = DependencyMetadata(
       index: Some(_indexIncrementer++),
       groupEntity: g,
-      validator: validator != null ? Some((e) => validator(e as Resolvable<T>)) : const None(),
-      onUnregister:
-          onUnregister != null ? Some((e) => onUnregister(e as Resolvable<T>)) : const None(),
     );
     final value = Resolvable.unsafe(unsafe);
     final check = completeRegistration(value, g);
@@ -88,6 +83,7 @@ base class DIBase {
             ),
           );
       if (b.isSome()) {
+        // ignore: invalid_use_of_visible_for_testing_member
         final test = (b.unwrap() as Dependency).value.sync().unwrap().value;
         if (test.isErr()) {
           return test.cast();
@@ -224,6 +220,7 @@ base class DIBase {
       get<T>(
         groupEntity: groupEntity,
         traverse: traverse,
+        // ignore: invalid_use_of_visible_for_testing_member
       ).unwrap().value,
       (e) => e.unwrap(),
     );
@@ -255,6 +252,7 @@ base class DIBase {
     if (resolvable.isAsync()) {
       return const None();
     }
+    // ignore: invalid_use_of_visible_for_testing_member
     final result = resolvable.sync().unwrap().value;
     if (result.isErr()) {
       return const None();
@@ -301,6 +299,7 @@ base class DIBase {
 
     return Some(
       Async.unsafe(
+        // ignore: invalid_use_of_visible_for_testing_member
         () => value.async().unwrap().value.then((e) {
           final value = e.unwrap();
           registry.removeDependency<T>(groupEntity: g);
@@ -377,6 +376,7 @@ base class DIBase {
 
       if (test.isSome()) {
         final some = test.unwrap();
+        // ignore: invalid_use_of_visible_for_testing_member
         final completer = some.value.sync().unwrap().value.unwrap();
         return completer.resolvable;
       }

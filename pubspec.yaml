@@ -31,10 +31,9 @@ environment:
 ## -----------------------------------------------------------------------------
 
 dependencies:
-  df_safer_dart:
-    path: ../df_safer_dart
-  df_type:
-    path: ../df_type
+  df_debouncer: ^0.3.0
+  df_safer_dart: ^0.5.1
+  df_type: ^0.9.0
 
   collection: ^1.18.0
   meta: ^1.15.0
