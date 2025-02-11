@@ -16,61 +16,28 @@ import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-base mixin SupportsConstructorsMixinK on SupportsMixinK {
-  Resolvable<void> resetSingletonK(
-    Entity typeEntity, {
-    Entity groupEntity = const DefaultEntity(),
-  }) {
-    final temp = getK(
-      TypeEntity(Lazy, [typeEntity]),
-      groupEntity: groupEntity,
-    );
-    if (temp.isSome()) {
-      return temp.unwrap().map((e) => (e as Lazy)..resetSingleton());
-    }
-    return const Sync(Ok(Object()));
-  }
-
-  Resolvable<Option<Object>> getSingletonK(
-    Entity typeEntity, {
+base mixin SupportsServicesMixinK on SupportsConstructorsMixinK, SupportsMixinK {
+  Resolvable<Option<Service>> getServiceSingletonK(
+    TypeEntity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getK(
-      TypeEntity(Lazy, [typeEntity]),
+    return getSingletonK(
+      typeEntity,
       groupEntity: groupEntity,
       traverse: traverse,
-    ).map((e) => e.map((e) => (e as Lazy).singleton)).reduce<Object>();
+    ).map((e) => e.map((e) => e as Service));
   }
 
-  FutureOr<Object> getSingletonUnsafeK(
-    Entity typeEntity, {
+  Resolvable<Option<Service>> getServiceFactoryK(
+    TypeEntity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return consec(
-      getUnsafeK(
-        TypeEntity(Lazy, [typeEntity]),
-        groupEntity: groupEntity,
-        traverse: traverse,
-      ),
-      (e) => consec(
-        // ignore: invalid_use_of_visible_for_testing_member
-        (e as Lazy).singleton.value,
-        (e) => e.unwrap(),
-      ),
-    );
-  }
-
-  Resolvable<Option<Object>> getFactoryK(
-    Entity typeEntity, {
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    return getK(
-      TypeEntity(Lazy, [typeEntity]),
+    return getFactoryK(
+      typeEntity,
       groupEntity: groupEntity,
       traverse: traverse,
-    ).map((e) => e.map((e) => (e as Lazy).factory)).reduce<Object>();
+    ).map((e) => e.map((e) => e as Service));
   }
 }

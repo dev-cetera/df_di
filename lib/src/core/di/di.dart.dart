@@ -25,6 +25,7 @@ final class DI extends DIBase
         SupportsConstructorsMixinT,
         SupportsChildrenMixin,
         SupportsServicesMixin,
+        SupportsServicesMixinK,
         SupportsServicesMixinT {
   /// A predefined container recommended for application-wide dependencies.
   /// This container serves as the parent for other containers.
