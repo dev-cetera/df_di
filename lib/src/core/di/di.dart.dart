@@ -29,33 +29,40 @@ final class DI extends DIBase
         SupportsServicesMixinT {
   /// A predefined container recommended for application-wide dependencies.
   /// This container serves as the parent for other containers.
-  static final app = DI();
+  static final root = DI();
 
   /// A predefined container recommended for global dependencies. This
-  /// container is a child of [app].
-  static DI get global => app.child(groupEntity: const GlobalEntity());
+  /// container is a child of [root].
+  @pragma('vm:prefer-inline')
+  static DI get global => root.child(groupEntity: const GlobalEntity());
 
   /// A predefined container recommended for session-specific dependencies.
   /// This container is a child of [global].
+  @pragma('vm:prefer-inline')
   static DI get session => global.child(groupEntity: const SessionEntity());
 
   /// A predefined container recommended for user-specific dependencies.
   /// This container is a child of [session].
+  @pragma('vm:prefer-inline')
   static DI get user => session.child(groupEntity: const UserEntity());
 
   /// A predefined container recommended for theme-related objects.
-  /// This container is a child of [app].
-  static DI get theme => app.child(groupEntity: const ThemeEntity());
+  /// This container is a child of [root].
+  @pragma('vm:prefer-inline')
+  static DI get theme => root.child(groupEntity: const ThemeEntity());
 
   /// A predefined container recommended for objects intended for development
-  /// environments. This container is a child of [app].
-  static DI get dev => app.child(groupEntity: const DevEntity());
+  /// environments. This container is a child of [root].
+  @pragma('vm:prefer-inline')
+  static DI get dev => root.child(groupEntity: const DevEntity());
 
   /// A predefined container recommended for objects intended for production
-  /// environments. This container is a child of [app].
-  static DI get prod => app.child(groupEntity: const ProdEntity());
+  /// environments. This container is a child of [root].
+  @pragma('vm:prefer-inline')
+  static DI get prod => root.child(groupEntity: const ProdEntity());
 
   /// A predefined container recommended for objects intended for testing
-  /// environments. This container is a child of [app].
-  static DI get test => app.child(groupEntity: const TestEntity());
+  /// environments. This container is a child of [root].
+  @pragma('vm:prefer-inline')
+  static DI get test => root.child(groupEntity: const TestEntity());
 }

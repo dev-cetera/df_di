@@ -29,7 +29,6 @@ void main() {
         di.getUnsafe<DI>(),
       );
       di.unregister<DI>();
-      print(di.get<DI>());
       expect(
         di.get<DI>().isNone(),
         true,
@@ -46,28 +45,32 @@ void main() {
         child,
         di.getSingletonUnsafe<DI>(),
       );
+      expect(
+        true,
+        di.isRegistered<DI>(),
+      );
       di.unregister<DI>();
       expect(
-        child,
-        di.getFactory<DI>(),
+        false,
+        di.isRegistered<DI>(),
       );
     },
   );
-  // test(
-  //   '- Testing singletons',
-  //   () async {
-  //     final c1 = DI();
-  //     c1.registerValue<int>(1);
-  //     final c4 = c1.child().child().child().child();
-  //     expect(
-  //       1,
-  //       c4.getUnsafe<int>(),
-  //     );
-  //     c1.unregister<int>();
-  //     expect(
-  //       true,
-  //       c4.getOrNone<int>().isNone(),
-  //     );
-  //   },
-  // );
+  test(
+    'Testing children of children.',
+    () async {
+      final c1 = DI();
+      c1.registerValue<int>(1);
+      final c4 = c1.child().child().child().child();
+      expect(
+        1,
+        c4.getUnsafe<int>(),
+      );
+      c1.unregister<int>();
+      expect(
+        true,
+        c4.getSyncOrNone<int>().isNone(),
+      );
+    },
+  );
 }

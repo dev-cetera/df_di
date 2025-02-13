@@ -91,7 +91,7 @@ final class DIRegistry {
         : const DefaultEntity();
     final typeEntity = dependency.typeEntity;
     final currentDep = Option.fromNullable(_state[groupEntity]?[typeEntity]);
-    // ignore: invalid_use_of_visible_for_testing_member
+
     if (currentDep.isNone() || currentDep.unwrap() != dependency) {
       (_state[groupEntity] ??= {})[typeEntity] = dependency;
       onChange.ifSome((e) => e.unwrap()());

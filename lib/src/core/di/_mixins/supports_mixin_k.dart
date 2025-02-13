@@ -11,12 +11,32 @@
 //.title~
 
 // ignore_for_file: invalid_use_of_protected_member
+// ignore_for_file: invalid_use_of_visible_for_testing_member
 
 import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 base mixin SupportsMixinK on DIBase {
+  //
+  //
+  //
+
+  @protected
+  @pragma('vm:prefer-inline')
+  Object getSyncUnsafeK(
+    Entity typeEntity, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return getSyncK(
+      typeEntity,
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).unwrap().value.unwrap();
+  }
+
+  @protected
   Option<Sync<Object>> getSyncK(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
@@ -38,6 +58,25 @@ base mixin SupportsMixinK on DIBase {
     );
   }
 
+  @protected
+  @pragma('vm:prefer-inline')
+  Future<Object> getAsyncUnsafeK(
+    Entity typeEntity, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return Future.sync(() async {
+      final result = await getAsyncK(
+        typeEntity,
+        groupEntity: groupEntity,
+        traverse: traverse,
+      ).unwrap().value;
+      return result.unwrap();
+    });
+  }
+
+  @protected
+  @pragma('vm:prefer-inline')
   Option<Async<Object>> getAsyncK(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
@@ -50,8 +89,8 @@ base mixin SupportsMixinK on DIBase {
     ).map((e) => e.toAsync());
   }
 
-  // TODO: NEW NEW NEW
   @protected
+  @pragma('vm:prefer-inline')
   FutureOr<Object> getUnsafeK(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
@@ -62,10 +101,35 @@ base mixin SupportsMixinK on DIBase {
         typeEntity,
         groupEntity: groupEntity,
         traverse: traverse,
-        // ignore: invalid_use_of_visible_for_testing_member
       ).unwrap().value,
       (e) => e.unwrap(),
     );
+  }
+
+  @protected
+  Option<Object> getSyncOrNoneK(
+    Entity typeEntity, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    final option = getK(
+      typeEntity,
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
+    if (option.isNone()) {
+      return const None();
+    }
+    final resolvable = option.unwrap();
+    if (resolvable.isAsync()) {
+      return const None();
+    }
+    final result = resolvable.sync().unwrap().value;
+    if (result.isErr()) {
+      return const None();
+    }
+    final value = result.unwrap();
+    return Some(value);
   }
 
   @protected
@@ -94,7 +158,6 @@ base mixin SupportsMixinK on DIBase {
 
     return Some(
       Async.unsafe(
-        // ignore: invalid_use_of_visible_for_testing_member
         () => value.async().unwrap().value.then((e) {
           final value = e.unwrap();
           registry.removeDependencyK(typeEntity, groupEntity: g);
@@ -120,7 +183,6 @@ base mixin SupportsMixinK on DIBase {
     required Dependency<Object> dependency,
     bool checkExisting = false,
   }) {
-    // ignore: invalid_use_of_visible_for_testing_member
     final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
     if (checkExisting) {
       final option = getDependencyK(
@@ -149,7 +211,7 @@ base mixin SupportsMixinK on DIBase {
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
     final option = registry.getDependencyK(typeEntity, groupEntity: g);
-    var temp = option.map((e) => Ok(e).result());
+    var temp = option.map((e) => Ok(e).asResult());
     if (option.isNone() && traverse) {
       for (final parent in parents) {
         temp = (parent as SupportsMixinK).getDependencyK(
@@ -256,22 +318,22 @@ base mixin SupportsMixinK on DIBase {
     }
     if (completers.isSome()) {
       final option = completers.unwrap().registry.getDependencyK(
-            TypeEntity(SafeCompleter, [typeEntity]),
+            TypeEntity(SafeFinisher, [typeEntity]),
             groupEntity: g,
           );
 
       if (option.isSome()) {
         final some = option.unwrap();
-        // ignore: invalid_use_of_visible_for_testing_member
+
         final completer = some.value.sync().unwrap().value.unwrap();
-        return (completer as SafeCompleter).resolvable;
+        return (completer as SafeFinisher).resolvable;
       }
     } else {
       completers = Some(DIBase());
     }
-    final completer = SafeCompleter();
+    final completer = SafeFinisher();
     completers.unwrap().registry.setDependency(
-          Dependency<SafeCompleter>(
+          Dependency<SafeFinisher>(
             Sync(Ok(completer)),
             metadata: Some(
               DependencyMetadata(
@@ -282,11 +344,10 @@ base mixin SupportsMixinK on DIBase {
         );
     return completer.resolvable.map((e) {
       completers.unwrap().registry.removeDependencyK(
-            TypeEntity(SafeCompleter, [typeEntity]),
+            TypeEntity(SafeFinisher, [typeEntity]),
             groupEntity: g,
           );
       return e;
-      //return get<T>();
     });
   }
 }

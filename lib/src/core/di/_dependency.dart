@@ -24,7 +24,6 @@ final class Dependency<T extends Object> {
     this.metadata = const None(),
   }) {
     if (this.metadata.isSome()) {
-      // ignore: invalid_use_of_visible_for_testing_member
       final a = this.metadata.unwrap();
       if (a._initialType.isSome()) {
         a._initialType = Some(value.runtimeType);
@@ -46,7 +45,6 @@ final class Dependency<T extends Object> {
   /// Returns the `preemptivetypeEntity` of [metadata] if not `null` or the
   /// runtime type key of [value].
   Entity get typeEntity {
-    // ignore: invalid_use_of_visible_for_testing_member
     final preemptivetypeEntity = metadata.unwrap().preemptivetypeEntity;
     if (preemptivetypeEntity.isDefault()) {
       return TypeEntity(value.runtimeType);
@@ -72,7 +70,6 @@ final class Dependency<T extends Object> {
     Option<DependencyMetadata> metadata = const None(),
   }) {
     return Dependency<T>(
-      // ignore: invalid_use_of_visible_for_testing_member
       value.isNone() ? this.value : value.unwrap(),
       metadata: metadata,
     );

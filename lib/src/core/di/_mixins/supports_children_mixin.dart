@@ -56,7 +56,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     if (raw.isErr()) {
       return Some(raw.err().castErr());
     }
-    // ignore: invalid_use_of_visible_for_testing_member
+
     return raw.unwrap().value.swap();
   }
 
@@ -89,7 +89,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     bool Function(FutureOr<DI>)? validator,
     OnUnregisterCallback<FutureOr<DI>>? onUnregister,
   }) {
-    final existingChild = getOrNone<DI>(groupEntity: groupEntity);
+    final existingChild = getSyncOrNone<DI>(groupEntity: groupEntity);
     if (existingChild.isSome()) {
       return existingChild.unwrap();
     }

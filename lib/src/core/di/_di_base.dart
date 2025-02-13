@@ -11,6 +11,7 @@
 //.title~
 
 // ignore_for_file: invalid_use_of_protected_member
+// ignore_for_file: invalid_use_of_visible_for_testing_member
 
 import '/src/_common.dart';
 
@@ -85,19 +86,19 @@ base class DIBase {
   ) {
     if (completers.isSome()) {
       final a = completers.unwrap();
-      final b = a.registry.getDependency<SafeCompleter<T>>(groupEntity: groupEntity).or(
+      final b = a.registry.getDependency<SafeFinisher<T>>(groupEntity: groupEntity).or(
             a.registry.getDependencyK(
-              TypeEntity(SafeCompleter<Object>, [value.runtimeType]),
+              TypeEntity(SafeFinisher<Object>, [value.runtimeType]),
               groupEntity: groupEntity,
             ),
           );
       if (b.isSome()) {
-        // ignore: invalid_use_of_visible_for_testing_member
+        //
         final test = (b.unwrap() as Dependency).value.sync().unwrap().value;
         if (test.isErr()) {
           return test.cast();
         }
-        (test.unwrap() as SafeCompleter).resolve(value);
+        (test.unwrap() as SafeFinisher).resolve(value);
       }
       // TODO:
       // for (final child in children) {
@@ -119,7 +120,6 @@ base class DIBase {
       'T must be specified and cannot be Object.',
     );
 
-    // ignore: invalid_use_of_visible_for_testing_member
     final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
     if (checkExisting) {
       final option = getDependency<T>(
@@ -179,6 +179,17 @@ base class DIBase {
     return false;
   }
 
+  @pragma('vm:prefer-inline')
+  T getSyncUnsafe<T extends Object>({
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return getSync<T>(
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).unwrap().value.unwrap();
+  }
+
   Option<Sync<T>> getSync<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
@@ -198,6 +209,21 @@ base class DIBase {
     );
   }
 
+  @pragma('vm:prefer-inline')
+  Future<T> getAsyncUnsafe<T extends Object>({
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return Future.sync(() async {
+      final result = await getAsync<T>(
+        groupEntity: groupEntity,
+        traverse: traverse,
+      ).unwrap().value;
+      return result.unwrap();
+    });
+  }
+
+  @pragma('vm:prefer-inline')
   Option<Async<T>> getAsync<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
@@ -208,6 +234,7 @@ base class DIBase {
     ).map((e) => e.toAsync());
   }
 
+  @pragma('vm:prefer-inline')
   FutureOr<T> getUnsafe<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
@@ -216,24 +243,23 @@ base class DIBase {
       get<T>(
         groupEntity: groupEntity,
         traverse: traverse,
-        // ignore: invalid_use_of_visible_for_testing_member
       ).unwrap().value,
       (e) => e.unwrap(),
     );
   }
 
+  @pragma('vm:prefer-inline')
   Option<T> call<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getOrNone<T>(
+    return getSyncOrNone<T>(
       groupEntity: groupEntity,
       traverse: traverse,
     );
   }
 
-  @pragma('vm:prefer-inline')
-  Option<T> getOrNone<T extends Object>({
+  Option<T> getSyncOrNone<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
@@ -248,7 +274,6 @@ base class DIBase {
     if (resolvable.isAsync()) {
       return const None();
     }
-    // ignore: invalid_use_of_visible_for_testing_member
     final result = resolvable.sync().unwrap().value;
     if (result.isErr()) {
       return const None();
@@ -281,7 +306,6 @@ base class DIBase {
 
     return Some(
       Async.unsafe(
-        // ignore: invalid_use_of_visible_for_testing_member
         () => value.async().unwrap().value.then((e) {
           final value = e.unwrap();
           registry.removeDependency<T>(groupEntity: g);
@@ -306,7 +330,7 @@ base class DIBase {
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
     final test = registry.getDependency<T>(groupEntity: g);
-    var temp = test.map((e) => Ok(e).result());
+    var temp = test.map((e) => Ok(e).asResult());
     if (test.isNone() && traverse) {
       for (final parent in parents) {
         temp = parent.getDependency<T>(
@@ -330,22 +354,21 @@ base class DIBase {
       return test.some().unwrap().value;
     }
     if (completers.isSome()) {
-      final test = completers.unwrap().registry.getDependency<SafeCompleter<T>>(
+      final test = completers.unwrap().registry.getDependency<SafeFinisher<T>>(
             groupEntity: g,
           );
 
       if (test.isSome()) {
         final some = test.unwrap();
-        // ignore: invalid_use_of_visible_for_testing_member
         final completer = some.value.sync().unwrap().value.unwrap();
         return completer.resolvable;
       }
     } else {
       completers = Some(DIBase());
     }
-    final completer = SafeCompleter<T>();
+    final completer = SafeFinisher<T>();
     completers.unwrap().registry.setDependency(
-          Dependency<SafeCompleter<T>>(
+          Dependency<SafeFinisher<T>>(
             Sync(Ok(completer)),
             metadata: Some(
               DependencyMetadata(
@@ -355,7 +378,7 @@ base class DIBase {
           ),
         );
     return completer.resolvable.map((e) {
-      completers.unwrap().registry.removeDependency<SafeCompleter<T>>(
+      completers.unwrap().registry.removeDependency<SafeFinisher<T>>(
             groupEntity: g,
           );
       return e;
@@ -363,8 +386,8 @@ base class DIBase {
   }
 
   Resolvable<List<Dependency>> unregisterAll({
-    Option<OnUnregisterCallback<Dependency>> onBeforeUnregister = const None(),
-    Option<OnUnregisterCallback<Dependency>> onAfterUnregister = const None(),
+    OnUnregisterCallback<Dependency>? onBeforeUnregister,
+    OnUnregisterCallback<Dependency>? onAfterUnregister,
   }) {
     final results = List.of(registry.sortedDependencies);
     final sequential = SafeSequential();
@@ -372,7 +395,7 @@ base class DIBase {
       sequential.addAll(
         unsafe: [
           (_) {
-            onBeforeUnregister.ifSome((e) => e.unwrap()(dependency));
+            onBeforeUnregister?.call(dependency);
             return null;
           },
           (_) {
@@ -387,7 +410,7 @@ base class DIBase {
                 .map((e) => e.onUnregister.ifSome((e) => e.unwrap()(dependency)));
           },
           (_) {
-            onAfterUnregister.ifSome((e) => e.unwrap()(dependency));
+            onAfterUnregister?.call(dependency);
             return null;
           },
         ],

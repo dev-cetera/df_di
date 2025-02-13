@@ -17,6 +17,23 @@ import '/src/_common.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 base mixin SupportsMixinT on SupportsMixinK {
+  //
+  //
+  //
+
+  @pragma('vm:prefer-inline')
+  Object getSyncUnsafeT(
+    Type type, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return getSyncUnsafeK(
+      TypeEntity(type),
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
+  }
+
   @pragma('vm:prefer-inline')
   Option<Sync<Object>> getSyncT(
     Type type, {
@@ -24,6 +41,19 @@ base mixin SupportsMixinT on SupportsMixinK {
     bool traverse = true,
   }) {
     return getSyncK(
+      TypeEntity(type),
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
+  }
+
+  @pragma('vm:prefer-inline')
+  Future<Object> getAsyncUnsafeT(
+    Type type, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return getAsyncUnsafeK(
       TypeEntity(type),
       groupEntity: groupEntity,
       traverse: traverse,
@@ -43,7 +73,6 @@ base mixin SupportsMixinT on SupportsMixinK {
     );
   }
 
-  // TODO: NEW NEW NEW
   @pragma('vm:prefer-inline')
   FutureOr<Object> getUnsafeT(
     Type type, {
@@ -51,6 +80,19 @@ base mixin SupportsMixinT on SupportsMixinK {
     bool traverse = true,
   }) {
     return getUnsafeK(
+      TypeEntity(type),
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
+  }
+
+  @pragma('vm:prefer-inline')
+  Option<Object> getSyncOrNoneT(
+    Type type, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return getSyncOrNoneK(
       TypeEntity(type),
       groupEntity: groupEntity,
       traverse: traverse,
