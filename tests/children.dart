@@ -23,7 +23,7 @@ void main() {
     () async {
       final di = DI();
       final child = DI();
-      di.registerValue(child);
+      di.register(child);
       expect(
         child,
         di.getUnsafe<DI>(),
@@ -37,13 +37,13 @@ void main() {
   );
   test(
     'Testing the lazy registration of a DI() instance, getting it and unregistering it.',
-    () async {
+    () {
       final di = DI();
       final child = DI();
       di.registerLazy<DI>(() => Sync(Ok(child)));
       expect(
         child,
-        di.getSingletonUnsafe<DI>(),
+        di.getSingleton<DI>().unwrap().unwrap(),
       );
       expect(
         true,
@@ -60,7 +60,7 @@ void main() {
     'Testing children of children.',
     () async {
       final c1 = DI();
-      c1.registerValue<int>(1);
+      c1.register<int>(1);
       final c4 = c1.child().child().child().child();
       expect(
         1,

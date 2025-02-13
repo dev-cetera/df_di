@@ -17,25 +17,40 @@ import '/src/_common.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
-  Result<Resolvable<TService>> registerService<TService extends Service>({
-    required FutureOr<TService> Function() unsafe,
+  //
+  //
+  //
+
+  Result<void> registerAndInitService<TService extends Service>(
+    FutureOr<TService> service, {
     Object? params,
     Entity groupEntity = const DefaultEntity(),
   }) {
     return register<TService>(
-      unsafe: () {
-        return consec(
-          unsafe(),
-          (e) => consec(
-            e.init(params),
-            (_) => e,
-          ),
-        );
-      },
+      consec(
+        service,
+        (e) => consec(
+          e.init(params),
+          (_) => e,
+        ),
+      ),
       groupEntity: groupEntity,
     );
   }
 
+  @pragma('vm:prefer-inline')
+  Result<void> registerLazyServiceUnsafe<TService extends Service>({
+    required FutureOr<TService> Function() constructor,
+    Object? params,
+    Entity groupEntity = const DefaultEntity(),
+  }) {
+    return registerLazy<TService>(
+      () => Resolvable.unsafe(constructor).map((e) => e..init(params)),
+      groupEntity: groupEntity,
+    );
+  }
+
+  @pragma('vm:prefer-inline')
   Result<void> registerLazyService<TService extends Service>({
     required Resolvable<TService> Function() constructor,
     Object? params,
@@ -47,7 +62,19 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
     );
   }
 
-  ResolvableOption<TService> getServiceSingleton<TService extends Service>({
+  @pragma('vm:prefer-inline')
+  Future<TService> getServiceSingletonAsync<TService extends Service>({
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return getServiceFactorySafe<TService>(
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).unwrap().toAsync().unwrap();
+  }
+
+  @pragma('vm:prefer-inline')
+  OptionResolvable<TService> getServiceSingletonSafe<TService extends Service>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
@@ -57,7 +84,19 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
     );
   }
 
-  ResolvableOption<TService> getServiceFactory<TService extends Service>({
+  @pragma('vm:prefer-inline')
+  TService getServiceFactorySync<TService extends Service>({
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return getServiceFactorySafe<TService>(
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).unwrap().sync().unwrap().unwrap();
+  }
+
+  @pragma('vm:prefer-inline')
+  OptionResolvable<TService> getServiceFactorySafe<TService extends Service>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {

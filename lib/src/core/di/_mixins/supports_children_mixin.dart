@@ -11,6 +11,7 @@
 //.title~
 
 // ignore_for_file: invalid_use_of_protected_member
+// ignore_for_file: invalid_use_of_visible_for_testing_member
 
 import '/src/_common.dart';
 
@@ -52,12 +53,16 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     if (_children.isNone()) {
       return const None();
     }
-    final raw = _children.unwrap().getSingleton<DI>(groupEntity: g).sync();
-    if (raw.isErr()) {
-      return Some(raw.err().castErr());
+    final option = _children.unwrap().getSingleton<DI>(groupEntity: g);
+    if (option.isNone()) {
+      return const None();
     }
-
-    return raw.unwrap().value.swap();
+    final result = option.unwrap().sync();
+    if (result.isErr()) {
+      return Some(result.err().castErr());
+    }
+    final value = result.unwrap().value;
+    return Some(value);
   }
 
   Option<Resolvable<Object>> unregisterChild({
@@ -86,8 +91,6 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
 
   DI child({
     Entity groupEntity = const DefaultEntity(),
-    bool Function(FutureOr<DI>)? validator,
-    OnUnregisterCallback<FutureOr<DI>>? onUnregister,
   }) {
     final existingChild = getSyncOrNone<DI>(groupEntity: groupEntity);
     if (existingChild.isSome()) {
@@ -95,6 +98,5 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     }
     registerChild(groupEntity: groupEntity);
     return getChild(groupEntity: groupEntity).unwrap().unwrap();
-    //return getSingleton<DI>(groupEntity: groupEntity).unwrapSync();
   }
 }

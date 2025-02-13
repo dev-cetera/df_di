@@ -31,32 +31,31 @@ base class DIBase {
   final parents = <DIBase>{};
 
   /// Child containers.
-  Iterable<DIBase> get children =>
-      registry.unsortedDependencies.map((e) => e.value).whereType<DIBase>();
+  Iterable<DI> get children => registry.unsortedDependencies.map((e) => e.value).whereType<DI>();
 
   /// A key that identifies the current group in focus for dependency management.
   Entity focusGroup = const DefaultEntity();
 
   /// A container storing Future completions.
   @protected
-  Option<DIBase> completers = const None();
+  Option<DI> finishers = const None();
 
   @protected
   int _indexIncrementer = 0;
 
   @pragma('vm:prefer-inline')
-  Result<Resolvable<T>> registerValue<T extends Object>(
+  Result<void> register<T extends Object>(
     FutureOr<T> value, {
     Entity groupEntity = const DefaultEntity(),
   }) {
-    return register(
-      unsafe: () => value,
+    return registerUnsafe(
+      () => value,
       groupEntity: groupEntity,
     );
   }
 
-  Result<Resolvable<T>> register<T extends Object>({
-    required FutureOr<T> Function() unsafe,
+  Result<void> registerUnsafe<T extends Object>(
+    FutureOr<T> Function() unsafe, {
     Entity groupEntity = const DefaultEntity(),
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
@@ -65,18 +64,18 @@ base class DIBase {
       groupEntity: g,
     );
     final value = Resolvable.unsafe(unsafe);
-    final check = completeRegistration(value, g);
+    final check = completeRegistration<T>(value, g);
     if (check.isErr()) {
       return check.err().castErr();
     }
-    final result = _registerDependency(
+    final result = registerDependency(
       dependency: Dependency(
         value,
         metadata: Some(metadata),
       ),
       checkExisting: true,
     );
-    return result.map((e) => e.value);
+    return result;
   }
 
   @protected
@@ -84,34 +83,22 @@ base class DIBase {
     Resolvable<T> value,
     Entity groupEntity,
   ) {
-    if (completers.isSome()) {
-      final a = completers.unwrap();
-      final b = a.registry.getDependency<SafeFinisher<T>>(groupEntity: groupEntity).or(
-            a.registry.getDependencyK(
-              TypeEntity(SafeFinisher<Object>, [value.runtimeType]),
-              groupEntity: groupEntity,
-            ),
-          );
-      if (b.isSome()) {
-        //
-        final test = (b.unwrap() as Dependency).value.sync().unwrap().value;
+    if (finishers.isSome()) {
+      final finishers1 = (finishers.unwrap()).child(groupEntity: TypeEntity(T));
+      final option = finishers1.registry.getDependency<SafeFinisher>(groupEntity: groupEntity);
+      if (option.isSome()) {
+        final test = (option.unwrap() as Dependency).value.sync().unwrap().value;
         if (test.isErr()) {
           return test.cast();
         }
         (test.unwrap() as SafeFinisher).resolve(value);
       }
-      // TODO:
-      // for (final child in children) {
-      //   final test = child.completeRegistration(value, groupEntity);
-      //   if (test.isErr()) {
-      //     test.cast();
-      //   }
-      // }
     }
     return const Ok(None());
   }
 
-  Result<Dependency<T>> _registerDependency<T extends Object>({
+  @protected
+  Result<Dependency<T>> registerDependency<T extends Object>({
     required Dependency<T> dependency,
     bool checkExisting = false,
   }) {
@@ -309,7 +296,7 @@ base class DIBase {
         () => value.async().unwrap().value.then((e) {
           final value = e.unwrap();
           registry.removeDependency<T>(groupEntity: g);
-          _registerDependency<T>(
+          registerDependency<T>(
             dependency: Dependency<T>(
               Sync(Ok(value)),
               metadata: option.unwrap().unwrap().metadata,
@@ -353,34 +340,35 @@ base class DIBase {
     if (test.isSome()) {
       return test.some().unwrap().value;
     }
-    if (completers.isSome()) {
-      final test = completers.unwrap().registry.getDependency<SafeFinisher<T>>(
-            groupEntity: g,
-          );
-
-      if (test.isSome()) {
-        final some = test.unwrap();
-        final completer = some.value.sync().unwrap().value.unwrap();
-        return completer.resolvable;
+    if (finishers.isSome()) {
+      final finishers1 = (finishers.unwrap()).child(groupEntity: TypeEntity(T));
+      final option = finishers1.registry.getDependency<SafeFinisher<T>>(
+        groupEntity: g,
+      );
+      if (option.isSome()) {
+        final some = option.unwrap();
+        final finisher = some.value.sync().unwrap().value.unwrap();
+        return finisher.resolvable;
       }
     } else {
-      completers = Some(DIBase());
+      finishers = Some(DI());
     }
-    final completer = SafeFinisher<T>();
-    completers.unwrap().registry.setDependency(
-          Dependency<SafeFinisher<T>>(
-            Sync(Ok(completer)),
-            metadata: Some(
-              DependencyMetadata(
-                groupEntity: g,
-              ),
-            ),
-          ),
-        );
-    return completer.resolvable.map((e) {
-      completers.unwrap().registry.removeDependency<SafeFinisher<T>>(
+    final finisher = SafeFinisher<T>();
+    final finishers1 = (finishers.unwrap()).child(groupEntity: TypeEntity(T));
+    finishers1.registry.setDependency(
+      Dependency<SafeFinisher<T>>(
+        Sync(Ok(finisher)),
+        metadata: Some(
+          DependencyMetadata(
             groupEntity: g,
-          );
+          ),
+        ),
+      ),
+    );
+    return finisher.resolvable.map((e) {
+      finishers1.registry.removeDependency<SafeFinisher<T>>(
+        groupEntity: g,
+      );
       return e;
     });
   }

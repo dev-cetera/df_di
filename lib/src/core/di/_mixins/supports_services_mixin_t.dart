@@ -17,6 +17,9 @@ import '/src/_common.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 base mixin SupportsServicesMixinT on SupportsServicesMixinK {
+  //
+  //
+  //
   @pragma('vm:prefer-inline')
   ResolvableOption<Service> getServiceSingletonT(
     Type type, {
@@ -32,7 +35,7 @@ base mixin SupportsServicesMixinT on SupportsServicesMixinK {
 
   @pragma('vm:prefer-inline')
   ResolvableOption<Service> getServiceFactoryT(
-       Type type,  {
+    Type type, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {

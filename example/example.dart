@@ -35,7 +35,7 @@ Future<void> main() async {
 
   di.registerLazy<List<int>>(() => Async.unsafe(() async => [123]));
   print(di.registry.state);
-  final value = await di.getSingleton<List<int>>().unwrapAsync();
+  final value = await di.getSingletonUnsafe<List<int>>();
   print(value);
 
   // await di.getSingleton<List<int>>().value;

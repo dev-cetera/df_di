@@ -166,7 +166,7 @@ base mixin SupportsMixinK on DIBase {
                   preemptivetypeEntity: TypeEntity(Sync, [typeEntity]),
                 ),
               );
-          _registerDependencyK(
+          registerDependencyK(
             dependency: Dependency(
               Sync(Ok(value)),
               metadata: metadata,
@@ -179,7 +179,8 @@ base mixin SupportsMixinK on DIBase {
     );
   }
 
-  Result<Dependency<Object>> _registerDependencyK({
+  @protected
+  Result<Dependency<Object>> registerDependencyK({
     required Dependency<Object> dependency,
     bool checkExisting = false,
   }) {
@@ -316,37 +317,36 @@ base mixin SupportsMixinK on DIBase {
     if (option.isSome()) {
       return option.some().unwrap().value;
     }
-    if (completers.isSome()) {
-      final option = completers.unwrap().registry.getDependencyK(
-            TypeEntity(SafeFinisher, [typeEntity]),
-            groupEntity: g,
-          );
 
+    if (finishers.isSome()) {
+      final finishers1 = (finishers.unwrap()).child(groupEntity: typeEntity);
+      final option = finishers1.registry.getDependency<SafeFinisher>(
+        groupEntity: g,
+      );
       if (option.isSome()) {
         final some = option.unwrap();
-
-        final completer = some.value.sync().unwrap().value.unwrap();
-        return (completer as SafeFinisher).resolvable;
+        final finisher = some.value.sync().unwrap().value.unwrap();
+        return finisher.resolvable;
       }
     } else {
-      completers = Some(DIBase());
+      finishers = Some(DI());
     }
-    final completer = SafeFinisher();
-    completers.unwrap().registry.setDependency(
-          Dependency<SafeFinisher>(
-            Sync(Ok(completer)),
-            metadata: Some(
-              DependencyMetadata(
-                groupEntity: g,
-              ),
-            ),
-          ),
-        );
-    return completer.resolvable.map((e) {
-      completers.unwrap().registry.removeDependencyK(
-            TypeEntity(SafeFinisher, [typeEntity]),
+    final finisher = SafeFinisher();
+    final finishers1 = (finishers.unwrap()).child(groupEntity: typeEntity);
+    finishers1.registry.setDependency(
+      Dependency<SafeFinisher>(
+        Sync(Ok(finisher)),
+        metadata: Some(
+          DependencyMetadata(
             groupEntity: g,
-          );
+          ),
+        ),
+      ),
+    );
+    return finisher.resolvable.map((e) {
+      finishers1.registry.removeDependency<SafeFinisher>(
+        groupEntity: g,
+      );
       return e;
     });
   }

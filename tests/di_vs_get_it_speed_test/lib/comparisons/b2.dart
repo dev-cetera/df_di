@@ -12,7 +12,7 @@ Future<void> b2() async {
     },
     di: () {
       final container2 = DI();
-      container2.registerValue<Map<int, String>>({1: 'some data'});
+      container2.register<Map<int, String>>({1: 'some data'});
     },
   );
 }

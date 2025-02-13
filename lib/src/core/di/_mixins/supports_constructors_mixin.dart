@@ -17,11 +17,15 @@ import '/src/_common.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 base mixin SupportsConstructorsMixin on SupportsMixinT {
+  //
+  //
+  //
+
   Result<void> registerLazy<T extends Object>(
     LazyConstructor<T> constructor, {
     Entity groupEntity = const DefaultEntity(),
   }) {
-    return registerValue<Lazy<T>>(
+    return register<Lazy<T>>(
       Lazy<T>(constructor),
       groupEntity: groupEntity,
     );
@@ -37,29 +41,6 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
     return const Sync(Ok(Object()));
   }
 
-  // Option<T> getSingletonSyncOrNone<T extends Object>({
-  //   Entity groupEntity = const DefaultEntity(),
-  //   bool traverse = true,
-  // }) {
-  //   final a = getSingleton<T>(
-  //     groupEntity: groupEntity,
-  //     traverse: traverse,
-  //   );
-  //   if (a.isAsync()) {
-  //     return const None();
-  //   }
-  //   final b = a.sync();
-  //   if (b.isErr()) {
-  //     return const None();
-  //   }
-  //
-  //   final c = b.unwrap().value;
-  //   if (c.isErr()) {
-  //     return const None();
-  //   }
-  //   return c.unwrap();
-  // }
-
   @pragma('vm:prefer-inline')
   FutureOr<T> getSingletonUnsafe<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
@@ -74,14 +55,19 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
     );
   }
 
-  ResolvableOption<T> getSingleton<T extends Object>({
+  OptionResolvable<T> getSingleton<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return get<Lazy<T>>(
+    final option = get<Lazy<T>>(
       groupEntity: groupEntity,
       traverse: traverse,
-    ).map((e) => e.map((e) => e.singleton)).reduce<T>();
+    );
+    if (option.isNone()) {
+      return const None();
+    }
+    final resolvable = option.unwrap().map((e) => e.singleton).merge();
+    return Some(resolvable);
   }
 
   @pragma('vm:prefer-inline')
@@ -98,13 +84,18 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
     );
   }
 
-  ResolvableOption<T> getFactory<T extends Object>({
+  OptionResolvable<T> getFactory<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return get<Lazy<T>>(
+    final option = get<Lazy<T>>(
       groupEntity: groupEntity,
       traverse: traverse,
-    ).map((e) => e.map((e) => e.factory)).reduce<T>();
+    );
+    if (option.isNone()) {
+      return const None();
+    }
+    final resolvable = option.unwrap().map((e) => e.factory).merge();
+    return Some(resolvable);
   }
 }
