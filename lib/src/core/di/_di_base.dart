@@ -192,7 +192,7 @@ base class DIBase {
           : Sync(
               const Err(
                 stack: ['DIBase', 'getSync'],
-                error: 'Called getSync() an async dependency.',
+                error: 'Called getSync() for an async dependency.',
               ),
             ),
     );
@@ -208,7 +208,6 @@ base class DIBase {
     ).map((e) => e.toAsync());
   }
 
-  // TODO: NEW NEW NEW
   FutureOr<T> getUnsafe<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
@@ -300,7 +299,7 @@ base class DIBase {
   }
 
   @protected
-  Option<Result<Dependency<T>>> getDependency<T extends Object>({
+  OptionResult<Dependency<T>> getDependency<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
     bool validate = true,
@@ -318,28 +317,6 @@ base class DIBase {
         }
       }
     }
-
-    // if (temp.isSome()) {
-    //   if (validate) {
-    //     final result = temp.unwrap();
-    //     if (result.isErr()) {
-    //       return Some(result);
-    //     }
-    //     final dependency = result.unwrap();
-    //     final metadata = dependency.metadata;
-    //     if (metadata.isSome()) {
-    //       final valid = metadata.unwrap().validator.map((e) => e(dependency));
-    //       if (valid.isSome() && !valid.unwrap()) {
-    //         return const Some(
-    //           Err(
-    //             stack: ['DIBase', 'getDependency'],
-    //             error: 'Dependency validation failed.',
-    //           ),
-    //         );
-    //       }
-    //     }
-    //   }
-    // }
     return temp;
   }
 
@@ -382,7 +359,6 @@ base class DIBase {
             groupEntity: g,
           );
       return e;
-      //return get<T>();
     });
   }
 
@@ -391,30 +367,33 @@ base class DIBase {
     Option<OnUnregisterCallback<Dependency>> onAfterUnregister = const None(),
   }) {
     final results = List.of(registry.sortedDependencies);
-    final sequential = Sequential();
+    final sequential = SafeSequential();
     for (final dependency in results) {
-      sequential.addAll([
-        (_) {
-          onBeforeUnregister.ifSome((e) => e.unwrap()(dependency));
-          return const None();
-        },
-        (_) {
-          return registry.removeDependencyK(
-            dependency.typeEntity,
-            groupEntity:
-                dependency.metadata.map((e) => e.groupEntity).unwrapOr(const DefaultEntity()),
-          );
-        },
-        (_) {
-          return dependency.metadata
-              .map((e) => e.onUnregister.ifSome((e) => e.unwrap()(dependency)));
-        },
-        (_) {
-          onAfterUnregister.ifSome((e) => e.unwrap()(dependency));
-          return const None();
-        },
-      ]);
+      sequential.addAll(
+        unsafe: [
+          (_) {
+            onBeforeUnregister.ifSome((e) => e.unwrap()(dependency));
+            return null;
+          },
+          (_) {
+            return registry.removeDependencyK(
+              dependency.typeEntity,
+              groupEntity:
+                  dependency.metadata.map((e) => e.groupEntity).unwrapOr(const DefaultEntity()),
+            );
+          },
+          (_) {
+            return dependency.metadata
+                .map((e) => e.onUnregister.ifSome((e) => e.unwrap()(dependency)));
+          },
+          (_) {
+            onAfterUnregister.ifSome((e) => e.unwrap()(dependency));
+            return null;
+          },
+        ],
+      );
     }
-    return sequential.add((_) => Some(results));
+    final result = sequential.add(unsafe: (_) => Some(results)).map((e) => e.unwrap());
+    return result;
   }
 }

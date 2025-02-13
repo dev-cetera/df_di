@@ -17,7 +17,7 @@ import '/src/_common.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 base mixin SupportsServicesMixinK on SupportsConstructorsMixinK, SupportsMixinK {
-  Resolvable<Option<Service>> getServiceSingletonK(
+  ResolvableOption<Service> getServiceSingletonK(
     TypeEntity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
@@ -29,7 +29,7 @@ base mixin SupportsServicesMixinK on SupportsConstructorsMixinK, SupportsMixinK 
     ).map((e) => e.map((e) => e as Service));
   }
 
-  Resolvable<Option<Service>> getServiceFactoryK(
+  ResolvableOption<Service> getServiceFactoryK(
     TypeEntity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,

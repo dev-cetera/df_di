@@ -37,7 +37,44 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
     return const Sync(Ok(Object()));
   }
 
-  Resolvable<Option<T>> getSingleton<T extends Object>({
+  // Option<T> getSingletonSyncOrNone<T extends Object>({
+  //   Entity groupEntity = const DefaultEntity(),
+  //   bool traverse = true,
+  // }) {
+  //   final a = getSingleton<T>(
+  //     groupEntity: groupEntity,
+  //     traverse: traverse,
+  //   );
+  //   if (a.isAsync()) {
+  //     return const None();
+  //   }
+  //   final b = a.sync();
+  //   if (b.isErr()) {
+  //     return const None();
+  //   }
+  //   // ignore: invalid_use_of_visible_for_testing_member
+  //   final c = b.unwrap().value;
+  //   if (c.isErr()) {
+  //     return const None();
+  //   }
+  //   return c.unwrap();
+  // }
+
+  @pragma('vm:prefer-inline')
+  FutureOr<T> getSingletonUnsafe<T extends Object>({
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return consec(
+      getSingleton<T>(
+        groupEntity: groupEntity,
+        traverse: traverse,
+      ).unwrap(),
+      (e) => e.unwrap(),
+    );
+  }
+
+  ResolvableOption<T> getSingleton<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
@@ -47,24 +84,21 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
     ).map((e) => e.map((e) => e.singleton)).reduce<T>();
   }
 
-  FutureOr<T> getSingletonUnsafe<T extends Object>({
+  @pragma('vm:prefer-inline')
+  FutureOr<T> getFactoryUnsafe<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
     return consec(
-      getUnsafe<Lazy<T>>(
+      getFactory<T>(
         groupEntity: groupEntity,
         traverse: traverse,
-      ),
-      (e) => consec(
-        // ignore: invalid_use_of_visible_for_testing_member
-        e.singleton.value,
-        (e) => e.unwrap(),
-      ),
+      ).unwrap(),
+      (e) => e.unwrap(),
     );
   }
 
-  Resolvable<Option<T>> getFactory<T extends Object>({
+  ResolvableOption<T> getFactory<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {

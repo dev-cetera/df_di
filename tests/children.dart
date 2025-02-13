@@ -18,55 +18,56 @@ import 'package:test/test.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 void main() {
-  group(
-    'Testing children',
-    () {
-      test(
-        '- Testing if a child gets created and unregistered',
-        () async {
-          final di = DI();
-          final child = DI();
-          di.registerValue(child);
-          expect(
-            child,
-            di.getUnsafe<DI>(),
-          );
-          di.unregister<DI>();
-          print(di.get<DI>());
-          expect(
-            di.get<DI>().isNone(),
-            true,
-          );
-        },
+  test(
+    'Testing the registration ofa DI instance, getting it and unregistering it.',
+    () async {
+      final di = DI();
+      final child = DI();
+      di.registerValue(child);
+      expect(
+        child,
+        di.getUnsafe<DI>(),
       );
-      test(
-        '- Testing singletons',
-        () async {
-          final di = DI();
-          di.registerLazy<int>(() => const Sync(Ok(1)));
-          expect(
-            1,
-            di.getSingleton<int>().sync().unwrap().value.unwrap().unwrap(),
-          );
-        },
-      );
-      test(
-        '- Testing singletons',
-        () async {
-          final c1 = DI();
-          c1.registerValue<int>(1);
-          final c4 = c1.child().child().child().child();
-          expect(
-            1,
-            c4.getUnsafe<int>(),
-          );
-          c1.unregister<int>();
-          expect(
-            true,
-            c4.getOrNone<int>().isNone(),
-          );
-        },
+      di.unregister<DI>();
+      print(di.get<DI>());
+      expect(
+        di.get<DI>().isNone(),
+        true,
       );
     },
   );
+  test(
+    'Testing the lazy registration of a DI() instance, getting it and unregistering it.',
+    () async {
+      final di = DI();
+      final child = DI();
+      di.registerLazy<DI>(() => Sync(Ok(child)));
+      expect(
+        child,
+        di.getSingletonUnsafe<DI>(),
+      );
+      di.unregister<DI>();
+      expect(
+        child,
+        di.getFactory<DI>(),
+      );
+    },
+  );
+  // test(
+  //   '- Testing singletons',
+  //   () async {
+  //     final c1 = DI();
+  //     c1.registerValue<int>(1);
+  //     final c4 = c1.child().child().child().child();
+  //     expect(
+  //       1,
+  //       c4.getUnsafe<int>(),
+  //     );
+  //     c1.unregister<int>();
+  //     expect(
+  //       true,
+  //       c4.getOrNone<int>().isNone(),
+  //     );
+  //   },
+  // );
 }

@@ -10,8 +10,6 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-import 'package:df_type/src/future_or/_completer_or.dart';
-
 import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
@@ -31,7 +29,7 @@ abstract class StreamService<TData extends Object?, TParams extends Object?>
 
   StreamService();
 
-  CompleterOr<TData>? _initialDataCompleter;
+  Finisher<TData>? _initialDataCompleter;
   StreamSubscription<TData>? _streamSubscription;
   StreamController<TData>? _streamController;
 
@@ -46,7 +44,7 @@ abstract class StreamService<TData extends Object?, TParams extends Object?>
 
   FutureOr<void> _initListener(TParams params) async {
     await _disposeListener(null);
-    _initialDataCompleter = CompleterOr<TData>();
+    _initialDataCompleter = Finisher<TData>();
     _streamController = StreamController<TData>.broadcast();
     _streamSubscription = provideInputStream(params).listen(
       pushToStream,

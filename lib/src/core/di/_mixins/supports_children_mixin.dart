@@ -45,7 +45,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     return Some(result.unwrap());
   }
 
-  Option<Result<DI>> getChild({
+  OptionResult<DI> getChild({
     Entity groupEntity = const DefaultEntity(),
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
@@ -56,7 +56,8 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     if (raw.isErr()) {
       return Some(raw.err().castErr());
     }
-    return Some(Ok(raw.ok().unwrap().unwrapSync()));
+    // ignore: invalid_use_of_visible_for_testing_member
+    return raw.unwrap().value.swap();
   }
 
   Option<Resolvable<Object>> unregisterChild({

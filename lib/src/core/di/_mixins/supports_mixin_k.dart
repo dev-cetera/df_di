@@ -141,7 +141,7 @@ base mixin SupportsMixinK on DIBase {
   }
 
   @protected
-  Option<Result<Dependency<Object>>> getDependencyK(
+  OptionResult<Dependency<Object>> getDependencyK(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,

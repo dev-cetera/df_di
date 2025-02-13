@@ -18,7 +18,7 @@ import '/src/_common.dart';
 
 base mixin SupportsServicesMixinT on SupportsServicesMixinK {
   @pragma('vm:prefer-inline')
-  Resolvable<Option<Service>> getServiceSingletonT(
+  ResolvableOption<Service> getServiceSingletonT(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
@@ -31,7 +31,7 @@ base mixin SupportsServicesMixinT on SupportsServicesMixinK {
   }
 
   @pragma('vm:prefer-inline')
-  Resolvable<Option<Service>> getServiceFactoryT(
+  ResolvableOption<Service> getServiceFactoryT(
        Type type,  {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,

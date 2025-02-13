@@ -11,9 +11,8 @@
 //.title~
 
 import 'package:df_debouncer/df_debouncer.dart';
-import 'package:df_type/src/future_or/_sequential.dart';
 
-import '/src/_common.dart' hide Sequential;
+import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 

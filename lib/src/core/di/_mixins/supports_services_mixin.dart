@@ -47,7 +47,7 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
     );
   }
 
-  Resolvable<Option<TService>> getServiceSingleton<TService extends Service>({
+  ResolvableOption<TService> getServiceSingleton<TService extends Service>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
@@ -57,7 +57,7 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
     );
   }
 
-  Resolvable<Option<TService>> getServiceFactory<TService extends Service>({
+  ResolvableOption<TService> getServiceFactory<TService extends Service>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {

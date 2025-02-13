@@ -31,7 +31,20 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
     return const Sync(Ok(Object()));
   }
 
-  Resolvable<Option<Object>> getSingletonK(
+  @pragma('vm:prefer-inline')
+  FutureOr<Object> getSingletonUnsafeK(
+    Entity typeEntity, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return getSingletonK(
+      typeEntity,
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).unwrap();
+  }
+
+  ResolvableOption<Object> getSingletonK(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
@@ -43,26 +56,20 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
     ).map((e) => e.map((e) => (e as Lazy).singleton)).reduce<Object>();
   }
 
-  FutureOr<Object> getSingletonUnsafeK(
+  @pragma('vm:prefer-inline')
+  FutureOr<Object> getFactoryUnsafeK(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return consec(
-      getUnsafeK(
-        TypeEntity(Lazy, [typeEntity]),
-        groupEntity: groupEntity,
-        traverse: traverse,
-      ),
-      (e) => consec(
-        // ignore: invalid_use_of_visible_for_testing_member
-        (e as Lazy).singleton.value,
-        (e) => e.unwrap(),
-      ),
-    );
+    return getFactoryK(
+      typeEntity,
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).unwrap();
   }
 
-  Resolvable<Option<Object>> getFactoryK(
+   ResolvableOption getFactoryK(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,

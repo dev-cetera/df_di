@@ -29,19 +29,6 @@ base mixin SupportsConstructorsMixinT on SupportsConstructorsMixinK {
   }
 
   @pragma('vm:prefer-inline')
-  Resolvable<Option<Object>> getSingletonT(
-    Type type, {
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    return getSingletonT(
-      type,
-      groupEntity: groupEntity,
-      traverse: traverse,
-    );
-  }
-
-  @pragma('vm:prefer-inline')
   FutureOr<Object> getSingletonUnsafeT(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
@@ -55,7 +42,33 @@ base mixin SupportsConstructorsMixinT on SupportsConstructorsMixinK {
   }
 
   @pragma('vm:prefer-inline')
-  Resolvable<Option<Object>> getFactoryT(
+  ResolvableOption getSingletonT(
+    Type type, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return getSingletonT(
+      type,
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
+  }
+
+  @pragma('vm:prefer-inline')
+  FutureOr<Object> getFactoryUnsafeT(
+    Type type, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return getFactoryUnsafeK(
+      TypeEntity(type),
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
+  }
+
+  @pragma('vm:prefer-inline')
+  ResolvableOption getFactoryT(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
