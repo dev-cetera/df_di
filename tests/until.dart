@@ -25,43 +25,52 @@ void main() {
     'Testing the until function.',
     () async {
       final di = DI();
-      //final value1 = Future.value(1);
       Future.delayed(
         const Duration(seconds: 1),
         () => di.register<int>(1),
       );
-      //final value = di.until<int>().unwrap();
-      await di.untilT(int).unwrap();
-      final value = di.untilT(int).unwrap();
-      //print(di.finishers.unwrap().registry.state);
+      Future.delayed(
+        const Duration(seconds: 1),
+        () => di.register<String>('Hello!'),
+      );
+      await di.until<int>().unwrap();
+      final value = di.until<int>().unwrap();
       expect(1, await value);
+      expect('Hello!', await di.until<String>().unwrap());
     },
   );
 
-  // test(
-  //   '- 1',
-  //   () async {
-  //     final di = DI();
-  //     di.register<int>(Future.value(1));
-  //     final value = await di.until<int>();
-  //     expect(1, value);
-  //   },
-  // );
-
-  // test(
-  //   '- 2',
-  //   () async {
-  //     final di = DI();
-  //     final service =
-  //         Future<TestService>.delayed(const Duration(seconds: 1), () => TestService());
-  //     Future.delayed(
-  //       const Duration(seconds: 4),
-  //       () => di.registerService<TestService>(service),
-  //     );
-  //     final value = await di.until<TestService>();
-  //     expect(await service, value);
-  //   },
-  // );
+  test(
+    'Testing the untilT function.',
+    () async {
+      final di = DI();
+      Future.delayed(
+        const Duration(seconds: 1),
+        () => di.register<int>(1),
+      );
+      Future.delayed(
+        const Duration(seconds: 1),
+        () => di.register<String>('Hello!'),
+      );
+      await di.untilT(int).unwrap();
+      final value = di.untilT(int).unwrap();
+      expect(1, await value);
+      expect('Hello!', await di.untilT(String).unwrap());
+    },
+  );
+  test(
+    'Testing the until function with a service.',
+    () async {
+      final di = DI();
+      final service = Future<TestService>.delayed(const Duration(seconds: 1), () => TestService());
+      Future.delayed(
+        const Duration(seconds: 4),
+        () => di.registerAndInitService<TestService>(service),
+      );
+      final value = await di.until<TestService>().unwrap();
+      expect(await service, value);
+    },
+  );
 }
 
 base class TestService extends Service {}

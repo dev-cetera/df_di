@@ -62,15 +62,26 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
     );
   }
 
+  // @pragma('vm:prefer-inline')
+  // Future<TService> getServiceSingletonAsync<TService extends Service>({
+  //   Entity groupEntity = const DefaultEntity(),
+  //   bool traverse = true,
+  // }) {
+  //   return getServiceFactorySafe<TService>(
+  //     groupEntity: groupEntity,
+  //     traverse: traverse,
+  //   ).unwrap().toAsync().unwrap();
+  // }
+
   @pragma('vm:prefer-inline')
-  Future<TService> getServiceSingletonAsync<TService extends Service>({
+  TService getServiceSingletonSync<TService extends Service>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getServiceFactorySafe<TService>(
+    return getServiceSingletonSafe<TService>(
       groupEntity: groupEntity,
       traverse: traverse,
-    ).unwrap().toAsync().unwrap();
+    ).unwrap().sync().unwrap().unwrap();
   }
 
   @pragma('vm:prefer-inline')
