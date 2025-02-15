@@ -43,7 +43,10 @@ abstract class Service<TParams extends Object?> {
   @nonVirtual
   FutureOr<void> init(TParams params) {
     if (_disposed) {
-      throw 1; //ServiceAlreadyDisposedException();
+      throw const Err(
+        stack: ['Service', 'init'],
+        error: 'Service has already been initialized.',
+      );
     }
     _sequantial.addAll([
       // Call init listeners.
@@ -96,7 +99,10 @@ abstract class Service<TParams extends Object?> {
   FutureOr<void> dispose() {
     // Throw an exception if the service has already been disposed.
     if (_disposed) {
-      throw 2; //ServiceAlreadyDisposedException();
+      throw const Err(
+        stack: ['Service', 'dispose'],
+        error: 'Service has already been disposed.',
+      );
     }
     _sequantial.addAll([
       // Call dispose listeners.

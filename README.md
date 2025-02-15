@@ -8,15 +8,17 @@ Dart & Flutter Packages by dev-cetera.com & contributors.
 
 ---
 
-## Summary
+## NOTE NOTE NOTE
 
-Efficiently structure and manage the essential dependencies of your code, such as services, data, and utilities. This package helps you organize and access these dependencies using containers that store and provide them when needed, making your app more adaptable, testable, maintainable, and easier to debug.
+PLEASE USE A PREVIOUS VERSION. THIS ONE IS BEING EXPERIMENTED WITH.
+
+<!-- Efficiently structure and manage the essential dependencies of your code, such as services, data, and utilities. This package helps you organize and access these dependencies using containers that store and provide them when needed, making your app more adaptable, testable, maintainable, and easier to debug.
 
 Inspired by [get_it](https://pub.dev/packages/get_it/), it offers a flexible, faster solution with enhanced async handling, support for retrieving dependencies by runtime or generic type, and a hierarchical container structure. This approach allows nested child containers that inherit from parent containers, all while providing clearer, more concise documentation.
 
-For a full feature set, please refer to the [API reference](https://pub.dev/documentation/df_di/).
+For a full feature set, please refer to the [API reference](https://pub.dev/documentation/df_di/). -->
 
-## Use Case 1
+<!-- ## Use Case 1
 
 Your app probably contains classes that act as managers, helpers, or services, for example:
 
@@ -300,7 +302,7 @@ print(di.registry.state);
 
 // Check if a specific type is registered.
 print(di.isRegistered<int>()); // true
-```
+``` -->
 
 ---
 

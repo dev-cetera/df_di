@@ -1,4 +1,4 @@
-### Implementing an Entity Component System (ECS) using the DI Framework:
+<!-- ### Implementing an Entity Component System (ECS) using the DI Framework:
 
 This is especially useful for game development with Flutter but can also be applied to app development, such as managing complex forms with dynamic field visibility or handling multiple user profiles in a customizable app.
 
@@ -123,4 +123,4 @@ print('Position 1: (${p1.x}, ${p1.y})');
 // Print the player name.
 final name = player1.getComponent<Name>().name;
 print('Player name: "$name"');
-```
+``` -->
