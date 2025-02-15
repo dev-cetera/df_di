@@ -46,16 +46,13 @@ void main() {
       expect(false, di.isRegistered<DI>());
     },
   );
-  test(
-    'Testing children of children.',
-    () async {
-      final c1 = DI();
-      c1.register<int>(1);
-      final c4 = c1.child().child().child().child();
-      expect(1, c4.getUnsafe<int>());
-      expect(true, c4.isRegistered<int>());
-      c1.unregister<int>();
-      expect(false, c4.isRegistered<int>());
-    },
-  );
+  test('Testing children of children.', () async {
+    final c1 = DI();
+    c1.register<int>(1);
+    final c4 = c1.child().child().child().child();
+    expect(1, c4.getUnsafe<int>());
+    expect(true, c4.isRegistered<int>());
+    c1.unregister<int>();
+    expect(false, c4.isRegistered<int>());
+  });
 }

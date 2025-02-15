@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.10.0]
+
+- Released @ 2/2025 (UTC)
+- breaking: Premature test release
+
 ## [0.9.5]
 
 - Released @ 1/2025 (UTC)

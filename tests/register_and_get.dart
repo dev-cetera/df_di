@@ -26,14 +26,8 @@ void main() {
       final a = <int>[1, 2, 3];
       di.register<List<int>>(a);
       final b = di.getUnsafe<List<int>>();
-      expect(
-        a,
-        b,
-      );
-      expect(
-        a.hashCode,
-        b.hashCode,
-      );
+      expect(a, b);
+      expect(a.hashCode, b.hashCode);
     },
   );
   /*

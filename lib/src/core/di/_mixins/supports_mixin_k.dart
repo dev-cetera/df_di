@@ -42,19 +42,16 @@ base mixin SupportsMixinK on DIBase {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getK(
-      typeEntity,
-      groupEntity: groupEntity,
-      traverse: traverse,
-    ).map(
-      (e) => e.isSync()
-          ? e.sync().unwrap()
-          : const Sync(
-              Err(
-                stack: ['SupportsMixinK', 'getSyncK'],
-                error: 'Called getSyncK() an async dependency.',
+    return getK(typeEntity, groupEntity: groupEntity, traverse: traverse).map(
+      (e) =>
+          e.isSync()
+              ? e.sync().unwrap()
+              : const Sync(
+                Err(
+                  stack: ['SupportsMixinK', 'getSyncK'],
+                  error: 'Called getSyncK() an async dependency.',
+                ),
               ),
-            ),
     );
   }
 
@@ -66,11 +63,12 @@ base mixin SupportsMixinK on DIBase {
     bool traverse = true,
   }) {
     return Future.sync(() async {
-      final result = await getAsyncK(
-        typeEntity,
-        groupEntity: groupEntity,
-        traverse: traverse,
-      ).unwrap().value;
+      final result =
+          await getAsyncK(
+            typeEntity,
+            groupEntity: groupEntity,
+            traverse: traverse,
+          ).unwrap().value;
       return result.unwrap();
     });
   }
@@ -162,15 +160,12 @@ base mixin SupportsMixinK on DIBase {
           final value = e.unwrap();
           registry.removeDependencyK(typeEntity, groupEntity: g);
           final metadata = option.unwrap().unwrap().metadata.map(
-                (e) => e.copyWith(
-                  preemptivetypeEntity: TypeEntity(Sync, [typeEntity]),
-                ),
-              );
-          registerDependencyK(
-            dependency: Dependency(
-              Sync(Ok(value)),
-              metadata: metadata,
+            (e) => e.copyWith(
+              preemptivetypeEntity: TypeEntity(Sync, [typeEntity]),
             ),
+          );
+          registerDependencyK(
+            dependency: Dependency(Sync(Ok(value)), metadata: metadata),
             checkExisting: false,
           );
           return value;
@@ -184,7 +179,10 @@ base mixin SupportsMixinK on DIBase {
     required Dependency<Object> dependency,
     bool checkExisting = false,
   }) {
-    final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
+    final g =
+        dependency.metadata.isSome()
+            ? dependency.metadata.unwrap().groupEntity
+            : focusGroup;
     if (checkExisting) {
       final option = getDependencyK(
         dependency.typeEntity,
@@ -267,7 +265,9 @@ base mixin SupportsMixinK on DIBase {
       final onUnregister = metadata.unwrap().onUnregister;
       if (onUnregister.isSome()) {
         return Some(
-          onUnregister.unwrap()(removedDependency).map((_) => removedDependency),
+          onUnregister.unwrap()(removedDependency).map(
+            (_) => removedDependency,
+          ),
         );
       }
     }
@@ -283,7 +283,12 @@ base mixin SupportsMixinK on DIBase {
     final g = groupEntity.preferOverDefault(focusGroup);
     return registry
         .removeDependencyK(typeEntity, groupEntity: g)
-        .or(registry.removeDependencyK(TypeEntity(Lazy, [typeEntity]), groupEntity: g));
+        .or(
+          registry.removeDependencyK(
+            TypeEntity(Lazy, [typeEntity]),
+            groupEntity: g,
+          ),
+        );
   }
 
   @protected
@@ -294,12 +299,19 @@ base mixin SupportsMixinK on DIBase {
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
     if (registry.containsDependencyK(typeEntity, groupEntity: g) ||
-        registry.containsDependencyK(TypeEntity(Lazy, [typeEntity]), groupEntity: g)) {
+        registry.containsDependencyK(
+          TypeEntity(Lazy, [typeEntity]),
+          groupEntity: g,
+        )) {
       return true;
     }
     if (traverse) {
       for (final parent in parents) {
-        if ((parent as SupportsMixinK).isRegisteredK(typeEntity, groupEntity: g, traverse: true)) {
+        if ((parent as SupportsMixinK).isRegisteredK(
+          typeEntity,
+          groupEntity: g,
+          traverse: true,
+        )) {
           return true;
         }
       }
@@ -336,17 +348,11 @@ base mixin SupportsMixinK on DIBase {
     finishers1.registry.setDependency(
       Dependency<SafeFinisher>(
         Sync(Ok(finisher)),
-        metadata: Some(
-          DependencyMetadata(
-            groupEntity: g,
-          ),
-        ),
+        metadata: Some(DependencyMetadata(groupEntity: g)),
       ),
     );
     return finisher.resolvable.map((e) {
-      finishers1.registry.removeDependency<SafeFinisher>(
-        groupEntity: g,
-      );
+      finishers1.registry.removeDependency<SafeFinisher>(groupEntity: g);
       return e;
     });
   }

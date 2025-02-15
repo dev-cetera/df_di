@@ -29,9 +29,7 @@ Future<void> runBenchmarkComparison(
     }
 
     // Allow time for GC or other system recovery.
-    await Future<dynamic>.delayed(
-      const Duration(milliseconds: 100),
-    );
+    await Future<dynamic>.delayed(const Duration(milliseconds: 100));
   }
 
   // Calculate averages.
@@ -46,7 +44,8 @@ Future<void> runBenchmarkComparison(
   final isGetItFaster = avgGetIt < avgDI;
   final slowerTime = isGetItFaster ? avgDI : avgGetIt;
   final fasterTime = isGetItFaster ? avgGetIt : avgDI;
-  final percentageImprovement = ((slowerTime - fasterTime) / slowerTime * 100).round();
+  final percentageImprovement =
+      ((slowerTime - fasterTime) / slowerTime * 100).round();
 
   final winner =
       '${isGetItFaster ? 'get_it' : 'df_di'} at $percentageImprovement% faster with $runs runs';

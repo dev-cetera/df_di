@@ -25,10 +25,7 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
     LazyConstructor<T> constructor, {
     Entity groupEntity = const DefaultEntity(),
   }) {
-    return register<Lazy<T>>(
-      Lazy<T>(constructor),
-      groupEntity: groupEntity,
-    );
+    return register<Lazy<T>>(Lazy<T>(constructor), groupEntity: groupEntity);
   }
 
   Resolvable<void> resetSingleton<T extends Object>({
@@ -47,10 +44,7 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
     bool traverse = true,
   }) {
     return consec(
-      getSingleton<T>(
-        groupEntity: groupEntity,
-        traverse: traverse,
-      ).unwrap(),
+      getSingleton<T>(groupEntity: groupEntity, traverse: traverse).unwrap(),
       (e) => e.unwrap(),
     );
   }
@@ -59,10 +53,7 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    final option = get<Lazy<T>>(
-      groupEntity: groupEntity,
-      traverse: traverse,
-    );
+    final option = get<Lazy<T>>(groupEntity: groupEntity, traverse: traverse);
     if (option.isNone()) {
       return const None();
     }
@@ -76,10 +67,7 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
     bool traverse = true,
   }) {
     return consec(
-      getFactory<T>(
-        groupEntity: groupEntity,
-        traverse: traverse,
-      ).unwrap(),
+      getFactory<T>(groupEntity: groupEntity, traverse: traverse).unwrap(),
       (e) => e.unwrap(),
     );
   }
@@ -88,10 +76,7 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    final option = get<Lazy<T>>(
-      groupEntity: groupEntity,
-      traverse: traverse,
-    );
+    final option = get<Lazy<T>>(groupEntity: groupEntity, traverse: traverse);
     if (option.isNone()) {
       return const None();
     }

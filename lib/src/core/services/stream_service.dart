@@ -36,10 +36,7 @@ abstract class StreamService<TData extends Object?, TParams extends Object?>
   @mustCallSuper
   @override
   ServiceListeners<TParams> provideInitListeners() {
-    return [
-      ...super.provideInitListeners(),
-      _initListener,
-    ];
+    return [...super.provideInitListeners(), _initListener];
   }
 
   FutureOr<void> _initListener(TParams params) async {
@@ -59,10 +56,7 @@ abstract class StreamService<TData extends Object?, TParams extends Object?>
   @mustCallSuper
   @override
   ServiceListeners<void> provideDisposeListeners() {
-    return [
-      ...super.provideDisposeListeners(),
-      _disposeListener,
-    ];
+    return [...super.provideDisposeListeners(), _disposeListener];
   }
 
   Future<void> _disposeListener(void _) async {

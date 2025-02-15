@@ -54,7 +54,7 @@ abstract class Service<TParams extends Object?> {
       (_) {
         // Mark the service as initialized.
         _initialized = true;
-      }
+      },
     ]);
     return _sequantial.last;
   }
@@ -110,7 +110,7 @@ abstract class Service<TParams extends Object?> {
       (_) {
         // Mark the service as disposed.
         _disposed = true;
-      }
+      },
     ]);
     return _sequantial.last;
   }

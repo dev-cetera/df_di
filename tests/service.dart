@@ -19,19 +19,16 @@ import 'package:test/test.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 void main() {
-  test(
-    'Testing the registration and initialization of a service.',
-    () async {
-      final di = DI();
-      final service = TestService();
-      di.registerAndInitService<TestService>(service);
-      print('Just registered...');
-      final value1 = await di.getUnsafe<TestService>();
-      final value2 = await di.getUnsafe<TestService>();
-      expect(value1, service);
-      expect(value1, value2);
-    },
-  );
+  test('Testing the registration and initialization of a service.', () async {
+    final di = DI();
+    final service = TestService();
+    di.registerAndInitService<TestService>(service);
+    print('Just registered...');
+    final value1 = await di.getUnsafe<TestService>();
+    final value2 = await di.getUnsafe<TestService>();
+    expect(value1, service);
+    expect(value1, value2);
+  });
   test(
     'Testing the lazy registration and initialization of a service.',
     () async {
@@ -54,7 +51,7 @@ base class TestService extends Service {
       ...super.provideInitListeners(),
       (_) {
         print('Initializing TestService!!!');
-      }
+      },
     ];
   }
 }

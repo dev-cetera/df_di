@@ -21,10 +21,7 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
   }) {
-    final temp = getK(
-      TypeEntity(Lazy, [typeEntity]),
-      groupEntity: groupEntity,
-    );
+    final temp = getK(TypeEntity(Lazy, [typeEntity]), groupEntity: groupEntity);
     if (temp.isSome()) {
       return temp.unwrap().map((e) => (e as Lazy)..resetSingleton());
     }

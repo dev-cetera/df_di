@@ -31,7 +31,8 @@ base class DIBase {
   final parents = <DIBase>{};
 
   /// Child containers.
-  Iterable<DI> get children => registry.unsortedDependencies.map((e) => e.value).whereType<DI>();
+  Iterable<DI> get children =>
+      registry.unsortedDependencies.map((e) => e.value).whereType<DI>();
 
   /// A key that identifies the current group in focus for dependency management.
   Entity focusGroup = const DefaultEntity();
@@ -48,10 +49,7 @@ base class DIBase {
     FutureOr<T> value, {
     Entity groupEntity = const DefaultEntity(),
   }) {
-    return registerUnsafe(
-      () => value,
-      groupEntity: groupEntity,
-    );
+    return registerUnsafe(() => value, groupEntity: groupEntity);
   }
 
   Result<void> registerUnsafe<T extends Object>(
@@ -69,10 +67,7 @@ base class DIBase {
       return check.err().castErr();
     }
     final result = registerDependency(
-      dependency: Dependency(
-        value,
-        metadata: Some(metadata),
-      ),
+      dependency: Dependency(value, metadata: Some(metadata)),
       checkExisting: true,
     );
     return result;
@@ -85,9 +80,12 @@ base class DIBase {
   ) {
     if (finishers.isSome()) {
       final finishers1 = (finishers.unwrap()).child(groupEntity: TypeEntity(T));
-      final option = finishers1.registry.getDependency<SafeFinisher>(groupEntity: groupEntity);
+      final option = finishers1.registry.getDependency<SafeFinisher>(
+        groupEntity: groupEntity,
+      );
       if (option.isSome()) {
-        final test = (option.unwrap() as Dependency).value.sync().unwrap().value;
+        final test =
+            (option.unwrap() as Dependency).value.sync().unwrap().value;
         if (test.isErr()) {
           return test.cast();
         }
@@ -102,12 +100,12 @@ base class DIBase {
     required Dependency<T> dependency,
     bool checkExisting = false,
   }) {
-    assert(
-      T != Object,
-      'T must be specified and cannot be Object.',
-    );
+    assert(T != Object, 'T must be specified and cannot be Object.');
 
-    final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
+    final g =
+        dependency.metadata.isSome()
+            ? dependency.metadata.unwrap().groupEntity
+            : focusGroup;
     if (checkExisting) {
       final option = getDependency<T>(
         groupEntity: g,
@@ -139,7 +137,9 @@ base class DIBase {
 
   @protected
   @pragma('vm:prefer-inline')
-  Option<Object> removeDependency<T extends Object>({Entity groupEntity = const DefaultEntity()}) {
+  Option<Object> removeDependency<T extends Object>({
+    Entity groupEntity = const DefaultEntity(),
+  }) {
     final g = groupEntity.preferOverDefault(focusGroup);
     return registry
         .removeDependency<T>(groupEntity: g)
@@ -181,18 +181,16 @@ base class DIBase {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return get<T>(
-      groupEntity: groupEntity,
-      traverse: traverse,
-    ).map(
-      (e) => e.isSync()
-          ? e.sync().unwrap()
-          : Sync(
-              const Err(
-                stack: ['DIBase', 'getSync'],
-                error: 'Called getSync() for an async dependency.',
+    return get<T>(groupEntity: groupEntity, traverse: traverse).map(
+      (e) =>
+          e.isSync()
+              ? e.sync().unwrap()
+              : Sync(
+                const Err(
+                  stack: ['DIBase', 'getSync'],
+                  error: 'Called getSync() for an async dependency.',
+                ),
               ),
-            ),
     );
   }
 
@@ -202,10 +200,11 @@ base class DIBase {
     bool traverse = true,
   }) {
     return Future.sync(() async {
-      final result = await getAsync<T>(
-        groupEntity: groupEntity,
-        traverse: traverse,
-      ).unwrap().value;
+      final result =
+          await getAsync<T>(
+            groupEntity: groupEntity,
+            traverse: traverse,
+          ).unwrap().value;
       return result.unwrap();
     });
   }
@@ -227,10 +226,7 @@ base class DIBase {
     bool traverse = true,
   }) {
     return consec(
-      get<T>(
-        groupEntity: groupEntity,
-        traverse: traverse,
-      ).unwrap().value,
+      get<T>(groupEntity: groupEntity, traverse: traverse).unwrap().value,
       (e) => e.unwrap(),
     );
   }
@@ -240,20 +236,14 @@ base class DIBase {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getSyncOrNone<T>(
-      groupEntity: groupEntity,
-      traverse: traverse,
-    );
+    return getSyncOrNone<T>(groupEntity: groupEntity, traverse: traverse);
   }
 
   Option<T> getSyncOrNone<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    final option = get<T>(
-      groupEntity: groupEntity,
-      traverse: traverse,
-    );
+    final option = get<T>(groupEntity: groupEntity, traverse: traverse);
     if (option.isNone()) {
       return const None();
     }
@@ -274,10 +264,7 @@ base class DIBase {
     bool traverse = true,
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
-    final option = getDependency<T>(
-      groupEntity: g,
-      traverse: traverse,
-    );
+    final option = getDependency<T>(groupEntity: g, traverse: traverse);
     if (option.isNone()) {
       return const None();
     }
@@ -320,9 +307,7 @@ base class DIBase {
     var temp = test.map((e) => Ok(e).asResult());
     if (test.isNone() && traverse) {
       for (final parent in parents) {
-        temp = parent.getDependency<T>(
-          groupEntity: g,
-        );
+        temp = parent.getDependency<T>(groupEntity: g);
         if (temp.isSome()) {
           break;
         }
@@ -358,17 +343,11 @@ base class DIBase {
     finishers1.registry.setDependency(
       Dependency<SafeFinisher<T>>(
         Sync(Ok(finisher)),
-        metadata: Some(
-          DependencyMetadata(
-            groupEntity: g,
-          ),
-        ),
+        metadata: Some(DependencyMetadata(groupEntity: g)),
       ),
     );
     return finisher.resolvable.map((e) {
-      finishers1.registry.removeDependency<SafeFinisher<T>>(
-        groupEntity: g,
-      );
+      finishers1.registry.removeDependency<SafeFinisher<T>>(groupEntity: g);
       return e;
     });
   }
@@ -389,13 +368,15 @@ base class DIBase {
           (_) {
             return registry.removeDependencyK(
               dependency.typeEntity,
-              groupEntity:
-                  dependency.metadata.map((e) => e.groupEntity).unwrapOr(const DefaultEntity()),
+              groupEntity: dependency.metadata
+                  .map((e) => e.groupEntity)
+                  .unwrapOr(const DefaultEntity()),
             );
           },
           (_) {
-            return dependency.metadata
-                .map((e) => e.onUnregister.ifSome((e) => e.unwrap()(dependency)));
+            return dependency.metadata.map(
+              (e) => e.onUnregister.ifSome((e) => e.unwrap()(dependency)),
+            );
           },
           (_) {
             onAfterUnregister?.call(dependency);
@@ -404,7 +385,9 @@ base class DIBase {
         ],
       );
     }
-    final result = sequential.add(unsafe: (_) => Some(results)).map((e) => e.unwrap());
+    final result = sequential
+        .add(unsafe: (_) => Some(results))
+        .map((e) => e.unwrap());
     return result;
   }
 }

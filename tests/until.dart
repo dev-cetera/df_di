@@ -21,56 +21,44 @@ import 'package:test/test.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 void main() {
-  test(
-    'Testing the until function.',
-    () async {
-      final di = DI();
-      Future.delayed(
-        const Duration(seconds: 1),
-        () => di.register<int>(1),
-      );
-      Future.delayed(
-        const Duration(seconds: 1),
-        () => di.register<String>('Hello!'),
-      );
-      await di.until<int>().unwrap();
-      final value = di.until<int>().unwrap();
-      expect(1, await value);
-      expect('Hello!', await di.until<String>().unwrap());
-    },
-  );
+  test('Testing the until function.', () async {
+    final di = DI();
+    Future.delayed(const Duration(seconds: 1), () => di.register<int>(1));
+    Future.delayed(
+      const Duration(seconds: 1),
+      () => di.register<String>('Hello!'),
+    );
+    await di.until<int>().unwrap();
+    final value = di.until<int>().unwrap();
+    expect(1, await value);
+    expect('Hello!', await di.until<String>().unwrap());
+  });
 
-  test(
-    'Testing the untilT function.',
-    () async {
-      final di = DI();
-      Future.delayed(
-        const Duration(seconds: 1),
-        () => di.register<int>(1),
-      );
-      Future.delayed(
-        const Duration(seconds: 1),
-        () => di.register<String>('Hello!'),
-      );
-      await di.untilT(int).unwrap();
-      final value = di.untilT(int).unwrap();
-      expect(1, await value);
-      expect('Hello!', await di.untilT(String).unwrap());
-    },
-  );
-  test(
-    'Testing the until function with a service.',
-    () async {
-      final di = DI();
-      final service = Future<TestService>.delayed(const Duration(seconds: 1), () => TestService());
-      Future.delayed(
-        const Duration(seconds: 4),
-        () => di.registerAndInitService<TestService>(service),
-      );
-      final value = await di.until<TestService>().unwrap();
-      expect(await service, value);
-    },
-  );
+  test('Testing the untilT function.', () async {
+    final di = DI();
+    Future.delayed(const Duration(seconds: 1), () => di.register<int>(1));
+    Future.delayed(
+      const Duration(seconds: 1),
+      () => di.register<String>('Hello!'),
+    );
+    await di.untilT(int).unwrap();
+    final value = di.untilT(int).unwrap();
+    expect(1, await value);
+    expect('Hello!', await di.untilT(String).unwrap());
+  });
+  test('Testing the until function with a service.', () async {
+    final di = DI();
+    final service = Future<TestService>.delayed(
+      const Duration(seconds: 1),
+      () => TestService(),
+    );
+    Future.delayed(
+      const Duration(seconds: 4),
+      () => di.registerAndInitService<TestService>(service),
+    );
+    final value = await di.until<TestService>().unwrap();
+    expect(await service, value);
+  });
 }
 
 base class TestService extends Service {}

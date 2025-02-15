@@ -19,10 +19,7 @@ import '/src/_common.dart';
 /// lifecycle.
 @internal
 final class Dependency<T extends Object> {
-  Dependency(
-    this.value, {
-    this.metadata = const None(),
-  }) {
+  Dependency(this.value, {this.metadata = const None()}) {
     if (this.metadata.isSome()) {
       final a = this.metadata.unwrap();
       if (a._initialType.isSome()) {
@@ -31,10 +28,7 @@ final class Dependency<T extends Object> {
     }
   }
 
-  Dependency._internal(
-    this.value, {
-    required this.metadata,
-  });
+  Dependency._internal(this.value, {required this.metadata});
 
   /// The value contained within this [Dependency].
   final Resolvable<T> value;
@@ -83,10 +77,7 @@ final class Dependency<T extends Object> {
 
   @override
   int get hashCode {
-    return Object.hashAll([
-      value,
-      metadata,
-    ]);
+    return Object.hashAll([value, metadata]);
   }
 }
 
@@ -144,7 +135,9 @@ class DependencyMetadata {
     return DependencyMetadata(
       groupEntity: groupEntity.isNotDefault() ? groupEntity : this.groupEntity,
       preemptivetypeEntity:
-          preemptivetypeEntity.isNotDefault() ? preemptivetypeEntity : this.preemptivetypeEntity,
+          preemptivetypeEntity.isNotDefault()
+              ? preemptivetypeEntity
+              : this.preemptivetypeEntity,
       index: index.isSome() ? index : this.index,
       validator: validator.isSome() ? validator : this.validator,
       onUnregister: onUnregister.isSome() ? onUnregister : this.onUnregister,
@@ -177,9 +170,8 @@ class DependencyMetadata {
 /// in order to facilitate any necessary cleanup or additional processing
 /// that might be required for the [value].
 @internal
-typedef OnUnregisterCallback<T extends Object> = Resolvable<void> Function(
-  T value,
-);
+typedef OnUnregisterCallback<T extends Object> =
+    Resolvable<void> Function(T value);
 
 /// A typedef for a function that evaluates the validity of a dependency.
 @internal

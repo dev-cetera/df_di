@@ -20,21 +20,17 @@ import '/src/_common.dart';
 base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
   Option<SupportsConstructorsMixin> _children = const None();
 
-  Result<void> registerChild({
-    Entity groupEntity = const DefaultEntity(),
-  }) {
+  Result<void> registerChild({Entity groupEntity = const DefaultEntity()}) {
     if (_children.isNone()) {
       _children = Some(DI() as SupportsChildrenMixin);
     }
     return _children.unwrap().registerLazy<DI>(
-          () => Sync(Ok(DI()..parents.add(this as DI))),
-          groupEntity: groupEntity,
-        );
+      () => Sync(Ok(DI()..parents.add(this as DI))),
+      groupEntity: groupEntity,
+    );
   }
 
-  Option<DI> getChildOrNone({
-    Entity groupEntity = const DefaultEntity(),
-  }) {
+  Option<DI> getChildOrNone({Entity groupEntity = const DefaultEntity()}) {
     final option = getChild(groupEntity: groupEntity);
     if (option.isNone()) {
       return const None();
@@ -46,9 +42,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     return Some(result.unwrap());
   }
 
-  OptionResult<DI> getChild({
-    Entity groupEntity = const DefaultEntity(),
-  }) {
+  OptionResult<DI> getChild({Entity groupEntity = const DefaultEntity()}) {
     final g = groupEntity.preferOverDefault(focusGroup);
     if (_children.isNone()) {
       return const None();
@@ -74,14 +68,12 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
       return const None();
     }
     return _children.unwrap().unregister<DI>(
-          groupEntity: g,
-          skipOnUnregisterCallback: skipOnUnregisterCallback,
-        );
+      groupEntity: g,
+      skipOnUnregisterCallback: skipOnUnregisterCallback,
+    );
   }
 
-  bool isChildRegistered({
-    Entity groupEntity = const DefaultEntity(),
-  }) {
+  bool isChildRegistered({Entity groupEntity = const DefaultEntity()}) {
     final g = groupEntity.preferOverDefault(focusGroup);
     if (_children.isNone()) {
       return false;
@@ -89,9 +81,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     return _children.unwrap().isRegistered(groupEntity: g);
   }
 
-  DI child({
-    Entity groupEntity = const DefaultEntity(),
-  }) {
+  DI child({Entity groupEntity = const DefaultEntity()}) {
     final existingChild = getSyncOrNone<DI>(groupEntity: groupEntity);
     if (existingChild.isSome()) {
       return existingChild.unwrap();

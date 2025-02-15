@@ -105,11 +105,7 @@ base mixin SupportsMixinT on SupportsMixinK {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getK(
-      TypeEntity(type),
-      groupEntity: groupEntity,
-      traverse: traverse,
-    );
+    return getK(TypeEntity(type), groupEntity: groupEntity, traverse: traverse);
   }
 
   @pragma('vm:prefer-inline')
@@ -145,10 +141,7 @@ base mixin SupportsMixinT on SupportsMixinK {
     Type type, {
     Entity groupEntity = const DefaultEntity(),
   }) {
-    return removeDependencyK(
-      TypeEntity(type),
-      groupEntity: groupEntity,
-    );
+    return removeDependencyK(TypeEntity(type), groupEntity: groupEntity);
   }
 
   @pragma('vm:prefer-inline')

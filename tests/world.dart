@@ -87,16 +87,10 @@ class Name extends Component {
 class Vector extends Component {
   final double x;
   final double y;
-  const Vector({
-    this.x = 0.0,
-    this.y = 0.0,
-  });
+  const Vector({this.x = 0.0, this.y = 0.0});
 
   Vector add(Vector other) {
-    return Vector(
-      x: x + other.x,
-      y: y + other.y,
-    );
+    return Vector(x: x + other.x, y: y + other.y);
   }
 
   @override
@@ -104,31 +98,19 @@ class Vector extends Component {
 }
 
 class Position extends Vector {
-  const Position({
-    super.x = 0.0,
-    super.y = 0.0,
-  });
+  const Position({super.x = 0.0, super.y = 0.0});
 
   @override
   Position add(Vector other) {
-    return Position(
-      x: x + other.x,
-      y: y + other.y,
-    );
+    return Position(x: x + other.x, y: y + other.y);
   }
 }
 
 class Velocity extends Vector {
-  const Velocity({
-    super.x = 0.0,
-    super.y = 0.0,
-  });
+  const Velocity({super.x = 0.0, super.y = 0.0});
 
   @override
   Velocity add(Vector other) {
-    return Velocity(
-      x: x + other.x,
-      y: y + other.y,
-    );
+    return Velocity(x: x + other.x, y: y + other.y);
   }
 }

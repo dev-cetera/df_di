@@ -22,10 +22,7 @@ base mixin SupportsConstructorsMixinT on SupportsConstructorsMixinK {
     Type type, {
     Entity groupEntity = const DefaultEntity(),
   }) {
-    return resetSingletonK(
-      TypeEntity(type),
-      groupEntity: groupEntity,
-    );
+    return resetSingletonK(TypeEntity(type), groupEntity: groupEntity);
   }
 
   @pragma('vm:prefer-inline')
@@ -47,11 +44,7 @@ base mixin SupportsConstructorsMixinT on SupportsConstructorsMixinK {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getSingletonT(
-      type,
-      groupEntity: groupEntity,
-      traverse: traverse,
-    );
+    return getSingletonT(type, groupEntity: groupEntity, traverse: traverse);
   }
 
   @pragma('vm:prefer-inline')
