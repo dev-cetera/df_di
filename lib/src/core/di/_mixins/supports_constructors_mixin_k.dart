@@ -69,7 +69,8 @@ base mixin SupportsConstructorsMixinK<H extends Object> on SupportsMixinK<H> {
     if (option.isNone()) {
       return const None();
     }
-    final resolvable = option.unwrap().map((e) => (e as Lazy).singleton).merge();
+    final resolvable =
+        option.unwrap().map((e) => (e as Lazy).singleton).merge();
     return Some(resolvable);
   }
 

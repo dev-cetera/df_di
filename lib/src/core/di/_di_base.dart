@@ -49,10 +49,7 @@ base class DIBase<H extends Object> {
     FutureOr<T> value, {
     Entity groupEntity = const DefaultEntity(),
   }) {
-    return registerUnsafe<T>(
-      () => value,
-      groupEntity: groupEntity,
-    );
+    return registerUnsafe<T>(() => value, groupEntity: groupEntity);
   }
 
   Result<void> registerUnsafe<T extends Object>(
@@ -97,7 +94,10 @@ base class DIBase<H extends Object> {
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
 
-    final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
+    final g =
+        dependency.metadata.isSome()
+            ? dependency.metadata.unwrap().groupEntity
+            : focusGroup;
     if (checkExisting) {
       final option = getDependency<T>(
         groupEntity: g,
@@ -174,14 +174,15 @@ base class DIBase<H extends Object> {
     bool traverse = true,
   }) {
     return get<T>(groupEntity: groupEntity, traverse: traverse).map(
-      (e) => e.isSync()
-          ? e.sync().unwrap()
-          : Sync(
-              const Err(
-                stack: ['DIBase', 'getSync'],
-                error: 'Called getSync() for an async dependency.',
+      (e) =>
+          e.isSync()
+              ? e.sync().unwrap()
+              : Sync(
+                const Err(
+                  stack: ['DIBase', 'getSync'],
+                  error: 'Called getSync() for an async dependency.',
+                ),
               ),
-            ),
     );
   }
 
@@ -191,10 +192,11 @@ base class DIBase<H extends Object> {
     bool traverse = true,
   }) {
     return Future.sync(() async {
-      final result = await getAsync<T>(
-        groupEntity: groupEntity,
-        traverse: traverse,
-      ).unwrap().value;
+      final result =
+          await getAsync<T>(
+            groupEntity: groupEntity,
+            traverse: traverse,
+          ).unwrap().value;
       return result.unwrap();
     });
   }
@@ -317,10 +319,7 @@ base class DIBase<H extends Object> {
     }
 
     final temp = SafeFinisher<T>();
-    register<SafeFinisher<T>>(
-      temp,
-      groupEntity: g,
-    );
+    register<SafeFinisher<T>>(temp, groupEntity: g);
     return temp.resolvable.map((e) {
       registry.removeDependency<SafeFinisher<T>>(groupEntity: g);
       return e;
@@ -343,8 +342,9 @@ base class DIBase<H extends Object> {
           (_) {
             return registry.removeDependencyK(
               dependency.typeEntity,
-              groupEntity:
-                  dependency.metadata.map((e) => e.groupEntity).unwrapOr(const DefaultEntity()),
+              groupEntity: dependency.metadata
+                  .map((e) => e.groupEntity)
+                  .unwrapOr(const DefaultEntity()),
             );
           },
           (_) {
@@ -359,7 +359,9 @@ base class DIBase<H extends Object> {
         ],
       );
     }
-    final result = sequential.add(unsafe: (_) => Some(results)).map((e) => e.unwrap());
+    final result = sequential
+        .add(unsafe: (_) => Some(results))
+        .map((e) => e.unwrap());
     return result;
   }
 }

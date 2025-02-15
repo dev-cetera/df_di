@@ -16,7 +16,8 @@ import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-base mixin SupportsConstructorsMixinT<H extends Object> on SupportsConstructorsMixinK<H> {
+base mixin SupportsConstructorsMixinT<H extends Object>
+    on SupportsConstructorsMixinK<H> {
   @pragma('vm:prefer-inline')
   Resolvable<void> resetSingletonT(
     Type type, {
