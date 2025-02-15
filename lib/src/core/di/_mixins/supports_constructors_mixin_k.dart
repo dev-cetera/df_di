@@ -37,11 +37,14 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getSingletonK(
-      typeEntity,
-      groupEntity: groupEntity,
-      traverse: traverse,
-    ).unwrap();
+    return consec(
+      getSingletonK(
+        typeEntity,
+        groupEntity: groupEntity,
+        traverse: traverse,
+      ).unwrap(),
+      (e) => e.unwrap(),
+    );
   }
 
   ResolvableOption<Object> getSingletonK(
@@ -69,7 +72,7 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
     ).unwrap();
   }
 
-   ResolvableOption getFactoryK(
+  ResolvableOption getFactoryK(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,

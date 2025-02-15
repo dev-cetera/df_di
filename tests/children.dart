@@ -19,41 +19,31 @@ import 'package:test/test.dart';
 
 void main() {
   test(
-    'Testing the registration ofa DI instance, getting it and unregistering it.',
+    'Testing the registration of a DI instance (child), getting it and unregistering it.',
     () async {
       final di = DI();
       final child = DI();
       di.register(child);
-      expect(
-        child,
-        di.getUnsafe<DI>(),
-      );
+      expect(child, di.getUnsafe<DI>());
+      expect(child, di.getUnsafeT(DI));
+      expect(di.isRegistered<DI>(), true);
+      expect(di.isRegisteredT(DI), true);
       di.unregister<DI>();
-      expect(
-        di.get<DI>().isNone(),
-        true,
-      );
+      expect(di.isRegistered<DI>(), false);
+      expect(di.isRegisteredT(DI), false);
     },
   );
   test(
-    'Testing the lazy registration of a DI() instance, getting it and unregistering it.',
+    'Testing the lazy registration of a DI instance (child), getting it and unregistering it.',
     () {
       final di = DI();
       final child = DI();
       di.registerLazy<DI>(() => Sync(Ok(child)));
-      expect(
-        child,
-        di.getSingleton<DI>().unwrap().unwrap(),
-      );
-      expect(
-        true,
-        di.isRegistered<DI>(),
-      );
+      expect(child, di.getSingletonUnsafe<DI>());
+      expect(child, di.getSingletonUnsafeT(DI));
+      expect(true, di.isRegistered<DI>());
       di.unregister<DI>();
-      expect(
-        false,
-        di.isRegistered<DI>(),
-      );
+      expect(false, di.isRegistered<DI>());
     },
   );
   test(
@@ -62,15 +52,10 @@ void main() {
       final c1 = DI();
       c1.register<int>(1);
       final c4 = c1.child().child().child().child();
-      expect(
-        1,
-        c4.getUnsafe<int>(),
-      );
+      expect(1, c4.getUnsafe<int>());
+      expect(true, c4.isRegistered<int>());
       c1.unregister<int>();
-      expect(
-        true,
-        c4.getSyncOrNone<int>().isNone(),
-      );
+      expect(false, c4.isRegistered<int>());
     },
   );
 }
