@@ -1,7 +1,7 @@
 //.title
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //
-// Dart/Flutter (DF) Packages by DevCetra.com & contributors. The use of this
+// Dart/Flutter (DF) Packages by dev-cetera.com & contributors. The use of this
 // source code is governed by an MIT-style license described in the LICENSE
 // file located in this project's root directory.
 //
@@ -15,13 +15,14 @@
 export 'dart:async';
 
 export 'package:collection/collection.dart';
+export 'package:df_safer_dart/df_safer_dart.dart';
 export 'package:df_type/df_type.dart';
 export 'package:meta/meta.dart';
 
 export '_index.g.dart';
 
-export 'core/_registry.dart';
-export 'core/_dependency.dart';
-export 'core/_di_base.dart';
+export 'core/di/_di_registry.dart';
+export 'core/di/_dependency.dart';
+export 'core/di/_di_base.dart';
 
-export 'core/_mixins/_index.g.dart';
+export 'core/di/_mixins/_index.g.dart';

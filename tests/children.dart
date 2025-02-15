@@ -1,7 +1,7 @@
 //.title
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //
-// Dart/Flutter (DF) Packages by DevCetra.com & contributors. The use of this
+// Dart/Flutter (DF) Packages by dev-cetera.com & contributors. The use of this
 // source code is governed by an MIT-style license described in the LICENSE
 // file located in this project's root directory.
 //
@@ -11,53 +11,51 @@
 //.title~
 
 import 'package:df_di/df_di.dart';
+import 'package:df_di/src/_common.dart';
 
 import 'package:test/test.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 void main() {
-  group(
-    'Testing children',
+  test(
+    'Testing the registration of a DI instance (child), getting it and unregistering it.',
+    () async {
+      final di = DI();
+      final child = DI();
+      di.register(child);
+      expect(child, di.getUnsafe<DI>());
+      expect(child, di.getUnsafeT(DI));
+      expect(di.isRegistered<DI>(), true);
+      expect(di.isRegisteredT(DI), true);
+      di.unregister<DI>();
+      expect(di.isRegistered<DI>(), false);
+      expect(di.isRegisteredT(DI), false);
+    },
+  );
+  test(
+    'Testing the lazy registration of a DI instance (child), getting it and unregistering it.',
     () {
-      test(
-        '- Testing if a child gets created and unregistered',
-        () async {
-          final di = DI();
-          final child = DI();
-          di.register(child);
-          final gotChild = di.getOrNull<DI>();
-          expect(
-            child,
-            gotChild,
-          );
-          di.unregister<DI>();
-        },
-      );
-      test(
-        '- Testing singletons',
-        () async {
-          final di = DI();
-          di.registerLazy<int>(() => 1);
-          expect(
-            1,
-            di.getSingletonOrNull<int>(),
-          );
-        },
-      );
-      test(
-        '- Testing singletons',
-        () async {
-          final c1 = DI();
-          c1.register<int>(1);
-          final c4 = c1.child().child().child().child();
-          expect(
-            1,
-            c4.getOrNull<int>(),
-          );
-          //c1.unregisterConstructor<DIContainer>();
-        },
-      );
+      final di = DI();
+      final child = DI();
+      di.registerLazy<DI>(() => Sync(Ok(child)));
+      expect(child, di.getSingletonUnsafe<DI>());
+      expect(child, di.getSingletonUnsafeT(DI));
+      expect(true, di.isRegistered<DI>());
+      di.unregister<DI>();
+      expect(false, di.isRegistered<DI>());
+    },
+  );
+  test(
+    'Testing children of children.',
+    () async {
+      final c1 = DI();
+      c1.register<int>(1);
+      final c4 = c1.child().child().child().child();
+      expect(1, c4.getUnsafe<int>());
+      expect(true, c4.isRegistered<int>());
+      c1.unregister<int>();
+      expect(false, c4.isRegistered<int>());
     },
   );
 }

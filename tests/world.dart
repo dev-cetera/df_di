@@ -1,7 +1,7 @@
 //.title
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //
-// Dart/Flutter (DF) Packages by DevCetra.com & contributors. The use of this
+// Dart/Flutter (DF) Packages by dev-cetera.com & contributors. The use of this
 // source code is governed by an MIT-style license described in the LICENSE
 // file located in this project's root directory.
 //
@@ -10,7 +10,7 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-// ignore_for_file: omit_local_variable_types
+// ignore_for_file: omit_local_variable_types, invalid_use_of_visible_for_testing_member
 
 import 'package:df_di/df_di.dart';
 
@@ -20,29 +20,29 @@ void main() {
   // Create a new world for players or users to exist in.
   final world = World();
 
-// Create a new player in the world.
+  // Create a new player in the world.
   final player1 = world.createUniqueEntity();
 
-// Spawn the player in the world with the components Name, Position and Velocity.
+  // Spawn the player in the world with the components Name, Position and Velocity.
   world.addAllComponents(player1, {
     const Name('Player 1'),
     const Position(x: 0, y: 0),
     const Velocity(x: 1, y: 0),
   });
 
-// Print the current position.
+  // Print the current position.
   final p0 = player1.getComponent<Position>();
   print('Position 0: (${p0.x}, ${p0.y})');
 
-// Update the movement in the world.
+  // Update the movement in the world.
   final movementSystem = MovementSystem();
   movementSystem.update(world);
 
-// Print the position after the world update.
+  // Print the position after the world update.
   final p1 = player1.getComponent<Position>();
   print('Position 1: (${p1.x}, ${p1.y})');
 
-// Print the player name.
+  // Print the player name.
   final name = player1.getComponent<Name>().name;
   print('Player name: "$name"');
 }

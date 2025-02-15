@@ -1,7 +1,7 @@
 //.title
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //
-// Dart/Flutter (DF) Packages by DevCetra.com & contributors. The use of this
+// Dart/Flutter (DF) Packages by dev-cetera.com & contributors. The use of this
 // source code is governed by an MIT-style license described in the LICENSE
 // file located in this project's root directory.
 //
@@ -12,186 +12,282 @@
 
 // ignore_for_file: invalid_use_of_protected_member, strict_raw_type
 
-import 'dart:async';
-import 'dart:math';
+// import 'dart:async';
 
-import 'package:df_di/df_di.dart';
+// import 'package:df_di/df_di.dart';
+import 'package:df_di/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+// Iterable<int> sort(Iterable<int> values) sync* {
+//   for (final e in values) {}
+// }
 
 Future<void> main() async {
-  print('\n# Get access to the global DI container:\n');
   final di = DI();
-  print('DI.global == di: ${DI.global == di}');
+  // di.register<int>(unsafe: () async => 1);
+  // print(di.registry.state);
+  // print(await di.getUnsafeK(TypeEntity(int)));
+  // print(di.registry.state);
+  // print(await di.getUnsafeK(TypeEntity(int)));
+  // print(di.registry.state);
 
-  print(
-    '\n# Get the state of the global DI container (prints an empty map):\n',
-  );
+  di.registerLazy<List<int>>(() => Async.unsafe(() async => [123]));
   print(di.registry.state);
+  final value = await di.getSingletonUnsafe<List<int>>();
+  print(value);
 
-  print('\n# Create a new DI container:\n');
-  print(DI());
+  // await di.getSingleton<List<int>>().value;
+  // final a = await l.unwrapAsync();
+  // print(a);
+  // final l2 = di.getSingleton<List<int>>();
+  // final b = await l2.unwrapAsync();
+  // print(a == b);
+  // di.resetSingleton<List<int>>().value;
+  // final l3 = di.getSingleton<List<int>>();
+  // final c = await l3.unwrapAsync();
+  // final l4 = di.getSingleton<List<int>>();
+  // await l4.value;
+  // final d = l4.unwrapSync();
+  // print(di.registry.state);
+  // print(a == c);
+  // final a = await l.unwrapAsync();
+  // print(await l.unwrapAsync());
+  // print(di.getSingletonUnsafe<List<int>>() == l.unwrapSync());
 
-  print('\n# Use any of the pre-defined containers for your app:\n');
-  print(DI.app); // You can store app settings in here.
-  print(DI.app); // You can contain the global state in here.
-  print(DI.global); // You can contain stuff for the active session in here.
-  print(DI.dev); // A container you can use for or development-only.
-  print(DI.test); // A container you can use for or test-only.
-  print(DI.prod); // A container you can use for or production-only.
+  // final a = TypeEntity(List, [int]);
+  // final c = TypeEntity(List, [TypeEntity(TypeEntity(TypeEntity(int)))]);
+  // print(a);
+  // print(c);
 
-  // Or create your own custom containers:
-  final di1 = DI();
-  print(di1);
-  final di2 = DI();
-  print(di2);
+  // final di = DI();
+  // final a = di.register<int>(unsafe: () => Future.delayed(const Duration(seconds: 3), () => 2));
+  // // print(a);
+  // final b =
+  //     di.register<String>(unsafe: () => Future.delayed(const Duration(seconds: 3), () => 'hello'));
+  // // print(b);
+  // final parent = DI();
+  // parent.register<DIBase>(unsafe: () => di);
+  //di.register<DIBase>(unsafe: () => child);
 
-  print('\n# Register the universe and everything:\n');
-  di.register<int>(42);
-  print(di.getOrNull<int>());
+  // print((await parent.untilK(TypeEntity(int)).value).ok().unwrap());
+  // print((await parent.untilK(TypeEntity(String)).value).ok().unwrap());
+  // print((await parent.until<int>().value).ok().unwrap());
+  // print((await parent.until<String>().value).ok().unwrap());
 
-  print('\n# Register Futures:\n');
-  DI.prod.register<double>(Future<double>.value(pi));
-  di.register<double>(
-    Future.delayed(const Duration(milliseconds: 10), () => pi),
-  );
-  print('PI is ${await DI.prod.getOrNull<double>()}');
+  // Future.delayed(const Duration(seconds: 4), () {
+  //   di.register<String>(unsafe: () => 'Hello World!');
+  //   print(di.completers.unwrap().registry.state);
+  // });
 
-  print('Get access to the global DI container:\n\n');
-  di.register(Future.value('Hello, DI!'));
+  // di.until<String>().map((e) {
+  //   print(e);
+  //   return e;
+  // });
 
-  // Register FooBarService as a lazy singleton.
-  di.registerLazyService(FooBarService.new);
+  // print(di.completers.unwrap().registry.state);
 
-  print(di.registry.state.entries);
+  // print(value.ifAsync((e) => e.value.then((e) => e.ifOk((e) => print(e.value)))));
+  //print(di.registry.state);
 
-  final fooBarService1 = await di.getServiceSingletonOrNull<FooBarService>();
-  final fooBarService2 = await di.getServiceSingletonT(FooBarService);
-  print(fooBarService1 == fooBarService2);
+  //di.registry.removeDependency<Future<int>>();
 
-  print(di.registry.state.entries);
+  //print(di.isRegisteredK(TypeEntity(int)));
 
-  print('TIME TO UNREG 1');
+  // print(
+  //   di.isRegisteredK(TypeEntity(Async, [int])),
+  // );
 
-  await di.unregister<int>();
-  print('TIME TO UNREG 2');
-  await di.unregister<String>();
-  print('TIME TO UNREG 3');
-  //await di.unregister<Constructor<FooBarService>>();
-  print('TIME TO UNREG 4');
+  // final a = await di.get<int>().unwrap().value;
+  // print(a.unwrap());
 
-  await consec(
-    di.unregisterAll(
-      onAfterUnregister: (dependency) {
-        print('Unregistered: ${dependency.value}');
-      },
-    ),
-    ((_) {
-      // Completes when all dependencies are unregistered and removed
-      // from di.
-      print('Unregistered all!');
-    }),
-  );
+  // final b = await di.getK(TypeEntity(Async, [int])).unwrap().value;
+  // print(b.unwrap());
 
-  print('TIME TO UNREG 5');
+  //final a = await di.getK(TypeEntity(int)).map((e) => e.value).unwrap();
+
+  //print(a.unwrap());
+
+  // print(di
+  //     .get<int>()
+  //     .async()
+  //     .unwrap()
+  //     .value
+  //     .then((e) => e.ifOk((e) => e.value.ifSome((e) => print(e.unwrap())))));
+  //di.unregister<int>().ifSome((e) => print('SOME $e'));
+  //print(di.get<int>().unwrap().isNone());
+  //print(di.registry.state);
 }
+//   print('\n# Get access to the global DI container:\n');
+//   final di = DI();
+//   print('DI.global == di: ${DI.global == di}');
 
-// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+//   print(
+//     '\n# Get the state of the global DI container (prints an empty map):\n',
+//   );
+//   print(di.registry.state);
 
-/// A new service class that extends [Service].
-///
-/// - Register via `di.initSingletonService(FooBarService.new);`
-/// - Get via `di.get<FooBarService>();`
-/// - Unregister via `di.unregister<FooBarService>();`
-final class FooBarService extends Service {
-  @override
-  ServiceListeners provideDisposeListeners() {
-    return [
-      ...super.provideDisposeListeners(),
-    ];
-  }
+//   print('\n# Create a new DI container:\n');
+//   print(DI());
 
-  @override
-  ServiceListeners provideInitListeners() {
-    return [
-      ...super.provideInitListeners(),
-      (_) => print('Disposed $FooBarService'),
-    ];
-  }
-}
+//   print('\n# Use any of the pre-defined containers for your app:\n');
+//   print(DI.app); // You can store app settings in here.
+//   print(DI.app); // You can contain the global state in here.
+//   print(DI.global); // You can contain stuff for the active session in here.
+//   print(DI.dev); // A container you can use for or development-only.
+//   print(DI.test); // A container you can use for or test-only.
+//   print(DI.prod); // A container you can use for or production-only.
 
-// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+//   // Or create your own custom containers:
+//   final di1 = DI();
+//   print(di1);
+//   final di2 = DI();
+//   print(di2);
 
-final class CountingService extends StreamService<int, bool> {
-  @override
-  Stream<int> provideInputStream(_) async* {
-    for (var n = 0; n < 100; n++) {
-      await Future<void>.delayed(const Duration(seconds: 1));
-      yield n;
-    }
-  }
+//   print('\n# Register the universe and everything:\n');
+//   di.register<int>(42);
+//   print(di.getOrNull<int>());
 
-  @override
-  ServiceListeners<bool> provideInitListeners() {
-    return [
-      ...super.provideInitListeners(),
-    ];
-  }
+//   print('\n# Register Futures:\n');
+//   DI.prod.register<double>(Future<double>.value(pi));
+//   di.register<double>(
+//     Future.delayed(const Duration(milliseconds: 10), () => pi),
+//   );
+//   print('PI is ${await DI.prod.getOrNull<double>()}');
 
-  @override
-  ServiceListeners provideDisposeListeners() {
-    return [
-      ...super.provideDisposeListeners(),
-      (_) => print('Disposed $FooBarService'),
-    ];
-  }
+//   print('Get access to the global DI container:\n\n');
+//   di.register(Future.value('Hello, DI!'));
 
-  @override
-  ServiceListeners<int> provideOnPushToStreamListeners() {
-    return [
-      (data) => print('[CountingService]: $data'),
-    ];
-  }
-}
+//   // Register FooBarService as a lazy singleton.
+//   di.registerLazyService(FooBarService.new);
 
-// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+//   print(di.registry.state.entries);
 
-// An example of a service that DI will treat as sync.
-final class SyncServiceExmple extends Service {
-  @override
-  ServiceListeners provideInitListeners() {
-    return [
-      ...super.provideInitListeners(),
-      (_) => 1,
-    ];
-  }
+//   final fooBarService1 = await di.getServiceSingletonOrNull<FooBarService>();
+//   final fooBarService2 = await di.getServiceSingletonT(FooBarService);
+//   print(fooBarService1 == fooBarService2);
 
-  @override
-  ServiceListeners provideDisposeListeners() {
-    return [
-      ...super.provideDisposeListeners(),
-      (_) async => 1,
-    ];
-  }
-}
+//   print(di.registry.state.entries);
 
-// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+//   print('TIME TO UNREG 1');
 
-// An example of a service that DI will treat as async.
-final class AsyncServiceExample extends Service {
-  @override
-  ServiceListeners provideInitListeners() {
-    return [
-      ...super.provideInitListeners(),
-      (_) async => 1,
-    ];
-  }
+//   await di.unregister<int>();
+//   print('TIME TO UNREG 2');
+//   await di.unregister<String>();
+//   print('TIME TO UNREG 3');
+//   //await di.unregister<Constructor<FooBarService>>();
+//   print('TIME TO UNREG 4');
 
-  @override
-  ServiceListeners provideDisposeListeners() {
-    return [
-      ...super.provideDisposeListeners(),
-      (_) => 1,
-    ];
-  }
-}
+//   await di.unregisterAll(
+//     onAfterUnregister: (dependency) {
+//       print('Unregistered: ${dependency.value}');
+//     },
+//   ).thenOr((_) {
+//     // Completes when all dependencies are unregistered and removed
+//     // from di.
+//     print('Unregistered all!');
+//   });
+
+//   print('TIME TO UNREG 5');
+// }
+
+// // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+// /// A new service class that extends [Service].
+// ///
+// /// - Register via `di.initSingletonService(FooBarService.new);`
+// /// - Get via `di.get<FooBarService>();`
+// /// - Unregister via `di.unregister<FooBarService>();`
+// final class FooBarService extends Service {
+//   @override
+//   ServiceListeners provideDisposeListeners() {
+//     return [
+//       ...super.provideDisposeListeners(),
+//     ];
+//   }
+
+//   @override
+//   ServiceListeners provideInitListeners() {
+//     return [
+//       ...super.provideInitListeners(),
+//       (_) => print('Disposed $FooBarService'),
+//     ];
+//   }
+// }
+
+// // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+// final class CountingService extends StreamService<int, bool> {
+//   @override
+//   Stream<int> provideInputStream(_) async* {
+//     for (var n = 0; n < 100; n++) {
+//       await Future<void>.delayed(const Duration(seconds: 1));
+//       yield n;
+//     }
+//   }
+
+//   @override
+//   ServiceListeners<bool> provideInitListeners() {
+//     return [
+//       ...super.provideInitListeners(),
+//     ];
+//   }
+
+//   @override
+//   ServiceListeners provideDisposeListeners() {
+//     return [
+//       ...super.provideDisposeListeners(),
+//       (_) => print('Disposed $FooBarService'),
+//     ];
+//   }
+
+//   @override
+//   ServiceListeners<int> provideOnPushToStreamListeners() {
+//     return [
+//       ...super.provideOnPushToStreamListeners(),
+//       (data) => print('[CountingService]: $data'),
+//     ];
+//   }
+// }
+
+// // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+// // An example of a service that DI will treat as sync.
+// final class SyncServiceExmple extends Service {
+//   @override
+//   ServiceListeners provideInitListeners() {
+//     return [
+//       ...super.provideInitListeners(),
+//       (_) => 1,
+//     ];
+//   }
+
+//   @override
+//   ServiceListeners provideDisposeListeners() {
+//     return [
+//       ...super.provideDisposeListeners(),
+//       (_) async => 1,
+//     ];
+//   }
+// }
+
+// // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+// // An example of a service that DI will treat as async.
+// final class AsyncServiceExample extends Service {
+//   @override
+//   ServiceListeners provideInitListeners() {
+//     return [
+//       ...super.provideInitListeners(),
+//       (_) async => 1,
+//     ];
+//   }
+
+//   @override
+//   ServiceListeners provideDisposeListeners() {
+//     return [
+//       ...super.provideDisposeListeners(),
+//       (_) => 1,
+//     ];
+//   }
+// }

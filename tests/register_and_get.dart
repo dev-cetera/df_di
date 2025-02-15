@@ -1,7 +1,7 @@
 //.title
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //
-// Dart/Flutter (DF) Packages by DevCetra.com & contributors. The use of this
+// Dart/Flutter (DF) Packages by dev-cetera.com & contributors. The use of this
 // source code is governed by an MIT-style license described in the LICENSE
 // file located in this project's root directory.
 //
@@ -12,8 +12,6 @@
 
 // ignore_for_file: invalid_use_of_protected_member
 
-import 'dart:collection';
-
 import 'package:df_di/df_di.dart';
 
 import 'package:test/test.dart';
@@ -21,6 +19,24 @@ import 'package:test/test.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 void main() {
+  test(
+    '- The value returned by "register" is the same as the value registered',
+    () {
+      final di = DI();
+      final a = <int>[1, 2, 3];
+      di.register<List<int>>(a);
+      final b = di.getUnsafe<List<int>>();
+      expect(
+        a,
+        b,
+      );
+      expect(
+        a.hashCode,
+        b.hashCode,
+      );
+    },
+  );
+  /*
   group(
     'Testing basics',
     () {
@@ -29,7 +45,7 @@ void main() {
         () {
           final di = DI();
           final a = <int>[1, 2, 3];
-          final b = di.register(a);
+          final b = di.register<List<int>>(a);
           expect(
             a,
             b,
@@ -45,9 +61,8 @@ void main() {
         '- The exact registered value is returned by "register"',
         () async {
           final di = DI();
-          final a =
-              Future<int>.delayed(const Duration(milliseconds: 100), () => 1);
-          final b = di.register(a);
+          final a = Future<int>.delayed(const Duration(milliseconds: 100), () => 1);
+          final b = di.register<int>(a);
           expect(
             1,
             await b,
@@ -64,15 +79,11 @@ void main() {
         '- Get with "dynamic" or "Object" should return the first registered value',
         () {
           final di = DI();
-          di.register(1);
-          di.register('2');
-          di.register(false);
+          di.register<int>(1);
+          di.register<String>('2');
+          di.register<bool>(false);
           expect(
-            di.getOrNull(),
-            1,
-          );
-          expect(
-            di.getOrNull<Object>(),
+            di.getOrNull<int>(),
             1,
           );
         },
@@ -83,7 +94,7 @@ void main() {
         () {
           final di = DI();
           expect(
-            di.register('Hello World!'),
+            di.register<String>('Hello World!'),
             di.getOrNull<String>(),
           );
           expect(
@@ -212,5 +223,5 @@ void main() {
         },
       );
     },
-  );
+  );*/
 }

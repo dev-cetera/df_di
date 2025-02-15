@@ -1,31 +1,152 @@
-<a href="https://www.buymeacoffee.com/robmllze" target="_blank"><img align="right" src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
+<a href="https://www.buymeacoffee.com/dev_cetera" target="_blank"><img align="right" src="https://cdn.buymeacoffee.com/buttons/default-orange.png" height="48"></a>
+<a href="https://discord.gg/gEQ8y2nfyX" target="_blank"><img align="right" src="https://raw.githubusercontent.com/dev-cetera/resources/refs/heads/main/assets/discord_icon/discord_icon.svg" height="48"></a>
 
-Dart & Flutter Packages by DevCetra.com & contributors.
+Dart & Flutter Packages by dev-cetera.com & contributors.
 
 [![Pub Package](https://img.shields.io/pub/v/df_di.svg)](https://pub.dev/packages/df_di)
-[![MIT License](https://img.shields.io/badge/License-MIT-blue.svg)](https://raw.githubusercontent.com/robmllze/df_di/main/LICENSE)
+[![MIT License](https://img.shields.io/badge/License-MIT-blue.svg)](https://raw.githubusercontent.com/dev-cetera/df_di/main/LICENSE)
 
 ---
 
-## Summary
+## NOTE NOTE NOTE
 
-This package provides a pragmatic dependency injection (DI) framework, coupled with service classes for seamless state management in Dart, as well as a new ECS (Entity Component System) build on top of the DI framework.
+PLEASE USE A PREVIOUS VERSION. THIS ONE IS BEING EXPERIMENTED WITH.
 
-## Features
+<!-- Efficiently structure and manage the essential dependencies of your code, such as services, data, and utilities. This package helps you organize and access these dependencies using containers that store and provide them when needed, making your app more adaptable, testable, maintainable, and easier to debug.
 
-- Robust FutureOr support for handling both synchronous and asynchronous dependencies and callbacks.
-- Register dependencies by type and groupEntity, enabling management of multiple dependencies of the same type.
-- Hierarchical DI with scoped dependencies through child containers.
-- Retrieve dependencies by runtime type or generic type.
-- Factory dependencies and lazy initialization for singleton dependencies.
-- Service classes that automatically handle cleanup when they are unregistered.
-- Extension of the DI system into an ECS framework called “World.” For an example, see: https://github.com/DevCetra/df_di/blob/main/tests/world.dart
+Inspired by [get_it](https://pub.dev/packages/get_it/), it offers a flexible, faster solution with enhanced async handling, support for retrieving dependencies by runtime or generic type, and a hierarchical container structure. This approach allows nested child containers that inherit from parent containers, all while providing clearer, more concise documentation.
 
-For a full feature set, please refer to the [API reference](https://pub.dev/documentation/df_di/).
+For a full feature set, please refer to the [API reference](https://pub.dev/documentation/df_di/). -->
+
+<!-- ## Use Case 1
+
+Your app probably contains classes that act as managers, helpers, or services, for example:
+
+```dart
+class UserManager {
+  final String uid;
+  const UserManager(this.uid);
+
+  String? _userName;
+  String get userName => _userName ?? 'Guest';
+
+  Future<void> loadUserData() async {
+    // TODO: Implement functionality to load user data here.
+    _userName = 'John Doe'; // Example of loaded data
+
+  }
+}
+```
+
+You can register dependencies like the `UserManager` above in the dedicated `DI.session` container. This container is one of many pre-defined containers you can use and is specifically intended to store dependencies that should persist throughout the app’s session (from login to logout):
+
+```dart
+Future<void> logIn() async {
+  // TODO: Log in and get the current user's uid.
+  final userManger = UserManager(uid);
+  await userManger.loadUserData();
+  // Register the UserManager in the session container once loaded.
+  DI.session.register<UserManager>(userManager);
+}
+```
+
+You can now use the `until` method that will only complete with an instance of `UserManager` once one has been registered in the `DI.session` container:
+
+```dart
+Widget build(BuildContext contect) {
+  return FutureBuilder<UserManager>(
+    future:  DI.session.until<UserManager>(),
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return CircularProgressIndicator();
+      } else if (snapshot.hasError) {
+        return Text('Error: ${snapshot.error}');
+      } else {
+        return Text('Hello, ${snapshot.data?.userName}');
+      }
+    },
+  );
+}
+```
+
+Upon logging out, the `DI.session` ssion container can be cleared and reset for future use. Dependencies are unregistered in the reverse order of their registration, ensuring proper resource cleanup:
+
+```dart
+Future<void> logOut() async {
+  // TODO: Log out the user.r
+  DI.session.unregisterAll();
+}
+```
+
+## Use Case 2
+
+Define a custom type to hold a `String` representing the getConfig API endpoint URL. Avoid registering types like `String` or `Map` in a container, as doing so introduces ambiguity about what will be retrieved.
+
+```dart
+class GetConfigEndpointUrl {
+  final String value;
+  const GetConfigEndpointUrl(this.value);
+}
+
+void setupEndpoints() {
+  DI.global.register<GetConfigEndpointUrl>(
+    GetConfigEndpointUrl('https://api.example.com/getConfig'),
+  );
+}
+```
+
+Define a class that is responsible for loading configuration data from the endpoint provided by `ConfigApiEndpointUrl`.
+
+```dart
+class ConfigManager {
+  Map<String, dynamic> _data = {};
+  Map<String, dynamic> get data => _data;
+
+  Future<void> loadDataFromApi() async {
+      // Don't proceed until ConfigApiEndpointUrl is registered.
+      final endpointUrl = (await DI.global.until<ConfigApiEndpointUrl>()).value;
+      // TODO: Get the data from the API...
+      _data = {'latestVersion': '1.2.3+4'}; // Example of data from API.
+  }
+
+  String? get latestVersion => _data['latestVersion'] as String?;
+}
+```
+
+Configure the app using the provided API and register the `ConfigManager`. This can only be done once thanks to the `isRegistered` check.
+
+```dart
+Future<void> configure() {
+  if (!isRegistered<ConfigManager>()) {
+    final configManager = ConfigManager();
+    await configManager.loadDataFromApi();
+    DI.global.register<ConfigManager>(configManager);
+  }
+}
+```
+
+If you’re confident that `ConfigManager` is already registered in the container, you can fetch it directly. Otherwise, check with `isRegistered` or use the `until` method.
+
+```dart
+Future<void> doStuff() async {
+  final configManager = DI.global<ConfigManager>().latestVersion;
+}
+```
 
 ## Quickstart
 
-### Creating a DI container:
+### Store a dependency in a container:
+
+```dart
+// Access the global DI instance anywhere in your app.
+DI.global;
+
+// Or create your own DI container.
+final di = DI();
+
+// Create nested child containers, useful for scoping dependencies in modular apps.
+final scopedDi = di.child().child().child(groupEntity: Entity('moduleGroup'));
+```
 
 ```dart
 // Access the global DI instance anywhere in your app.
@@ -181,170 +302,39 @@ print(di.registry.state);
 
 // Check if a specific type is registered.
 print(di.isRegistered<int>()); // true
-```
-
-### Implementing an Entity Component System (ECS) using the DI Framework:
-
-This is especially useful for game development with Flutter but can also be applied to app development, such as managing complex forms with dynamic field visibility or handling multiple user profiles in a customizable app.
-
-#### Create various components that can be applied to entities.
-
-```dart
-class Name extends Component {
-  final String name;
-  const Name(this.name);
-
-  @override
-  List<Object?> get props => [name];
-}
-
-class Vector extends Component {
-  final double x;
-  final double y;
-  const Vector({
-    this.x = 0.0,
-    this.y = 0.0,
-  });
-
-  Vector add(Vector other) {
-    return Vector(
-      x: x + other.x,
-      y: y + other.y,
-    );
-  }
-
-  @override
-  List<Object?> get props => [x, y];
-}
-
-class Position extends Vector {
-  const Position({
-    super.x = 0.0,
-    super.y = 0.0,
-  });
-
-  @override
-  Position add(Vector other) {
-    return Position(
-      x: x + other.x,
-      y: y + other.y,
-    );
-  }
-}
-
-class Velocity extends Vector {
-  const Velocity({
-    super.x = 0.0,
-    super.y = 0.0,
-  });
-
-  @override
-  Velocity add(Vector other) {
-    return Velocity(
-      x: x + other.x,
-      y: y + other.y,
-    );
-  }
-}
-```
-
-#### Create a movement system to update entities in the world.
-
-```dart
-class MovementSystem extends UpdateSystem {
-  @override
-  void update(World world) {
-    // Get all entities with both Position and Velocity components.
-    final entities = world.query2<Position, Velocity>();
-    for (var entity in entities) {
-      // Update the position based on the velocity
-      final Position position = entity.getComponent();
-      final Velocity velocity = entity.getComponent();
-      final result = world.updateComponent(
-        entity,
-        position.add(velocity),
-      );
-      final newPosition = result.unwrap() as Position;
-
-      // Log the updated position.
-      print('Updated Position: (${newPosition.x}, ${newPosition.y})');
-    }
-  }
-}
-
-abstract class UpdateSystem {
-  void update(World world);
-}
-```
-
-#### Move a player in the world.
-
-```dart
-// Create a new world for players or users to exist in.
-final world = World();
-
-// Create a new player in the world.
-final player1 = world.createUniqueEntity();
-
-// Spawn the player in the world with the components Name, Position and Velocity.
-world.addAllComponents(player1, {
-  const Name('Player 1'),
-  const Position(x: 0, y: 0),
-  const Velocity(x: 1, y: 0),
-});
-
-// Print the current position.
-final p0 = player1.getComponent<Position>();
-print('Position 0: (${p0.x}, ${p0.y})');
-
-// Update the movement in the world.
-final movementSystem = MovementSystem();
-movementSystem.update(world);
-
-// Print the position after the world update.
-final p1 = player1.getComponent<Position>();
-print('Position 1: (${p1.x}, ${p1.y})');
-
-// Print the player name.
-final name = player1.getComponent<Name>().name;
-print('Player name: "$name"');
-```
-
-## Installation
-
-Use this package as a dependency by adding it to your `pubspec.yaml` file (see [here](https://pub.dev/packages/df_di/install)).
+``` -->
 
 ---
+
+<!-- <a href="https://medium.com/@dev-cetera" target="_blank"><img src="https://raw.githubusercontent.com/dev-cetera/resources/refs/heads/main/assets/medium_logo/medium_logo.svg" height="20"></a>
+
+[Dependency Injection Tutorial for Flutter]() - This article explains what Dependency Injection (DI) is and how to use it effectively in Flutter, improving code structure and testability by decoupling components.
+
+[State Management Done Right in Flutter]() - This article covers showcases techniques to manage app state efficiently and ensuring scalability and maintainability. -->
 
 ## Contributing and Discussions
 
 This is an open-source project, and we warmly welcome contributions from everyone, regardless of experience level. Whether you're a seasoned developer or just starting out, contributing to this project is a fantastic way to learn, share your knowledge, and make a meaningful impact on the community.
 
-### Ways you can contribute:
+### Ways you can contribute
 
-- **Buy me a coffee:** If you'd like to support the project financially, consider [buying me a coffee](https://www.buymeacoffee.com/robmllze). Your support helps cover the costs of development and keeps the project growing.
+- **Buy me a coffee:** If you'd like to support the project financially, consider [buying me a coffee](https://www.buymeacoffee.com/dev_cetera). Your support helps cover the costs of development and keeps the project growing.
+- **Find us on Discord:** Feel free to ask questions and engage with the community here: https://discord.gg/gEQ8y2nfyX.
 - **Share your ideas:** Every perspective matters, and your ideas can spark innovation.
+- **Help others:** Engage with other users by offering advice, solutions, or troubleshooting assistance.
 - **Report bugs:** Help us identify and fix issues to make the project more robust.
 - **Suggest improvements or new features:** Your ideas can help shape the future of the project.
-- **Help clarify documentation:** Good documentation is groupEntity to accessibility. You can make it easier for others to get started by improving or expanding our documentation.
+- **Help clarify documentation:** Good documentation is key to accessibility. You can make it easier for others to get started by improving or expanding our documentation.
 - **Write articles:** Share your knowledge by writing tutorials, guides, or blog posts about your experiences with the project. It's a great way to contribute and help others learn.
 
 No matter how you choose to contribute, your involvement is greatly appreciated and valued!
 
----
+### We drink a lot of coffee...
 
-### Chief Maintainer:
+If you're enjoying this package and find it valuable, consider showing your appreciation with a small donation. Every bit helps in supporting future development. You can donate here: https://www.buymeacoffee.com/dev_cetera
 
-📧 Email _Robert Mollentze_ at robmllze@gmail.com
-
-### Dontations:
-
-If you're enjoying this package and find it valuable, consider showing your appreciation with a small donation. Every bit helps in supporting future development. You can donate here:
-
-https://www.buymeacoffee.com/robmllze
-
----
+<a href="https://www.buymeacoffee.com/dev_cetera" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" height="40"></a>
 
 ## License
 
-This project is released under the MIT License. See [LICENSE](https://raw.githubusercontent.com/robmllze/df_di/main/LICENSE) for more information.
+This project is released under the MIT License. See [LICENSE](https://raw.githubusercontent.com/dev-cetera/df_type/main/LICENSE) for more information.
