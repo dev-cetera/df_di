@@ -17,21 +17,24 @@ import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
-  Option<SupportsConstructorsMixin> _children = const None();
+base mixin SupportsChildrenMixin<H extends Object> on SupportsConstructorsMixin<H> {
+  @protected
+  Option<DI> children = const None();
 
-  Result<void> registerChild({Entity groupEntity = const DefaultEntity()}) {
-    if (_children.isNone()) {
-      _children = Some(DI() as SupportsChildrenMixin);
+  Result<void> registerChild<T extends Object>({Entity groupEntity = const DefaultEntity()}) {
+    if (children.isNone()) {
+      children = Some(DI());
     }
-    return _children.unwrap().registerLazy<DI>(
-      () => Sync(Ok(DI()..parents.add(this as DI))),
-      groupEntity: groupEntity,
-    );
+    return children.unwrap().registerLazy<DI<T>>(
+          () => Sync(Ok(DI<T>()..parents.add(this as DI<H>))),
+          groupEntity: groupEntity,
+        );
   }
 
-  Option<DI> getChildOrNone({Entity groupEntity = const DefaultEntity()}) {
-    final option = getChild(groupEntity: groupEntity);
+  Option<DI<T>> getChildOrNone<T extends Object>({
+    Entity groupEntity = const DefaultEntity(),
+  }) {
+    final option = getChild<T>(groupEntity: groupEntity);
     if (option.isNone()) {
       return const None();
     }
@@ -42,12 +45,14 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     return Some(result.unwrap());
   }
 
-  OptionResult<DI> getChild({Entity groupEntity = const DefaultEntity()}) {
+  OptionResult<DI<T>> getChild<T extends Object>({
+    Entity groupEntity = const DefaultEntity(),
+  }) {
     final g = groupEntity.preferOverDefault(focusGroup);
-    if (_children.isNone()) {
+    if (children.isNone()) {
       return const None();
     }
-    final option = _children.unwrap().getSingleton<DI>(groupEntity: g);
+    final option = children.unwrap().getSingleton<DI<T>>(groupEntity: g);
     if (option.isNone()) {
       return const None();
     }
@@ -59,34 +64,81 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     return Some(value);
   }
 
-  Option<Resolvable<Object>> unregisterChild({
+  OptionResult<DI> getChildT(
+    Type type, {
+    Entity groupEntity = const DefaultEntity(),
+  }) {
+    final g = groupEntity.preferOverDefault(focusGroup);
+    if (children.isNone()) {
+      return const None();
+    }
+    final option = children.unwrap().getSingletonT(type, groupEntity: g);
+    if (option.isNone()) {
+      return const None();
+    }
+    final result = option.unwrap().sync();
+    if (result.isErr()) {
+      return Some(result.err().castErr());
+    }
+    final value = result.unwrap().value.cast<DI>();
+    return Some(value);
+  }
+
+  Option<Resolvable<Object>> unregisterChild<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool skipOnUnregisterCallback = false,
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
-    if (_children.isNone()) {
+    if (children.isNone()) {
       return const None();
     }
-    return _children.unwrap().unregister<DI>(
-      groupEntity: g,
-      skipOnUnregisterCallback: skipOnUnregisterCallback,
-    );
+    return children.unwrap().unregister<DI<T>>(
+          groupEntity: g,
+          skipOnUnregisterCallback: skipOnUnregisterCallback,
+        );
   }
 
-  bool isChildRegistered({Entity groupEntity = const DefaultEntity()}) {
+  Option<Resolvable<Object>> unregisterChildT(
+    Type type, {
+    Entity groupEntity = const DefaultEntity(),
+    bool skipOnUnregisterCallback = false,
+  }) {
     final g = groupEntity.preferOverDefault(focusGroup);
-    if (_children.isNone()) {
+    if (children.isNone()) {
+      return const None();
+    }
+    return children.unwrap().unregisterT(
+          type,
+          groupEntity: g,
+          skipOnUnregisterCallback: skipOnUnregisterCallback,
+        );
+  }
+
+  bool isChildRegistered<T extends Object>({
+    Entity groupEntity = const DefaultEntity(),
+  }) {
+    final g = groupEntity.preferOverDefault(focusGroup);
+    if (children.isNone()) {
       return false;
     }
-    return _children.unwrap().isRegistered(groupEntity: g);
+    return children.unwrap().isRegistered<DI<T>>(groupEntity: g);
   }
 
-  DI child({Entity groupEntity = const DefaultEntity()}) {
-    final existingChild = getSyncOrNone<DI>(groupEntity: groupEntity);
-    if (existingChild.isSome()) {
-      return existingChild.unwrap();
+  bool isChildRegisteredT<T extends Object>({
+    Entity groupEntity = const DefaultEntity(),
+  }) {
+    final g = groupEntity.preferOverDefault(focusGroup);
+    if (children.isNone()) {
+      return false;
     }
-    registerChild(groupEntity: groupEntity);
-    return getChild(groupEntity: groupEntity).unwrap().unwrap();
+    return children.unwrap().isRegisteredT(DI<T>, groupEntity: g);
+  }
+
+  DI<T> child<T extends Object>({Entity groupEntity = const DefaultEntity()}) {
+    if (isChildRegistered<T>(groupEntity: groupEntity)) {
+      return getChild<T>(groupEntity: groupEntity).unwrap().unwrap();
+    }
+    registerChild<T>(groupEntity: groupEntity);
+    return getChild<T>(groupEntity: groupEntity).unwrap().unwrap();
   }
 }

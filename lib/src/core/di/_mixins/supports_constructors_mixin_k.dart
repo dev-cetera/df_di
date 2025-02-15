@@ -16,7 +16,7 @@ import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-base mixin SupportsConstructorsMixinK on SupportsMixinK {
+base mixin SupportsConstructorsMixinK<H extends Object> on SupportsMixinK<H> {
   Resolvable<void> resetSingletonK(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
@@ -44,16 +44,33 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
     );
   }
 
-  ResolvableOption<Object> getSingletonK(
+  OptionResolvable<T> getSingleton<T extends Object>({
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    final option = get<Lazy<T>>(groupEntity: groupEntity, traverse: traverse);
+    if (option.isNone()) {
+      return const None();
+    }
+    final resolvable = option.unwrap().map((e) => e.singleton).merge();
+    return Some(resolvable);
+  }
+
+  OptionResolvable<Object> getSingletonK(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getK(
+    final option = getK(
       TypeEntity(Lazy, [typeEntity]),
       groupEntity: groupEntity,
       traverse: traverse,
-    ).map((e) => e.map((e) => (e as Lazy).singleton)).reduce<Object>();
+    );
+    if (option.isNone()) {
+      return const None();
+    }
+    final resolvable = option.unwrap().map((e) => (e as Lazy).singleton).merge();
+    return Some(resolvable);
   }
 
   @pragma('vm:prefer-inline')

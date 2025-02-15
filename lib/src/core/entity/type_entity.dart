@@ -20,8 +20,7 @@ final class TypeEntity extends Entity {
   static String _getTypeString(Object object) =>
       object is TypeEntity ? object._typeString : object.toString();
 
-  TypeEntity._obj(Object object, this._typeString)
-    : super(Entity.objId(object));
+  TypeEntity._obj(Object object, this._typeString) : super(Entity.objId(object));
 
   /// Constructs a `Entity` representation by replacing occurrences of `Object`
   /// or `dynamic` in the `baseType` with corresponding values from `subTypes`.
@@ -59,8 +58,7 @@ final class TypeEntity extends Entity {
     final buffer = StringBuffer();
     for (var n = 0; n < cleanBaseType.length; n++) {
       // Check for 'Object' or 'dynamic' at the current position.
-      if (cleanBaseType.startsWith(objectStr, n) ||
-          cleanBaseType.startsWith(dynamicStr, n)) {
+      if (cleanBaseType.startsWith(objectStr, n) || cleanBaseType.startsWith(dynamicStr, n)) {
         // Replace with the next subtype from subTypes if available.
         if (subTypeIndex < subTypes.length) {
           buffer.write(_getTypeString(subTypes[subTypeIndex]));
@@ -73,10 +71,7 @@ final class TypeEntity extends Entity {
         }
 
         // Skip ahead over the matched word.
-        n +=
-            cleanBaseType.startsWith(objectStr, n)
-                ? objectStr.length - 1
-                : dynamicStr.length - 1;
+        n += cleanBaseType.startsWith(objectStr, n) ? objectStr.length - 1 : dynamicStr.length - 1;
       } else {
         // Append the current character if it's not part of 'Object' or 'dynamic'.
         buffer.write(cleanBaseType[n]);
@@ -86,5 +81,16 @@ final class TypeEntity extends Entity {
     // Return the constructed type string wrapped in a Entity object.
     final buffer1 = buffer.toString();
     return TypeEntity._obj(buffer1, buffer1);
+  }
+}
+
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+final class GenericEntity<T> extends TypeEntity {
+  GenericEntity._(super.object, super.typeString) : super._obj();
+
+  factory GenericEntity() {
+    final typeEntity = TypeEntity(T);
+    return GenericEntity._(T, typeEntity._typeString);
   }
 }

@@ -16,7 +16,7 @@ import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-base mixin SupportsConstructorsMixinT on SupportsConstructorsMixinK {
+base mixin SupportsConstructorsMixinT<H extends Object> on SupportsConstructorsMixinK<H> {
   @pragma('vm:prefer-inline')
   Resolvable<void> resetSingletonT(
     Type type, {
@@ -39,12 +39,16 @@ base mixin SupportsConstructorsMixinT on SupportsConstructorsMixinK {
   }
 
   @pragma('vm:prefer-inline')
-  ResolvableOption getSingletonT(
+  OptionResolvable getSingletonT(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getSingletonT(type, groupEntity: groupEntity, traverse: traverse);
+    return getSingletonK(
+      TypeEntity(type),
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
   }
 
   @pragma('vm:prefer-inline')

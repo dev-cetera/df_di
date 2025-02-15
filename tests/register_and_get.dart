@@ -25,7 +25,7 @@ void main() {
       final di = DI();
       final a = <int>[1, 2, 3];
       di.register<List<int>>(a);
-      final b = di.getUnsafe<List<int>>();
+      final b = di.getUnsafe<Iterable<int>>();
       expect(a, b);
       expect(a.hashCode, b.hashCode);
     },

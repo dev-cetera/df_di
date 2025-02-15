@@ -16,7 +16,7 @@ import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-base mixin SupportsMixinT on SupportsMixinK {
+base mixin SupportsMixinT<H extends Object> on SupportsMixinK<H> {
   //
   //
   //
@@ -151,19 +151,6 @@ base mixin SupportsMixinT on SupportsMixinK {
     bool traverse = true,
   }) {
     return isRegisteredK(
-      TypeEntity(type),
-      groupEntity: groupEntity,
-      traverse: traverse,
-    );
-  }
-
-  @pragma('vm:prefer-inline')
-  Resolvable<Object> untilT(
-    Type type, {
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    return untilK(
       TypeEntity(type),
       groupEntity: groupEntity,
       traverse: traverse,
