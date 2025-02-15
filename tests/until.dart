@@ -24,7 +24,6 @@ void main() {
   test('Testing the until function.', () async {
     final di = DI();
     Future.delayed(const Duration(seconds: 2), () {
-      print('B');
       di.register<int>(1);
       di.maybeResolve1<int>(SyncOk(1));
     });
