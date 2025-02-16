@@ -32,25 +32,22 @@ final class DIRegistry {
 
   /// A snapshot describing the current state of the dependencies.
   RegistryState get state => RegistryState.unmodifiable(
-    _state,
-  ).map((k, v) => MapEntry(k, Map.unmodifiable(v)));
+        _state,
+      ).map((k, v) => MapEntry(k, Map.unmodifiable(v)));
 
   @protected
   @pragma('vm:prefer-inline')
-  Iterable<Dependency> get unsortedDependencies =>
-      _state.entries.expand((e) => e.value.values);
+  Iterable<Dependency> get unsortedDependencies => _state.entries.expand((e) => e.value.values);
 
   List<Dependency> get sortedDependencies {
     final entries = _state.entries.expand((e) => e.value.values);
-    final sortedEntries =
-        entries.map((d) {
-          final metadata = d.metadata;
-          final index =
-              metadata.isSome() && metadata.unwrap().index.isSome()
-                  ? metadata.unwrap().index.unwrap()
-                  : -1;
-          return (index, d);
-        }).toList();
+    final sortedEntries = entries.map((d) {
+      final metadata = d.metadata;
+      final index = metadata.isSome() && metadata.unwrap().index.isSome()
+          ? metadata.unwrap().index.unwrap()
+          : -1;
+      return (index, d);
+    }).toList();
     sortedEntries.sort((a, b) => b.$1.compareTo(a.$1));
     return List.unmodifiable(sortedEntries.map((e) => e.$2));
   }
@@ -74,9 +71,7 @@ final class DIRegistry {
   /// subtypes.
   @pragma('vm:prefer-inline')
   Iterable<Dependency> dependenciesWhereTypeK(Entity typeEntity) {
-    return sortedDependencies
-        .map((e) => e.typeEntity == typeEntity ? e : null)
-        .nonNulls;
+    return sortedDependencies.map((e) => e.typeEntity == typeEntity ? e : null).nonNulls;
   }
 
   /// A snapshot of the current group entities within [state].
@@ -85,10 +80,9 @@ final class DIRegistry {
   /// Updates the [state] by setting or updating [dependency].
   @protected
   void setDependency(Dependency dependency) {
-    final groupEntity =
-        dependency.metadata.isSome()
-            ? dependency.metadata.unwrap().groupEntity
-            : const DefaultEntity();
+    final groupEntity = dependency.metadata.isSome()
+        ? dependency.metadata.unwrap().groupEntity
+        : const DefaultEntity();
     final typeEntity = dependency.typeEntity;
     final currentDep = Option.fromNullable(_state[groupEntity]?[typeEntity]);
 
@@ -106,8 +100,7 @@ final class DIRegistry {
   bool containsDependency<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
   }) {
-    return _state[groupEntity]?.values.any((e) => e.value is Resolvable<T>) ==
-        true;
+    return _state[groupEntity]?.values.any((e) => e.value is Resolvable<T>) == true;
   }
 
   /// Checks if any dependency with the exact [type] exists under the specified
@@ -123,8 +116,8 @@ final class DIRegistry {
     final a = TypeEntity(Sync, [type]);
     final b = TypeEntity(Async, [type]);
     return _state[groupEntity]?.values.any(
-          (e) => e.typeEntity == a || e.typeEntity == b,
-        ) ==
+              (e) => e.typeEntity == a || e.typeEntity == b,
+            ) ==
         true;
   }
 
@@ -141,8 +134,8 @@ final class DIRegistry {
     final a = TypeEntity(Sync, [typeEntity]);
     final b = TypeEntity(Async, [typeEntity]);
     return _state[groupEntity]?.values.any(
-          (e) => e.typeEntity == a || e.typeEntity == b,
-        ) ==
+              (e) => e.typeEntity == a || e.typeEntity == b,
+            ) ==
         true;
   }
 
@@ -153,10 +146,15 @@ final class DIRegistry {
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
     return Option.fromNullable(
-      _state[groupEntity]?.values
-          .firstWhereOrNull((e) => e.value is Resolvable<T>)
-          ?.cast<T>(),
+      //_state[groupEntity]?.values.whereType<Dependency<T>>().firstOrNull,
+      _state[groupEntity]?.values.firstWhereOrNull((e) => e.value is Resolvable<T>)?.cast<T>(),
     );
+  }
+
+  Iterable<Dependency<T>> getDependencies<T extends Object>({
+    Entity groupEntity = const DefaultEntity(),
+  }) {
+    return _state[groupEntity]?.values.whereType<Dependency<T>>() ?? [];
   }
 
   /// Returns any dependency with the exact [type] under the specified
@@ -182,8 +180,8 @@ final class DIRegistry {
     final b = TypeEntity(Async, [typeEntity]);
     return Option.fromNullable(
       _state[groupEntity]?.values.firstWhereOrNull(
-        (e) => e.typeEntity == a || e.typeEntity == b,
-      ),
+            (e) => e.typeEntity == a || e.typeEntity == b,
+          ),
     );
   }
 

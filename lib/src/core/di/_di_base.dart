@@ -17,15 +17,20 @@ import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-final class _ReservedSafeFinisher<T extends Object> extends SafeFinisher<T> {
+final class ReservedSafeFinisher<T extends Object> extends SafeFinisher<T> {
+  final Type type;
+  ReservedSafeFinisher(this.type);
+
   @override
   bool operator ==(Object other) => identical(this, other);
 
   @override
-  int get hashCode => identityHashCode(this);
+  int get hashCode {
+    final a = Object() is! T ? T.hashCode : type.hashCode;
+    final b = (ReservedSafeFinisher).hashCode;
+    return Object.hash(a, b);
+  }
 }
-
-// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 base class DIBase<H extends Object> {
   //
@@ -59,11 +64,11 @@ base class DIBase<H extends Object> {
     FutureOr<T> value, {
     Entity groupEntity = const DefaultEntity(),
   }) {
-    return registerUnsafe<T>(() => value, groupEntity: groupEntity);
+    return registerUnsafe<T, T>(() => value, groupEntity: groupEntity);
   }
 
-  Result<void> registerUnsafe<T extends Object>(
-    FutureOr<T> Function() unsafe, {
+  Result<void> registerUnsafe<TParent extends Object, TT extends TParent>(
+    FutureOr<TT> Function() unsafe, {
     Entity groupEntity = const DefaultEntity(),
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
@@ -72,8 +77,20 @@ base class DIBase<H extends Object> {
       groupEntity: g,
     );
     final value = Resolvable.unsafe(unsafe);
-    get<_ReservedSafeFinisher<T>>(groupEntity: g).map((e) => e.map((e) => e.resolve(value)));
-    final result = registerDependency<T>(
+    final deps = registry.getDependencies<ReservedSafeFinisher>(groupEntity: g);
+    print(deps.length);
+    for (final dep in deps) {
+      try {
+        dep.value.map((e) => e.resolve(value));
+      } catch (e) {
+        print(e);
+      }
+    }
+    // get<ReservedSafeFinisher<T>>(groupEntity: g).map((e) => e.map((e) => e.resolve(value)));
+    // if (T != TT) {
+    //   get<ReservedSafeFinisher<TT>>(groupEntity: g).map((e) => e.map((e) => e.resolve(value)));
+    // }
+    final result = registerDependency<TParent>(
       dependency: Dependency(value, metadata: Some(metadata)),
       checkExisting: true,
     );
@@ -305,11 +322,17 @@ base class DIBase<H extends Object> {
     if (test.isSome()) {
       return test.unwrap();
     }
+    ReservedSafeFinisher<T> finisher;
+    final option = getSyncOrNone<ReservedSafeFinisher<T>>(groupEntity: g);
+    if (option.isSome()) {
+      finisher = option.unwrap();
+    } else {
+      finisher = ReservedSafeFinisher<T>(T);
+      register<ReservedSafeFinisher<T>>(finisher, groupEntity: g);
+    }
 
-    final temp = _ReservedSafeFinisher<T>();
-    register<_ReservedSafeFinisher<T>>(temp, groupEntity: g);
-    return temp.resolvable().map((e) {
-      registry.removeDependency<_ReservedSafeFinisher<T>>(groupEntity: g);
+    return finisher.resolvable().map((e) {
+      registry.removeDependency<ReservedSafeFinisher<T>>(groupEntity: g);
       return e;
     });
   }
@@ -348,18 +371,5 @@ base class DIBase<H extends Object> {
     }
     final result = sequential.add(unsafe: (_) => Some(results)).map((e) => e.unwrap());
     return result;
-  }
-}
-
-// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-
-extension _TryConvertSafeFinisher<T extends Object> on SafeFinisher<T> {
-  SafeFinisher<U> _tryConvert<U extends Object>() {
-    final finisher = SafeFinisher<U>();
-    resolvable().map((e) {
-      finisher.resolve(SyncOk(e as U));
-      return e;
-    });
-    return finisher;
   }
 }

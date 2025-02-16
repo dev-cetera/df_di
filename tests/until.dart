@@ -15,6 +15,7 @@
 import 'dart:async';
 
 import 'package:df_di/df_di.dart';
+import 'package:df_di/src/core/di/_di_base.dart';
 
 import 'package:test/test.dart';
 
@@ -30,14 +31,34 @@ void main() {
   test('Testing the until function with a single registaration.', () async {
     final di = DI();
     Future.delayed(const Duration(seconds: 1), () {
-      di.register<double>(1.2);
+      di.register('hello');
     });
 
-    Future.delayed(const Duration(seconds: 2), () {
-      di.register<int>(1);
+    Future.delayed(const Duration(seconds: 3), () {
+      di.register(1000);
     });
 
-    print(await di.until<int>().unwrap());
+    print(await di.until<String>().unwrap());
+    print(di.until<num>().unwrap());
+    print(di.until<num>().unwrap());
+    print(await di.until<num>().unwrap());
+    print('111');
+
+    // //print(di<SafeFinisher<int>>().unwrap());
+
+    // final a = di.registry
+    //     .getDependencies<ReservedSafeFinisher>()
+    //     .map((e) => e.value.unwrap())
+    //     .cast<ReservedSafeFinisher>();
+
+    // print(a.where((e) {
+    //   print(e.resolvable().value as FutureOr<Result<num>>);
+    //   print(e.type == int);
+    //   return [e] is List<ReservedSafeFinisher<int>>;
+    // }));
+    // print(a.where((e) => e.type == int));
+
+    // print(await di.until<num>().unwrap());
   });
 
   // test('Testing the until function.', () async {
