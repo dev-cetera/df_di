@@ -10,8 +10,6 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-// ignore_for_file: invalid_use_of_protected_member
-
 import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
@@ -21,12 +19,12 @@ base mixin SupportsServicesMixinT on SupportsServicesMixinK {
   //
   //
   @pragma('vm:prefer-inline')
-  OptionResolvable<Service> getServiceSingletonT(
+  OptionResolvable<TService> getServiceSingletonT<TService extends Service>(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getServiceSingletonK(
+    return getServiceSingletonK<TService>(
       TypeEntity(type),
       groupEntity: groupEntity,
       traverse: traverse,
@@ -34,12 +32,12 @@ base mixin SupportsServicesMixinT on SupportsServicesMixinK {
   }
 
   @pragma('vm:prefer-inline')
-  ResolvableOption<Service> getServiceFactoryT(
+  OptionResolvable<TService> getServiceFactoryT<TService extends Service>(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getServiceFactoryK(
+    return getServiceFactoryK<TService>(
       TypeEntity(type),
       groupEntity: groupEntity,
       traverse: traverse,

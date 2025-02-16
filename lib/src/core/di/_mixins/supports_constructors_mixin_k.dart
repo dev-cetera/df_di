@@ -10,8 +10,6 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-// ignore_for_file: invalid_use_of_protected_member
-
 import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
@@ -21,7 +19,7 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
   }) {
-    final temp = getK(
+    final temp = getK<T>(
       TypeEntity(Lazy, [typeEntity]),
       groupEntity: groupEntity,
     );
@@ -37,68 +35,58 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return consec(
-      getSingletonK(
-        typeEntity,
-        groupEntity: groupEntity,
-        traverse: traverse,
-      ).unwrap(),
-      (e) => e.trans<T>().unwrap(),
-    );
-  }
-
-  OptionResolvable<T> getSingleton<T extends Object>({
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    final option = get<Lazy<T>>(groupEntity: groupEntity, traverse: traverse);
-    if (option.isNone()) {
-      return const None();
-    }
-    final resolvable = option.unwrap().map((e) => e.singleton).merge();
-    return Some(resolvable);
-  }
-
-  OptionResolvable<T> getSingletonK<T extends Object>(
-    Entity typeEntity, {
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    final option = getK<T>(
-      TypeEntity(Lazy, [typeEntity]),
-      groupEntity: groupEntity,
-      traverse: traverse,
-    );
-    if (option.isNone()) {
-      return const None();
-    }
-    final resolvable = option.unwrap().map((e) => (e as Lazy).singleton).merge().trans<T>();
-    return Some(resolvable);
-  }
-
-  @pragma('vm:prefer-inline')
-  FutureOr<Object> getFactoryUnsafeK<T extends Object>(
-    Entity typeEntity, {
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    return getFactoryK(
+    return getSingletonK<T>(
       typeEntity,
       groupEntity: groupEntity,
       traverse: traverse,
-    ).unwrap();
+    ).unwrap().unwrap();
   }
 
-  ResolvableOption<T> getFactoryK<T extends Object>(
+  Option<Resolvable<T>> getSingletonK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getK<T>(
+    final option = getK<Lazy<T>>(
       TypeEntity(Lazy, [typeEntity]),
       groupEntity: groupEntity,
       traverse: traverse,
-    ).map((e) => e.map((e) => (e as Lazy).factory)).reduce<T>();
+    );
+    if (option.isNone()) {
+      return const None();
+    }
+    final lazy = option.unwrap().sync().unwrap().unwrap();
+    return Some(lazy.singleton);
+  }
+
+  @pragma('vm:prefer-inline')
+  FutureOr<T> getFactoryUnsafeK<T extends Object>(
+    Entity typeEntity, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return getFactoryK<T>(
+      typeEntity,
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).unwrap().unwrap();
+  }
+
+  Option<Resolvable<T>> getFactoryK<T extends Object>(
+    Entity typeEntity, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    final option = getK<Lazy<T>>(
+      TypeEntity(Lazy, [typeEntity]),
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
+    if (option.isNone()) {
+      return const None();
+    }
+    final lazy = option.unwrap().sync().unwrap().unwrap();
+    return Some(lazy.factory);
   }
 
   Resolvable<T> untilK<T extends Object>(
@@ -112,7 +100,10 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
       return test.unwrap();
     }
     ReservedSafeFinisher<T> finisher;
-    final option = getSyncOrNone<ReservedSafeFinisher<T>>(groupEntity: g);
+    final option = getSyncOrNone<ReservedSafeFinisher<T>>(
+      groupEntity: g,
+      traverse: traverse,
+    );
     if (option.isSome()) {
       finisher = option.unwrap();
     } else {
@@ -120,9 +111,11 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
       register<ReservedSafeFinisher<T>>(finisher, groupEntity: g);
     }
     return finisher.resolvable().map((e) {
-      registry.removeDependencyK<T>(
+      unregisterK(
         TypeEntity(ReservedSafeFinisher, [typeEntity]),
         groupEntity: g,
+        traverse: traverse,
+        removeAll: false,
       );
       return e;
     });

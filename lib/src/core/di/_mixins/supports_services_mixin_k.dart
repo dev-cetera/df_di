@@ -10,8 +10,6 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-// ignore_for_file: invalid_use_of_protected_member
-
 import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
@@ -23,29 +21,29 @@ base mixin SupportsServicesMixinK on SupportsConstructorsMixinK, SupportsMixinK 
 
   @protected
   @pragma('vm:prefer-inline')
-  OptionResolvable<Service> getServiceSingletonK(
+  OptionResolvable<TService> getServiceSingletonK<TService extends Service>(
     TypeEntity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getSingletonK(
+    return getSingletonK<TService>(
       typeEntity,
       groupEntity: groupEntity,
       traverse: traverse,
-    ).map((e) => e.map((e) => e as Service));
+    );
   }
 
   @protected
   @pragma('vm:prefer-inline')
-  ResolvableOption<Service> getServiceFactoryK(
+  OptionResolvable<TService> getServiceFactoryK<TService extends Service>(
     TypeEntity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getFactoryK(
+    return getFactoryK<TService>(
       typeEntity,
       groupEntity: groupEntity,
       traverse: traverse,
-    ).map((e) => e.map((e) => e as Service));
+    );
   }
 }

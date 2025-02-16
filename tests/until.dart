@@ -10,8 +10,6 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-// ignore_for_file: invalid_use_of_protected_member
-
 import 'dart:async';
 
 import 'package:df_di/df_di.dart';
@@ -28,12 +26,14 @@ void main() {
   // print(di.until<num>().unwrap());
 
   test('Testing the until function with a single registaration.', () async {
-    final di = DI();
+    final parent = DI();
+    final child = parent.child();
+
     Future.delayed(const Duration(seconds: 1), () {
-      di.register<int>(1);
+      parent.register<int>(1);
     });
 
-    print(await di.untilT<num>(int).unwrap());
+    print(await child.until<int>().unwrap());
 
     // Future.delayed(const Duration(seconds: 3), () {
     //   di.register(1000);

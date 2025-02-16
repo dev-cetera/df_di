@@ -50,12 +50,12 @@ base mixin SupportsConstructorsMixinT on SupportsConstructorsMixinK {
   }
 
   @pragma('vm:prefer-inline')
-  FutureOr<Object> getFactoryUnsafeT(
+  FutureOr<T> getFactoryUnsafeT<T extends Object>(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getFactoryUnsafeK(
+    return getFactoryUnsafeK<T>(
       TypeEntity(type),
       groupEntity: groupEntity,
       traverse: traverse,
@@ -63,12 +63,12 @@ base mixin SupportsConstructorsMixinT on SupportsConstructorsMixinK {
   }
 
   @pragma('vm:prefer-inline')
-  ResolvableOption getFactoryT(
+  OptionResolvable<T> getFactoryT<T extends Object>(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getFactoryK(
+    return getFactoryK<T>(
       TypeEntity(type),
       groupEntity: groupEntity,
       traverse: traverse,

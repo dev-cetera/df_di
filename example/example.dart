@@ -10,8 +10,6 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-// ignore_for_file: invalid_use_of_protected_member, strict_raw_type
-
 // import 'dart:async';
 
 // import 'package:df_di/df_di.dart';
@@ -23,7 +21,7 @@ import 'package:df_di/src/_common.dart';
 //   for (final e in values) {}
 // }
 
-Future<void> main() async {
+Future<Object> main() async {
   final di = DI();
   // di.register<int>(unsafe: () async => 1);
   // print(di.registry.state);
@@ -31,11 +29,35 @@ Future<void> main() async {
   // print(di.registry.state);
   // print(await di.getUnsafeK(TypeEntity(int)));
   // print(di.registry.state);
-
   di.registerLazy<List<int>>(() => Async.unsafe(() async => [123]));
-  print(di.registry.state);
-  final value = await di.getSingletonUnsafe<List<int>>();
-  print(value);
+
+  print(await di.getSingleton<List<int>>().unwrap().unwrap());
+
+  // final g = di.get<Lazy<List<int>>>();
+  // print(await g.unwrap().sync().unwrap().unwrap().singleton.unwrap());
+
+  // print(di.getSingleton<List<int>>().unwrap().async().unwrap().unwrap());
+
+  // final option = di.get<Lazy<List<int>>>();
+  // if (option.isNone()) {
+  //   return const None();
+  // }
+  // final result = option.unwrap().sync().unwrap().value;
+  // print(result);
+
+  // final b = option.unwrap();
+  // final c = b.sync().unwrap().value;
+  // final d = c.unwrap();
+  // final e = await d.singleton.async().unwrap().unwrap();
+  // print(e);
+
+  // value = di.getSingleton<List<int>>().unwrap();
+
+  //value.async().unwrap(); //.unwrap().value.then((e) => e.unwrap());
+
+  //print(value.unwrap());
+  // // print(value.unwrap().unwrapSync().unwrap());
+  // print(di.getUnsafe<Lazy<List<int>>>());
 
   // await di.getSingleton<List<int>>().value;
   // final a = await l.unwrapAsync();
@@ -117,6 +139,7 @@ Future<void> main() async {
   //di.unregister<int>().ifSome((e) => print('SOME $e'));
   //print(di.get<int>().unwrap().isNone());
   //print(di.registry.state);
+  return 1;
 }
 //   print('\n# Get access to the global DI container:\n');
 //   final di = DI();

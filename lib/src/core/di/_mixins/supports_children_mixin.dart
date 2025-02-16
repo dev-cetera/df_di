@@ -10,7 +10,6 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-// ignore_for_file: invalid_use_of_protected_member
 // ignore_for_file: invalid_use_of_visible_for_testing_member
 
 import '/src/_common.dart';
@@ -18,16 +17,13 @@ import '/src/_common.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
-  @protected
-  Option<DI> children = const None();
-
   Result<void> registerChild<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
   }) {
-    if (children.isNone()) {
-      children = Some(DI());
+    if (childrenContainer.isNone()) {
+      childrenContainer = Some(DI());
     }
-    return children.unwrap().registerLazy<DI>(
+    return childrenContainer.unwrap().registerLazy<DI>(
           () => Sync(Ok(DI()..parents.add(this as DI))),
           groupEntity: groupEntity,
         );
@@ -51,10 +47,10 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     Entity groupEntity = const DefaultEntity(),
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
-    if (children.isNone()) {
+    if (childrenContainer.isNone()) {
       return const None();
     }
-    final option = children.unwrap().getSingleton<DI>(groupEntity: g);
+    final option = childrenContainer.unwrap().getSingleton<DI>(groupEntity: g);
     if (option.isNone()) {
       return const None();
     }
@@ -71,10 +67,10 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     Entity groupEntity = const DefaultEntity(),
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
-    if (children.isNone()) {
+    if (childrenContainer.isNone()) {
       return const None();
     }
-    final option = children.unwrap().getSingletonT(type, groupEntity: g);
+    final option = childrenContainer.unwrap().getSingletonT(type, groupEntity: g);
     if (option.isNone()) {
       return const None();
     }
@@ -88,31 +84,27 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
 
   Result<void> unregisterChild({
     Entity groupEntity = const DefaultEntity(),
-    bool skipOnUnregisterCallback = false,
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
-    if (children.isNone()) {
-      return children.asResult();
+    if (childrenContainer.isNone()) {
+      return childrenContainer.asResult();
     }
-    return children.unwrap().unregister<DI>(
+    return childrenContainer.unwrap().unregister<DI>(
           groupEntity: g,
-          skipOnUnregisterCallback: skipOnUnregisterCallback,
         );
   }
 
   Result<void> unregisterChildT(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
-    bool skipOnUnregisterCallback = false,
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
-    if (children.isNone()) {
-      return children.asResult();
+    if (childrenContainer.isNone()) {
+      return childrenContainer.asResult();
     }
-    return children.unwrap().unregisterT<DI>(
+    return childrenContainer.unwrap().unregisterT<DI>(
           type,
           groupEntity: g,
-          skipOnUnregisterCallback: skipOnUnregisterCallback,
         );
   }
 
@@ -120,20 +112,20 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     Entity groupEntity = const DefaultEntity(),
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
-    if (children.isNone()) {
+    if (childrenContainer.isNone()) {
       return false;
     }
-    return children.unwrap().isRegistered<DI>(groupEntity: g);
+    return childrenContainer.unwrap().isRegistered<DI>(groupEntity: g);
   }
 
   bool isChildRegisteredT<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
-    if (children.isNone()) {
+    if (childrenContainer.isNone()) {
       return false;
     }
-    return children.unwrap().isRegisteredT(DI, groupEntity: g);
+    return childrenContainer.unwrap().isRegisteredT(DI, groupEntity: g);
   }
 
   DI child<T extends Object>({Entity groupEntity = const DefaultEntity()}) {

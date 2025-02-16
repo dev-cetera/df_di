@@ -10,8 +10,6 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-// ignore_for_file: invalid_use_of_protected_member
-
 import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
@@ -25,7 +23,25 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
     LazyConstructor<T> constructor, {
     Entity groupEntity = const DefaultEntity(),
   }) {
-    return register<Lazy<T>>(Lazy<T>(constructor), groupEntity: groupEntity);
+    return register<Lazy<T>>(
+      Lazy<T>(constructor),
+      groupEntity: groupEntity,
+    );
+  }
+
+  Option<Resolvable<T>> getSingleton<T extends Object>({
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    final option = get<Lazy<T>>(
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
+    if (option.isNone()) {
+      return const None();
+    }
+    final lazy = option.unwrap().sync().unwrap().unwrap();
+    return Some(lazy.singleton);
   }
 
   Resolvable<void> resetSingleton<T extends Object>({
@@ -43,22 +59,10 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return consec(
-      getSingleton<T>(groupEntity: groupEntity, traverse: traverse).unwrap(),
-      (e) => e.unwrap(),
-    );
-  }
-
-  OptionResolvable<T> getSingleton<T extends Object>({
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    final option = get<Lazy<T>>(groupEntity: groupEntity, traverse: traverse);
-    if (option.isNone()) {
-      return const None();
-    }
-    final resolvable = option.unwrap().map((e) => e.singleton).merge();
-    return Some(resolvable);
+    return getSingleton<T>(
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).map((e) => e.unwrap()).unwrap();
   }
 
   @pragma('vm:prefer-inline')
@@ -66,21 +70,24 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return consec(
-      getFactory<T>(groupEntity: groupEntity, traverse: traverse).unwrap(),
-      (e) => e.unwrap(),
-    );
+    return getFactory<T>(
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).map((e) => e.unwrap()).unwrap();
   }
 
-  OptionResolvable<T> getFactory<T extends Object>({
+  Option<Resolvable<T>> getFactory<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    final option = get<Lazy<T>>(groupEntity: groupEntity, traverse: traverse);
+    final option = get<Lazy<T>>(
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
     if (option.isNone()) {
       return const None();
     }
-    final resolvable = option.unwrap().map((e) => e.factory).merge();
-    return Some(resolvable);
+    final lazy = option.unwrap().sync().unwrap().unwrap();
+    return Some(lazy.factory);
   }
 }

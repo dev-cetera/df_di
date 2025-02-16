@@ -10,8 +10,6 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-// ignore_for_file: invalid_use_of_protected_member
-
 import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
@@ -125,12 +123,14 @@ base mixin SupportsMixinT on SupportsMixinK {
   Result<void> unregisterT<T extends Object>(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
-    bool skipOnUnregisterCallback = false,
+    bool traverse = true,
+    bool removeAll = true,
   }) {
     return unregisterK(
       TypeEntity(type),
       groupEntity: groupEntity,
-      skipOnUnregisterCallback: skipOnUnregisterCallback,
+      traverse: traverse,
+      removeAll: removeAll,
     );
   }
 

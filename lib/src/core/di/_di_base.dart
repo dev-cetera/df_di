@@ -10,7 +10,6 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-// ignore_for_file: invalid_use_of_protected_member
 // ignore_for_file: invalid_use_of_visible_for_testing_member
 
 import '/src/_common.dart';
@@ -43,7 +42,7 @@ base class DIBase {
 
   /// Parent containers.
   @protected
-  final parents = <DIBase>{};
+  final parents = <DI>{};
 
   /// A key that identifies the current group in focus for dependency management.
   Entity focusGroup = const DefaultEntity();
@@ -82,20 +81,35 @@ base class DIBase {
     return result;
   }
 
+  @protected
+  Option<DI> childrenContainer = const None();
+
+  @protected
+  Option<Iterable<DI>> children() {
+    return childrenContainer.map(
+      (e) => e.registry.unsortedDependencies.map(
+        (e) => e.trans<Lazy<DI>>().value.unwrapSync().unwrap().singleton.unwrapSync().unwrap(),
+      ),
+    );
+  }
+
   // Resolve all finishers that can be resolved with the value.
   void _resolveFinisher<T extends Object>({
     required Resolvable<T> value,
     required Entity groupEntity,
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
-    final g = groupEntity.preferOverDefault(focusGroup);
-    final finisherDependencies = registry.getDependencies<ReservedSafeFinisher>(groupEntity: g);
-    for (final dependency in finisherDependencies) {
-      final finisher = dependency.value.unwrapSync().unwrap();
-      try {
-        finisher.resolve(value);
-        break;
-      } catch (_) {}
+    for (final di in [this as DI, ...children().unwrapOr([])]) {
+      final g = groupEntity.preferOverDefault(focusGroup);
+      final finisherDependencies =
+          di.registry.getDependencies<ReservedSafeFinisher>(groupEntity: g);
+      for (final dependency in finisherDependencies) {
+        final finisher = dependency.value.unwrapSync().unwrap();
+        try {
+          finisher.resolve(value);
+          break;
+        } catch (_) {}
+      }
     }
   }
 
@@ -124,12 +138,21 @@ base class DIBase {
 
   Result<void> unregister<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
-    bool skipOnUnregisterCallback = false,
+    bool traverse = true,
+    bool removeAll = true,
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
-    final removed = removeDependency<T>(groupEntity: groupEntity);
-    if (removed.isErr()) {
-      return removed.err().transErr();
+    final g = groupEntity.preferOverDefault(focusGroup);
+    for (final di in [this as DI, ...parents]) {
+      final removed = di.removeDependency<T>(groupEntity: g);
+      if (removed.isErr()) {
+        return removed.err().transErr();
+      }
+      if (!removeAll) {
+        if (removed.unwrap().isSome()) {
+          break;
+        }
+      }
     }
     return const Ok(Object());
   }
@@ -292,22 +315,24 @@ base class DIBase {
       return Some(value);
     }
 
-    return Some(
-      Async.unsafe(
-        () => value.async().unwrap().value.then((e) {
-          final value = e.unwrap();
-          registry.removeDependency<T>(groupEntity: g);
-          registerDependency<T>(
-            dependency: Dependency<T>(
-              Sync(Ok(value)),
-              metadata: option.unwrap().unwrap().metadata,
-            ),
-            checkExisting: false,
-          );
-          return value;
-        }),
-      ),
-    );
+    return Some(value);
+
+    // return Some(
+    //   Async.unsafe(
+    //     () => value.async().unwrap().value.then((e) {
+    //       final value = e.unwrap();
+    //       registry.removeDependency<T>(groupEntity: g);
+    //       registerDependency<T>(
+    //         dependency: Dependency<T>(
+    //           Sync(Ok(value)),
+    //           metadata: option.unwrap().unwrap().metadata,
+    //         ),
+    //         checkExisting: false,
+    //       );
+    //       return value;
+    //     }),
+    //   ),
+    // );
   }
 
   @protected
@@ -339,7 +364,10 @@ base class DIBase {
       return test.unwrap();
     }
     ReservedSafeFinisher<T> finisher;
-    final option = getSyncOrNone<ReservedSafeFinisher<T>>(groupEntity: g);
+    final option = getSyncOrNone<ReservedSafeFinisher<T>>(
+      groupEntity: g,
+      traverse: true,
+    );
     if (option.isSome()) {
       finisher = option.unwrap();
     } else {
@@ -347,7 +375,11 @@ base class DIBase {
       register<ReservedSafeFinisher<T>>(finisher, groupEntity: g);
     }
     return finisher.resolvable().map((e) {
-      registry.removeDependency<ReservedSafeFinisher<T>>(groupEntity: g);
+      unregister<ReservedSafeFinisher<T>>(
+        groupEntity: g,
+        traverse: traverse,
+        removeAll: false,
+      );
       return e;
     });
   }

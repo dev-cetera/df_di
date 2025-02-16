@@ -10,7 +10,6 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-// ignore_for_file: invalid_use_of_protected_member
 // ignore_for_file: invalid_use_of_visible_for_testing_member
 
 import '/src/_common.dart';
@@ -221,11 +220,20 @@ base mixin SupportsMixinK on DIBase {
   Result<void> unregisterK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
-    bool skipOnUnregisterCallback = false,
+    bool traverse = true,
+    bool removeAll = true,
   }) {
-    final removed = removeDependencyK<T>(typeEntity, groupEntity: groupEntity);
-    if (removed.isErr()) {
-      return removed.err().transErr();
+    final g = groupEntity.preferOverDefault(focusGroup);
+    for (final di in [this as DI, ...parents]) {
+      final removed = di.removeDependencyK<T>(typeEntity, groupEntity: g);
+      if (removed.isErr()) {
+        return removed.err().transErr();
+      }
+      if (!removeAll) {
+        if (removed.unwrap().isSome()) {
+          break;
+        }
+      }
     }
     return const Ok(Object());
   }
