@@ -24,9 +24,9 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
       childrenContainer = Some(DI());
     }
     return childrenContainer.unwrap().registerLazy<DI>(
-          () => Sync(Ok(DI()..parents.add(this as DI))),
-          groupEntity: groupEntity,
-        );
+      () => Sync(Ok(DI()..parents.add(this as DI))),
+      groupEntity: groupEntity,
+    );
   }
 
   Option<DI> getChildOrNone<T extends Object>({
@@ -70,7 +70,10 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     if (childrenContainer.isNone()) {
       return const None();
     }
-    final option = childrenContainer.unwrap().getSingletonT(type, groupEntity: g);
+    final option = childrenContainer.unwrap().getSingletonT(
+      type,
+      groupEntity: g,
+    );
     if (option.isNone()) {
       return const None();
     }
@@ -82,16 +85,12 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     return Some(value);
   }
 
-  Result<void> unregisterChild({
-    Entity groupEntity = const DefaultEntity(),
-  }) {
+  Result<void> unregisterChild({Entity groupEntity = const DefaultEntity()}) {
     final g = groupEntity.preferOverDefault(focusGroup);
     if (childrenContainer.isNone()) {
       return childrenContainer.asResult();
     }
-    return childrenContainer.unwrap().unregister<DI>(
-          groupEntity: g,
-        );
+    return childrenContainer.unwrap().unregister<DI>(groupEntity: g);
   }
 
   Result<void> unregisterChildT(
@@ -102,10 +101,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     if (childrenContainer.isNone()) {
       return childrenContainer.asResult();
     }
-    return childrenContainer.unwrap().unregisterT<DI>(
-          type,
-          groupEntity: g,
-        );
+    return childrenContainer.unwrap().unregisterT<DI>(type, groupEntity: g);
   }
 
   bool isChildRegistered<T extends Object>({

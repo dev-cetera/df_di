@@ -42,14 +42,15 @@ base mixin SupportsMixinK on DIBase {
     bool traverse = true,
   }) {
     return getK(typeEntity, groupEntity: groupEntity, traverse: traverse).map(
-      (e) => e.isSync()
-          ? e.sync().unwrap()
-          : Sync(
-              Err(
-                debugPath: ['SupportsMixinK', 'getSyncK'],
-                error: 'Called getSyncK() an async dependency.',
+      (e) =>
+          e.isSync()
+              ? e.sync().unwrap()
+              : Sync(
+                Err(
+                  debugPath: ['SupportsMixinK', 'getSyncK'],
+                  error: 'Called getSyncK() an async dependency.',
+                ),
               ),
-            ),
     );
   }
 
@@ -61,11 +62,12 @@ base mixin SupportsMixinK on DIBase {
     bool traverse = true,
   }) {
     return Future.sync(() async {
-      final result = await getAsyncK(
-        typeEntity,
-        groupEntity: groupEntity,
-        traverse: traverse,
-      ).unwrap().value;
+      final result =
+          await getAsyncK(
+            typeEntity,
+            groupEntity: groupEntity,
+            traverse: traverse,
+          ).unwrap().value;
       return result.unwrap();
     });
   }
@@ -157,10 +159,10 @@ base mixin SupportsMixinK on DIBase {
           final value = e.unwrap();
           registry.removeDependencyK(typeEntity, groupEntity: g);
           final metadata = option.unwrap().unwrap().metadata.map(
-                (e) => e.copyWith(
-                  preemptivetypeEntity: TypeEntity(Sync, [typeEntity]),
-                ),
-              );
+            (e) => e.copyWith(
+              preemptivetypeEntity: TypeEntity(Sync, [typeEntity]),
+            ),
+          );
           registerDependencyK(
             dependency: Dependency(Sync(Ok(value)), metadata: metadata),
             checkExisting: false,
@@ -176,7 +178,10 @@ base mixin SupportsMixinK on DIBase {
     required Dependency<Object> dependency,
     bool checkExisting = false,
   }) {
-    final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
+    final g =
+        dependency.metadata.isSome()
+            ? dependency.metadata.unwrap().groupEntity
+            : focusGroup;
     if (checkExisting) {
       final option = getDependencyK(
         dependency.typeEntity,
