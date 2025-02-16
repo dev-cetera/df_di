@@ -129,7 +129,7 @@ base class DIBase<H extends Object> {
     Entity groupEntity = const DefaultEntity(),
     bool skipOnUnregisterCallback = false,
   }) {
-    final removed = removeDependencyT<T>(T, groupEntity: groupEntity);
+    final removed = removeDependency<T>(groupEntity: groupEntity);
     if (removed.isErr()) {
       return removed.err().transErr();
     }
@@ -138,14 +138,13 @@ base class DIBase<H extends Object> {
 
   @protected
   @pragma('vm:prefer-inline')
-  ResultOption<T> removeDependencyT<T extends Object>(
-    Type type, {
+  ResultOption<T> removeDependency<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
     return registry
-        .removeDependencyT<T>(type, groupEntity: g)
-        .or(registry.removeDependencyT<Lazy<T>>(type, groupEntity: g))
+        .removeDependency<T>(groupEntity: g)
+        .or(registry.removeDependency<Lazy<T>>(groupEntity: g))
         .trans();
   }
 
