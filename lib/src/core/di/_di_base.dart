@@ -32,18 +32,10 @@ final class ReservedSafeFinisher<T extends Object> extends SafeFinisher<T> {
   }
 }
 
-base class DIBase<H extends Object> {
+base class DIBase {
   //
   //
   //
-
-  @protected
-  late final Type type;
-
-  DIBase() : type = H;
-
-  @protected
-  DIBase.type(this.type);
 
   /// Internal registry that stores dependencies.
   @protected
@@ -64,13 +56,18 @@ base class DIBase<H extends Object> {
     FutureOr<T> value, {
     Entity groupEntity = const DefaultEntity(),
   }) {
-    return registerUnsafe<T>(() => value, groupEntity: groupEntity);
+    assert(T != Object, 'T must be specified and cannot be Object.');
+    return registerUnsafe<T>(
+      () => value,
+      groupEntity: groupEntity,
+    );
   }
 
   Result<void> registerUnsafe<T extends Object>(
     FutureOr<T> Function() unsafe, {
     Entity groupEntity = const DefaultEntity(),
   }) {
+    assert(T != Object, 'T must be specified and cannot be Object.');
     final g = groupEntity.preferOverDefault(focusGroup);
     final metadata = DependencyMetadata(
       index: Some(_indexIncrementer++),
@@ -90,6 +87,7 @@ base class DIBase<H extends Object> {
     required Resolvable<T> value,
     required Entity groupEntity,
   }) {
+    assert(T != Object, 'T must be specified and cannot be Object.');
     final g = groupEntity.preferOverDefault(focusGroup);
     final finisherDependencies = registry.getDependencies<ReservedSafeFinisher>(groupEntity: g);
     for (final dependency in finisherDependencies) {
@@ -112,7 +110,6 @@ base class DIBase<H extends Object> {
       final option = getDependency<T>(
         groupEntity: g,
         traverse: false,
-        validate: false,
       );
       if (option.isSome()) {
         return Err(
@@ -129,6 +126,7 @@ base class DIBase<H extends Object> {
     Entity groupEntity = const DefaultEntity(),
     bool skipOnUnregisterCallback = false,
   }) {
+    assert(T != Object, 'T must be specified and cannot be Object.');
     final removed = removeDependency<T>(groupEntity: groupEntity);
     if (removed.isErr()) {
       return removed.err().transErr();
@@ -141,6 +139,7 @@ base class DIBase<H extends Object> {
   ResultOption<T> removeDependency<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
   }) {
+    assert(T != Object, 'T must be specified and cannot be Object.');
     final g = groupEntity.preferOverDefault(focusGroup);
     return registry
         .removeDependency<T>(groupEntity: g)
@@ -152,6 +151,7 @@ base class DIBase<H extends Object> {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
+    assert(T != Object, 'T must be specified and cannot be Object.');
     final g = groupEntity.preferOverDefault(focusGroup);
     if (registry.containsDependency<T>(groupEntity: g) ||
         registry.containsDependency<Lazy<T>>(groupEntity: g)) {
@@ -173,6 +173,7 @@ base class DIBase<H extends Object> {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
+    assert(T != Object, 'T must be specified and cannot be Object.');
     return getSync<T>(
       groupEntity: groupEntity,
       traverse: traverse,
@@ -183,6 +184,7 @@ base class DIBase<H extends Object> {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
+    assert(T != Object, 'T must be specified and cannot be Object.');
     return get<T>(groupEntity: groupEntity, traverse: traverse).map(
       (e) => e.isSync()
           ? e.sync().unwrap()
@@ -200,6 +202,7 @@ base class DIBase<H extends Object> {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
+    assert(T != Object, 'T must be specified and cannot be Object.');
     return Future.sync(() async {
       final result = await getAsync<T>(
         groupEntity: groupEntity,
@@ -214,6 +217,7 @@ base class DIBase<H extends Object> {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
+    assert(T != Object, 'T must be specified and cannot be Object.');
     return get<T>(
       groupEntity: groupEntity,
       traverse: traverse,
@@ -225,8 +229,12 @@ base class DIBase<H extends Object> {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
+    assert(T != Object, 'T must be specified and cannot be Object.');
     return consec(
-      get<T>(groupEntity: groupEntity, traverse: traverse).unwrap().value,
+      get<T>(
+        groupEntity: groupEntity,
+        traverse: traverse,
+      ).unwrap().value,
       (e) => e.unwrap(),
     );
   }
@@ -236,13 +244,18 @@ base class DIBase<H extends Object> {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getSyncOrNone<T>(groupEntity: groupEntity, traverse: traverse);
+    assert(T != Object, 'T must be specified and cannot be Object.');
+    return getSyncOrNone<T>(
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
   }
 
   Option<T> getSyncOrNone<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
+    assert(T != Object, 'T must be specified and cannot be Object.');
     final option = get<T>(groupEntity: groupEntity, traverse: traverse);
     if (option.isNone()) {
       return const None();
@@ -263,6 +276,7 @@ base class DIBase<H extends Object> {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
+    assert(T != Object, 'T must be specified and cannot be Object.');
     final g = groupEntity.preferOverDefault(focusGroup);
     final option = getDependency<T>(groupEntity: g, traverse: traverse);
     if (option.isNone()) {
@@ -300,7 +314,6 @@ base class DIBase<H extends Object> {
   OptionResult<Dependency<T>> getDependency<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
-    bool validate = true,
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
     final test = registry.getDependency<T>(groupEntity: g);

@@ -10,13 +10,11 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-// ignore_for_file: invalid_use_of_protected_member
-
 import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-base mixin SupportsConstructorsMixinT<H extends Object> on SupportsConstructorsMixinK<H> {
+base mixin SupportsConstructorsMixinT on SupportsConstructorsMixinK {
   @pragma('vm:prefer-inline')
   Resolvable<void> resetSingletonT(
     Type type, {
@@ -83,8 +81,7 @@ base mixin SupportsConstructorsMixinT<H extends Object> on SupportsConstructorsM
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    assert(T != Object, '');
-    return untilK(
+    return untilK<T>(
       TypeEntity(type),
       groupEntity: groupEntity,
       traverse: traverse,

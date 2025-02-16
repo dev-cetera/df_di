@@ -34,7 +34,7 @@
 
 // // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-// base class DIBase<H extends Object> {
+// base class DIBase {
 //   //
 //   //
 //   //
@@ -79,7 +79,7 @@
 //       groupEntity: g,
 //     );
 //     final value = Resolvable.unsafe(unsafe);
-//     // (this as DI<H>)
+//     // (this as DI)
 //     //     .getT(_ReservedSafeFinisher<T>, groupEntity: g)
 //     //     .map((e) => e.map((e) => (e as _ReservedSafeFinisher<T>).resolve(value)));
 //     get<SafeFinisher<T>>(groupEntity: g).map((e) => e.map((e) => e.resolve(value)));
@@ -290,7 +290,6 @@
 //   OptionResult<Dependency<T>> getDependency<T extends Object>({
 //     Entity groupEntity = const DefaultEntity(),
 //     bool traverse = true,
-//     bool validate = true,
 //   }) {
 //     final g = groupEntity.preferOverDefault(focusGroup);
 //     final test = registry.getDependency<T>(groupEntity: g);
@@ -306,7 +305,7 @@
 //     return temp;
 //   }
 
-//   // (this as DI<H>)
+//   // (this as DI)
 //   //   .getT(_ReservedSafeFinisher<T>, groupEntity: g)
 //   //   .map((e) => e.map((e) => (e as _ReservedSafeFinisher<T>).resolve(value)));
 
@@ -316,7 +315,7 @@
 //     bool traverse = true,
 //   }) {
 //     final g = groupEntity.preferOverDefault(focusGroup);
-//     final test = (this as DI<H>).getT(type, groupEntity: g);
+//     final test = (this as DI).getT(type, groupEntity: g);
 //     if (test.isSome()) {
 //       return test.unwrap();
 //     }

@@ -144,8 +144,8 @@ final class DIRegistry {
     Entity groupEntity = const DefaultEntity(),
   }) {
     return Option.fromNullable(
-      //_state[groupEntity]?.values.whereType<Dependency<T>>().firstOrNull,
-      _state[groupEntity]?.values.firstWhereOrNull((e) => e.value is Resolvable<T>)?.trans<T>(),
+      _state[groupEntity]?.values.whereType<Dependency<T>>().firstOrNull,
+      //_state[groupEntity]?.values.firstWhereOrNull((e) => e.value is Resolvable<T>)?.trans<T>(),
     );
   }
 

@@ -16,21 +16,18 @@ import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-final class DI<H extends Object> extends DIBase<H>
+final class DI extends DIBase
     with
-        SupportsMixinK<H>,
-        SupportsMixinT<H>,
-        SupportsConstructorsMixin<H>,
-        SupportsConstructorsMixinK<H>,
-        SupportsConstructorsMixinT<H>,
-        SupportsChildrenMixin<H>,
-        SupportsServicesMixin<H>,
-        SupportsServicesMixinK<H>,
-        SupportsServicesMixinT<H> {
+        SupportsMixinK,
+        SupportsMixinT,
+        SupportsConstructorsMixin,
+        SupportsConstructorsMixinK,
+        SupportsConstructorsMixinT,
+        SupportsChildrenMixin,
+        SupportsServicesMixin,
+        SupportsServicesMixinK,
+        SupportsServicesMixinT {
   DI();
-
-  @protected
-  DI.type(super.type) : super.type();
 
   /// A predefined container recommended for application-wide dependencies.
   /// This container serves as the parent for other containers.

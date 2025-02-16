@@ -17,7 +17,7 @@ import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-base mixin SupportsChildrenMixin<H extends Object> on SupportsConstructorsMixin<H> {
+base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
   @protected
   Option<DI> children = const None();
 
@@ -27,13 +27,13 @@ base mixin SupportsChildrenMixin<H extends Object> on SupportsConstructorsMixin<
     if (children.isNone()) {
       children = Some(DI());
     }
-    return children.unwrap().registerLazy<DI<T>>(
-          () => Sync(Ok(DI<T>()..parents.add(this as DI<H>))),
+    return children.unwrap().registerLazy<DI>(
+          () => Sync(Ok(DI()..parents.add(this as DI))),
           groupEntity: groupEntity,
         );
   }
 
-  Option<DI<T>> getChildOrNone<T extends Object>({
+  Option<DI> getChildOrNone<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
   }) {
     final option = getChild<T>(groupEntity: groupEntity);
@@ -47,14 +47,14 @@ base mixin SupportsChildrenMixin<H extends Object> on SupportsConstructorsMixin<
     return Some(result.unwrap());
   }
 
-  OptionResult<DI<T>> getChild<T extends Object>({
+  OptionResult<DI> getChild<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
     if (children.isNone()) {
       return const None();
     }
-    final option = children.unwrap().getSingleton<DI<T>>(groupEntity: g);
+    final option = children.unwrap().getSingleton<DI>(groupEntity: g);
     if (option.isNone()) {
       return const None();
     }
@@ -123,7 +123,7 @@ base mixin SupportsChildrenMixin<H extends Object> on SupportsConstructorsMixin<
     if (children.isNone()) {
       return false;
     }
-    return children.unwrap().isRegistered<DI<T>>(groupEntity: g);
+    return children.unwrap().isRegistered<DI>(groupEntity: g);
   }
 
   bool isChildRegisteredT<T extends Object>({
@@ -133,10 +133,10 @@ base mixin SupportsChildrenMixin<H extends Object> on SupportsConstructorsMixin<
     if (children.isNone()) {
       return false;
     }
-    return children.unwrap().isRegisteredT(DI<T>, groupEntity: g);
+    return children.unwrap().isRegisteredT(DI, groupEntity: g);
   }
 
-  DI<T> child<T extends Object>({Entity groupEntity = const DefaultEntity()}) {
+  DI child<T extends Object>({Entity groupEntity = const DefaultEntity()}) {
     if (isChildRegistered<T>(groupEntity: groupEntity)) {
       return getChild<T>(groupEntity: groupEntity).unwrap().unwrap();
     }

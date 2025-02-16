@@ -15,7 +15,6 @@
 import 'dart:async';
 
 import 'package:df_di/df_di.dart';
-import 'package:df_di/src/core/di/_di_base.dart';
 
 import 'package:test/test.dart';
 
@@ -34,7 +33,7 @@ void main() {
       di.register<int>(1);
     });
 
-    print(await di.untilT(String).unwrap());
+    print(await di.untilT<num>(int).unwrap());
 
     // Future.delayed(const Duration(seconds: 3), () {
     //   di.register(1000);

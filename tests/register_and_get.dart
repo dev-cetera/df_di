@@ -20,14 +20,16 @@ import 'package:test/test.dart';
 
 void main() {
   test(
-    '- The value returned by "register" is the same as the value registered',
+    'The value returned by "register" is the same as the value registered',
     () {
       final di = DI();
       final a = <int>[1, 2, 3];
       di.register<List<int>>(a);
-      final b = di.getUnsafe<Iterable<int>>();
+      final b = di<Iterable<int>>().unwrap();
       expect(a, b);
       expect(a.hashCode, b.hashCode);
+      di.unregister<Iterable<int>>();
+      expect(false, di.isRegistered<List<Object>>());
     },
   );
   /*

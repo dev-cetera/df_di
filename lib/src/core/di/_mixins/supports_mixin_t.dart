@@ -16,7 +16,7 @@ import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-base mixin SupportsMixinT<H extends Object> on SupportsMixinK<H> {
+base mixin SupportsMixinT on SupportsMixinK {
   //
   //
   //
@@ -113,13 +113,11 @@ base mixin SupportsMixinT<H extends Object> on SupportsMixinK<H> {
     Type type, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
-    bool validate = true,
   }) {
     return getDependencyK(
       TypeEntity(type),
       groupEntity: groupEntity,
       traverse: traverse,
-      validate: validate,
     );
   }
 

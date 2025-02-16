@@ -17,7 +17,7 @@ import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-base mixin SupportsMixinK<H extends Object> on DIBase<H> {
+base mixin SupportsMixinK on DIBase {
   //
   //
   //
@@ -134,7 +134,6 @@ base mixin SupportsMixinK<H extends Object> on DIBase<H> {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    assert(T != Object, 'T must be specified and cannot be Object.');
     final g = groupEntity.preferOverDefault(focusGroup);
     final option = getDependencyK<T>(
       typeEntity,
@@ -184,7 +183,6 @@ base mixin SupportsMixinK<H extends Object> on DIBase<H> {
         dependency.typeEntity,
         groupEntity: g,
         traverse: false,
-        validate: false,
       );
       if (option.isSome()) {
         return Err(
@@ -202,9 +200,7 @@ base mixin SupportsMixinK<H extends Object> on DIBase<H> {
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
-    bool validate = true,
   }) {
-    assert(T != Object, 'T must be specified and cannot be Object.');
     final g = groupEntity.preferOverDefault(focusGroup);
     final option = registry.getDependencyK(typeEntity, groupEntity: g);
     var temp = option.map((e) => Ok(e).asResult().trans<Dependency<T>>());
@@ -219,28 +215,6 @@ base mixin SupportsMixinK<H extends Object> on DIBase<H> {
         }
       }
     }
-
-    if (temp.isSome()) {
-      if (validate) {
-        final result = temp.unwrap();
-        if (result.isErr()) {
-          return Some(result.trans());
-        }
-        final dependency = result.unwrap();
-        final metadata = dependency.metadata;
-        if (metadata.isSome()) {
-          final valid = metadata.unwrap().validator.map((e) => e(dependency));
-          if (valid.isSome() && !valid.unwrap()) {
-            return Some(
-              Err(
-                debugPath: ['SupportsMixinK', 'getDependencyK'],
-                error: 'Dependency validation failed.',
-              ),
-            );
-          }
-        }
-      }
-    }
     return temp;
   }
 
@@ -249,7 +223,6 @@ base mixin SupportsMixinK<H extends Object> on DIBase<H> {
     Entity groupEntity = const DefaultEntity(),
     bool skipOnUnregisterCallback = false,
   }) {
-    assert(T != Object, 'T must be specified and cannot be Object.');
     final removed = removeDependencyK<T>(typeEntity, groupEntity: groupEntity);
     if (removed.isErr()) {
       return removed.err().transErr();

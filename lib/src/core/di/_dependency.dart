@@ -91,7 +91,6 @@ class DependencyMetadata {
     this.groupEntity = const DefaultEntity(),
     this.preemptivetypeEntity = const DefaultEntity(),
     this.index = const None(),
-    this.validator = const None(),
     this.onUnregister = const None(),
   });
 
@@ -116,9 +115,6 @@ class DependencyMetadata {
   /// and ensuring proper management of dependencies.
   final Option<int> index;
 
-  /// A function that evaluates the validity of a dependency.
-  final Option<DependencyValidator> validator;
-
   /// A callback to be invoked when this dependency is unregistered.
   final Option<OnUnregisterCallback<Object>> onUnregister;
 
@@ -129,7 +125,6 @@ class DependencyMetadata {
     Entity preemptivetypeEntity = const DefaultEntity(),
     Option<Type> initialType = const None(),
     Option<int> index = const None(),
-    Option<DependencyValidator> validator = const None(),
     Option<OnUnregisterCallback<Object>> onUnregister = const None(),
   }) {
     return DependencyMetadata(
@@ -137,7 +132,6 @@ class DependencyMetadata {
       preemptivetypeEntity:
           preemptivetypeEntity.isNotDefault() ? preemptivetypeEntity : this.preemptivetypeEntity,
       index: index.isSome() ? index : this.index,
-      validator: validator.isSome() ? validator : this.validator,
       onUnregister: onUnregister.isSome() ? onUnregister : this.onUnregister,
     ).._initialType = initialType.isSome() ? initialType : _initialType;
   }
@@ -154,7 +148,6 @@ class DependencyMetadata {
       groupEntity,
       preemptivetypeEntity,
       index,
-      validator,
       onUnregister,
       _initialType,
     ]);
