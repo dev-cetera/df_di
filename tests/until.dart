@@ -21,13 +21,23 @@ import 'package:test/test.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 void main() {
-  test('Testing the until function.', () async {
+  //  final di = DI();
+  // di.register<int>(Future.value(1));
+  // print(di.register<int>(Future.value(2)).isErr());
+  // print(await di.until<int>().unwrap());
+  // print(di.until<num>().unwrap());
+
+  test('Testing the until function with a single registaration.', () async {
     final di = DI();
+    Future.delayed(const Duration(seconds: 1), () {
+      di.register<double>(1.2);
+    });
+
     Future.delayed(const Duration(seconds: 2), () {
       di.register<int>(1);
-      di.maybeResolve1<int>(SyncOk(1));
     });
-    print(await di.until<num>().unwrap());
+
+    print(await di.until<int>().unwrap());
   });
 
   // test('Testing the until function.', () async {

@@ -17,6 +17,16 @@ import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
+final class _ReservedSafeFinisher<T extends Object> extends SafeFinisher<T> {
+  @override
+  bool operator ==(Object other) => identical(this, other);
+
+  @override
+  int get hashCode => identityHashCode(this);
+}
+
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
 base class DIBase<H extends Object> {
   //
   //
@@ -62,29 +72,12 @@ base class DIBase<H extends Object> {
       groupEntity: g,
     );
     final value = Resolvable.unsafe(unsafe);
-
+    get<_ReservedSafeFinisher<T>>(groupEntity: g).map((e) => e.map((e) => e.resolve(value)));
     final result = registerDependency<T>(
       dependency: Dependency(value, metadata: Some(metadata)),
       checkExisting: true,
     );
     return result;
-  }
-
-  @protected
-  void maybeResolve1<T extends Object>(
-    Resolvable<T> value, {
-    Entity groupEntity = const DefaultEntity(),
-  }) {
-    final g = groupEntity.preferOverDefault(focusGroup);
-    final values = registry.getGroup(groupEntity: g).values;
-    for (final e in values) {
-      try {
-        final finisher = (e.value as Sync<SafeFinisher>).unwrap();
-        final _ = finisher._tryConvert<T>();
-        finisher.resolve(value);
-        break;
-      } catch (_) {}
-    }
   }
 
   @protected
@@ -94,10 +87,7 @@ base class DIBase<H extends Object> {
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
 
-    final g =
-        dependency.metadata.isSome()
-            ? dependency.metadata.unwrap().groupEntity
-            : focusGroup;
+    final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
     if (checkExisting) {
       final option = getDependency<T>(
         groupEntity: g,
@@ -105,8 +95,8 @@ base class DIBase<H extends Object> {
         validate: false,
       );
       if (option.isSome()) {
-        return const Err(
-          stack: ['DIBase', '_registerDependency'],
+        return Err(
+          debugPath: ['DIBase', '_registerDependency'],
           error: 'Dependency already registered.',
         );
       }
@@ -174,15 +164,14 @@ base class DIBase<H extends Object> {
     bool traverse = true,
   }) {
     return get<T>(groupEntity: groupEntity, traverse: traverse).map(
-      (e) =>
-          e.isSync()
-              ? e.sync().unwrap()
-              : Sync(
-                const Err(
-                  stack: ['DIBase', 'getSync'],
-                  error: 'Called getSync() for an async dependency.',
-                ),
+      (e) => e.isSync()
+          ? e.sync().unwrap()
+          : Sync(
+              Err(
+                debugPath: ['DIBase', 'getSync'],
+                error: 'Called getSync() for an async dependency.',
               ),
+            ),
     );
   }
 
@@ -192,11 +181,10 @@ base class DIBase<H extends Object> {
     bool traverse = true,
   }) {
     return Future.sync(() async {
-      final result =
-          await getAsync<T>(
-            groupEntity: groupEntity,
-            traverse: traverse,
-          ).unwrap().value;
+      final result = await getAsync<T>(
+        groupEntity: groupEntity,
+        traverse: traverse,
+      ).unwrap().value;
       return result.unwrap();
     });
   }
@@ -262,7 +250,7 @@ base class DIBase<H extends Object> {
     }
     final result = option.unwrap();
     if (result.isErr()) {
-      return Some(Sync(result.err().castErr()));
+      return Some(Sync(result.err().transErr()));
     }
     final dependency = result.unwrap();
     final value = dependency.value;
@@ -315,13 +303,13 @@ base class DIBase<H extends Object> {
     final g = groupEntity.preferOverDefault(focusGroup);
     final test = get<T>(groupEntity: g);
     if (test.isSome()) {
-      return test.some().unwrap().value;
+      return test.unwrap();
     }
 
-    final temp = SafeFinisher<T>();
-    register<SafeFinisher<T>>(temp, groupEntity: g);
-    return temp.resolvable.map((e) {
-      registry.removeDependency<SafeFinisher<T>>(groupEntity: g);
+    final temp = _ReservedSafeFinisher<T>();
+    register<_ReservedSafeFinisher<T>>(temp, groupEntity: g);
+    return temp.resolvable().map((e) {
+      registry.removeDependency<_ReservedSafeFinisher<T>>(groupEntity: g);
       return e;
     });
   }
@@ -342,9 +330,8 @@ base class DIBase<H extends Object> {
           (_) {
             return registry.removeDependencyK(
               dependency.typeEntity,
-              groupEntity: dependency.metadata
-                  .map((e) => e.groupEntity)
-                  .unwrapOr(const DefaultEntity()),
+              groupEntity:
+                  dependency.metadata.map((e) => e.groupEntity).unwrapOr(const DefaultEntity()),
             );
           },
           (_) {
@@ -359,9 +346,7 @@ base class DIBase<H extends Object> {
         ],
       );
     }
-    final result = sequential
-        .add(unsafe: (_) => Some(results))
-        .map((e) => e.unwrap());
+    final result = sequential.add(unsafe: (_) => Some(results)).map((e) => e.unwrap());
     return result;
   }
 }
@@ -371,7 +356,7 @@ base class DIBase<H extends Object> {
 extension _TryConvertSafeFinisher<T extends Object> on SafeFinisher<T> {
   SafeFinisher<U> _tryConvert<U extends Object>() {
     final finisher = SafeFinisher<U>();
-    resolvable.map((e) {
+    resolvable().map((e) {
       finisher.resolve(SyncOk(e as U));
       return e;
     });

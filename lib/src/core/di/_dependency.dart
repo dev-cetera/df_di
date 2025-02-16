@@ -55,7 +55,7 @@ final class Dependency<T extends Object> {
 
   /// Returns a new [Dependency] instance where the current [value] is cast
   /// to type [R], while retaining the existing [metadata].
-  Dependency<R> cast<R extends Object>() => passNewValue(value.cast());
+  Dependency<R> cast<R extends Object>() => passNewValue(value.trans());
 
   /// Creates a new instance with updated fields, preserving the values of any
   /// fields not explicitly specified.
@@ -135,9 +135,7 @@ class DependencyMetadata {
     return DependencyMetadata(
       groupEntity: groupEntity.isNotDefault() ? groupEntity : this.groupEntity,
       preemptivetypeEntity:
-          preemptivetypeEntity.isNotDefault()
-              ? preemptivetypeEntity
-              : this.preemptivetypeEntity,
+          preemptivetypeEntity.isNotDefault() ? preemptivetypeEntity : this.preemptivetypeEntity,
       index: index.isSome() ? index : this.index,
       validator: validator.isSome() ? validator : this.validator,
       onUnregister: onUnregister.isSome() ? onUnregister : this.onUnregister,
@@ -170,8 +168,7 @@ class DependencyMetadata {
 /// in order to facilitate any necessary cleanup or additional processing
 /// that might be required for the [value].
 @internal
-typedef OnUnregisterCallback<T extends Object> =
-    Resolvable<void> Function(T value);
+typedef OnUnregisterCallback<T extends Object> = Resolvable<void> Function(T value);
 
 /// A typedef for a function that evaluates the validity of a dependency.
 @internal

@@ -43,15 +43,14 @@ base mixin SupportsMixinK<H extends Object> on DIBase<H> {
     bool traverse = true,
   }) {
     return getK(typeEntity, groupEntity: groupEntity, traverse: traverse).map(
-      (e) =>
-          e.isSync()
-              ? e.sync().unwrap()
-              : const Sync(
-                Err(
-                  stack: ['SupportsMixinK', 'getSyncK'],
-                  error: 'Called getSyncK() an async dependency.',
-                ),
+      (e) => e.isSync()
+          ? e.sync().unwrap()
+          : Sync(
+              Err(
+                debugPath: ['SupportsMixinK', 'getSyncK'],
+                error: 'Called getSyncK() an async dependency.',
               ),
+            ),
     );
   }
 
@@ -63,12 +62,11 @@ base mixin SupportsMixinK<H extends Object> on DIBase<H> {
     bool traverse = true,
   }) {
     return Future.sync(() async {
-      final result =
-          await getAsyncK(
-            typeEntity,
-            groupEntity: groupEntity,
-            traverse: traverse,
-          ).unwrap().value;
+      final result = await getAsyncK(
+        typeEntity,
+        groupEntity: groupEntity,
+        traverse: traverse,
+      ).unwrap().value;
       return result.unwrap();
     });
   }
@@ -147,7 +145,7 @@ base mixin SupportsMixinK<H extends Object> on DIBase<H> {
     }
     final result = option.unwrap();
     if (result.isErr()) {
-      return Some(Sync(result.err().castErr()));
+      return Some(Sync(result.err().transErr()));
     }
     final value = result.unwrap().value;
     if (value.isSync()) {
@@ -160,10 +158,10 @@ base mixin SupportsMixinK<H extends Object> on DIBase<H> {
           final value = e.unwrap();
           registry.removeDependencyK(typeEntity, groupEntity: g);
           final metadata = option.unwrap().unwrap().metadata.map(
-            (e) => e.copyWith(
-              preemptivetypeEntity: TypeEntity(Sync, [typeEntity]),
-            ),
-          );
+                (e) => e.copyWith(
+                  preemptivetypeEntity: TypeEntity(Sync, [typeEntity]),
+                ),
+              );
           registerDependencyK(
             dependency: Dependency(Sync(Ok(value)), metadata: metadata),
             checkExisting: false,
@@ -179,10 +177,7 @@ base mixin SupportsMixinK<H extends Object> on DIBase<H> {
     required Dependency<Object> dependency,
     bool checkExisting = false,
   }) {
-    final g =
-        dependency.metadata.isSome()
-            ? dependency.metadata.unwrap().groupEntity
-            : focusGroup;
+    final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
     if (checkExisting) {
       final option = getDependencyK(
         dependency.typeEntity,
@@ -191,8 +186,8 @@ base mixin SupportsMixinK<H extends Object> on DIBase<H> {
         validate: false,
       );
       if (option.isSome()) {
-        return const Err(
-          stack: ['DIBase', '_registerDependency'],
+        return Err(
+          debugPath: ['DIBase', '_registerDependency'],
           error: 'Dependency already registered.',
         );
       }
@@ -234,9 +229,9 @@ base mixin SupportsMixinK<H extends Object> on DIBase<H> {
         if (metadata.isSome()) {
           final valid = metadata.unwrap().validator.map((e) => e(dependency));
           if (valid.isSome() && !valid.unwrap()) {
-            return const Some(
+            return Some(
               Err(
-                stack: ['SupportsMixinK', 'getDependencyK'],
+                debugPath: ['SupportsMixinK', 'getDependencyK'],
                 error: 'Dependency validation failed.',
               ),
             );
@@ -266,8 +261,8 @@ base mixin SupportsMixinK<H extends Object> on DIBase<H> {
       if (onUnregister.isSome()) {
         return Some(
           onUnregister.unwrap()(removedDependency).map(
-            (_) => removedDependency,
-          ),
+                (_) => removedDependency,
+              ),
         );
       }
     }
@@ -281,9 +276,7 @@ base mixin SupportsMixinK<H extends Object> on DIBase<H> {
     Entity groupEntity = const DefaultEntity(),
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
-    return registry
-        .removeDependencyK(typeEntity, groupEntity: g)
-        .or(
+    return registry.removeDependencyK(typeEntity, groupEntity: g).or(
           registry.removeDependencyK(
             TypeEntity(Lazy, [typeEntity]),
             groupEntity: g,

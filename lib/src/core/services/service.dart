@@ -43,8 +43,8 @@ abstract class Service<TParams extends Object?> {
   @nonVirtual
   FutureOr<void> init(TParams params) {
     if (_disposed) {
-      throw const Err(
-        stack: ['Service', 'init'],
+      throw Err(
+        debugPath: ['Service', 'init'],
         error: 'Service has already been initialized.',
       );
     }
@@ -99,8 +99,8 @@ abstract class Service<TParams extends Object?> {
   FutureOr<void> dispose() {
     // Throw an exception if the service has already been disposed.
     if (_disposed) {
-      throw const Err(
-        stack: ['Service', 'dispose'],
+      throw Err(
+        debugPath: ['Service', 'dispose'],
         error: 'Service has already been disposed.',
       );
     }

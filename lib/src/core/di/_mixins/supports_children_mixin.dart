@@ -17,8 +17,7 @@ import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-base mixin SupportsChildrenMixin<H extends Object>
-    on SupportsConstructorsMixin<H> {
+base mixin SupportsChildrenMixin<H extends Object> on SupportsConstructorsMixin<H> {
   @protected
   Option<DI> children = const None();
 
@@ -29,9 +28,9 @@ base mixin SupportsChildrenMixin<H extends Object>
       children = Some(DI());
     }
     return children.unwrap().registerLazy<DI<T>>(
-      () => Sync(Ok(DI<T>()..parents.add(this as DI<H>))),
-      groupEntity: groupEntity,
-    );
+          () => Sync(Ok(DI<T>()..parents.add(this as DI<H>))),
+          groupEntity: groupEntity,
+        );
   }
 
   Option<DI<T>> getChildOrNone<T extends Object>({
@@ -61,7 +60,7 @@ base mixin SupportsChildrenMixin<H extends Object>
     }
     final result = option.unwrap().sync();
     if (result.isErr()) {
-      return Some(result.err().castErr());
+      return Some(result.err().transErr());
     }
     final value = result.unwrap().value;
     return Some(value);
@@ -81,9 +80,9 @@ base mixin SupportsChildrenMixin<H extends Object>
     }
     final result = option.unwrap().sync();
     if (result.isErr()) {
-      return Some(result.err().castErr());
+      return Some(result.err().transErr());
     }
-    final value = result.unwrap().value.cast<DI>();
+    final value = result.unwrap().value.trans<DI>();
     return Some(value);
   }
 
@@ -96,9 +95,9 @@ base mixin SupportsChildrenMixin<H extends Object>
       return const None();
     }
     return children.unwrap().unregister<DI<T>>(
-      groupEntity: g,
-      skipOnUnregisterCallback: skipOnUnregisterCallback,
-    );
+          groupEntity: g,
+          skipOnUnregisterCallback: skipOnUnregisterCallback,
+        );
   }
 
   Option<Resolvable<Object>> unregisterChildT(
@@ -111,10 +110,10 @@ base mixin SupportsChildrenMixin<H extends Object>
       return const None();
     }
     return children.unwrap().unregisterT(
-      type,
-      groupEntity: g,
-      skipOnUnregisterCallback: skipOnUnregisterCallback,
-    );
+          type,
+          groupEntity: g,
+          skipOnUnregisterCallback: skipOnUnregisterCallback,
+        );
   }
 
   bool isChildRegistered<T extends Object>({
