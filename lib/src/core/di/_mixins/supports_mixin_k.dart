@@ -129,13 +129,14 @@ base mixin SupportsMixinK<H extends Object> on DIBase<H> {
   }
 
   @protected
-  Option<Resolvable<Object>> getK(
+  Option<Resolvable<T>> getK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
+    assert(T != Object, 'T must be specified and cannot be Object.');
     final g = groupEntity.preferOverDefault(focusGroup);
-    final option = getDependencyK(
+    final option = getDependencyK<T>(
       typeEntity,
       groupEntity: g,
       traverse: traverse,
@@ -197,15 +198,16 @@ base mixin SupportsMixinK<H extends Object> on DIBase<H> {
   }
 
   @protected
-  OptionResult<Dependency<Object>> getDependencyK(
+  OptionResult<Dependency<T>> getDependencyK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
     bool validate = true,
   }) {
+    assert(T != Object, 'T must be specified and cannot be Object.');
     final g = groupEntity.preferOverDefault(focusGroup);
     final option = registry.getDependencyK(typeEntity, groupEntity: g);
-    var temp = option.map((e) => Ok(e).asResult());
+    var temp = option.map((e) => Ok(e).asResult().trans<Dependency<T>>());
     if (option.isNone() && traverse) {
       for (final parent in parents) {
         temp = (parent as SupportsMixinK).getDependencyK(
@@ -222,7 +224,7 @@ base mixin SupportsMixinK<H extends Object> on DIBase<H> {
       if (validate) {
         final result = temp.unwrap();
         if (result.isErr()) {
-          return Some(result);
+          return Some(result.trans());
         }
         final dependency = result.unwrap();
         final metadata = dependency.metadata;
@@ -242,46 +244,30 @@ base mixin SupportsMixinK<H extends Object> on DIBase<H> {
     return temp;
   }
 
-  Option<Resolvable<Object>> unregisterK<T extends Object>(
+  Result<void> unregisterK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool skipOnUnregisterCallback = false,
   }) {
-    final removed = removeDependencyK(typeEntity, groupEntity: groupEntity);
-    if (removed.isNone()) {
-      return const None();
+    assert(T != Object, 'T must be specified and cannot be Object.');
+    final removed = removeDependencyK<T>(typeEntity, groupEntity: groupEntity);
+    if (removed.isErr()) {
+      return removed.err().transErr();
     }
-    final removedDependency = removed.unwrap() as Dependency;
-    if (skipOnUnregisterCallback) {
-      return Some(Sync(Ok(removedDependency.value)));
-    }
-    final metadata = removedDependency.metadata;
-    if (metadata.isSome()) {
-      final onUnregister = metadata.unwrap().onUnregister;
-      if (onUnregister.isSome()) {
-        return Some(
-          onUnregister.unwrap()(removedDependency).map(
-                (_) => removedDependency,
-              ),
-        );
-      }
-    }
-    return Some(Sync(Ok(removedDependency.value)));
+    return const Ok(Object());
   }
 
   @protected
   @pragma('vm:prefer-inline')
-  Option<Object> removeDependencyK(
+  ResultOption<T> removeDependencyK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
-    return registry.removeDependencyK(typeEntity, groupEntity: g).or(
-          registry.removeDependencyK(
-            TypeEntity(Lazy, [typeEntity]),
-            groupEntity: g,
-          ),
-        );
+    return registry
+        .removeDependencyK<T>(typeEntity, groupEntity: g)
+        .or(registry.removeDependencyK<Lazy<T>>(typeEntity, groupEntity: g))
+        .trans();
   }
 
   @protected

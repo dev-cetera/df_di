@@ -31,18 +31,21 @@ void main() {
   test('Testing the until function with a single registaration.', () async {
     final di = DI();
     Future.delayed(const Duration(seconds: 1), () {
-      di.register('hello');
+      di.register<int>(1);
     });
 
-    Future.delayed(const Duration(seconds: 3), () {
-      di.register(1000);
-    });
+    print(await di.untilT(String).unwrap());
 
-    print(await di.until<String>().unwrap());
-    print(di.until<num>().unwrap());
-    print(di.until<num>().unwrap());
-    print(await di.until<num>().unwrap());
-    print('111');
+    // Future.delayed(const Duration(seconds: 3), () {
+    //   di.register(1000);
+    // });
+
+    // print(await di.until<String>().unwrap());
+    // print(di.until<num>().unwrap());
+    // print(di.until<int>().unwrap());
+    // print(await di.until<num>().unwrap());
+    // print(di.registry.state);
+    // print('111');
 
     // //print(di<SafeFinisher<int>>().unwrap());
 

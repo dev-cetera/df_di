@@ -55,7 +55,6 @@ final class DIRegistry {
   /// Returns all dependencies witin this [DIRegistry] instance of type
   /// [T].
   Iterable<Dependency> dependenciesWhereType<T extends Object>() {
-    assert(T != Object, 'T must be specified and cannot be Object.');
     return sortedDependencies.map((e) => e.value is T ? e : null).nonNulls;
   }
 
@@ -144,10 +143,9 @@ final class DIRegistry {
   Option<Dependency<T>> getDependency<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
   }) {
-    assert(T != Object, 'T must be specified and cannot be Object.');
     return Option.fromNullable(
       //_state[groupEntity]?.values.whereType<Dependency<T>>().firstOrNull,
-      _state[groupEntity]?.values.firstWhereOrNull((e) => e.value is Resolvable<T>)?.cast<T>(),
+      _state[groupEntity]?.values.firstWhereOrNull((e) => e.value is Resolvable<T>)?.trans<T>(),
     );
   }
 
@@ -185,59 +183,55 @@ final class DIRegistry {
     );
   }
 
-  /// Removes any [Dependency] of [T] or subtypes under the specified
-  /// [groupEntity].
-  ///
-  /// Returns the removed [Dependency] of [T], or `null` if it did not exist
-  /// within [state].
-  @protected
-  Option<Dependency<T>> removeDependency<T extends Object>({
-    Entity groupEntity = const DefaultEntity(),
-  }) {
-    final removed = removeDependencyT(T, groupEntity: groupEntity);
-    return removed.map((e) => e.cast<T>());
-  }
-
-  /// Removes any dependency with the exact [type] under the specified
-  /// [groupEntity]. Unlike [removeDependency], this will not include any
-  /// subtypes.
-  ///
-  /// Returns the removed [Dependency] or `null` if it did not exist within
-  /// [state].
   @protected
   @pragma('vm:prefer-inline')
-  Option<Dependency> removeDependencyT(
+  ResultOption<Dependency<T>> removeDependencyT<T extends Object>(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
   }) {
-    return removeDependencyK(TypeEntity(type), groupEntity: groupEntity);
+    return removeDependencyK<T>(
+      TypeEntity(type),
+      groupEntity: groupEntity,
+    );
   }
 
-  Option<Dependency> removeDependencyK(
+  Ok<Option<Dependency<T>>> removeDependency<T extends Object>({
+    Entity groupEntity = const DefaultEntity(),
+  }) {
+    final group = _state[groupEntity];
+    if (group == null) {
+      return const Ok(None());
+    }
+    final key = group.entries.firstWhereOrNull((e) => e.value.value is Resolvable<T>)?.key;
+    if (key == null) {
+      return const Ok(None());
+    }
+    final dependency = group.remove(key);
+    if (dependency == null) {
+      return const Ok(None());
+    }
+    return Ok(Some(dependency.trans()));
+  }
+
+  ResultOption<Dependency<T>> removeDependencyK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
   }) {
-    final a = _removeDependencyK(
+    final a = _removeDependencyK<T>(
       TypeEntity(Sync, [typeEntity]),
       groupEntity: groupEntity,
     );
-    if (a.isSome()) {
+    if (a.isErr()) {
       return a;
     }
-    return _removeDependencyK(
+    return _removeDependencyK<T>(
       TypeEntity(Async, [typeEntity]),
       groupEntity: groupEntity,
     );
   }
 
-  /// Removes any dependency with the exact [typeEntity] under the specified
-  /// [groupEntity]. Unlike [removeDependency], this will not include any
-  /// subtypes.
-  ///
-  /// Returns the removed [Dependency] or `null` if it did not exist within
-  /// [state].
   @protected
-  Option<Dependency> _removeDependencyK(
+  ResultOption<Dependency<T>> _removeDependencyK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
   }) {
@@ -251,10 +245,10 @@ final class DIRegistry {
           setGroup(group, groupEntity: groupEntity);
         }
         onChange.ifSome((e) => e.unwrap()());
-        return removed;
+        return removed.trans();
       }
     }
-    return const None();
+    return const Ok(None());
   }
 
   /// Updates the [state] by setting or replacing the [group] under the

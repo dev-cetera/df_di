@@ -18,15 +18,15 @@ import '/src/_common.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 final class ReservedSafeFinisher<T extends Object> extends SafeFinisher<T> {
-  final Type type;
-  ReservedSafeFinisher(this.type);
+  final Entity typeEntity;
+  ReservedSafeFinisher(this.typeEntity);
 
   @override
   bool operator ==(Object other) => identical(this, other);
 
   @override
   int get hashCode {
-    final a = Object() is! T ? T.hashCode : type.hashCode;
+    final a = Object() is! T ? T.hashCode : typeEntity.hashCode;
     final b = (ReservedSafeFinisher).hashCode;
     return Object.hash(a, b);
   }
@@ -64,11 +64,11 @@ base class DIBase<H extends Object> {
     FutureOr<T> value, {
     Entity groupEntity = const DefaultEntity(),
   }) {
-    return registerUnsafe<T, T>(() => value, groupEntity: groupEntity);
+    return registerUnsafe<T>(() => value, groupEntity: groupEntity);
   }
 
-  Result<void> registerUnsafe<TParent extends Object, TT extends TParent>(
-    FutureOr<TT> Function() unsafe, {
+  Result<void> registerUnsafe<T extends Object>(
+    FutureOr<T> Function() unsafe, {
     Entity groupEntity = const DefaultEntity(),
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
@@ -77,24 +77,28 @@ base class DIBase<H extends Object> {
       groupEntity: g,
     );
     final value = Resolvable.unsafe(unsafe);
-    final deps = registry.getDependencies<ReservedSafeFinisher>(groupEntity: g);
-    print(deps.length);
-    for (final dep in deps) {
-      try {
-        dep.value.map((e) => e.resolve(value));
-      } catch (e) {
-        print(e);
-      }
-    }
-    // get<ReservedSafeFinisher<T>>(groupEntity: g).map((e) => e.map((e) => e.resolve(value)));
-    // if (T != TT) {
-    //   get<ReservedSafeFinisher<TT>>(groupEntity: g).map((e) => e.map((e) => e.resolve(value)));
-    // }
-    final result = registerDependency<TParent>(
+    _resolveFinisher(value: value, groupEntity: g);
+    final result = registerDependency<T>(
       dependency: Dependency(value, metadata: Some(metadata)),
       checkExisting: true,
     );
     return result;
+  }
+
+  // Resolve all finishers that can be resolved with the value.
+  void _resolveFinisher<T extends Object>({
+    required Resolvable<T> value,
+    required Entity groupEntity,
+  }) {
+    final g = groupEntity.preferOverDefault(focusGroup);
+    final finisherDependencies = registry.getDependencies<ReservedSafeFinisher>(groupEntity: g);
+    for (final dependency in finisherDependencies) {
+      final finisher = dependency.value.unwrapSync().unwrap();
+      try {
+        finisher.resolve(value);
+        break;
+      } catch (_) {}
+    }
   }
 
   @protected
@@ -103,7 +107,6 @@ base class DIBase<H extends Object> {
     bool checkExisting = false,
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
-
     final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
     if (checkExisting) {
       final option = getDependency<T>(
@@ -122,27 +125,28 @@ base class DIBase<H extends Object> {
     return Ok(dependency);
   }
 
-  Option<Resolvable<Object>> unregister<T extends Object>({
+  Result<void> unregister<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool skipOnUnregisterCallback = false,
   }) {
-    final removed = removeDependency<T>(groupEntity: groupEntity);
-    if (removed.isNone()) {
-      return const None();
+    final removed = removeDependencyT<T>(T, groupEntity: groupEntity);
+    if (removed.isErr()) {
+      return removed.err().transErr();
     }
-    final removedDependency = removed.unwrap() as Dependency;
-    return Some(Sync(Ok(removedDependency.value)));
+    return const Ok(Object());
   }
 
   @protected
   @pragma('vm:prefer-inline')
-  Option<Object> removeDependency<T extends Object>({
+  ResultOption<T> removeDependencyT<T extends Object>(
+    Type type, {
     Entity groupEntity = const DefaultEntity(),
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
     return registry
-        .removeDependency<T>(groupEntity: g)
-        .or(registry.removeDependency<Lazy<T>>(groupEntity: g));
+        .removeDependencyT<T>(type, groupEntity: g)
+        .or(registry.removeDependencyT<Lazy<T>>(type, groupEntity: g))
+        .trans();
   }
 
   bool isRegistered<T extends Object>({
@@ -327,17 +331,16 @@ base class DIBase<H extends Object> {
     if (option.isSome()) {
       finisher = option.unwrap();
     } else {
-      finisher = ReservedSafeFinisher<T>(T);
+      finisher = ReservedSafeFinisher<T>(TypeEntity(T));
       register<ReservedSafeFinisher<T>>(finisher, groupEntity: g);
     }
-
     return finisher.resolvable().map((e) {
       registry.removeDependency<ReservedSafeFinisher<T>>(groupEntity: g);
       return e;
     });
   }
 
-  Resolvable<List<Dependency>> unregisterAll({
+  Resolvable<void> unregisterAll({
     OnUnregisterCallback<Dependency>? onBeforeUnregister,
     OnUnregisterCallback<Dependency>? onAfterUnregister,
   }) {
@@ -351,11 +354,12 @@ base class DIBase<H extends Object> {
             return null;
           },
           (_) {
-            return registry.removeDependencyK(
+            registry.removeDependencyK(
               dependency.typeEntity,
               groupEntity:
                   dependency.metadata.map((e) => e.groupEntity).unwrapOr(const DefaultEntity()),
             );
+            return null;
           },
           (_) {
             return dependency.metadata.map(

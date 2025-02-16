@@ -86,30 +86,30 @@ base mixin SupportsChildrenMixin<H extends Object> on SupportsConstructorsMixin<
     return Some(value);
   }
 
-  Option<Resolvable<Object>> unregisterChild<T extends Object>({
+  Result<void> unregisterChild({
     Entity groupEntity = const DefaultEntity(),
     bool skipOnUnregisterCallback = false,
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
     if (children.isNone()) {
-      return const None();
+      return children.asResult();
     }
-    return children.unwrap().unregister<DI<T>>(
+    return children.unwrap().unregister<DI>(
           groupEntity: g,
           skipOnUnregisterCallback: skipOnUnregisterCallback,
         );
   }
 
-  Option<Resolvable<Object>> unregisterChildT(
+  Result<void> unregisterChildT(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
     bool skipOnUnregisterCallback = false,
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
     if (children.isNone()) {
-      return const None();
+      return children.asResult();
     }
-    return children.unwrap().unregisterT(
+    return children.unwrap().unregisterT<DI>(
           type,
           groupEntity: g,
           skipOnUnregisterCallback: skipOnUnregisterCallback,

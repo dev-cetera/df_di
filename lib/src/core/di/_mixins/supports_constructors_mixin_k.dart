@@ -17,11 +17,15 @@ import '/src/_common.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 base mixin SupportsConstructorsMixinK<H extends Object> on SupportsMixinK<H> {
-  Resolvable<void> resetSingletonK(
+  Resolvable<void> resetSingletonK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
   }) {
-    final temp = getK(TypeEntity(Lazy, [typeEntity]), groupEntity: groupEntity);
+    assert(T != Object, 'T must be specified and cannot be Object.');
+    final temp = getK(
+      TypeEntity(Lazy, [typeEntity]),
+      groupEntity: groupEntity,
+    );
     if (temp.isSome()) {
       return temp.unwrap().map((e) => (e as Lazy)..resetSingleton());
     }
@@ -29,18 +33,19 @@ base mixin SupportsConstructorsMixinK<H extends Object> on SupportsMixinK<H> {
   }
 
   @pragma('vm:prefer-inline')
-  FutureOr<Object> getSingletonUnsafeK(
+  FutureOr<T> getSingletonUnsafeK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
+    assert(T != Object, 'T must be specified and cannot be Object.');
     return consec(
       getSingletonK(
         typeEntity,
         groupEntity: groupEntity,
         traverse: traverse,
       ).unwrap(),
-      (e) => e.unwrap(),
+      (e) => e.trans<T>().unwrap(),
     );
   }
 
@@ -48,6 +53,7 @@ base mixin SupportsConstructorsMixinK<H extends Object> on SupportsMixinK<H> {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
+    assert(T != Object, 'T must be specified and cannot be Object.');
     final option = get<Lazy<T>>(groupEntity: groupEntity, traverse: traverse);
     if (option.isNone()) {
       return const None();
@@ -56,12 +62,13 @@ base mixin SupportsConstructorsMixinK<H extends Object> on SupportsMixinK<H> {
     return Some(resolvable);
   }
 
-  OptionResolvable<Object> getSingletonK(
+  OptionResolvable<T> getSingletonK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    final option = getK(
+    assert(T != Object, 'T must be specified and cannot be Object.');
+    final option = getK<T>(
       TypeEntity(Lazy, [typeEntity]),
       groupEntity: groupEntity,
       traverse: traverse,
@@ -69,8 +76,7 @@ base mixin SupportsConstructorsMixinK<H extends Object> on SupportsMixinK<H> {
     if (option.isNone()) {
       return const None();
     }
-    final resolvable =
-        option.unwrap().map((e) => (e as Lazy).singleton).merge();
+    final resolvable = option.unwrap().map((e) => (e as Lazy).singleton).merge().trans<T>();
     return Some(resolvable);
   }
 
@@ -97,5 +103,32 @@ base mixin SupportsConstructorsMixinK<H extends Object> on SupportsMixinK<H> {
       groupEntity: groupEntity,
       traverse: traverse,
     ).map((e) => e.map((e) => (e as Lazy).factory)).reduce<Object>();
+  }
+
+  Resolvable<Object> untilK(
+    Entity typeEntity, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    final g = groupEntity.preferOverDefault(focusGroup);
+    final test = getK(typeEntity, groupEntity: g);
+    if (test.isSome()) {
+      return test.unwrap();
+    }
+    ReservedSafeFinisher finisher;
+    final option = getSyncOrNone<ReservedSafeFinisher>(groupEntity: g);
+    if (option.isSome()) {
+      finisher = option.unwrap();
+    } else {
+      finisher = ReservedSafeFinisher(typeEntity);
+      register<ReservedSafeFinisher>(finisher, groupEntity: g);
+    }
+    return finisher.resolvable().map((e) {
+      registry.removeDependencyK(
+        TypeEntity(ReservedSafeFinisher, [typeEntity]),
+        groupEntity: g,
+      );
+      return e;
+    });
   }
 }
