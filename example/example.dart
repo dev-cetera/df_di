@@ -23,6 +23,7 @@ import 'package:df_di/src/_common.dart';
 
 Future<Object> main() async {
   final di = DI();
+
   // di.register<int>(unsafe: () async => 1);
   // print(di.registry.state);
   // print(await di.getUnsafeK(TypeEntity(int)));

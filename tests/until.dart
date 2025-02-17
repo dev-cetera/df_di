@@ -30,10 +30,12 @@ void main() {
     final child = parent.child();
 
     Future.delayed(const Duration(seconds: 1), () {
-      parent.register<int>(1);
+      parent.register<int>(Future.value(1));
     });
 
     print(await child.until<int>().unwrap());
+    print(child.get<int>());
+    print(child.get<int>());
 
     // Future.delayed(const Duration(seconds: 3), () {
     //   di.register(1000);

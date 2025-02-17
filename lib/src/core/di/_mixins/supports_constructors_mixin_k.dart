@@ -117,7 +117,7 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
         traverse: traverse,
         removeAll: false,
       );
-      return e;
-    });
+      return getK<T>(typeEntity, groupEntity: g).unwrap();
+    }).merge();
   }
 }
