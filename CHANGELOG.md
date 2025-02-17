@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.10.3]
+
+- Released @ 2/2025 (UTC)
+- chore: Bugfix
+
 ## [0.10.2]
 
 - Released @ 2/2025 (UTC)
