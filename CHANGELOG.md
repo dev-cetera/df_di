@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.10.4]
+
+- Released @ 2/2025 (UTC)
+- feat: Add untilFactory and untilSingleton
+
 ## [0.10.3]
 
 - Released @ 2/2025 (UTC)
