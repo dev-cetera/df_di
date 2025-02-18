@@ -19,8 +19,7 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
   //
   //
 
-  Resolvable<Lazy<TService>>
-  registerLazyAndInitService<TService extends Service>(
+  Resolvable<Lazy<TService>> registerLazyAndInitService<TService extends Service>(
     FutureOr<TService> service, {
     Object? params,
     Entity groupEntity = const DefaultEntity(),
@@ -65,7 +64,7 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
     return getSingleton<TService>(
       groupEntity: groupEntity,
       traverse: traverse,
-    ).unwrap().sync().unwrap().unwrap();
+    ).unwrap().toSync().unwrap();
   }
 
   @pragma('vm:prefer-inline')
@@ -76,6 +75,6 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
     return getFactory<TService>(
       groupEntity: groupEntity,
       traverse: traverse,
-    ).unwrap().sync().unwrap().unwrap();
+    ).unwrap().toSync().unwrap();
   }
 }
