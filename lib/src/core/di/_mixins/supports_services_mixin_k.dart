@@ -14,37 +14,8 @@ import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-base mixin SupportsServicesMixinK
-    on SupportsConstructorsMixinK, SupportsMixinK {
+base mixin SupportsServicesMixinK on SupportsConstructorsMixinK, SupportsMixinK {
   //
   //
   //
-
-  @protected
-  @pragma('vm:prefer-inline')
-  OptionResolvable<TService> getServiceSingletonK<TService extends Service>(
-    TypeEntity typeEntity, {
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    return getSingletonK<TService>(
-      typeEntity,
-      groupEntity: groupEntity,
-      traverse: traverse,
-    );
-  }
-
-  @protected
-  @pragma('vm:prefer-inline')
-  OptionResolvable<TService> getServiceFactoryK<TService extends Service>(
-    TypeEntity typeEntity, {
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    return getFactoryK<TService>(
-      typeEntity,
-      groupEntity: groupEntity,
-      traverse: traverse,
-    );
-  }
 }

@@ -20,26 +20,13 @@ void main() {
   test('Testing the registration and initialization of a service.', () async {
     final di = DI();
     final service = TestService();
-    di.registerAndInitService<TestService>(service);
+    await di.registerLazyAndInitService<TestService>(service).value;
     print('Just registered...');
-    final value1 = await di.getUnsafe<TestService>();
-    final value2 = await di.getUnsafe<TestService>();
+    final value1 = await di.getSingletonUnsafe<TestService>();
+    final value2 = await di.getSingletonUnsafe<TestService>();
     expect(value1, service);
     expect(value1, value2);
   });
-  test(
-    'Testing the lazy registration and initialization of a service.',
-    () async {
-      final di = DI();
-      final service = TestService();
-      di.registerLazyServiceUnsafe<TestService>(constructor: () => service);
-      print('Just registered...');
-      final value1 = di.getServiceSingletonSync<TestService>();
-      final value2 = di.getServiceSingletonSync<TestService>();
-      expect(value1, service);
-      expect(value1, value2);
-    },
-  );
 }
 
 base class TestService extends Service {

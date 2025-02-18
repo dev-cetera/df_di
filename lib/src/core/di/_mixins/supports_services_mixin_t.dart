@@ -18,29 +18,5 @@ base mixin SupportsServicesMixinT on SupportsServicesMixinK {
   //
   //
   //
-  @pragma('vm:prefer-inline')
-  OptionResolvable<TService> getServiceSingletonT<TService extends Service>(
-    Type type, {
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    return getServiceSingletonK<TService>(
-      TypeEntity(type),
-      groupEntity: groupEntity,
-      traverse: traverse,
-    );
-  }
-
-  @pragma('vm:prefer-inline')
-  OptionResolvable<TService> getServiceFactoryT<TService extends Service>(
-    Type type, {
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    return getServiceFactoryK<TService>(
-      TypeEntity(type),
-      groupEntity: groupEntity,
-      traverse: traverse,
-    );
-  }
+  
 }
