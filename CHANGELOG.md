@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.10.5]
+
+- Released @ 2/2025 (UTC)
+- chore: Give registerLazyAndInitService a valuable return value
+
 ## [0.10.4]
 
 - Released @ 2/2025 (UTC)

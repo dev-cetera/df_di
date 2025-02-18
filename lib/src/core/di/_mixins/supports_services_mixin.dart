@@ -19,7 +19,8 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
   //
   //
 
-  Resolvable<Lazy<TService>> registerLazyAndInitService<TService extends Service>(
+  Resolvable<Lazy<TService>>
+  registerLazyAndInitService<TService extends Service>(
     FutureOr<TService> service, {
     Object? params,
     Entity groupEntity = const DefaultEntity(),
@@ -31,10 +32,7 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
     if (test.isErr()) {
       return Sync(test.err().transErr());
     }
-    return until<Lazy<TService>>(
-      groupEntity: groupEntity,
-      traverse: false,
-    );
+    return until<Lazy<TService>>(groupEntity: groupEntity, traverse: false);
   }
 
   @pragma('vm:prefer-inline')

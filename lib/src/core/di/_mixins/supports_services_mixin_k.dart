@@ -14,7 +14,8 @@ import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-base mixin SupportsServicesMixinK on SupportsConstructorsMixinK, SupportsMixinK {
+base mixin SupportsServicesMixinK
+    on SupportsConstructorsMixinK, SupportsMixinK {
   //
   //
   //
