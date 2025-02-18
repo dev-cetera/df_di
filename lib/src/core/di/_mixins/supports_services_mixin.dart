@@ -19,7 +19,8 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
   //
   //
 
-  Resolvable<Lazy<TService>> registerLazyAndInitService<TService extends Service>(
+  Resolvable<Lazy<TService>>
+  registerLazyAndInitService<TService extends Service>(
     FutureOr<TService> service, {
     Object? params,
     Entity groupEntity = const DefaultEntity(),
