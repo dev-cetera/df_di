@@ -38,6 +38,17 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
     return Some(lazy.singleton);
   }
 
+  @pragma('vm:prefer-inline')
+  Resolvable<T> untilSingleton<T extends Object>({
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return until<Lazy<T>>(
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).map((e) => e.singleton).merge();
+  }
+
   Resolvable<void> resetSingleton<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
   }) {
@@ -74,11 +85,25 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    final option = get<Lazy<T>>(groupEntity: groupEntity, traverse: traverse);
+    final option = get<Lazy<T>>(
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
     if (option.isNone()) {
       return const None();
     }
     final lazy = option.unwrap().sync().unwrap().unwrap();
     return Some(lazy.factory);
+  }
+
+  @pragma('vm:prefer-inline')
+  Resolvable<T> untilFactory<T extends Object>({
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return until<Lazy<T>>(
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).map((e) => e.factory).merge();
   }
 }

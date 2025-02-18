@@ -81,7 +81,10 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getSingleton<TService>(groupEntity: groupEntity, traverse: traverse);
+    return getSingleton<TService>(
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
   }
 
   @pragma('vm:prefer-inline')
@@ -100,6 +103,9 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getFactory<TService>(groupEntity: groupEntity, traverse: traverse);
+    return getFactory<TService>(
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
   }
 }
