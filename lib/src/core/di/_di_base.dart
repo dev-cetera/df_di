@@ -51,16 +51,10 @@ base class DIBase {
   int _indexIncrementer = 0;
 
   @pragma('vm:prefer-inline')
-  Result<void> register<T extends Object>(
+  Resolvable<T> register<T extends Object>(
     FutureOr<T> value, {
-    Entity groupEntity = const DefaultEntity(),
-  }) {
-    assert(T != Object, 'T must be specified and cannot be Object.');
-    return registerUnsafe<T>(() => value, groupEntity: groupEntity);
-  }
-
-  Result<void> registerUnsafe<T extends Object>(
-    FutureOr<T> Function() unsafe, {
+    FutureOr<void> Function(T value)? onRegister,
+    OnUnregisterCallback<T>? onUnregister,
     Entity groupEntity = const DefaultEntity(),
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
@@ -68,14 +62,15 @@ base class DIBase {
     final metadata = DependencyMetadata(
       index: Some(_indexIncrementer++),
       groupEntity: g,
+      onUnregister: onUnregister != null ? Some((e) => onUnregister(e.trans())) : const None(),
     );
-    final value = Resolvable.unsafe(unsafe);
-    _resolveFinisher(value: value, groupEntity: g);
-    final result = registerDependency<T>(
-      dependency: Dependency(value, metadata: Some(metadata)),
+    final a = Resolvable.unsafe(() => consec(value, (e) => consec(onRegister?.call(e), (_) => e)));
+    _resolveFinisher(value: a, groupEntity: g);
+    final b = registerDependency<T>(
+      dependency: Dependency(a, metadata: Some(metadata)),
       checkExisting: true,
     );
-    return result;
+    return a.map((e) => b.unwrap().value).merge();
   }
 
   @protected
@@ -85,15 +80,7 @@ base class DIBase {
   Option<Iterable<DI>> children() {
     return childrenContainer.map(
       (e) => e.registry.unsortedDependencies.map(
-        (e) =>
-            e
-                .trans<Lazy<DI>>()
-                .value
-                .unwrapSync()
-                .unwrap()
-                .singleton
-                .unwrapSync()
-                .unwrap(),
+        (e) => e.trans<Lazy<DI>>().value.unwrapSync().unwrap().singleton.unwrapSync().unwrap(),
       ),
     );
   }
@@ -106,8 +93,8 @@ base class DIBase {
     assert(T != Object, 'T must be specified and cannot be Object.');
     for (final di in [this as DI, ...children().unwrapOr([])]) {
       final g = groupEntity.preferOverDefault(focusGroup);
-      final finisherDependencies = di.registry
-          .getDependencies<ReservedSafeFinisher>(groupEntity: g);
+      final finisherDependencies =
+          di.registry.getDependencies<ReservedSafeFinisher>(groupEntity: g);
       for (final dependency in finisherDependencies) {
         final finisher = dependency.value.unwrapSync().unwrap();
         try {
@@ -124,10 +111,7 @@ base class DIBase {
     bool checkExisting = false,
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
-    final g =
-        dependency.metadata.isSome()
-            ? dependency.metadata.unwrap().groupEntity
-            : focusGroup;
+    final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
     if (checkExisting) {
       final option = getDependency<T>(groupEntity: g, traverse: false);
       if (option.isSome()) {
@@ -141,38 +125,57 @@ base class DIBase {
     return Ok(dependency);
   }
 
-  Result<void> unregister<T extends Object>({
+  Resolvable<None> unregister<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
     bool removeAll = true,
+    bool triggerOnUnregisterCallbacks = true,
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
+    final sequential = SafeSequential();
     final g = groupEntity.preferOverDefault(focusGroup);
     for (final di in [this as DI, ...parents]) {
-      final removed = di.removeDependency<T>(groupEntity: g);
-      if (removed.isErr()) {
-        return removed.err().transErr();
+      final dependencyOption = di.removeDependency<T>(groupEntity: g);
+      if (dependencyOption.isNone()) {
+        continue;
       }
-      if (!removeAll) {
-        if (removed.unwrap().isSome()) {
-          break;
+      if (triggerOnUnregisterCallbacks) {
+        final dependency = dependencyOption.unwrap();
+        final metadataOption = dependency.metadata;
+        if (metadataOption.isSome()) {
+          final metadata = metadataOption.unwrap();
+          final onUnregisterOption = metadata.onUnregister;
+          if (onUnregisterOption.isSome()) {
+            final onUnregister = onUnregisterOption.unwrap();
+            sequential.addSafe((_) => dependency.value.map((e) => Some(e)));
+            sequential.addSafe((e) {
+              final option = e.swap();
+              if (option.isSome()) {
+                final result = option.unwrap();
+                return onUnregister(result);
+              }
+              return null;
+            });
+          }
         }
       }
+      if (!removeAll) {
+        break;
+      }
     }
-    return const Ok(Object());
+    return sequential.last;
   }
 
   @protected
   @pragma('vm:prefer-inline')
-  ResultOption<T> removeDependency<T extends Object>({
+  Option<Dependency> removeDependency<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
     final g = groupEntity.preferOverDefault(focusGroup);
     return registry
         .removeDependency<T>(groupEntity: g)
-        .or(registry.removeDependency<Lazy<T>>(groupEntity: g))
-        .trans();
+        .or(registry.removeDependency<Lazy<T>>(groupEntity: g)) as Option<Dependency>;
   }
 
   bool isRegistered<T extends Object>({
@@ -214,15 +217,14 @@ base class DIBase {
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
     return get<T>(groupEntity: groupEntity, traverse: traverse).map(
-      (e) =>
-          e.isSync()
-              ? e.sync().unwrap()
-              : Sync(
-                Err(
-                  debugPath: ['DIBase', 'getSync'],
-                  error: 'Called getSync() for an async dependency.',
-                ),
+      (e) => e.isSync()
+          ? e.sync().unwrap()
+          : Sync(
+              Err(
+                debugPath: ['DIBase', 'getSync'],
+                error: 'Called getSync() for an async dependency.',
               ),
+            ),
     );
   }
 
@@ -233,11 +235,10 @@ base class DIBase {
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
     return Future.sync(() async {
-      final result =
-          await getAsync<T>(
-            groupEntity: groupEntity,
-            traverse: traverse,
-          ).unwrap().value;
+      final result = await getAsync<T>(
+        groupEntity: groupEntity,
+        traverse: traverse,
+      ).unwrap().value;
       return result.unwrap();
     });
   }
@@ -393,33 +394,30 @@ base class DIBase {
       sequential.addAll(
         unsafe: [
           (_) {
-            onBeforeUnregister?.call(dependency);
+            onBeforeUnregister?.call(Ok(dependency));
             return null;
           },
           (_) {
             registry.removeDependencyK(
               dependency.typeEntity,
-              groupEntity: dependency.metadata
-                  .map((e) => e.groupEntity)
-                  .unwrapOr(const DefaultEntity()),
+              groupEntity:
+                  dependency.metadata.map((e) => e.groupEntity).unwrapOr(const DefaultEntity()),
             );
             return null;
           },
           (_) {
             return dependency.metadata.map(
-              (e) => e.onUnregister.ifSome((e) => e.unwrap()(dependency)),
+              (e) => e.onUnregister.ifSome((e) => e.unwrap()(Ok(dependency))),
             );
           },
           (_) {
-            onAfterUnregister?.call(dependency);
+            onAfterUnregister?.call(Ok(dependency));
             return null;
           },
         ],
       );
     }
-    final result = sequential
-        .add(unsafe: (_) => Some(results))
-        .map((e) => e.unwrap());
+    final result = sequential.add(unsafe: (_) => Some(results)).map((e) => e.unwrap());
     return result;
   }
 }

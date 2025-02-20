@@ -199,25 +199,25 @@ final class DIRegistry {
     return removeDependencyK<T>(TypeEntity(type), groupEntity: groupEntity);
   }
 
-  Ok<Option<Dependency<T>>> removeDependency<T extends Object>({
+  Option<Dependency<T>> removeDependency<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
   }) {
     final group = _state[groupEntity];
     if (group == null) {
-      return const Ok(None());
+      return const None();
     }
     final key =
         group.entries
             .firstWhereOrNull((e) => e.value.value is Resolvable<T>)
             ?.key;
     if (key == null) {
-      return const Ok(None());
+      return const None();
     }
     final dependency = group.remove(key);
     if (dependency == null) {
-      return const Ok(None());
+      return const None();
     }
-    return Ok(Some(dependency.trans()));
+    return Some(dependency.trans());
   }
 
   ResultOption<Dependency<T>> removeDependencyK<T extends Object>(

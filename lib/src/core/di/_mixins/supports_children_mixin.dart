@@ -17,22 +17,22 @@ import '/src/_common.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
-  Result<void> registerChild<T extends Object>({
+  Resolvable<Lazy<DI>> registerChild({
     Entity groupEntity = const DefaultEntity(),
   }) {
     if (childrenContainer.isNone()) {
       childrenContainer = Some(DI());
     }
     return childrenContainer.unwrap().registerLazy<DI>(
-      () => Sync(Ok(DI()..parents.add(this as DI))),
-      groupEntity: groupEntity,
-    );
+          () => Sync(Ok(DI()..parents.add(this as DI))),
+          groupEntity: groupEntity,
+        );
   }
 
-  Option<DI> getChildOrNone<T extends Object>({
+  Option<DI> getChildOrNone({
     Entity groupEntity = const DefaultEntity(),
   }) {
-    final option = getChild<T>(groupEntity: groupEntity);
+    final option = getChild(groupEntity: groupEntity);
     if (option.isNone()) {
       return const None();
     }
@@ -43,7 +43,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     return Some(result.unwrap());
   }
 
-  OptionResult<DI> getChild<T extends Object>({
+  OptionResult<DI> getChild({
     Entity groupEntity = const DefaultEntity(),
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
@@ -62,18 +62,17 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     return Some(value);
   }
 
-  OptionResult<DI> getChildT(
-    Type type, {
+  OptionResult<DI> getChildT({
     Entity groupEntity = const DefaultEntity(),
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
     if (childrenContainer.isNone()) {
       return const None();
     }
-    final option = childrenContainer.unwrap().getSingletonT(
-      type,
-      groupEntity: g,
-    );
+    final option = childrenContainer.unwrap().getSingletonT<DI>(
+          DI,
+          groupEntity: g,
+        );
     if (option.isNone()) {
       return const None();
     }
@@ -85,12 +84,15 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     return Some(value);
   }
 
-  Result<void> unregisterChild({Entity groupEntity = const DefaultEntity()}) {
+  Result<None> unregisterChild({Entity groupEntity = const DefaultEntity()}) {
     final g = groupEntity.preferOverDefault(focusGroup);
     if (childrenContainer.isNone()) {
-      return childrenContainer.asResult();
+      return Err(
+        debugPath: ['SupportsChildrenMixin', 'unregisterChild'],
+        error: 'No child container registered.',
+      );
     }
-    return childrenContainer.unwrap().unregister<DI>(groupEntity: g);
+    return childrenContainer.unwrap().unregister<DI>(groupEntity: g).sync().unwrap().value;
   }
 
   Result<void> unregisterChildT(
@@ -99,9 +101,12 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
     if (childrenContainer.isNone()) {
-      return childrenContainer.asResult();
+      return Err(
+        debugPath: ['unregisterChildT', 'unregisterChild'],
+        error: 'No child container registered.',
+      );
     }
-    return childrenContainer.unwrap().unregisterT<DI>(type, groupEntity: g);
+    return childrenContainer.unwrap().unregisterT<DI>(type, groupEntity: g).sync().unwrap().value;
   }
 
   bool isChildRegistered<T extends Object>({
@@ -124,11 +129,11 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     return childrenContainer.unwrap().isRegisteredT(DI, groupEntity: g);
   }
 
-  DI child<T extends Object>({Entity groupEntity = const DefaultEntity()}) {
-    if (isChildRegistered<T>(groupEntity: groupEntity)) {
-      return getChild<T>(groupEntity: groupEntity).unwrap().unwrap();
+  DI child({Entity groupEntity = const DefaultEntity()}) {
+    if (isChildRegistered(groupEntity: groupEntity)) {
+      return getChild(groupEntity: groupEntity).unwrap().unwrap();
     }
-    registerChild<T>(groupEntity: groupEntity);
-    return getChild<T>(groupEntity: groupEntity).unwrap().unwrap();
+    registerChild(groupEntity: groupEntity);
+    return getChild(groupEntity: groupEntity).unwrap().unwrap();
   }
 }

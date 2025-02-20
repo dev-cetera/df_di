@@ -42,15 +42,14 @@ base mixin SupportsMixinK on DIBase {
     bool traverse = true,
   }) {
     return getK(typeEntity, groupEntity: groupEntity, traverse: traverse).map(
-      (e) =>
-          e.isSync()
-              ? e.sync().unwrap()
-              : Sync(
-                Err(
-                  debugPath: ['SupportsMixinK', 'getSyncK'],
-                  error: 'Called getSyncK() an async dependency.',
-                ),
+      (e) => e.isSync()
+          ? e.sync().unwrap()
+          : Sync(
+              Err(
+                debugPath: ['SupportsMixinK', 'getSyncK'],
+                error: 'Called getSyncK() an async dependency.',
               ),
+            ),
     );
   }
 
@@ -62,12 +61,11 @@ base mixin SupportsMixinK on DIBase {
     bool traverse = true,
   }) {
     return Future.sync(() async {
-      final result =
-          await getAsyncK(
-            typeEntity,
-            groupEntity: groupEntity,
-            traverse: traverse,
-          ).unwrap().value;
+      final result = await getAsyncK(
+        typeEntity,
+        groupEntity: groupEntity,
+        traverse: traverse,
+      ).unwrap().value;
       return result.unwrap();
     });
   }
@@ -159,10 +157,10 @@ base mixin SupportsMixinK on DIBase {
           final value = e.unwrap();
           registry.removeDependencyK(typeEntity, groupEntity: g);
           final metadata = option.unwrap().unwrap().metadata.map(
-            (e) => e.copyWith(
-              preemptivetypeEntity: TypeEntity(Sync, [typeEntity]),
-            ),
-          );
+                (e) => e.copyWith(
+                  preemptivetypeEntity: TypeEntity(Sync, [typeEntity]),
+                ),
+              );
           registerDependencyK(
             dependency: Dependency(Sync(Ok(value)), metadata: metadata),
             checkExisting: false,
@@ -178,10 +176,7 @@ base mixin SupportsMixinK on DIBase {
     required Dependency<Object> dependency,
     bool checkExisting = false,
   }) {
-    final g =
-        dependency.metadata.isSome()
-            ? dependency.metadata.unwrap().groupEntity
-            : focusGroup;
+    final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
     if (checkExisting) {
       final option = getDependencyK(
         dependency.typeEntity,
@@ -222,38 +217,58 @@ base mixin SupportsMixinK on DIBase {
     return temp;
   }
 
-  Result<void> unregisterK<T extends Object>(
+  Resolvable<None> unregisterK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
     bool removeAll = true,
+    bool triggerOnUnregisterCallbacks = true,
   }) {
+    final sequential = SafeSequential();
     final g = groupEntity.preferOverDefault(focusGroup);
     for (final di in [this as DI, ...parents]) {
-      final removed = di.removeDependencyK<T>(typeEntity, groupEntity: g);
-      if (removed.isErr()) {
-        return removed.err().transErr();
+      final dependencyOption = di.removeDependencyK<T>(typeEntity, groupEntity: g);
+      if (dependencyOption.isNone()) {
+        continue;
       }
-      if (!removeAll) {
-        if (removed.unwrap().isSome()) {
-          break;
+      if (triggerOnUnregisterCallbacks) {
+        final dependency = dependencyOption.unwrap();
+        final metadataOption = dependency.metadata;
+        if (metadataOption.isSome()) {
+          final metadata = metadataOption.unwrap();
+          final onUnregisterOption = metadata.onUnregister;
+          if (onUnregisterOption.isSome()) {
+            final onUnregister = onUnregisterOption.unwrap();
+            sequential.addSafe((_) => dependency.value.map((e) => Some(e)));
+            sequential.addSafe((e) {
+              final option = e.swap();
+              if (option.isSome()) {
+                final result = option.unwrap();
+                return onUnregister(result);
+              }
+              return null;
+            });
+          }
         }
       }
+      if (!removeAll) {
+        break;
+      }
     }
-    return const Ok(Object());
+    return sequential.last;
   }
 
   @protected
   @pragma('vm:prefer-inline')
-  ResultOption<T> removeDependencyK<T extends Object>(
+  Option<Dependency> removeDependencyK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
     return registry
-        .removeDependencyK<T>(typeEntity, groupEntity: g)
-        .or(registry.removeDependencyK<Lazy<T>>(typeEntity, groupEntity: g))
-        .trans();
+            .removeDependencyK<T>(typeEntity, groupEntity: g)
+            .or(registry.removeDependencyK<Lazy<T>>(TypeEntity(Lazy, [typeEntity]), groupEntity: g))
+        as Option<Dependency>;
   }
 
   @protected

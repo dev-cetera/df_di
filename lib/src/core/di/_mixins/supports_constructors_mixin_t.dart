@@ -16,20 +16,23 @@ import '/src/_common.dart';
 
 base mixin SupportsConstructorsMixinT on SupportsConstructorsMixinK {
   @pragma('vm:prefer-inline')
-  Resolvable<void> resetSingletonT(
+  Resolvable<void> resetSingletonT<T extends Object>(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
   }) {
-    return resetSingletonK(TypeEntity(type), groupEntity: groupEntity);
+    return resetSingletonK<T>(
+      TypeEntity(type),
+      groupEntity: groupEntity,
+    );
   }
 
   @pragma('vm:prefer-inline')
-  FutureOr<Object> getSingletonUnsafeT(
+  FutureOr<Object> getSingletonUnsafeT<T extends Object>(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getSingletonUnsafeK(
+    return getSingletonUnsafeK<T>(
       TypeEntity(type),
       groupEntity: groupEntity,
       traverse: traverse,
@@ -37,12 +40,12 @@ base mixin SupportsConstructorsMixinT on SupportsConstructorsMixinK {
   }
 
   @pragma('vm:prefer-inline')
-  OptionResolvable getSingletonT(
+  OptionResolvable getSingletonT<T extends Object>(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getSingletonK(
+    return getSingletonK<T>(
       TypeEntity(type),
       groupEntity: groupEntity,
       traverse: traverse,

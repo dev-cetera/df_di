@@ -19,11 +19,18 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
   //
   //
 
-  Result<void> registerLazy<T extends Object>(
+  Resolvable<Lazy<T>> registerLazy<T extends Object>(
     LazyConstructor<T> constructor, {
+    FutureOr<void> Function(Lazy<T> lazy)? onRegister,
+    OnUnregisterCallback<Lazy<T>>? onUnregister,
     Entity groupEntity = const DefaultEntity(),
   }) {
-    return register<Lazy<T>>(Lazy<T>(constructor), groupEntity: groupEntity);
+    return register<Lazy<T>>(
+      Lazy<T>(constructor),
+      onRegister: onRegister,
+      onUnregister: onUnregister,
+      groupEntity: groupEntity,
+    );
   }
 
   Option<Resolvable<T>> getSingleton<T extends Object>({

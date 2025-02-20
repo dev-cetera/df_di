@@ -120,7 +120,7 @@ base mixin SupportsMixinT on SupportsMixinK {
   }
 
   @pragma('vm:prefer-inline')
-  Result<void> unregisterT<T extends Object>(
+  Resolvable<None> unregisterT<T extends Object>(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
@@ -135,7 +135,7 @@ base mixin SupportsMixinT on SupportsMixinK {
   }
 
   @pragma('vm:prefer-inline')
-  ResultOption<T> removeDependencyT<T extends Object>(
+  Option<Dependency> removeDependencyT<T extends Object>(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
   }) {

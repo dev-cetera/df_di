@@ -19,22 +19,6 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
   //
   //
 
-  Resolvable<Lazy<TService>>
-  registerLazyAndInitService<TService extends Service>(
-    FutureOr<TService> service, {
-    Object? params,
-    Entity groupEntity = const DefaultEntity(),
-  }) {
-    final test = registerLazy<TService>(
-      () => Resolvable.unsafe(() => service).map((e) => e..init(params)),
-      groupEntity: groupEntity,
-    );
-    if (test.isErr()) {
-      return Sync(test.err().transErr());
-    }
-    return until<Lazy<TService>>(groupEntity: groupEntity, traverse: false);
-  }
-
   @pragma('vm:prefer-inline')
   Future<TService> getServiceSingletonAsync<TService extends Service>({
     Entity groupEntity = const DefaultEntity(),
