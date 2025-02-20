@@ -23,12 +23,12 @@ base mixin SupportsMixinK on DIBase {
 
   @protected
   @pragma('vm:prefer-inline')
-  Object getSyncUnsafeK(
+  T getSyncUnsafeK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getSyncK(
+    return getSyncK<T>(
       typeEntity,
       groupEntity: groupEntity,
       traverse: traverse,
@@ -36,12 +36,16 @@ base mixin SupportsMixinK on DIBase {
   }
 
   @protected
-  Option<Sync<Object>> getSyncK(
+  Option<Sync<T>> getSyncK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getK(typeEntity, groupEntity: groupEntity, traverse: traverse).map(
+    return getK<T>(
+      typeEntity,
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).map(
       (e) => e.isSync()
           ? e.sync().unwrap()
           : Sync(
@@ -55,13 +59,13 @@ base mixin SupportsMixinK on DIBase {
 
   @protected
   @pragma('vm:prefer-inline')
-  Future<Object> getAsyncUnsafeK(
+  Future<T> getAsyncUnsafeK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
     return Future.sync(() async {
-      final result = await getAsyncK(
+      final result = await getAsyncK<T>(
         typeEntity,
         groupEntity: groupEntity,
         traverse: traverse,
@@ -72,12 +76,12 @@ base mixin SupportsMixinK on DIBase {
 
   @protected
   @pragma('vm:prefer-inline')
-  Option<Async<Object>> getAsyncK(
+  Option<Async<T>> getAsyncK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getK(
+    return getK<T>(
       typeEntity,
       groupEntity: groupEntity,
       traverse: traverse,
@@ -86,28 +90,25 @@ base mixin SupportsMixinK on DIBase {
 
   @protected
   @pragma('vm:prefer-inline')
-  FutureOr<Object> getUnsafeK(
+  FutureOr<T> getUnsafeK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return consec(
-      getK(
-        typeEntity,
-        groupEntity: groupEntity,
-        traverse: traverse,
-      ).unwrap().value,
-      (e) => e.unwrap(),
-    );
+    return getK<T>(
+      typeEntity,
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).unwrap().unwrap();
   }
 
   @protected
-  Option<Object> getSyncOrNoneK(
+  Option<T> getSyncOrNoneK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    final option = getK(
+    final option = getK<T>(
       typeEntity,
       groupEntity: groupEntity,
       traverse: traverse,
@@ -123,7 +124,7 @@ base mixin SupportsMixinK on DIBase {
     if (result.isErr()) {
       return const None();
     }
-    final value = result.unwrap();
+    final value = result.trans<T>().unwrap();
     return Some(value);
   }
 
@@ -172,8 +173,8 @@ base mixin SupportsMixinK on DIBase {
   }
 
   @protected
-  Result<Dependency<Object>> registerDependencyK({
-    required Dependency<Object> dependency,
+  Result<Dependency<T>> registerDependencyK<T extends Object>({
+    required Dependency<T> dependency,
     bool checkExisting = false,
   }) {
     final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
@@ -217,7 +218,7 @@ base mixin SupportsMixinK on DIBase {
     return temp;
   }
 
-  Resolvable<None> unregisterK<T extends Object>(
+  Resolvable<None<T>> unregisterK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
@@ -255,7 +256,7 @@ base mixin SupportsMixinK on DIBase {
         break;
       }
     }
-    return sequential.last;
+    return sequential.last.trans();
   }
 
   @protected
@@ -265,10 +266,12 @@ base mixin SupportsMixinK on DIBase {
     Entity groupEntity = const DefaultEntity(),
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
-    return registry
-            .removeDependencyK<T>(typeEntity, groupEntity: g)
-            .or(registry.removeDependencyK<Lazy<T>>(TypeEntity(Lazy, [typeEntity]), groupEntity: g))
-        as Option<Dependency>;
+    return registry.removeDependencyK<T>(typeEntity, groupEntity: g).or(
+          registry.removeDependencyK<Lazy<T>>(
+            TypeEntity(Lazy, [typeEntity]),
+            groupEntity: g,
+          ),
+        ) as Option<Dependency>;
   }
 
   @protected

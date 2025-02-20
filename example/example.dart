@@ -30,7 +30,16 @@ Future<Object> main() async {
   print(di.getFactoryUnsafe<String>());
   print(di.get<Lazy<String>>());
   print(di.getLazy<String>());
-  di.unregisterLazy<String>();
+  print(di.getLazyUnsafe<String>());
+  print('---');
+  print(di.getLazySingletonT<String>(String));
+  print(di.getLazySingletonUnsafeT<String>(String));
+  print(di.getFactoryT<String>(String));
+  print(di.getFactoryUnsafeT<String>(String));
+  print(di.getT<Lazy<String>>(Lazy<String>));
+  print(di.getLazyT<String>(String));
+  print(di.getLazyUnsafeT<String>(String));
+  di.unregisterLazyT<String>(String);
   print(di.getLazySingleton<String>());
 
   return 1;

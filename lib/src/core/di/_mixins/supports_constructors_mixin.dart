@@ -38,7 +38,7 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return get<Lazy<T>>(
+    return getLazy<T>(
       groupEntity: groupEntity,
       traverse: traverse,
     ).map((e) => e.unwrap()).unwrap();

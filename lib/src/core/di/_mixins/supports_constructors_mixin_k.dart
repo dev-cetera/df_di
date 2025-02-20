@@ -16,6 +16,20 @@ import '/src/_common.dart';
 
 base mixin SupportsConstructorsMixinK on SupportsMixinK {
   @protected
+  @pragma('vm:prefer-inline')
+  FutureOr<Lazy<T>> getLazyUnsafeK<T extends Object>(
+    Entity typeEntity, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return getLazyK<T>(
+      typeEntity,
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).map((e) => e.unwrap()).unwrap();
+  }
+
+  @protected
   Resolvable<None> resetLazySingletonK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
@@ -42,19 +56,6 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
       groupEntity: groupEntity,
       traverse: traverse,
     ).unwrap().unwrap();
-  }
-
-  @pragma('vm:prefer-inline')
-  FutureOr<Lazy<T>> getLazyUnsafeK<T extends Object>(
-    Entity typeEntity, {
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    return getK<Lazy<T>>(
-      typeEntity,
-      groupEntity: groupEntity,
-      traverse: traverse,
-    ).map((e) => e.unwrap()).unwrap();
   }
 
   @protected

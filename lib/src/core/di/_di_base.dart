@@ -261,10 +261,10 @@ base class DIBase {
     bool traverse = true,
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
-    return consec(
-      get<T>(groupEntity: groupEntity, traverse: traverse).unwrap().value,
-      (e) => e.unwrap(),
-    );
+    return get<T>(
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).unwrap().unwrap();
   }
 
   @pragma('vm:prefer-inline')

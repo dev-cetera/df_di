@@ -16,6 +16,19 @@ import '/src/_common.dart';
 
 base mixin SupportsConstructorsMixinT on SupportsConstructorsMixinK {
   @pragma('vm:prefer-inline')
+  FutureOr<Lazy<T>> getLazyUnsafeT<T extends Object>(
+    Type type, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return getLazyT<T>(
+      type,
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).map((e) => e.unwrap()).unwrap();
+  }
+
+  @pragma('vm:prefer-inline')
   Resolvable<None> resetLazySingletonT<T extends Object>(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
@@ -70,7 +83,7 @@ base mixin SupportsConstructorsMixinT on SupportsConstructorsMixinK {
   }
 
   @pragma('vm:prefer-inline')
-  OptionResolvable getLazySingletonT<T extends Object>(
+  OptionResolvable<T> getLazySingletonT<T extends Object>(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,

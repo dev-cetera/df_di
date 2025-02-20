@@ -20,12 +20,12 @@ base mixin SupportsMixinT on SupportsMixinK {
   //
 
   @pragma('vm:prefer-inline')
-  Object getSyncUnsafeT(
+  T getSyncUnsafeT<T extends Object>(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getSyncUnsafeK(
+    return getSyncUnsafeK<T>(
       TypeEntity(type),
       groupEntity: groupEntity,
       traverse: traverse,
@@ -33,12 +33,12 @@ base mixin SupportsMixinT on SupportsMixinK {
   }
 
   @pragma('vm:prefer-inline')
-  Option<Sync<Object>> getSyncT(
+  Option<Sync<T>> getSyncT<T extends Object>(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getSyncK(
+    return getSyncK<T>(
       TypeEntity(type),
       groupEntity: groupEntity,
       traverse: traverse,
@@ -46,12 +46,12 @@ base mixin SupportsMixinT on SupportsMixinK {
   }
 
   @pragma('vm:prefer-inline')
-  Future<Object> getAsyncUnsafeT(
+  Future<T> getAsyncUnsafeT<T extends Object>(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getAsyncUnsafeK(
+    return getAsyncUnsafeK<T>(
       TypeEntity(type),
       groupEntity: groupEntity,
       traverse: traverse,
@@ -59,12 +59,12 @@ base mixin SupportsMixinT on SupportsMixinK {
   }
 
   @pragma('vm:prefer-inline')
-  Option<Async<Object>> getAsyncT(
+  Option<Async<T>> getAsyncT<T extends Object>(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getAsyncK(
+    return getAsyncK<T>(
       TypeEntity(type),
       groupEntity: groupEntity,
       traverse: traverse,
@@ -72,12 +72,12 @@ base mixin SupportsMixinT on SupportsMixinK {
   }
 
   @pragma('vm:prefer-inline')
-  FutureOr<Object> getUnsafeT(
+  FutureOr<T> getUnsafeT<T extends Object>(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getUnsafeK(
+    return getUnsafeK<T>(
       TypeEntity(type),
       groupEntity: groupEntity,
       traverse: traverse,
@@ -85,12 +85,12 @@ base mixin SupportsMixinT on SupportsMixinK {
   }
 
   @pragma('vm:prefer-inline')
-  Option<Object> getSyncOrNoneT(
+  Option<T> getSyncOrNoneT<T extends Object>(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getSyncOrNoneK(
+    return getSyncOrNoneK<T>(
       TypeEntity(type),
       groupEntity: groupEntity,
       traverse: traverse,
@@ -98,21 +98,12 @@ base mixin SupportsMixinT on SupportsMixinK {
   }
 
   @pragma('vm:prefer-inline')
-  Option<Resolvable<Object>> getT(
+  Option<Resolvable<T>> getT<T extends Object>(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getK(TypeEntity(type), groupEntity: groupEntity, traverse: traverse);
-  }
-
-  @pragma('vm:prefer-inline')
-  OptionResult<Dependency<Object>> getDependencyT(
-    Type type, {
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    return getDependencyK(
+    return getK<T>(
       TypeEntity(type),
       groupEntity: groupEntity,
       traverse: traverse,
@@ -120,13 +111,26 @@ base mixin SupportsMixinT on SupportsMixinK {
   }
 
   @pragma('vm:prefer-inline')
-  Resolvable<None> unregisterT<T extends Object>(
+  OptionResult<Dependency<T>> getDependencyT<T extends Object>(
+    Type type, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return getDependencyK<T>(
+      TypeEntity(type),
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
+  }
+
+  @pragma('vm:prefer-inline')
+  Resolvable<None<T>> unregisterT<T extends Object>(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
     bool removeAll = true,
   }) {
-    return unregisterK(
+    return unregisterK<T>(
       TypeEntity(type),
       groupEntity: groupEntity,
       traverse: traverse,
@@ -139,7 +143,10 @@ base mixin SupportsMixinT on SupportsMixinK {
     Type type, {
     Entity groupEntity = const DefaultEntity(),
   }) {
-    return removeDependencyK<T>(TypeEntity(type), groupEntity: groupEntity);
+    return removeDependencyK<T>(
+      TypeEntity(type),
+      groupEntity: groupEntity,
+    );
   }
 
   @pragma('vm:prefer-inline')
