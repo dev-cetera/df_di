@@ -39,8 +39,8 @@ void main() {
       final di = DI();
       final child = DI();
       di.registerLazy<DI>(() => Sync(Ok(child)));
-      expect(child, di.getSingletonUnsafe<DI>());
-      expect(child, di.getSingletonUnsafeT(DI));
+      expect(child, di.getLazySingletonUnsafe<DI>());
+      expect(child, di.getLazySingletonUnsafeT(DI));
       expect(true, di.isRegistered<DI>());
       di.unregister<DI>();
       expect(false, di.isRegistered<DI>());

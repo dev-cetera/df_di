@@ -24,7 +24,7 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getSingleton<TService>(
+    return getLazySingleton<TService>(
       groupEntity: groupEntity,
       traverse: traverse,
     ).unwrap().toAsync().unwrap();
@@ -46,7 +46,7 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getSingleton<TService>(
+    return getLazySingleton<TService>(
       groupEntity: groupEntity,
       traverse: traverse,
     ).unwrap().toSync().unwrap();

@@ -50,7 +50,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     if (childrenContainer.isNone()) {
       return const None();
     }
-    final option = childrenContainer.unwrap().getSingleton<DI>(groupEntity: g);
+    final option = childrenContainer.unwrap().getLazySingleton<DI>(groupEntity: g);
     if (option.isNone()) {
       return const None();
     }
@@ -69,7 +69,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     if (childrenContainer.isNone()) {
       return const None();
     }
-    final option = childrenContainer.unwrap().getSingletonT<DI>(
+    final option = childrenContainer.unwrap().getLazySingletonT<DI>(
           DI,
           groupEntity: g,
         );

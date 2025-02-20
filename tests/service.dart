@@ -20,10 +20,10 @@ void main() {
   test('Testing the registration and initialization of a service.', () async {
     final di = DI();
     final service = TestService();
-    await di.registerLazyAndInitService<TestService>(service).value;
+    await di.registerLazy<TestService>(() => SyncOk(service)).value;
     print('Just registered...');
-    final value1 = await di.getSingletonUnsafe<TestService>();
-    final value2 = await di.getSingletonUnsafe<TestService>();
+    final value1 = await di.getLazySingletonUnsafe<TestService>();
+    final value2 = await di.getLazySingletonUnsafe<TestService>();
     expect(value1, service);
     expect(value1, value2);
   });

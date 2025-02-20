@@ -14,7 +14,7 @@ Future<void> b4() async {
       container1.get<Map<int, String>>();
     },
     di: () {
-      container2.getSingleton<Map<int, String>>();
+      container2.getLazySingleton<Map<int, String>>();
     },
   );
 }

@@ -33,11 +33,59 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
     );
   }
 
-  Option<Resolvable<T>> getSingleton<T extends Object>({
+  @pragma('vm:prefer-inline')
+  FutureOr<Lazy<T>> getLazyUnsafe<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    final option = get<Lazy<T>>(groupEntity: groupEntity, traverse: traverse);
+    return get<Lazy<T>>(
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).map((e) => e.unwrap()).unwrap();
+  }
+
+  @pragma('vm:prefer-inline')
+  Option<Resolvable<Lazy<T>>> getLazy<T extends Object>({
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return get<Lazy<T>>(
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
+  }
+
+  @pragma('vm:prefer-inline')
+  Resolvable<None<Object>> unregisterLazy<T extends Object>({
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+    bool removeAll = true,
+    bool triggerOnUnregisterCallbacks = true,
+  }) {
+    return unregister<Lazy<T>>(
+      groupEntity: groupEntity,
+      traverse: traverse,
+      removeAll: removeAll,
+      triggerOnUnregisterCallbacks: triggerOnUnregisterCallbacks,
+    );
+  }
+
+  @pragma('vm:prefer-inline')
+  Resolvable<Lazy<T>> untilLazy<T extends Object>({
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return until<Lazy<T>>(
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
+  }
+
+  Option<Resolvable<T>> getLazySingleton<T extends Object>({
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    final option = getLazy<T>(groupEntity: groupEntity, traverse: traverse);
     if (option.isNone()) {
       return const None();
     }
@@ -46,32 +94,32 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
   }
 
   @pragma('vm:prefer-inline')
-  Resolvable<T> untilSingleton<T extends Object>({
+  Resolvable<T> untilLazySingleton<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return until<Lazy<T>>(
+    return untilLazy<T>(
       groupEntity: groupEntity,
       traverse: traverse,
     ).map((e) => e.singleton).merge();
   }
 
-  Resolvable<void> resetSingleton<T extends Object>({
+  Resolvable<None> resetLazySingleton<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
   }) {
-    final temp = get<Lazy<T>>(groupEntity: groupEntity);
+    final temp = getLazy<T>(groupEntity: groupEntity);
     if (temp.isSome()) {
-      return temp.unwrap().map((e) => e..resetSingleton());
+      return temp.unwrap().map((e) => e.resetSingleton());
     }
-    return const Sync(Ok(Object()));
+    return const Sync(Ok(None()));
   }
 
   @pragma('vm:prefer-inline')
-  FutureOr<T> getSingletonUnsafe<T extends Object>({
+  FutureOr<T> getLazySingletonUnsafe<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getSingleton<T>(
+    return getLazySingleton<T>(
       groupEntity: groupEntity,
       traverse: traverse,
     ).map((e) => e.unwrap()).unwrap();
@@ -92,7 +140,7 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    final option = get<Lazy<T>>(groupEntity: groupEntity, traverse: traverse);
+    final option = getLazy<T>(groupEntity: groupEntity, traverse: traverse);
     if (option.isNone()) {
       return const None();
     }
@@ -105,7 +153,7 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return until<Lazy<T>>(
+    return untilLazy<T>(
       groupEntity: groupEntity,
       traverse: traverse,
     ).map((e) => e.factory).merge();

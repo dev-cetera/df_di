@@ -16,23 +16,23 @@ import '/src/_common.dart';
 
 base mixin SupportsConstructorsMixinT on SupportsConstructorsMixinK {
   @pragma('vm:prefer-inline')
-  Resolvable<void> resetSingletonT<T extends Object>(
+  Resolvable<None> resetLazySingletonT<T extends Object>(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
   }) {
-    return resetSingletonK<T>(
+    return resetLazySingletonK<T>(
       TypeEntity(type),
       groupEntity: groupEntity,
     );
   }
 
   @pragma('vm:prefer-inline')
-  FutureOr<Object> getSingletonUnsafeT<T extends Object>(
+  FutureOr<Object> getLazySingletonUnsafeT<T extends Object>(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getSingletonUnsafeK<T>(
+    return getLazySingletonUnsafeK<T>(
       TypeEntity(type),
       groupEntity: groupEntity,
       traverse: traverse,
@@ -40,12 +40,42 @@ base mixin SupportsConstructorsMixinT on SupportsConstructorsMixinK {
   }
 
   @pragma('vm:prefer-inline')
-  OptionResolvable getSingletonT<T extends Object>(
+  Option<Resolvable<Lazy<T>>> getLazyT<T extends Object>(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getSingletonK<T>(
+    return getLazyK<T>(
+      TypeEntity(type),
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
+  }
+
+  @pragma('vm:prefer-inline')
+  Resolvable<None<Object>> unregisterLazyT<T extends Object>(
+    Type type, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+    bool removeAll = true,
+    bool triggerOnUnregisterCallbacks = true,
+  }) {
+    return unregisterLazyK<T>(
+      TypeEntity(type),
+      groupEntity: groupEntity,
+      traverse: traverse,
+      removeAll: removeAll,
+      triggerOnUnregisterCallbacks: triggerOnUnregisterCallbacks,
+    );
+  }
+
+  @pragma('vm:prefer-inline')
+  OptionResolvable getLazySingletonT<T extends Object>(
+    Type type, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return getLazySingletonK<T>(
       TypeEntity(type),
       groupEntity: groupEntity,
       traverse: traverse,
@@ -72,6 +102,19 @@ base mixin SupportsConstructorsMixinT on SupportsConstructorsMixinK {
     bool traverse = true,
   }) {
     return getFactoryK<T>(
+      TypeEntity(type),
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
+  }
+
+  @pragma('vm:prefer-inline')
+  Resolvable<Lazy<T>> untilLazyT<T extends Object>(
+    Type type, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return untilLazyK<T>(
       TypeEntity(type),
       groupEntity: groupEntity,
       traverse: traverse,

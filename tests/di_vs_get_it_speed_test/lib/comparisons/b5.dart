@@ -16,7 +16,7 @@ Future<void> b5() async {
     di: () {
       final container2 = DI();
       container2.registerLazy<Map<int, String>>(() => SyncOk({1: 'some data'}));
-      container2.getSingleton<Map<int, String>>();
+      container2.getLazySingleton<Map<int, String>>();
     },
   );
 }

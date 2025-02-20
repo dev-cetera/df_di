@@ -15,7 +15,8 @@ import '/src/_common.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 base mixin SupportsConstructorsMixinK on SupportsMixinK {
-  Resolvable<void> resetSingletonK<T extends Object>(
+  @protected
+  Resolvable<None> resetLazySingletonK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
   }) {
@@ -24,31 +25,78 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
       groupEntity: groupEntity,
     );
     if (temp.isSome()) {
-      return temp.unwrap().map((e) => (e as Lazy)..resetSingleton());
+      return temp.unwrap().map((e) => (e as Lazy).resetSingleton());
     }
-    return const Sync(Ok(Object()));
+    return const Sync(Ok(None()));
   }
 
+  @protected
   @pragma('vm:prefer-inline')
-  FutureOr<T> getSingletonUnsafeK<T extends Object>(
+  FutureOr<T> getLazySingletonUnsafeK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getSingletonK<T>(
+    return getLazySingletonK<T>(
       typeEntity,
       groupEntity: groupEntity,
       traverse: traverse,
     ).unwrap().unwrap();
   }
 
-  Option<Resolvable<T>> getSingletonK<T extends Object>(
+  @pragma('vm:prefer-inline')
+  FutureOr<Lazy<T>> getLazyUnsafeK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    final option = getK<Lazy<T>>(
+    return getK<Lazy<T>>(
+      typeEntity,
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).map((e) => e.unwrap()).unwrap();
+  }
+
+  @protected
+  @pragma('vm:prefer-inline')
+  Option<Resolvable<Lazy<T>>> getLazyK<T extends Object>(
+    Entity typeEntity, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return getK<Lazy<T>>(
       TypeEntity(Lazy, [typeEntity]),
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
+  }
+
+  @protected
+  @pragma('vm:prefer-inline')
+  Resolvable<None<Object>> unregisterLazyK<T extends Object>(
+    Entity typeEntity, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+    bool removeAll = true,
+    bool triggerOnUnregisterCallbacks = true,
+  }) {
+    return unregisterK<Lazy<T>>(
+      typeEntity,
+      groupEntity: groupEntity,
+      traverse: traverse,
+      removeAll: removeAll,
+      triggerOnUnregisterCallbacks: triggerOnUnregisterCallbacks,
+    );
+  }
+
+  @protected
+  Option<Resolvable<T>> getLazySingletonK<T extends Object>(
+    Entity typeEntity, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    final option = getLazyK<T>(
+      typeEntity,
       groupEntity: groupEntity,
       traverse: traverse,
     );
@@ -59,6 +107,7 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
     return Some(lazy.singleton);
   }
 
+  @protected
   @pragma('vm:prefer-inline')
   FutureOr<T> getFactoryUnsafeK<T extends Object>(
     Entity typeEntity, {
@@ -72,13 +121,14 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
     ).unwrap().unwrap();
   }
 
+  @protected
   Option<Resolvable<T>> getFactoryK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    final option = getK<Lazy<T>>(
-      TypeEntity(Lazy, [typeEntity]),
+    final option = getLazyK<T>(
+      typeEntity,
       groupEntity: groupEntity,
       traverse: traverse,
     );
@@ -89,6 +139,21 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
     return Some(lazy.factory);
   }
 
+  @protected
+  @pragma('vm:prefer-inline')
+  Resolvable<Lazy<T>> untilLazyK<T extends Object>(
+    Entity typeEntity, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return untilK<Lazy<T>>(
+      TypeEntity(Lazy, [typeEntity]),
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
+  }
+
+  @protected
   Resolvable<T> untilK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
