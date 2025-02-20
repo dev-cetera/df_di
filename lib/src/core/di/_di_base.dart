@@ -384,7 +384,7 @@ base class DIBase {
     }).merge();
   }
 
-  Resolvable<void> unregisterAll({
+  Resolvable<List<Dependency>> unregisterAll({
     OnUnregisterCallback<Dependency>? onBeforeUnregister,
     OnUnregisterCallback<Dependency>? onAfterUnregister,
   }) {

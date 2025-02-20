@@ -95,7 +95,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     return childrenContainer.unwrap().unregister<DI>(groupEntity: g).sync().unwrap().value;
   }
 
-  Result<void> unregisterChildT(
+  Result<None> unregisterChildT(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
   }) {
@@ -106,7 +106,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
         error: 'No child container registered.',
       );
     }
-    return childrenContainer.unwrap().unregisterT<DI>(type, groupEntity: g).sync().unwrap().value;
+    return childrenContainer.unwrap().unregisterT(type, groupEntity: g).sync().unwrap().value;
   }
 
   bool isChildRegistered<T extends Object>({

@@ -218,7 +218,7 @@ base mixin SupportsMixinK on DIBase {
     return temp;
   }
 
-  Resolvable<None<T>> unregisterK<T extends Object>(
+  Resolvable<None> unregisterK(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
@@ -228,7 +228,7 @@ base mixin SupportsMixinK on DIBase {
     final sequential = SafeSequential();
     final g = groupEntity.preferOverDefault(focusGroup);
     for (final di in [this as DI, ...parents]) {
-      final dependencyOption = di.removeDependencyK<T>(typeEntity, groupEntity: g);
+      final dependencyOption = di.removeDependencyK(typeEntity, groupEntity: g);
       if (dependencyOption.isNone()) {
         continue;
       }
@@ -256,7 +256,7 @@ base mixin SupportsMixinK on DIBase {
         break;
       }
     }
-    return sequential.last.trans();
+    return sequential.last;
   }
 
   @protected
