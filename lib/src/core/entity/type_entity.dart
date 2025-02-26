@@ -20,8 +20,7 @@ final class TypeEntity extends Entity {
   static String _getTypeString(Object object) =>
       object is TypeEntity ? object._typeString : object.toString();
 
-  TypeEntity._obj(Object object, this._typeString)
-    : super(Entity.objId(object));
+  TypeEntity._obj(Object object, this._typeString) : super(Entity.objId(object));
 
   /// Constructs a `Entity` representation by replacing occurrences of `Object`
   /// or `dynamic` in the `baseType` with corresponding values from `subTypes`.
@@ -50,43 +49,96 @@ final class TypeEntity extends Entity {
   /// print(type4); // Output: Map<String,List<int>>
   /// ```
   factory TypeEntity(Object baseType, [List<Object> subTypes = const []]) {
-    final objectStr = '$Object';
-    final dynamicStr = '$dynamic';
+    final objectStr = '$Object'; // "Object"
+    final objectNullableStr = '$Object?'; // "Object?"
+    final dynamicStr = '$dynamic'; // "dynamic"
+    final dynamicNullableStr = '$dynamic?'; // "dynamic?"
     final cleanBaseType = _getTypeString(baseType).replaceAll(' ', '');
     var subTypeIndex = 0;
 
-    // Build a new type string by replacing 'Object' or 'dynamic' with subTypes.
     final buffer = StringBuffer();
-    for (var n = 0; n < cleanBaseType.length; n++) {
-      // Check for 'Object' or 'dynamic' at the current position.
-      if (cleanBaseType.startsWith(objectStr, n) ||
-          cleanBaseType.startsWith(dynamicStr, n)) {
-        // Replace with the next subtype from subTypes if available.
+    var n = 0;
+    while (n < cleanBaseType.length) {
+      // Check for nullable placeholders first (longer match takes precedence)
+      if (cleanBaseType.startsWith(objectNullableStr, n)) {
         if (subTypeIndex < subTypes.length) {
           buffer.write(_getTypeString(subTypes[subTypeIndex]));
           subTypeIndex++;
         } else {
-          // Retain 'Object' or 'dynamic' if no subtypes are left.
-          buffer.write(
-            cleanBaseType.startsWith(objectStr, n) ? objectStr : dynamicStr,
-          );
+          buffer.write(objectNullableStr);
         }
-
-        // Skip ahead over the matched word.
-        n +=
-            cleanBaseType.startsWith(objectStr, n)
-                ? objectStr.length - 1
-                : dynamicStr.length - 1;
+        n += objectNullableStr.length;
+      } else if (cleanBaseType.startsWith(dynamicNullableStr, n)) {
+        if (subTypeIndex < subTypes.length) {
+          buffer.write(_getTypeString(subTypes[subTypeIndex]));
+          subTypeIndex++;
+        } else {
+          buffer.write(dynamicNullableStr);
+        }
+        n += dynamicNullableStr.length;
+      } else if (cleanBaseType.startsWith(objectStr, n)) {
+        if (subTypeIndex < subTypes.length) {
+          buffer.write(_getTypeString(subTypes[subTypeIndex]));
+          subTypeIndex++;
+        } else {
+          buffer.write(objectStr);
+        }
+        n += objectStr.length;
+      } else if (cleanBaseType.startsWith(dynamicStr, n)) {
+        if (subTypeIndex < subTypes.length) {
+          buffer.write(_getTypeString(subTypes[subTypeIndex]));
+          subTypeIndex++;
+        } else {
+          buffer.write(dynamicStr);
+        }
+        n += dynamicStr.length;
       } else {
-        // Append the current character if it's not part of 'Object' or 'dynamic'.
         buffer.write(cleanBaseType[n]);
+        n++;
       }
     }
 
-    // Return the constructed type string wrapped in a Entity object.
     final buffer1 = buffer.toString();
     return TypeEntity._obj(buffer1, buffer1);
   }
+  // factory TypeEntity(Object baseType, [List<Object> subTypes = const []]) {
+  //   final objectStr = '$Object';
+  //   final dynamicStr = '$dynamic';
+  //   final cleanBaseType = _getTypeString(baseType).replaceAll(' ', '');
+  //   var subTypeIndex = 0;
+
+  //   // Build a new type string by replacing 'Object' or 'dynamic' with subTypes.
+  //   final buffer = StringBuffer();
+  //   for (var n = 0; n < cleanBaseType.length; n++) {
+  //     // Check for 'Object' or 'dynamic' at the current position.
+  //     if (cleanBaseType.startsWith(objectStr, n) ||
+  //         cleanBaseType.startsWith(dynamicStr, n)) {
+  //       // Replace with the next subtype from subTypes if available.
+  //       if (subTypeIndex < subTypes.length) {
+  //         buffer.write(_getTypeString(subTypes[subTypeIndex]));
+  //         subTypeIndex++;
+  //       } else {
+  //         // Retain 'Object' or 'dynamic' if no subtypes are left.
+  //         buffer.write(
+  //           cleanBaseType.startsWith(objectStr, n) ? objectStr : dynamicStr,
+  //         );
+  //       }
+
+  //       // Skip ahead over the matched word.
+  //       n +=
+  //           cleanBaseType.startsWith(objectStr, n)
+  //               ? objectStr.length - 1
+  //               : dynamicStr.length - 1;
+  //     } else {
+  //       // Append the current character if it's not part of 'Object' or 'dynamic'.
+  //       buffer.write(cleanBaseType[n]);
+  //     }
+  //   }
+
+  //   // Return the constructed type string wrapped in a Entity object.
+  //   final buffer1 = buffer.toString();
+  //   return TypeEntity._obj(buffer1, buffer1);
+  // }
 }
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░

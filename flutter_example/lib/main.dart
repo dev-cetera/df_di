@@ -6,7 +6,8 @@ import 'package:df_di/df_di.dart';
 void main() {
   DI.global.register<List<int>>([42]);
   final answer = DI.global.getT(List<int>).unwrap().unwrap();
-  // Should print 42.
-  print(answer);
-  runApp(MaterialApp(home: Scaffold(body: Text('$answer'))));
+  final output = '${List<int>}: $answer';
+
+  print(output);
+  runApp(MaterialApp(home: Scaffold(body: Text(output))));
 }
