@@ -20,7 +20,8 @@ final class TypeEntity extends Entity {
   static String _getTypeString(Object object) =>
       object is TypeEntity ? object._typeString : object.toString();
 
-  TypeEntity._obj(Object object, this._typeString) : super(Entity.objId(object));
+  TypeEntity._obj(Object object, this._typeString)
+    : super(Entity.objId(object));
 
   /// Constructs a `Entity` representation by replacing occurrences of `Object`
   /// or `dynamic` in the `baseType` with corresponding values from `subTypes`.

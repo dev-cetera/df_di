@@ -1,7 +1,9 @@
 import 'package:df_di/df_di.dart';
 
 void main(List<String> arguments) {
-  final a1 = TypeEntity('minified:Class1377<Object>', ['minified:Class1377<Object>']);
+  final a1 = TypeEntity('minified:Class1377<Object>', [
+    'minified:Class1377<Object>',
+  ]);
   final b1 = TypeEntity('minified:Class1377<minified:Class1377<Object>>');
   print(a1 == b1); // expected true
 
