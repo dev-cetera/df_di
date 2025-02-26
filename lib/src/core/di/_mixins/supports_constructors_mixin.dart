@@ -109,7 +109,10 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
   }) {
     final temp = getLazy<T>(groupEntity: groupEntity);
     if (temp.isSome()) {
-      return temp.unwrap().map((e) => e.resetSingleton());
+      return temp.unwrap().map((e) {
+        e.resetSingleton();
+        return const None();
+      });
     }
     return const Sync(Ok(None()));
   }

@@ -39,7 +39,10 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
       groupEntity: groupEntity,
     );
     if (temp.isSome()) {
-      return temp.unwrap().map((e) => (e as Lazy).resetSingleton());
+      return temp.unwrap().map((e) {
+        (e as Lazy).resetSingleton();
+        return const None();
+      });
     }
     return const Sync(Ok(None()));
   }
