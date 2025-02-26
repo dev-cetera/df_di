@@ -49,10 +49,7 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return get<Lazy<T>>(
-      groupEntity: groupEntity,
-      traverse: traverse,
-    );
+    return get<Lazy<T>>(groupEntity: groupEntity, traverse: traverse);
   }
 
   @pragma('vm:prefer-inline')
@@ -75,10 +72,7 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return until<Lazy<T>>(
-      groupEntity: groupEntity,
-      traverse: traverse,
-    );
+    return until<Lazy<T>>(groupEntity: groupEntity, traverse: traverse);
   }
 
   Option<Resolvable<T>> getLazySingleton<T extends Object>({

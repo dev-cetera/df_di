@@ -33,10 +33,7 @@ base mixin SupportsConstructorsMixinT on SupportsConstructorsMixinK {
     Type type, {
     Entity groupEntity = const DefaultEntity(),
   }) {
-    return resetLazySingletonK<T>(
-      TypeEntity(type),
-      groupEntity: groupEntity,
-    );
+    return resetLazySingletonK<T>(TypeEntity(type), groupEntity: groupEntity);
   }
 
   @pragma('vm:prefer-inline')
