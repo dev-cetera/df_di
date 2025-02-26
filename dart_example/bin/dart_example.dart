@@ -15,7 +15,6 @@ void main(List<String> arguments) {
   // print(output);
 }
 
-
 class Service<TParams extends Object?> {}
 
 class UserSessionServiceParams extends Object {}
