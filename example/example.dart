@@ -39,8 +39,7 @@ Future<Object> main() async {
   print(di.getT<Lazy<String>>(Lazy<String>));
   print(di.getLazyT<String>(String));
   print(di.getLazyUnsafeT<String>(String));
-  di.unregisterLazyT<String>(String);
-  //print(di.getLazySingleton<String>());
+  di.unregisterLazy<String>();
 
   return 1;
 }

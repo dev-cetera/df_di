@@ -20,8 +20,7 @@ final class TypeEntity extends Entity {
   static String _getTypeString(Object object) =>
       object is TypeEntity ? object._typeString : object.toString();
 
-  TypeEntity._obj(Object object, this._typeString)
-    : super(Entity.objId(object));
+  TypeEntity._obj(Object object, this._typeString) : super(Entity.objId(object));
 
   /// Constructs a `Entity` representation by replacing occurrences of `Object`
   /// or `dynamic` in the `baseType` with corresponding values from `subTypes`.
@@ -50,10 +49,10 @@ final class TypeEntity extends Entity {
   /// print(type4); // Output: Map<String,List<int>>
   /// ```
   factory TypeEntity(Object baseType, [List<Object> subTypes = const []]) {
-    final objectStr = '$Object'; // "Object"
-    final objectNullableStr = '$Object?'; // "Object?"
-    final dynamicStr = '$dynamic'; // "dynamic"
-    final dynamicNullableStr = '$dynamic?'; // "dynamic?"
+    final objectStr = '$Object';
+    final objectNullableStr = '$Object?';
+    final dynamicStr = '$dynamic';
+    //final dynamicNullableStr = '$dynamic?';
     final cleanBaseType = _getTypeString(baseType).replaceAll(' ', '');
     var subTypeIndex = 0;
 
@@ -69,14 +68,14 @@ final class TypeEntity extends Entity {
           buffer.write(objectNullableStr);
         }
         n += objectNullableStr.length;
-      } else if (cleanBaseType.startsWith(dynamicNullableStr, n)) {
-        if (subTypeIndex < subTypes.length) {
-          buffer.write(_getTypeString(subTypes[subTypeIndex]));
-          subTypeIndex++;
-        } else {
-          buffer.write(dynamicNullableStr);
-        }
-        n += dynamicNullableStr.length;
+        // } else if (cleanBaseType.startsWith(dynamicNullableStr, n)) {
+        //   if (subTypeIndex < subTypes.length) {
+        //     buffer.write(_getTypeString(subTypes[subTypeIndex]));
+        //     subTypeIndex++;
+        //   } else {
+        //     buffer.write(dynamicNullableStr);
+        //   }
+        //   n += dynamicNullableStr.length;
       } else if (cleanBaseType.startsWith(objectStr, n)) {
         if (subTypeIndex < subTypes.length) {
           buffer.write(_getTypeString(subTypes[subTypeIndex]));
@@ -102,6 +101,9 @@ final class TypeEntity extends Entity {
     final buffer1 = buffer.toString();
     return TypeEntity._obj(buffer1, buffer1);
   }
+  //
+  // OLDER VERSION:
+  //
   // factory TypeEntity(Object baseType, [List<Object> subTypes = const []]) {
   //   final objectStr = '$Object';
   //   final dynamicStr = '$dynamic';

@@ -63,7 +63,7 @@ base mixin SupportsConstructorsMixinT on SupportsConstructorsMixinK {
   }
 
   @pragma('vm:prefer-inline')
-  Resolvable<None> unregisterLazyT<T extends Object>(
+  Resolvable<None> unregisterLazyT(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,

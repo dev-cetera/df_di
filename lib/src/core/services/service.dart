@@ -24,7 +24,7 @@ import '/src/_common.dart';
 /// It provides a standardized structure for managing the lifecycle of services,
 /// ensuring they are properly initialized when needed and disposed of when no
 /// longer in use.
-abstract class Service<TParams extends Object?> {
+abstract class Service<TParams extends Option> {
   //
   //
   //
