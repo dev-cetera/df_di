@@ -64,7 +64,7 @@ base class DIBase {
       groupEntity: g,
       onUnregister: onUnregister != null ? Some((e) => onUnregister(e.trans())) : const None(),
     );
-    final a = Resolvable.unsafe(
+    final a = Resolvable(
       () => consec(value, (e) => consec(onRegister?.call(e), (_) => e)),
     );
     _resolveFinisher(value: a, groupEntity: g);
@@ -72,7 +72,7 @@ base class DIBase {
       dependency: Dependency(a, metadata: Some(metadata)),
       checkExisting: true,
     );
-    return a.map((e) => b.unwrap().value).merge();
+    return a.map((e) => b.unwrap().value).comb2();
   }
 
   @protected
@@ -221,7 +221,7 @@ base class DIBase {
     return get<T>(groupEntity: groupEntity, traverse: traverse).map(
       (e) => e.isSync()
           ? e.sync().unwrap()
-          : Sync(
+          : Sync.value(
               Err(
                 debugPath: ['DIBase', 'getSync'],
                 error: 'Called getSync() for an async dependency.',
@@ -311,7 +311,7 @@ base class DIBase {
     }
     final result = option.unwrap();
     if (result.isErr()) {
-      return Some(Sync(result.err().transErr()));
+      return Some(Sync.value(result.err().transErr()));
     }
     final dependency = result.unwrap();
     final value = dependency.value;
@@ -320,13 +320,13 @@ base class DIBase {
     }
 
     return Some(
-      Async.unsafe(
+      Async(
         () => value.async().unwrap().value.then((e) {
           final value = e.unwrap();
           registry.removeDependency<T>(groupEntity: g);
           registerDependency<T>(
             dependency: Dependency<T>(
-              Sync(Ok(value)),
+              Sync.value(Ok(value)),
               metadata: option.unwrap().unwrap().metadata,
             ),
             checkExisting: false,
@@ -338,7 +338,7 @@ base class DIBase {
   }
 
   @protected
-  OptionResult<Dependency<T>> getDependency<T extends Object>({
+  Option<Result<Dependency<T>>> getDependency<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
@@ -383,7 +383,7 @@ base class DIBase {
         removeAll: false,
       );
       return get<T>(groupEntity: g).unwrap();
-    }).merge();
+    }).comb2();
   }
 
   Resolvable<List<Dependency>> unregisterAll({
@@ -394,7 +394,7 @@ base class DIBase {
     final sequential = SafeSequential();
     for (final dependency in results) {
       sequential.addAll(
-        unsafe: [
+        [
           (_) {
             onBeforeUnregister?.call(Ok(dependency));
             return null;
@@ -419,7 +419,7 @@ base class DIBase {
         ],
       );
     }
-    final result = sequential.add(unsafe: (_) => Some(results)).map((e) => e.unwrap());
+    final result = sequential.add((_) => Some(results)).map((e) => e.unwrap());
     return result;
   }
 }

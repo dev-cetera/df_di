@@ -44,7 +44,7 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
         return const None();
       });
     }
-    return const Sync(Ok(None()));
+    return const Sync.value(Ok(None()));
   }
 
   @protected
@@ -187,6 +187,6 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
         removeAll: false,
       );
       return getK<T>(typeEntity, groupEntity: g).unwrap();
-    }).merge();
+    }).comb2();
   }
 }

@@ -111,7 +111,7 @@ base mixin SupportsMixinT on SupportsMixinK {
   }
 
   @pragma('vm:prefer-inline')
-  OptionResult<Dependency<T>> getDependencyT<T extends Object>(
+  Option<Result<Dependency<T>>> getDependencyT<T extends Object>(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,

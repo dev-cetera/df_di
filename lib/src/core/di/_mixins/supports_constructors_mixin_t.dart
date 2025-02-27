@@ -80,7 +80,7 @@ base mixin SupportsConstructorsMixinT on SupportsConstructorsMixinK {
   }
 
   @pragma('vm:prefer-inline')
-  OptionResolvable<T> getLazySingletonT<T extends Object>(
+  Option<Resolvable<T>> getLazySingletonT<T extends Object>(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
@@ -106,7 +106,7 @@ base mixin SupportsConstructorsMixinT on SupportsConstructorsMixinK {
   }
 
   @pragma('vm:prefer-inline')
-  OptionResolvable<T> getFactoryT<T extends Object>(
+  Option<Resolvable<T>> getFactoryT<T extends Object>(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,

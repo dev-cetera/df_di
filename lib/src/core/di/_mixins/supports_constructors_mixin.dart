@@ -95,7 +95,7 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
     return untilLazy<T>(
       groupEntity: groupEntity,
       traverse: traverse,
-    ).map((e) => e.singleton).merge();
+    ).map((e) => e.singleton).comb2();
   }
 
   Resolvable<None> resetLazySingleton<T extends Object>({
@@ -108,7 +108,7 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
         return const None();
       });
     }
-    return const Sync(Ok(None()));
+    return const Sync.value(Ok(None()));
   }
 
   @pragma('vm:prefer-inline')
@@ -153,6 +153,6 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
     return untilLazy<T>(
       groupEntity: groupEntity,
       traverse: traverse,
-    ).map((e) => e.factory).merge();
+    ).map((e) => e.factory).comb2();
   }
 }

@@ -24,9 +24,9 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
       childrenContainer = Some(DI());
     }
     return childrenContainer.unwrap().registerLazy<DI>(
-      () => Sync(Ok(DI()..parents.add(this as DI))),
-      groupEntity: groupEntity,
-    );
+          () => Sync.value(Ok(DI()..parents.add(this as DI))),
+          groupEntity: groupEntity,
+        );
   }
 
   Option<DI> getChildOrNone({Entity groupEntity = const DefaultEntity()}) {
@@ -41,14 +41,14 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     return Some(result.unwrap());
   }
 
-  OptionResult<DI> getChild({Entity groupEntity = const DefaultEntity()}) {
+  Option<Result<DI>> getChild({Entity groupEntity = const DefaultEntity()}) {
     final g = groupEntity.preferOverDefault(focusGroup);
     if (childrenContainer.isNone()) {
       return const None();
     }
     final option = childrenContainer.unwrap().getLazySingleton<DI>(
-      groupEntity: g,
-    );
+          groupEntity: g,
+        );
     if (option.isNone()) {
       return const None();
     }
@@ -60,15 +60,15 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     return Some(value);
   }
 
-  OptionResult<DI> getChildT({Entity groupEntity = const DefaultEntity()}) {
+  Option<Result<DI>> getChildT({Entity groupEntity = const DefaultEntity()}) {
     final g = groupEntity.preferOverDefault(focusGroup);
     if (childrenContainer.isNone()) {
       return const None();
     }
     final option = childrenContainer.unwrap().getLazySingletonT<DI>(
-      DI,
-      groupEntity: g,
-    );
+          DI,
+          groupEntity: g,
+        );
     if (option.isNone()) {
       return const None();
     }
@@ -88,12 +88,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
         error: 'No child container registered.',
       );
     }
-    return childrenContainer
-        .unwrap()
-        .unregister<DI>(groupEntity: g)
-        .sync()
-        .unwrap()
-        .value;
+    return childrenContainer.unwrap().unregister<DI>(groupEntity: g).sync().unwrap().value;
   }
 
   Result<None> unregisterChildT(
@@ -107,12 +102,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
         error: 'No child container registered.',
       );
     }
-    return childrenContainer
-        .unwrap()
-        .unregisterT(type, groupEntity: g)
-        .sync()
-        .unwrap()
-        .value;
+    return childrenContainer.unwrap().unregisterT(type, groupEntity: g).sync().unwrap().value;
   }
 
   bool isChildRegistered<T extends Object>({

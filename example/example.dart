@@ -23,7 +23,7 @@ import 'package:df_di/src/_common.dart';
 
 Future<Object> main() async {
   final di = DI();
-  di.registerLazy<String>(() => SyncOk('Lazy init!'));
+  di.registerLazy<String>(() => SyncOk.value('Lazy init!'));
   print(di.getLazySingleton<String>());
   print(di.getLazySingletonUnsafe<String>());
   print(di.getFactory<String>());
