@@ -64,7 +64,8 @@ base class DIBase {
       return Sync.value(b.err().transErr());
     }
     if (value is! ReservedSafeFinisher) {
-      _resolveFinisher<T>(g: g);
+      _maybeFinishA<T>(g: g);
+      _maybeFinishB<T>(g: g);
     }
     return a.map((e) {
       return b.unwrap().value;
@@ -83,7 +84,20 @@ base class DIBase {
     );
   }
 
-  void _resolveFinisher<T extends Object>({required Entity g}) {
+  void _maybeFinishA<T extends Object>({required Entity g}) {
+    assert(T != Object, 'T must be specified and cannot be Object.');
+    for (final di in [this as DI, ...children().unwrapOr([])]) {
+      final option = di.getSyncOrNone<ReservedSafeFinisher<T>>(
+        groupEntity: g,
+        traverse: false,
+      );
+      if (option.isSome()) {
+        option.unwrap().finish(const None());
+      }
+    }
+  }
+
+  void _maybeFinishB<T extends Object>({required Entity g}) {
     assert(T != Object, 'T must be specified and cannot be Object.');
     final typeEntity = TypeEntity(T);
     for (final di in [this as DI, ...children().unwrapOr([])]) {
@@ -349,6 +363,34 @@ base class DIBase {
   }
 
   Resolvable<T> until<T extends Object>({
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    final typeEntity = TypeEntity(T);
+    final g = groupEntity.preferOverDefault(focusGroup);
+    final test = get<T>(groupEntity: g);
+    if (test.isSome()) {
+      return test.unwrap();
+    }
+    ReservedSafeFinisher<T>? finisher;
+    var temp = getSyncOrNone<ReservedSafeFinisher<T>>(
+      groupEntity: g,
+      traverse: traverse,
+    );
+    if (temp.isSome()) {
+      finisher = temp.unwrap();
+    } else {
+      finisher = ReservedSafeFinisher<T>(typeEntity);
+      register(finisher, groupEntity: g);
+    }
+    return finisher.resolvable().map((_) {
+      unregister<ReservedSafeFinisher<T>>(groupEntity: g);
+      return get<T>(groupEntity: g).unwrap();
+    }).comb2();
+  }
+
+  @protected
+  Resolvable<T> untilB<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
