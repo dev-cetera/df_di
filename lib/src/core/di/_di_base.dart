@@ -62,10 +62,7 @@ base class DIBase {
     final metadata = DependencyMetadata(
       index: Some(_indexIncrementer++),
       groupEntity: g,
-      onUnregister:
-          onUnregister != null
-              ? Some((e) => onUnregister(e.trans()))
-              : const None(),
+      onUnregister: onUnregister != null ? Some((e) => onUnregister(e.trans())) : const None(),
     );
     final a = Resolvable(
       () => consec(value, (e) => consec(onRegister?.call(e), (_) => e)),
@@ -85,15 +82,7 @@ base class DIBase {
   Option<Iterable<DI>> children() {
     return childrenContainer.map(
       (e) => e.registry.unsortedDependencies.map(
-        (e) =>
-            e
-                .trans<Lazy<DI>>()
-                .value
-                .unwrapSync()
-                .unwrap()
-                .singleton
-                .unwrapSync()
-                .unwrap(),
+        (e) => e.trans<Lazy<DI>>().value.unwrapSync().unwrap().singleton.unwrapSync().unwrap(),
       ),
     );
   }
@@ -120,10 +109,7 @@ base class DIBase {
     bool checkExisting = false,
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
-    final g =
-        dependency.metadata.isSome()
-            ? dependency.metadata.unwrap().groupEntity
-            : focusGroup;
+    final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
     if (checkExisting) {
       final option = getDependency<T>(groupEntity: g, traverse: false);
       if (option.isSome()) {
@@ -186,9 +172,8 @@ base class DIBase {
     assert(T != Object, 'T must be specified and cannot be Object.');
     final g = groupEntity.preferOverDefault(focusGroup);
     return registry
-            .removeDependency<T>(groupEntity: g)
-            .or(registry.removeDependency<Lazy<T>>(groupEntity: g))
-        as Option<Dependency>;
+        .removeDependency<T>(groupEntity: g)
+        .or(registry.removeDependency<Lazy<T>>(groupEntity: g)) as Option<Dependency>;
   }
 
   bool isRegistered<T extends Object>({
@@ -230,15 +215,14 @@ base class DIBase {
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
     return get<T>(groupEntity: groupEntity, traverse: traverse).map(
-      (e) =>
-          e.isSync()
-              ? e.sync().unwrap()
-              : Sync.value(
-                Err(
-                  debugPath: ['DIBase', 'getSync'],
-                  error: 'Called getSync() for an async dependency.',
-                ),
+      (e) => e.isSync()
+          ? e.sync().unwrap()
+          : Sync.value(
+              Err(
+                debugPath: ['DIBase', 'getSync'],
+                error: 'Called getSync() for an async dependency.',
               ),
+            ),
     );
   }
 
@@ -249,11 +233,10 @@ base class DIBase {
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
     return Future.sync(() async {
-      final result =
-          await getAsync<T>(
-            groupEntity: groupEntity,
-            traverse: traverse,
-          ).unwrap().value;
+      final result = await getAsync<T>(
+        groupEntity: groupEntity,
+        traverse: traverse,
+      ).unwrap().value;
       return result.unwrap();
     });
   }
@@ -395,21 +378,24 @@ base class DIBase {
     required Entity typeEntity,
     required Entity g,
   }) {
-    registry.removDependencyWhere((entity, dependency) {
-      final resolvable = dependency.value;
-      if (resolvable.isAsync()) return false;
-      final result = resolvable.sync().unwrap().value;
-      if (result.isErr()) return false;
-      final value = result.unwrap();
-      if (value is ReservedSafeFinisher) {
-        if (isSubtype<ReservedSafeFinisher<T>, ReservedSafeFinisher>()) {
-          return true;
-        } else if (value.typeEntity == typeEntity) {
-          return true;
+    registry.removDependencyWhere(
+      (entity, dependency) {
+        final resolvable = dependency.value;
+        if (resolvable.isAsync()) return false;
+        final result = resolvable.sync().unwrap().value;
+        if (result.isErr()) return false;
+        final value = result.unwrap();
+        if (value is ReservedSafeFinisher) {
+          if (isSubtype<ReservedSafeFinisher<T>, ReservedSafeFinisher>()) {
+            return true;
+          } else if (value.typeEntity == typeEntity) {
+            return true;
+          }
         }
-      }
-      return false;
-    }, groupEntity: g,);
+        return false;
+      },
+      groupEntity: g,
+    );
   }
 
   @protected
@@ -450,9 +436,8 @@ base class DIBase {
         (_) {
           registry.removeDependencyK(
             dependency.typeEntity,
-            groupEntity: dependency.metadata
-                .map((e) => e.groupEntity)
-                .unwrapOr(const DefaultEntity()),
+            groupEntity:
+                dependency.metadata.map((e) => e.groupEntity).unwrapOr(const DefaultEntity()),
           );
           return null;
         },
@@ -471,5 +456,3 @@ base class DIBase {
     return result;
   }
 }
-
-bool _isSubtype<TChild, TParent>() => <TChild>[] is List<TParent>;
