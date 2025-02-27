@@ -13,28 +13,17 @@
 // ignore_for_file: invalid_use_of_visible_for_testing_member
 
 import '/src/_common.dart';
+import '/src/core/_reserved_safe_finisher.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-
-final class ReservedSafeFinisher<T extends Object> extends SafeFinisher<None> {
-  final Entity typeEntity;
-  ReservedSafeFinisher(this.typeEntity);
-
-  @override
-  bool operator ==(Object other) => identical(this, other);
-
-  @override
-  int get hashCode {
-    final a = Object() is! T ? T.hashCode : typeEntity.hashCode;
-    final b = (ReservedSafeFinisher).hashCode;
-    return Object.hash(a, b);
-  }
-}
 
 base class DIBase {
   //
   //
   //
+
+  @protected
+  Map<Entity, List<ReservedSafeFinisher>> finishers = {};
 
   /// Internal registry that stores dependencies.
   @protected
@@ -97,13 +86,16 @@ base class DIBase {
     );
   }
 
-  // Resolve all finishers that can be resolved with the value.
   void _resolveFinisher<T extends Object>({required Entity g}) {
     assert(T != Object, 'T must be specified and cannot be Object.');
+    final typeEntity = TypeEntity(T);
     for (final di in [this as DI, ...children().unwrapOr([])]) {
-      var finisher = di.getFinisher<T>(typeEntity: TypeEntity(T), g: g);
-      if (finisher == null) continue;
-      finisher.finish(const None());
+      final test = di.finishers[g]
+          ?.firstWhereOrNull((e) => e is ReservedSafeFinisher<T> || e.typeEntity == typeEntity);
+      if (test != null) {
+        test.finish(const None());
+        break;
+      }
     }
   }
 
@@ -299,44 +291,6 @@ base class DIBase {
     return Some(value);
   }
 
-  Option<Resolvable<T>> get1<T extends Object>({
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    assert(T != Object, 'T must be specified and cannot be Object.');
-    final g = groupEntity.preferOverDefault(focusGroup);
-    final option = getDependency<T>(groupEntity: g, traverse: traverse);
-    if (option.isNone()) {
-      return const None();
-    }
-    final result = option.unwrap();
-    if (result.isErr()) {
-      return Some(Sync.value(result.err().transErr()));
-    }
-    final dependency = result.unwrap();
-    final value = dependency.value;
-    if (value.isSync()) {
-      return Some(value);
-    }
-
-    return Some(
-      Async(
-        () => value.async().unwrap().value.then((e) {
-          final value = e.unwrap();
-          registry.removeDependency<T>(groupEntity: g);
-          registerDependency<T>(
-            dependency: Dependency<T>(
-              Sync.value(Ok(value)),
-              metadata: option.unwrap().unwrap().metadata,
-            ),
-            checkExisting: false,
-          );
-          return value;
-        }),
-      ),
-    );
-  }
-
   Option<Resolvable<T>> get<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
@@ -404,56 +358,27 @@ base class DIBase {
     if (test.isSome()) {
       return test.unwrap();
     }
-    var finisher = getFinisher<T>(typeEntity: typeEntity, g: g);
+
+    var finisher = finishers[g]?.firstWhereOrNull((e) => e is ReservedSafeFinisher<T>);
     if (finisher == null) {
-      final temp = ReservedSafeFinisher<T>(typeEntity);
-      finisher = temp;
-      register(temp, groupEntity: g);
+      finisher = ReservedSafeFinisher<T>(typeEntity);
+      (finishers[g] ??= []).add(finisher);
     }
-    register(finisher, groupEntity: g);
     return finisher.resolvable().map((_) {
-      removeFinisher<T>(typeEntity: typeEntity, g: g);
+      //
+      //
+      final temp = finishers[g] ?? [];
+      for (var n = 0; n < temp.length; n++) {
+        final e = temp[n];
+        if (e is ReservedSafeFinisher<T>) {
+          temp.removeAt(n);
+          break;
+        }
+      }
+      //
+      //
       return get<T>(groupEntity: g).unwrap();
     }).comb2();
-  }
-
-  @protected
-  void removeFinisher<T extends Object>({
-    required Entity typeEntity,
-    required Entity g,
-  }) {
-    registry.removDependencyWhere(
-      (entity, dependency) {
-        final resolvable = dependency.value;
-        if (resolvable.isAsync()) return false;
-        final result = resolvable.sync().unwrap().value;
-        if (result.isErr()) return false;
-        final value = result.unwrap();
-        return value is ReservedSafeFinisher<T> ||
-            value is ReservedSafeFinisher && value.typeEntity == typeEntity;
-      },
-      groupEntity: g,
-    );
-  }
-
-  @protected
-  ReservedSafeFinisher? getFinisher<T extends Object>({
-    required Entity typeEntity,
-    required Entity g,
-  }) {
-    for (final e in registry.getGroup(groupEntity: g).values) {
-      final resolvable = e.value;
-      if (resolvable.isAsync()) continue;
-      final result = resolvable.sync().unwrap().value;
-      if (result.isErr()) continue;
-
-      final value = result.unwrap();
-      if (value is ReservedSafeFinisher<T> ||
-          value is ReservedSafeFinisher && value.typeEntity == typeEntity) {
-        return value as ReservedSafeFinisher;
-      }
-    }
-    return null;
   }
 
   Resolvable<List<Dependency>> unregisterAll({

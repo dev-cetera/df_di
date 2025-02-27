@@ -10,27 +10,24 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-import 'dart:async';
+// ignore_for_file: invalid_use_of_visible_for_testing_member
 
-import 'package:df_di/df_di.dart';
+import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-class Test1 {}
+@internal
+final class ReservedSafeFinisher<T extends Object> extends SafeFinisher<None> {
+  final Entity typeEntity;
+  ReservedSafeFinisher(this.typeEntity);
 
-class Test2 {}
+  @override
+  bool operator ==(Object other) => identical(this, other);
 
-final di = DI();
-
-Future<void> setup() async {
-  di.register(Future<Test1>.value(Test1()));
-  await Future<void>.delayed(const Duration(seconds: 1));
-  di.register(Future<Test2>.value(Test2()));
-}
-
-void main() async {
-  setup();
-  final u2 = di.until<Test2>();
-  print(await u2.unwrap());
-  print('DONE!!!');
+  @override
+  int get hashCode {
+    final a = Object() is! T ? T.hashCode : typeEntity.hashCode;
+    final b = (ReservedSafeFinisher).hashCode;
+    return Object.hash(a, b);
+  }
 }
