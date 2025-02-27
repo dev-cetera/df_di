@@ -169,7 +169,9 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
     if (test.isSome()) {
       return test.unwrap().map((e) => e as T);
     }
-    var finisher = finishers[g]?.firstWhereOrNull((e) => e.typeEntity == typeEntity);
+    var finisher = finishers[g]?.firstWhereOrNull(
+      (e) => e.typeEntity == typeEntity,
+    );
     if (finisher == null) {
       finisher = ReservedSafeFinisher(typeEntity);
       (finishers[g] ??= []).add(finisher);

@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.10.14]
+
+- Released @ 2/2025 (UTC)
+- fix: Critical bug fix with until function (again)
+
 ## [0.10.13]
 
 - Released @ 2/2025 (UTC)
