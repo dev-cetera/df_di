@@ -13,6 +13,7 @@
 import 'dart:async';
 
 import 'package:df_di/df_di.dart';
+import 'package:df_di/src/core/_reserved_safe_finisher.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -20,17 +21,39 @@ class Test1 {}
 
 class Test2 {}
 
+class Parent3 {}
+
+class Test3 extends Parent3 {}
+
+class Test4 {}
+
 final di = DI();
 
-Future<void> setup() async {
-  di.register(Future<Test1>.value(Test1()));
-  await Future<void>.delayed(const Duration(seconds: 1));
-  di.register(Future<Test2>.value(Test2()));
+void setup() async {
+  // di.register(Future<Test1>.value(Test1()));
+  // await Future<void>.delayed(const Duration(seconds: 1));
+  // di.register(Future<Test2>.value(Test2()));
+  // await Future<void>.delayed(const Duration(seconds: 1));
+  di.register(Future<int>.delayed(const Duration(seconds: 2), () => 1));
 }
 
 void main() async {
-  setup();
-  final u2 = di.until<Test2>();
-  print(await u2.unwrap());
-  print('DONE!!!');
+  // final e = ReservedSafeFinisher<int>(TypeEntity(int));
+  // print(e is ReservedSafeFinisher<num>);
+  // // print((ReservedSafeFinisher<int>(TypeEntity(int)) is ReservedSafeFinisher<num>));
+
+  //setup();
+  Future.delayed(const Duration(seconds: 1), () {
+    di.register<num>(Future.delayed(const Duration(seconds: 2), () => 1));
+  });
+
+  print(await di.until<int>().value);
+
+  // final a = ReservedSafeFinisher<int>(TypeEntity(int));
+  // print(a is ReservedSafeFinisher<num>);
+
+  // setup();
+  // final u2 = di.until<Parent3>();
+  // print(await u2.unwrap());
+  // print('DONE!!!');
 }
