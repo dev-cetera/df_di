@@ -16,7 +16,7 @@ import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-final class ReservedSafeFinisher<T extends Object> extends SafeFinisher<T> {
+final class ReservedSafeFinisher<T extends Object> extends SafeFinisher<None> {
   final Entity typeEntity;
   ReservedSafeFinisher(this.typeEntity);
 
@@ -67,7 +67,7 @@ base class DIBase {
     final a = Resolvable(
       () => consec(value, (e) => consec(onRegister?.call(e), (_) => e)),
     );
-    _resolveFinisher(value: a, g: g);
+    _resolveFinisher<T>(g: g);
     final b = registerDependency<T>(
       dependency: Dependency(a, metadata: Some(metadata)),
       checkExisting: true,
@@ -89,7 +89,6 @@ base class DIBase {
 
   // Resolve all finishers that can be resolved with the value.
   void _resolveFinisher<T extends Object>({
-    required Resolvable<T> value,
     required Entity g,
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
@@ -97,7 +96,7 @@ base class DIBase {
       var finisher = di.getFinisher<T>(typeEntity: TypeEntity(T), g: g);
       if (finisher == null) continue;
       try {
-        finisher.resolve(value);
+        finisher.finish(const None());
         break;
       } catch (_) {}
     }
@@ -364,7 +363,7 @@ base class DIBase {
     }
     var finisher = getFinisher<T>(typeEntity: typeEntity, g: g);
     if (finisher == null) {
-      finisher = ReservedSafeFinisher(typeEntity);
+      finisher = ReservedSafeFinisher<T>(typeEntity);
       register(finisher, groupEntity: g);
     }
     return finisher.resolvable().map((_) {
@@ -385,14 +384,8 @@ base class DIBase {
         final result = resolvable.sync().unwrap().value;
         if (result.isErr()) return false;
         final value = result.unwrap();
-        if (value is ReservedSafeFinisher) {
-          if (isSubtype<ReservedSafeFinisher<T>, ReservedSafeFinisher>()) {
-            return true;
-          } else if (value.typeEntity == typeEntity) {
-            return true;
-          }
-        }
-        return false;
+        return value is ReservedSafeFinisher<T> ||
+            value is ReservedSafeFinisher && value.typeEntity == typeEntity;
       },
       groupEntity: g,
     );
@@ -410,12 +403,9 @@ base class DIBase {
       final result = resolvable.sync().unwrap().value;
       if (result.isErr()) break;
       final value = result.unwrap();
-      if (value is ReservedSafeFinisher) {
-        if (isSubtype<ReservedSafeFinisher<T>, ReservedSafeFinisher>()) {
-          finisher = value;
-        } else if (value.typeEntity == typeEntity) {
-          finisher = value;
-        }
+      if (value is ReservedSafeFinisher<T> ||
+          value is ReservedSafeFinisher && value.typeEntity == typeEntity) {
+        finisher = value as ReservedSafeFinisher;
       }
     }
     return finisher;

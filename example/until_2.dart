@@ -16,24 +16,19 @@ import 'package:df_di/df_di.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
+abstract class Parent1 {}
+
+class Test1 extends Parent1 {}
+
+class Test2 {}
+
 void main() async {
-  () async {
-    await Future<void>.delayed(const Duration(seconds: 1));
-    DI.global.register<_T>(() async {
-      await Future<void>.delayed(const Duration(seconds: 1));
-      return [
-        [42],
-      ];
-    }());
-  }();
-
-  consec(DI.global.untilT<_T>(_T).value, (e) => print(e));
-  consec(DI.global.until<List<Object>>().value, (e) => print(e));
-  consec(DI.global.until<List<Object>>().value, (e) => print(e));
-  consec(DI.global.untilT<_T>(_T).value, (e) => print(e));
-  consec(DI.global.untilT(_T).value, (e) => print(e));
-  consec(DI.global.until<_T>().value, (e) => print(e));
-  consec(DI.global.until<_T>().value, (e) => print(e));
+  DI.global.until<Test2>().unwrap();
+  DI.global.register<Test1>(() async {
+    await Future<void>.delayed(const Duration(milliseconds: 2000));
+    return Test1();
+  }());
+  await Future<void>.delayed(const Duration(milliseconds: 100));
+  DI.global.register(Test2());
+  print(await DI.global.until<Parent1>().unwrap());
 }
-
-typedef _T = List<List<int>>;
