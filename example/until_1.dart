@@ -16,20 +16,27 @@ import 'package:df_di/df_di.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-void main() {
+void main() async {
   () async {
-    await Future<void>.delayed(const Duration(seconds: 2));
+    await Future<void>.delayed(const Duration(seconds: 1));
     DI.global.register<_T>(() async {
-      await Future<void>.delayed(const Duration(seconds: 2));
+      await Future<void>.delayed(const Duration(seconds: 1));
       return [
         [42],
       ];
     }());
   }();
 
-  // TODO: THIS THROWS AN ERROR IF UNCOMMENTED. Seems like we cant have
+  consec(DI.global.untilT<_T>(_T).value, (e) => print(e));
+  consec(DI.global.until<List>().value, (e) => print(e));
+
+  consec(DI.global.until<List>().value, (e) => print(e));
+  consec(DI.global.untilT<_T>(_T).value, (e) => print(e));
   consec(DI.global.untilT(_T).value, (e) => print(e));
   consec(DI.global.until<_T>().value, (e) => print(e));
+  consec(DI.global.until<_T>().value, (e) => print(e));
+
+  // Replacing B with A throws an error
 
   // print(DI.global.registry.state);
   // print(DI.global.registry.state[const DefaultEntity()]!.values.first.typeEntity == TypeEntity(List, [TypeEntity(List, [int])]));

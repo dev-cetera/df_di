@@ -67,7 +67,7 @@ base class DIBase {
     final a = Resolvable(
       () => consec(value, (e) => consec(onRegister?.call(e), (_) => e)),
     );
-    _resolveFinisher(value: a, groupEntity: g);
+    _resolveFinisher(value: a, g: g);
     final b = registerDependency<T>(
       dependency: Dependency(a, metadata: Some(metadata)),
       checkExisting: true,
@@ -90,20 +90,16 @@ base class DIBase {
   // Resolve all finishers that can be resolved with the value.
   void _resolveFinisher<T extends Object>({
     required Resolvable<T> value,
-    required Entity groupEntity,
+    required Entity g,
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
     for (final di in [this as DI, ...children().unwrapOr([])]) {
-      final g = groupEntity.preferOverDefault(focusGroup);
-      final finisherDependencies =
-          di.registry.getDependencies<ReservedSafeFinisher>(groupEntity: g);
-      for (final dependency in finisherDependencies) {
-        final finisher = dependency.value.unwrapSync().unwrap();
-        try {
-          finisher.resolve(value);
-          break;
-        } catch (_) {}
-      }
+      var finisher = di.getFinisher<T>(typeEntity: TypeEntity(T), g: g);
+      if (finisher == null) continue;
+      try {
+        finisher.resolve(value);
+        break;
+      } catch (_) {}
     }
   }
 
@@ -360,30 +356,69 @@ base class DIBase {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
+    final typeEntity = TypeEntity(T);
     final g = groupEntity.preferOverDefault(focusGroup);
     final test = get<T>(groupEntity: g);
     if (test.isSome()) {
       return test.unwrap();
     }
-    ReservedSafeFinisher<T> finisher;
-    final option = getSyncOrNone<ReservedSafeFinisher<T>>(
-      groupEntity: g,
-      traverse: true,
-    );
-    if (option.isSome()) {
-      finisher = option.unwrap();
-    } else {
-      finisher = ReservedSafeFinisher<T>(TypeEntity(T));
-      register<ReservedSafeFinisher<T>>(finisher, groupEntity: g);
+    var finisher = getFinisher<T>(typeEntity: typeEntity, g: g);
+    if (finisher == null) {
+      finisher = ReservedSafeFinisher(typeEntity);
+      register<ReservedSafeFinisher>(finisher, groupEntity: g);
     }
-    return finisher.resolvable().map((e) {
-      unregister<ReservedSafeFinisher<T>>(
-        groupEntity: g,
-        traverse: traverse,
-        removeAll: false,
-      );
+    return finisher.resolvable().map((_) {
+      removeFinisher<T>(typeEntity: typeEntity, g: g);
       return get<T>(groupEntity: g).unwrap();
     }).comb2();
+  }
+
+  @protected
+  void removeFinisher<T extends Object>({
+    required Entity typeEntity,
+    required Entity g,
+  }) {
+    registry.removDependencyWhere(
+      (entity, dependency) {
+        final resolvable = dependency.value;
+        if (resolvable.isAsync()) return false;
+        final result = resolvable.sync().unwrap().value;
+        if (result.isErr()) return false;
+        final value = result.unwrap();
+        if (value is ReservedSafeFinisher) {
+          if (isSubtype<ReservedSafeFinisher<T>, ReservedSafeFinisher>()) {
+            return true;
+          } else if (value.typeEntity == typeEntity) {
+            return true;
+          }
+        }
+        return false;
+      },
+      groupEntity: g,
+    );
+  }
+
+  @protected
+  ReservedSafeFinisher? getFinisher<T extends Object>({
+    required Entity typeEntity,
+    required Entity g,
+  }) {
+    ReservedSafeFinisher? finisher;
+    for (final e in registry.getGroup(groupEntity: g).values) {
+      final resolvable = e.value;
+      if (resolvable.isAsync()) break;
+      final result = resolvable.sync().unwrap().value;
+      if (result.isErr()) break;
+      final value = result.unwrap();
+      if (value is ReservedSafeFinisher) {
+        if (isSubtype<ReservedSafeFinisher<T>, ReservedSafeFinisher>()) {
+          finisher = value;
+        } else if (value.typeEntity == typeEntity) {
+          finisher = value;
+        }
+      }
+    }
+    return finisher;
   }
 
   Resolvable<List<Dependency>> unregisterAll({
@@ -423,3 +458,5 @@ base class DIBase {
     return result;
   }
 }
+
+bool _isSubtype<TChild, TParent>() => <TChild>[] is List<TParent>;

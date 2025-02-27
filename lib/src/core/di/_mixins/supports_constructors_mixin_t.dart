@@ -141,6 +141,6 @@ base mixin SupportsConstructorsMixinT on SupportsConstructorsMixinK {
       TypeEntity(type),
       groupEntity: groupEntity,
       traverse: traverse,
-    ).trans<T>();
+    );
   }
 }

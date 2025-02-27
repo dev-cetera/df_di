@@ -164,28 +164,17 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
     bool traverse = true,
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
-    final test = getK<T>(typeEntity, groupEntity: g);
+    final test = getK(typeEntity, groupEntity: g);
     if (test.isSome()) {
-      return test.unwrap();
+      return test.unwrap().map((e) => e as T);
     }
-    ReservedSafeFinisher<T> finisher;
-    final option = getSyncOrNone<ReservedSafeFinisher<T>>(
-      groupEntity: g,
-      traverse: traverse,
-    );
-    if (option.isSome()) {
-      finisher = option.unwrap();
-    } else {
-      finisher = ReservedSafeFinisher<T>(typeEntity);
-      register<ReservedSafeFinisher<T>>(finisher, groupEntity: g);
+    var finisher = getFinisher<T>(typeEntity: typeEntity, g: g);
+    if (finisher == null) {
+      finisher = ReservedSafeFinisher(typeEntity);
+      register<ReservedSafeFinisher>(finisher, groupEntity: g);
     }
-    return finisher.resolvable().map((e) {
-      unregisterK(
-        TypeEntity(ReservedSafeFinisher, [typeEntity]),
-        groupEntity: g,
-        traverse: traverse,
-        removeAll: false,
-      );
+    return finisher.resolvable().map((_) {
+      removeFinisher<T>(typeEntity: typeEntity, g: g);
       return getK<T>(typeEntity, groupEntity: g).unwrap();
     }).comb2();
   }
