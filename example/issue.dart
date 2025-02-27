@@ -2,7 +2,6 @@
 
 import 'package:df_di/df_di.dart';
 
-// TODO: THIS IS AN ISSUE!!! There should be 3 completers!!!
 void main() {
   final u1 = DI.global.untilT(int);
   final u2 = DI.global.untilT(double);
