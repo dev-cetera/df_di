@@ -171,7 +171,7 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
     var finisher = getFinisher<T>(typeEntity: typeEntity, g: g);
     if (finisher == null) {
       finisher = ReservedSafeFinisher(typeEntity);
-      register<ReservedSafeFinisher>(finisher, groupEntity: g);
+      register(finisher, groupEntity: g);
     }
     return finisher.resolvable().map((_) {
       removeFinisher<T>(typeEntity: typeEntity, g: g);
