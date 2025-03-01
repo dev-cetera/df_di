@@ -10,9 +10,7 @@ void register() async {
 
 void main() async {
   register();
-  print(
-    await DI.global.until<int>().unwrap(),
-  );
+  print(await DI.global.until<int>().unwrap());
 }
 
 class Grandparent {}

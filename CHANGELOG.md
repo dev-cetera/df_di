@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.10.16]
+
+- Released @ 3/2025 (UTC)
+- fix: Fix issue pertaining generic types with until function
+
 ## [0.10.15]
 
 - Released @ 2/2025 (UTC)
