@@ -118,6 +118,9 @@ base mixin SupportsConstructorsMixinT on SupportsConstructorsMixinK {
     );
   }
 
+  /// You must register dependencies via [register] and set its parameter
+  /// `enableUntilK` to true to use this method.
+  @visibleForTesting
   @pragma('vm:prefer-inline')
   Resolvable<Lazy<T>> untilLazyT<T extends Object>(
     Type type, {
@@ -131,6 +134,9 @@ base mixin SupportsConstructorsMixinT on SupportsConstructorsMixinK {
     );
   }
 
+  /// You must register dependencies via [register] and set its parameter
+  /// `enableUntilK` to true to use this method.
+  @visibleForTesting
   @pragma('vm:prefer-inline')
   Resolvable<T> untilT<T extends Object>(
     Type type, {

@@ -17,12 +17,23 @@ import '/src/_common.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 @internal
-final class ReservedSafeFinisher<T extends Object> extends SafeFinisher<None> {
+final class ReservedSafeFinisher<T extends Object> extends SafeFinisher<T> {
   final Entity typeEntity;
   ReservedSafeFinisher(this.typeEntity);
 
   @override
   bool operator ==(Object other) => identical(this, other);
+
+  // static ReservedSafeFinisher<T> castFrom<T extends Object, E extends Object>(
+  //   ReservedSafeFinisher<E> input,
+  // ) {
+  //   final test = <ReservedSafeFinisher<E>>[input];
+  //   return test.cast<ReservedSafeFinisher<T>>().first;
+  // }
+
+  // ReservedSafeFinisher<E> castTo<E extends Object>() {
+  //   return ReservedSafeFinisher.castFrom<E, T>(this);
+  // }
 
   @override
   int get hashCode {

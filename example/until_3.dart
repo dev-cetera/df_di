@@ -16,5 +16,5 @@ import 'package:df_di/df_di.dart';
 
 void main() async {
   DI.global.register<int>(22);
-  print(DI.global.untilB<num>().unwrap());
+  print(DI.global.until<num>().unwrap());
 }

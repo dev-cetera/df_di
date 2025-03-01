@@ -144,6 +144,9 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
     return Some(lazy.factory);
   }
 
+  /// You must register dependencies via [register] and set its parameter
+  /// `enableUntilK` to true to use this method.
+  @visibleForTesting
   @protected
   @pragma('vm:prefer-inline')
   Resolvable<Lazy<T>> untilLazyK<T extends Object>(
@@ -158,6 +161,9 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
     );
   }
 
+  /// You must register dependencies via [register] and set its parameter
+  /// `enableUntilK` to true to use this method.
+  @visibleForTesting
   @protected
   Resolvable<T> untilK<T extends Object>(
     Entity typeEntity, {
@@ -169,17 +175,17 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
     if (test.isSome()) {
       return test.unwrap().map((e) => e as T);
     }
-    var finisher = finishers[g]?.firstWhereOrNull(
+    var finisher = finishersK[g]?.firstWhereOrNull(
       (e) => e.typeEntity == typeEntity,
     );
     if (finisher == null) {
       finisher = ReservedSafeFinisher(typeEntity);
-      (finishers[g] ??= []).add(finisher);
+      (finishersK[g] ??= []).add(finisher);
     }
     return finisher.resolvable().map((_) {
       //
       //
-      final temp = finishers[g] ?? [];
+      final temp = finishersK[g] ?? [];
       for (var n = 0; n < temp.length; n++) {
         final e = temp[n];
         if (e.typeEntity == typeEntity) {
