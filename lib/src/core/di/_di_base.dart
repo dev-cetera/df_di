@@ -66,7 +66,7 @@ base class DIBase {
 
       // Used for untilT and untilK. Disabled by default to improve performance.
       if (enableUntilK) {
-        _maybeFinishK<T>(g: g);
+        (this as SupportsMixinK).maybeFinishK<T>(g: g);
       }
     }
     return a.map((e) {
@@ -110,23 +110,6 @@ base class DIBase {
         } catch (_) {
           // Skip this finisher.
         }
-      }
-    }
-  }
-
-  @protected
-  Map<Entity, List<ReservedSafeFinisher>> finishersK = {};
-
-  void _maybeFinishK<T extends Object>({required Entity g}) {
-    assert(T != Object, 'T must be specified and cannot be Object.');
-    final typeEntity = TypeEntity(T);
-    for (final di in [this as DI, ...children().unwrapOr([])]) {
-      final test = di.finishersK[g]?.firstWhereOrNull((e) {
-        return e is ReservedSafeFinisher<T> || e.typeEntity == typeEntity;
-      });
-      if (test != null) {
-        test.finish(const None());
-        break;
       }
     }
   }

@@ -19,47 +19,47 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
   //
   //
 
-  @pragma('vm:prefer-inline')
-  Future<TService> getServiceSingletonAsync<TService extends Service>({
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    return getLazySingleton<TService>(
-      groupEntity: groupEntity,
-      traverse: traverse,
-    ).unwrap().toAsync().unwrap();
-  }
+  // @pragma('vm:prefer-inline')
+  // Future<TService> getServiceSingletonAsync<TService extends Service>({
+  //   Entity groupEntity = const DefaultEntity(),
+  //   bool traverse = true,
+  // }) {
+  //   return getLazySingleton<TService>(
+  //     groupEntity: groupEntity,
+  //     traverse: traverse,
+  //   ).unwrap().toAsync().unwrap();
+  // }
 
-  @pragma('vm:prefer-inline')
-  Future<TService> getServiceFactoryAsync<TService extends Service>({
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    return getFactory<TService>(
-      groupEntity: groupEntity,
-      traverse: traverse,
-    ).unwrap().toAsync().unwrap();
-  }
+  // @pragma('vm:prefer-inline')
+  // Future<TService> getServiceFactoryAsync<TService extends Service>({
+  //   Entity groupEntity = const DefaultEntity(),
+  //   bool traverse = true,
+  // }) {
+  //   return getFactory<TService>(
+  //     groupEntity: groupEntity,
+  //     traverse: traverse,
+  //   ).unwrap().toAsync().unwrap();
+  // }
 
-  @pragma('vm:prefer-inline')
-  TService getServiceSingletonSyncUnsafe<TService extends Service>({
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    return getLazySingleton<TService>(
-      groupEntity: groupEntity,
-      traverse: traverse,
-    ).unwrap().toSync().unwrap();
-  }
+  // @pragma('vm:prefer-inline')
+  // TService getServiceSingletonSyncUnsafe<TService extends Service>({
+  //   Entity groupEntity = const DefaultEntity(),
+  //   bool traverse = true,
+  // }) {
+  //   return getLazySingleton<TService>(
+  //     groupEntity: groupEntity,
+  //     traverse: traverse,
+  //   ).unwrap().toSync().unwrap();
+  // }
 
-  @pragma('vm:prefer-inline')
-  TService getServiceFactorySyncUnsafe<TService extends Service>({
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    return getFactory<TService>(
-      groupEntity: groupEntity,
-      traverse: traverse,
-    ).unwrap().toSync().unwrap();
-  }
+  // @pragma('vm:prefer-inline')
+  // TService getServiceFactorySyncUnsafe<TService extends Service>({
+  //   Entity groupEntity = const DefaultEntity(),
+  //   bool traverse = true,
+  // }) {
+  //   return getFactory<TService>(
+  //     groupEntity: groupEntity,
+  //     traverse: traverse,
+  //   ).unwrap().toSync().unwrap();
+  // }
 }

@@ -13,6 +13,7 @@
 // ignore_for_file: invalid_use_of_visible_for_testing_member
 
 import '/src/_common.dart';
+import '/src/core/_reserved_safe_finisher.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -46,15 +47,14 @@ base mixin SupportsMixinK on DIBase {
       groupEntity: groupEntity,
       traverse: traverse,
     ).map(
-      (e) =>
-          e.isSync()
-              ? e.sync().unwrap()
-              : Sync.value(
-                Err(
-                  debugPath: ['SupportsMixinK', 'getSyncK'],
-                  error: 'Called getSyncK() an async dependency.',
-                ),
+      (e) => e.isSync()
+          ? e.sync().unwrap()
+          : Sync.value(
+              Err(
+                debugPath: ['SupportsMixinK', 'getSyncK'],
+                error: 'Called getSyncK() an async dependency.',
               ),
+            ),
     );
   }
 
@@ -66,12 +66,11 @@ base mixin SupportsMixinK on DIBase {
     bool traverse = true,
   }) {
     return Future.sync(() async {
-      final result =
-          await getAsyncK<T>(
-            typeEntity,
-            groupEntity: groupEntity,
-            traverse: traverse,
-          ).unwrap().value;
+      final result = await getAsyncK<T>(
+        typeEntity,
+        groupEntity: groupEntity,
+        traverse: traverse,
+      ).unwrap().value;
       return result.unwrap();
     });
   }
@@ -160,10 +159,10 @@ base mixin SupportsMixinK on DIBase {
           final value = e.unwrap();
           registry.removeDependencyK(typeEntity, groupEntity: g);
           final metadata = option.unwrap().unwrap().metadata.map(
-            (e) => e.copyWith(
-              preemptivetypeEntity: TypeEntity(Sync, [typeEntity]),
-            ),
-          );
+                (e) => e.copyWith(
+                  preemptivetypeEntity: TypeEntity(Sync, [typeEntity]),
+                ),
+              );
           registerDependencyK(
             dependency: Dependency(Sync.value(Ok(value)), metadata: metadata),
             checkExisting: false,
@@ -179,10 +178,7 @@ base mixin SupportsMixinK on DIBase {
     required Dependency<T> dependency,
     bool checkExisting = false,
   }) {
-    final g =
-        dependency.metadata.isSome()
-            ? dependency.metadata.unwrap().groupEntity
-            : focusGroup;
+    final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
     if (checkExisting) {
       final option = getDependencyK(
         dependency.typeEntity,
@@ -223,6 +219,7 @@ base mixin SupportsMixinK on DIBase {
     return temp;
   }
 
+  @protected
   Resolvable<None> unregisterK(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
@@ -271,15 +268,12 @@ base mixin SupportsMixinK on DIBase {
     Entity groupEntity = const DefaultEntity(),
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
-    return registry
-            .removeDependencyK<T>(typeEntity, groupEntity: g)
-            .or(
-              registry.removeDependencyK<Lazy<T>>(
-                TypeEntity(Lazy, [typeEntity]),
-                groupEntity: g,
-              ),
-            )
-        as Option<Dependency>;
+    return registry.removeDependencyK<T>(typeEntity, groupEntity: g).or(
+          registry.removeDependencyK<Lazy<T>>(
+            TypeEntity(Lazy, [typeEntity]),
+            groupEntity: g,
+          ),
+        ) as Option<Dependency>;
   }
 
   @protected
@@ -308,5 +302,61 @@ base mixin SupportsMixinK on DIBase {
       }
     }
     return false;
+  }
+
+  @protected
+  final finishersK = <Entity, List<ReservedSafeFinisher>>{};
+
+  @protected
+  void maybeFinishK<T extends Object>({required Entity g}) {
+    assert(T != Object, 'T must be specified and cannot be Object.');
+    final typeEntity = TypeEntity(T);
+    for (final di in [this as DI, ...children().unwrapOr([])]) {
+      final test = di.finishersK[g]?.firstWhereOrNull((e) {
+        return e is ReservedSafeFinisher<T> || e.typeEntity == typeEntity;
+      });
+      if (test != null) {
+        test.finish(const None());
+        break;
+      }
+    }
+  }
+
+  /// You must register dependencies via [register] and set its parameter
+  /// `enableUntilK` to true to use this method.
+  @visibleForTesting
+  @protected
+  Resolvable<T> untilK<T extends Object>(
+    Entity typeEntity, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    final g = groupEntity.preferOverDefault(focusGroup);
+    final test = getK(typeEntity, groupEntity: g);
+    if (test.isSome()) {
+      return test.unwrap().map((e) => e as T);
+    }
+    var finisher = finishersK[g]?.firstWhereOrNull(
+      (e) => e.typeEntity == typeEntity,
+    );
+    if (finisher == null) {
+      finisher = ReservedSafeFinisher(typeEntity);
+      (finishersK[g] ??= []).add(finisher);
+    }
+    return finisher.resolvable().map((_) {
+      //
+      //
+      final temp = finishersK[g] ?? [];
+      for (var n = 0; n < temp.length; n++) {
+        final e = temp[n];
+        if (e.typeEntity == typeEntity) {
+          temp.removeAt(n);
+          break;
+        }
+      }
+      //
+      //
+      return getK<T>(typeEntity, groupEntity: g).unwrap();
+    }).comb2();
   }
 }

@@ -138,6 +138,7 @@ base mixin SupportsMixinT on SupportsMixinK {
     );
   }
 
+  @protected
   @pragma('vm:prefer-inline')
   Option<Dependency> removeDependencyT<T extends Object>(
     Type type, {

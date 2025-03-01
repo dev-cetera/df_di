@@ -12,10 +12,7 @@ void main() {
     final u5 = DI.global.until<double>();
     final u6 = DI.global.until<String>();
     expect(
-      (DI.global.finishersK[const DefaultEntity()]
-              ?.map((e) => e.toString())
-              .toList()
-            ?..sort())
+      (DI.global.finishersK[const DefaultEntity()]?.map((e) => e.toString()).toList()?..sort())
           .toString(),
       "[Instance of 'ReservedSafeFinisher<Object>', Instance of 'ReservedSafeFinisher<Object>', Instance of 'ReservedSafeFinisher<Object>']",
     );

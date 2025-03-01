@@ -11,7 +11,6 @@
 //.title~
 
 import '/src/_common.dart';
-import '/src/core/_reserved_safe_finisher.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -159,43 +158,5 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
       groupEntity: groupEntity,
       traverse: traverse,
     );
-  }
-
-  /// You must register dependencies via [register] and set its parameter
-  /// `enableUntilK` to true to use this method.
-  @visibleForTesting
-  @protected
-  Resolvable<T> untilK<T extends Object>(
-    Entity typeEntity, {
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    final g = groupEntity.preferOverDefault(focusGroup);
-    final test = getK(typeEntity, groupEntity: g);
-    if (test.isSome()) {
-      return test.unwrap().map((e) => e as T);
-    }
-    var finisher = finishersK[g]?.firstWhereOrNull(
-      (e) => e.typeEntity == typeEntity,
-    );
-    if (finisher == null) {
-      finisher = ReservedSafeFinisher(typeEntity);
-      (finishersK[g] ??= []).add(finisher);
-    }
-    return finisher.resolvable().map((_) {
-      //
-      //
-      final temp = finishersK[g] ?? [];
-      for (var n = 0; n < temp.length; n++) {
-        final e = temp[n];
-        if (e.typeEntity == typeEntity) {
-          temp.removeAt(n);
-          break;
-        }
-      }
-      //
-      //
-      return getK<T>(typeEntity, groupEntity: g).unwrap();
-    }).comb2();
   }
 }
