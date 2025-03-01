@@ -4,6 +4,7 @@
 
 - Released @ 3/2025 (UTC)
 - fix: Fix issue pertaining generic types with until function
+- chore: Clean up a bit
 
 ## [0.10.15]
 
