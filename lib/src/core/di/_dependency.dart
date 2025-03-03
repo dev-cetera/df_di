@@ -55,7 +55,7 @@ final class Dependency<T extends Object> {
 
   /// Returns a new [Dependency] instance where the current [value] is cast
   /// to type [R], while retaining the existing [metadata].
-  Dependency<R> trans<R extends Object>() => passNewValue(value.trans());
+  Dependency<R> trans<R extends Object>() => passNewValue(value.transf());
 
   /// Creates a new instance with updated fields, preserving the values of any
   /// fields not explicitly specified.

@@ -127,7 +127,7 @@ base mixin SupportsMixinK on DIBase {
     if (result.isErr()) {
       return const None();
     }
-    final value = result.trans<T>().unwrap();
+    final value = result.transf<T>().unwrap();
     return Some(value);
   }
 
@@ -209,7 +209,7 @@ base mixin SupportsMixinK on DIBase {
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
     final option = registry.getDependencyK(typeEntity, groupEntity: g);
-    var temp = option.map((e) => Ok(e).asResult().trans<Dependency<T>>());
+    var temp = option.map((e) => Ok(e).asResult().transf<Dependency<T>>());
     if (option.isNone() && traverse) {
       for (final parent in parents) {
         temp = (parent as SupportsMixinK).getDependencyK(

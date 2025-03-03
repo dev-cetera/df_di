@@ -76,7 +76,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     if (result.isErr()) {
       return Some(result.err().transErr());
     }
-    final value = result.unwrap().value.trans<DI>();
+    final value = result.unwrap().value.transf<DI>();
     return Some(value);
   }
 
