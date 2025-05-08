@@ -56,10 +56,7 @@ abstract class StreamService<TData extends Object?, TParams extends Option>
   @mustCallSuper
   @override
   ServiceListeners<void> provideDisposeListeners() {
-    return [
-      _disposeListener,
-      ...super.provideDisposeListeners(),
-    ];
+    return [_disposeListener, ...super.provideDisposeListeners()];
   }
 
   Future<void> _disposeListener(void _) async {

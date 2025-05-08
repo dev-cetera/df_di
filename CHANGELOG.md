@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.10.19]
+
+- Released @ 5/2025 (UTC)
+- fix: Bugfix with dispose stream_service
+
 ## [0.10.18]
 
 - Released @ 5/2025 (UTC)
