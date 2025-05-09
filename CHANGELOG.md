@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.10.20]
+
+- Released @ 5/2025 (UTC)
+- feat: Add Service.unregister function
+
 ## [0.10.19]
 
 - Released @ 5/2025 (UTC)
