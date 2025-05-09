@@ -29,6 +29,17 @@ abstract class Service<TParams extends Option> {
   //
   //
 
+  static Resolvable<None> unregister(Result<Service> e) {
+    return Resolvable(() async {
+      await e.unwrap().dispose();
+      return const None();
+    });
+  }
+
+  //
+  //
+  //
+
   Service();
 
   // Used to avoid concurrent initialization, resetting, and disposal.
@@ -119,3 +130,5 @@ abstract class Service<TParams extends Option> {
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 typedef ServiceListeners<T> = List<FutureOr<void> Function(T data)>;
+
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
