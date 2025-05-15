@@ -33,7 +33,7 @@ environment:
 
 dependencies:
   df_debouncer: ^0.4.5
-  df_safer_dart: ^0.10.1
+  df_safer_dart: ^0.10.2
   df_type: ^0.10.3
 
   collection: ^1.18.0
