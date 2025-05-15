@@ -8,14 +8,11 @@ void main() {
     final u1 = DI.global.untilT(int);
     final u2 = DI.global.untilT(double);
     final u3 = DI.global.untilT(String);
-    final u4 = DI.global.until<int>();
-    final u5 = DI.global.until<double>();
-    final u6 = DI.global.until<String>();
+    final u4 = DI.global.untilSuper<int>();
+    final u5 = DI.global.untilSuper<double>();
+    final u6 = DI.global.untilSuper<String>();
     expect(
-      (DI.global.finishersK[const DefaultEntity()]
-              ?.map((e) => e.toString())
-              .toList()
-            ?..sort())
+      (DI.global.finishersK[const DefaultEntity()]?.map((e) => e.toString()).toList()?..sort())
           .toString(),
       "[Instance of 'ReservedSafeFinisher<Object>', Instance of 'ReservedSafeFinisher<Object>', Instance of 'ReservedSafeFinisher<Object>']",
     );

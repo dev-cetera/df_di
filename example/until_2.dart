@@ -46,7 +46,7 @@ void main() async {
     di.register<num>(Future.delayed(const Duration(seconds: 2), () => 1));
   });
 
-  print(await di.until<int>().value);
+  print(await di.untilSuper<int>().value);
 
   // final a = ReservedSafeFinisher<int>(TypeEntity(int));
   // print(a is ReservedSafeFinisher<num>);

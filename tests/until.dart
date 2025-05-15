@@ -33,7 +33,7 @@ void main() {
       parent.register<int>(Future.value(1));
     });
 
-    print(await child.until<int>().unwrap());
+    print(await child.untilSuper<int>().unwrap());
     print(child.get<int>());
     print(child.get<int>());
 

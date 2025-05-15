@@ -28,7 +28,7 @@ void main() {
       }());
     }();
 
-    print(await di.until<TestService>().value);
+    print(await di.untilSuper<TestService>().value);
   });
 }
 

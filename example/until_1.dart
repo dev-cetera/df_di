@@ -30,12 +30,12 @@ void main() async {
   }();
 
   consec(DI.global.untilT<_T>(_T).value, (e) => print(e));
-  consec(DI.global.until<List<Object>>().value, (e) => print(e));
-  consec(DI.global.until<List<Object>>().value, (e) => print(e));
+  consec(DI.global.untilSuper<List<Object>>().value, (e) => print(e));
+  consec(DI.global.untilSuper<List<Object>>().value, (e) => print(e));
   consec(DI.global.untilT<_T>(_T).value, (e) => print(e));
   consec(DI.global.untilT(_T).value, (e) => print(e));
-  consec(DI.global.until<_T>().value, (e) => print(e));
-  consec(DI.global.until<_T>().value, (e) => print(e));
+  consec(DI.global.untilSuper<_T>().value, (e) => print(e));
+  consec(DI.global.untilSuper<_T>().value, (e) => print(e));
 }
 
 typedef _T = List<List<int>>;

@@ -68,11 +68,25 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
   }
 
   @pragma('vm:prefer-inline')
-  Resolvable<Lazy<T>> untilLazy<T extends Object>({
+  Resolvable<Lazy<TSuper>> untilLazySuper<TSuper extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return until<Lazy<T>>(groupEntity: groupEntity, traverse: traverse);
+    return untilLazy<TSuper, TSuper>(
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
+  }
+
+  @pragma('vm:prefer-inline')
+  Resolvable<Lazy<TSub>> untilLazy<TSuper extends Object, TSub extends TSuper>({
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return until<Lazy<TSuper>, Lazy<TSub>>(
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
   }
 
   Option<Resolvable<T>> getLazySingleton<T extends Object>({
@@ -88,11 +102,22 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
   }
 
   @pragma('vm:prefer-inline')
-  Resolvable<T> untilLazySingleton<T extends Object>({
+  Resolvable<TSuper> untilLazySingletonSuper<TSuper extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return untilLazy<T>(
+    return untilLazySingleton<TSuper, TSuper>(
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
+  }
+
+  @pragma('vm:prefer-inline')
+  Resolvable<TSub> untilLazySingleton<TSuper extends Object, TSub extends TSuper>({
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return untilLazy<TSuper, TSub>(
       groupEntity: groupEntity,
       traverse: traverse,
     ).map((e) => e.singleton).comb2();
@@ -146,11 +171,22 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
   }
 
   @pragma('vm:prefer-inline')
-  Resolvable<T> untilFactory<T extends Object>({
+  Resolvable<TSuper> untilFactorySuper<TSuper extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return untilLazy<T>(
+    return untilFactory<TSuper, TSuper>(
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
+  }
+
+  @pragma('vm:prefer-inline')
+  Resolvable<TSub> untilFactory<TSuper extends Object, TSub extends TSuper>({
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return untilLazy<TSuper, TSub>(
       groupEntity: groupEntity,
       traverse: traverse,
     ).map((e) => e.factory).comb2();

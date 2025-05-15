@@ -10,18 +10,11 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-// import 'dart:async';
-
-// import 'package:df_di/df_di.dart';
-import 'package:df_di/src/_common.dart';
+import 'package:df_di/df_di.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-// Iterable<int> sort(Iterable<int> values) sync* {
-//   for (final e in values) {}
-// }
-
-Future<Object> main() async {
+void main() async {
   final di = DI();
   di.registerLazy<String>(() => SyncOk.value('Lazy init!'));
   print(di.getLazySingleton<String>());
@@ -40,6 +33,8 @@ Future<Object> main() async {
   print(di.getLazyT<String>(String));
   print(di.getLazyUnsafeT<String>(String));
   di.unregisterLazy<String>();
-
-  return 1;
 }
+
+class A {}
+
+class B extends A {}
