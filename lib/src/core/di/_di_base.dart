@@ -142,7 +142,6 @@ base class DIBase {
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
     Resolvable<None>? result;
-
     final g = groupEntity.preferOverDefault(focusGroup);
     for (final di in [this as DI, ...parents]) {
       final dependencyOption = di.removeDependency<T>(groupEntity: g);
