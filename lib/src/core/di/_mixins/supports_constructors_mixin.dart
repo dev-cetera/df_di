@@ -113,10 +113,10 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
   }
 
   @pragma('vm:prefer-inline')
-  Resolvable<TSub> untilLazySingleton<TSuper extends Object, TSub extends TSuper>({
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
+  Resolvable<TSub> untilLazySingleton<
+    TSuper extends Object,
+    TSub extends TSuper
+  >({Entity groupEntity = const DefaultEntity(), bool traverse = true}) {
     return untilLazy<TSuper, TSub>(
       groupEntity: groupEntity,
       traverse: traverse,

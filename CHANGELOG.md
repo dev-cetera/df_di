@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.10.21]
+
+- Released @ 5/2025 (UTC)
+- bugfixes
+
 ## [0.10.20]
 
 - Released @ 5/2025 (UTC)
