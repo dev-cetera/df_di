@@ -55,8 +55,7 @@ abstract class Service<TParams extends Option> {
   FutureOr<void> init(TParams params) {
     if (_disposed) {
       throw Err(
-        debugPath: ['Service', 'init'],
-        error: 'Service has already been initialized.',
+        'Service has already been initialized.',
       );
     }
     _sequential.addAll([
@@ -111,8 +110,7 @@ abstract class Service<TParams extends Option> {
     // Throw an exception if the service has already been disposed.
     if (_disposed) {
       throw Err(
-        debugPath: ['Service', 'dispose'],
-        error: 'Service has already been disposed.',
+        'Service has already been disposed.',
       );
     }
     _sequential.addAll([

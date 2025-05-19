@@ -125,8 +125,7 @@ base class DIBase {
       final option = getDependency<T>(groupEntity: g, traverse: false);
       if (option.isSome()) {
         return Err(
-          debugPath: ['DIBase', '_registerDependency'],
-          error: 'Dependency already registered.',
+          'Dependency already registered.',
         );
       }
     }
@@ -222,8 +221,7 @@ base class DIBase {
           ? e.sync().unwrap()
           : Sync.value(
               Err(
-                debugPath: ['DIBase', 'getSync'],
-                error: 'Called getSync() for an async dependency.',
+                'Called getSync() for an async dependency.',
               ),
             ),
     );
