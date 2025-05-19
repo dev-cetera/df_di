@@ -54,9 +54,7 @@ abstract class Service<TParams extends Option> {
   @nonVirtual
   FutureOr<void> init(TParams params) {
     if (_disposed) {
-      throw Err(
-        'Service has already been initialized.',
-      );
+      throw Err('Service has already been initialized.');
     }
     _sequential.addAll([
       // Call init listeners.
@@ -109,9 +107,7 @@ abstract class Service<TParams extends Option> {
   FutureOr<void> dispose() {
     // Throw an exception if the service has already been disposed.
     if (_disposed) {
-      throw Err(
-        'Service has already been disposed.',
-      );
+      throw Err('Service has already been disposed.');
     }
     _sequential.addAll([
       // Call dispose listeners.
