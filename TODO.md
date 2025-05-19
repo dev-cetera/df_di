@@ -1,6 +1,3 @@
 # TODO:
 
-- Instead of throwing errors, use Result provided by df_type
-- Instead of returning null values, use Option provided by df_type
-- Both up and down traversal of dependencies (children and parents).
-- BRING BACK ON UNREGISTER CALLBACK. REMOVE VALIDITY CHECKER - TOO MUCH!
+- [ ] Add a Timer to until method if debugging is enabled so that it can remind the user if some until is stalling!!!
