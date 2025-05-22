@@ -47,10 +47,9 @@ base mixin SupportsMixinK on DIBase {
       groupEntity: groupEntity,
       traverse: traverse,
     ).map(
-      (e) =>
-          e.isSync()
-              ? e.sync().unwrap()
-              : Sync.value(Err('Called getSyncK() an async dependency.')),
+      (e) => e.isSync()
+          ? e.sync().unwrap()
+          : Sync.value(Err('Called getSyncK() an async dependency.')),
     );
   }
 
@@ -62,12 +61,11 @@ base mixin SupportsMixinK on DIBase {
     bool traverse = true,
   }) {
     return Future.sync(() async {
-      final result =
-          await getAsyncK<T>(
-            typeEntity,
-            groupEntity: groupEntity,
-            traverse: traverse,
-          ).unwrap().value;
+      final result = await getAsyncK<T>(
+        typeEntity,
+        groupEntity: groupEntity,
+        traverse: traverse,
+      ).unwrap().value;
       return result.unwrap();
     });
   }
@@ -175,10 +173,9 @@ base mixin SupportsMixinK on DIBase {
     required Dependency<T> dependency,
     bool checkExisting = false,
   }) {
-    final g =
-        dependency.metadata.isSome()
-            ? dependency.metadata.unwrap().groupEntity
-            : focusGroup;
+    final g = dependency.metadata.isSome()
+        ? dependency.metadata.unwrap().groupEntity
+        : focusGroup;
     if (checkExisting) {
       final option = getDependencyK(
         dependency.typeEntity,

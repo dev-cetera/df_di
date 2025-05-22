@@ -58,7 +58,10 @@ abstract class Service<TParams extends Option> {
     }
     _sequential.addAll([
       // Call init listeners.
-      ...provideInitListeners().map((e) => (_) => e(params)),
+      ...provideInitListeners().map(
+        (e) =>
+            (_) => e(params),
+      ),
       (_) {
         // Mark the service as initialized.
         _initialized = true;
@@ -111,7 +114,10 @@ abstract class Service<TParams extends Option> {
     }
     _sequential.addAll([
       // Call dispose listeners.
-      ...provideDisposeListeners().map((e) => (_) => e(null)),
+      ...provideDisposeListeners().map(
+        (e) =>
+            (_) => e(null),
+      ),
       (_) {
         // Mark the service as disposed.
         _disposed = true;

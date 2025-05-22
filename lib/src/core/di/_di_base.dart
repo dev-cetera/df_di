@@ -48,7 +48,9 @@ base class DIBase {
     final metadata = DependencyMetadata(
       index: Some(_indexIncrementer++),
       groupEntity: g,
-      onUnregister: onUnregister != null ? Some((e) => onUnregister(e.transf())) : const None(),
+      onUnregister: onUnregister != null
+          ? Some((e) => onUnregister(e.transf()))
+          : const None(),
     );
     final a = Resolvable(
       () => consec(value, (e) => consec(onRegister?.call(e), (_) => e)),
@@ -81,7 +83,14 @@ base class DIBase {
   Option<Iterable<DI>> children() {
     return childrenContainer.map(
       (e) => e.registry.unsortedDependencies.map(
-        (e) => e.transf<Lazy<DI>>().value.unwrapSync().unwrap().singleton.unwrapSync().unwrap(),
+        (e) => e
+            .transf<Lazy<DI>>()
+            .value
+            .unwrapSync()
+            .unwrap()
+            .singleton
+            .unwrapSync()
+            .unwrap(),
       ),
     );
   }
@@ -120,7 +129,9 @@ base class DIBase {
     bool checkExisting = false,
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
-    final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
+    final g = dependency.metadata.isSome()
+        ? dependency.metadata.unwrap().groupEntity
+        : focusGroup;
     if (checkExisting) {
       final option = getDependency<T>(groupEntity: g, traverse: false);
       if (option.isSome()) {
@@ -172,8 +183,9 @@ base class DIBase {
     assert(T != Object, 'T must be specified and cannot be Object.');
     final g = groupEntity.preferOverDefault(focusGroup);
     return registry
-        .removeDependency<T>(groupEntity: g)
-        .or(registry.removeDependency<Lazy<T>>(groupEntity: g)) as Option<Dependency>;
+            .removeDependency<T>(groupEntity: g)
+            .or(registry.removeDependency<Lazy<T>>(groupEntity: g))
+        as Option<Dependency>;
   }
 
   bool isRegistered<T extends Object>({
@@ -400,8 +412,9 @@ base class DIBase {
         ..addSafe((_) {
           registry.removeDependencyK(
             dependency.typeEntity,
-            groupEntity:
-                dependency.metadata.map((e) => e.groupEntity).unwrapOr(const DefaultEntity()),
+            groupEntity: dependency.metadata
+                .map((e) => e.groupEntity)
+                .unwrapOr(const DefaultEntity()),
           );
 
           final metadataOption = dependency.metadata;
