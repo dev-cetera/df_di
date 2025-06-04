@@ -53,17 +53,21 @@ final class TypeEntity extends Entity {
   }
 
   TypeEntity._obj(String typeString)
-      : _typeString = typeString,
-        super(Entity.objId(typeString));
+    : _typeString = typeString,
+      super(Entity.objId(typeString));
 
   factory TypeEntity(Object baseType, [List<Object> subTypes = const []]) {
     final initialCleanBaseTypeString = _getTypeString(baseType);
     String finalTypeString;
 
     if (subTypes.isNotEmpty) {
-      final isSimpleIdentifier = !initialCleanBaseTypeString.contains(RegExp(r'[<>,?]'));
+      final isSimpleIdentifier = !initialCleanBaseTypeString.contains(
+        RegExp(r'[<>,?]'),
+      );
       if (isSimpleIdentifier) {
-        final subTypeStrings = subTypes.map((st) => _getTypeString(st)).join(',');
+        final subTypeStrings = subTypes
+            .map((st) => _getTypeString(st))
+            .join(',');
         finalTypeString = '$initialCleanBaseTypeString<$subTypeStrings>';
       } else {
         final objectPlaceholder = _getTypeString(Object);
@@ -75,7 +79,10 @@ final class TypeEntity extends Entity {
         var n = 0;
         while (n < initialCleanBaseTypeString.length) {
           var matched = false;
-          if (initialCleanBaseTypeString.startsWith(objectNullablePlaceholder, n)) {
+          if (initialCleanBaseTypeString.startsWith(
+            objectNullablePlaceholder,
+            n,
+          )) {
             if (subTypeIndex < subTypes.length) {
               buffer.write(_getTypeString(subTypes[subTypeIndex]));
               subTypeIndex++;
@@ -84,7 +91,10 @@ final class TypeEntity extends Entity {
             }
             n += objectNullablePlaceholder.length;
             matched = true;
-          } else if (initialCleanBaseTypeString.startsWith(objectPlaceholder, n)) {
+          } else if (initialCleanBaseTypeString.startsWith(
+            objectPlaceholder,
+            n,
+          )) {
             if (subTypeIndex < subTypes.length) {
               buffer.write(_getTypeString(subTypes[subTypeIndex]));
               subTypeIndex++;
@@ -93,7 +103,10 @@ final class TypeEntity extends Entity {
             }
             n += objectPlaceholder.length;
             matched = true;
-          } else if (initialCleanBaseTypeString.startsWith(dynamicPlaceholder, n)) {
+          } else if (initialCleanBaseTypeString.startsWith(
+            dynamicPlaceholder,
+            n,
+          )) {
             if (subTypeIndex < subTypes.length) {
               buffer.write(_getTypeString(subTypes[subTypeIndex]));
               subTypeIndex++;

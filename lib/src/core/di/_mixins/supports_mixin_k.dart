@@ -154,10 +154,10 @@ base mixin SupportsMixinK on DIBase {
           final value = e.unwrap();
           registry.removeDependencyK(typeEntity, groupEntity: g);
           final metadata = option.unwrap().unwrap().metadata.map(
-                (e) => e.copyWith(
-                  preemptivetypeEntity: TypeEntity(Sync, [typeEntity]),
-                ),
-              );
+            (e) => e.copyWith(
+              preemptivetypeEntity: TypeEntity(Sync, [typeEntity]),
+            ),
+          );
           registerDependencyK(
             dependency: Dependency(Sync.value(Ok(value)), metadata: metadata),
             checkExisting: false,
@@ -173,7 +173,9 @@ base mixin SupportsMixinK on DIBase {
     required Dependency<T> dependency,
     bool checkExisting = false,
   }) {
-    final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
+    final g = dependency.metadata.isSome()
+        ? dependency.metadata.unwrap().groupEntity
+        : focusGroup;
     if (checkExisting) {
       final option = getDependencyK(
         dependency.typeEntity,
@@ -272,8 +274,9 @@ base mixin SupportsMixinK on DIBase {
           }
           registry.removeDependencyK(
             dependency.typeEntity,
-            groupEntity:
-                dependency.metadata.map((e) => e.groupEntity).unwrapOr(const DefaultEntity()),
+            groupEntity: dependency.metadata
+                .map((e) => e.groupEntity)
+                .unwrapOr(const DefaultEntity()),
           );
 
           final metadataOption = dependency.metadata;
@@ -303,10 +306,7 @@ base mixin SupportsMixinK on DIBase {
     Entity groupEntity = const DefaultEntity(),
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
-    var result = registry.removeDependencyK(
-      typeEntity,
-      groupEntity: g,
-    );
+    var result = registry.removeDependencyK(typeEntity, groupEntity: g);
     if (result.isNone()) {
       result = registry.removeDependencyK(
         TypeEntity(Lazy, [typeEntity]),
