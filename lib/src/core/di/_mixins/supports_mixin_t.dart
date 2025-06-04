@@ -144,7 +144,10 @@ base mixin SupportsMixinT on SupportsMixinK {
     Type type, {
     Entity groupEntity = const DefaultEntity(),
   }) {
-    return removeDependencyK<T>(TypeEntity(type), groupEntity: groupEntity);
+    return removeDependencyK<T>(
+      TypeEntity(type),
+      groupEntity: groupEntity,
+    );
   }
 
   @pragma('vm:prefer-inline')

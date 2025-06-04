@@ -48,9 +48,7 @@ base class DIBase {
     final metadata = DependencyMetadata(
       index: Some(_indexIncrementer++),
       groupEntity: g,
-      onUnregister: onUnregister != null
-          ? Some((e) => onUnregister(e.transf()))
-          : const None(),
+      onUnregister: onUnregister != null ? Some((e) => onUnregister(e.transf())) : const None(),
     );
     final a = Resolvable(
       () => consec(value, (e) => consec(onRegister?.call(e), (_) => e)),
@@ -83,14 +81,7 @@ base class DIBase {
   Option<Iterable<DI>> children() {
     return childrenContainer.map(
       (e) => e.registry.unsortedDependencies.map(
-        (e) => e
-            .transf<Lazy<DI>>()
-            .value
-            .unwrapSync()
-            .unwrap()
-            .singleton
-            .unwrapSync()
-            .unwrap(),
+        (e) => e.transf<Lazy<DI>>().value.unwrapSync().unwrap().singleton.unwrapSync().unwrap(),
       ),
     );
   }
@@ -129,9 +120,7 @@ base class DIBase {
     bool checkExisting = false,
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
-    final g = dependency.metadata.isSome()
-        ? dependency.metadata.unwrap().groupEntity
-        : focusGroup;
+    final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
     if (checkExisting) {
       final option = getDependency<T>(groupEntity: g, traverse: false);
       if (option.isSome()) {
@@ -182,10 +171,17 @@ base class DIBase {
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
     final g = groupEntity.preferOverDefault(focusGroup);
-    return registry
-            .removeDependency<T>(groupEntity: g)
-            .or(registry.removeDependency<Lazy<T>>(groupEntity: g))
-        as Option<Dependency>;
+    Option<Dependency> result;
+    result = registry.removeDependency<T>(
+      groupEntity: g,
+    );
+
+    if (result.isNone()) {
+      result = registry.removeDependency<Lazy<T>>(
+        groupEntity: g,
+      );
+    }
+    return result;
   }
 
   bool isRegistered<T extends Object>({
@@ -396,44 +392,5 @@ base class DIBase {
         })
         .comb2()
         .transf();
-  }
-
-  Resolvable<None> unregisterAll({
-    OnUnregisterCallback<Dependency>? onBeforeUnregister,
-    OnUnregisterCallback<Dependency>? onAfterUnregister,
-  }) {
-    final results = List.of(registry.reversedDependencies);
-    final sequential = SafeSequential();
-    for (final dependency in results) {
-      sequential
-        ..addSafe((_) {
-          return onBeforeUnregister?.call(Ok(dependency));
-        })
-        ..addSafe((_) {
-          registry.removeDependencyK(
-            dependency.typeEntity,
-            groupEntity: dependency.metadata
-                .map((e) => e.groupEntity)
-                .unwrapOr(const DefaultEntity()),
-          );
-
-          final metadataOption = dependency.metadata;
-          if (metadataOption.isSome()) {
-            final metadata = metadataOption.unwrap();
-            final onUnregisterOption = metadata.onUnregister;
-            if (onUnregisterOption.isSome()) {
-              final onUnregister = onUnregisterOption.unwrap();
-              return dependency.value
-                  .map((e) => onUnregister(Ok(e)) ?? SyncOk.value(const None()))
-                  .comb();
-            }
-          }
-          return null;
-        })
-        ..addSafe((_) {
-          return onAfterUnregister?.call(Ok(dependency));
-        });
-    }
-    return sequential.last;
   }
 }

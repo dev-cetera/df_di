@@ -32,13 +32,12 @@ final class DIRegistry {
 
   /// A snapshot describing the current state of the dependencies.
   RegistryState get state => RegistryState.unmodifiable(
-    _state,
-  ).map((k, v) => MapEntry(k, Map.unmodifiable(v)));
+        _state,
+      ).map((k, v) => MapEntry(k, Map.unmodifiable(v)));
 
   @protected
   @pragma('vm:prefer-inline')
-  Iterable<Dependency> get unsortedDependencies =>
-      _state.entries.expand((e) => e.value.values);
+  Iterable<Dependency> get unsortedDependencies => _state.entries.expand((e) => e.value.values);
 
   List<Dependency> get reversedDependencies {
     final entries = _state.entries.expand((e) => e.value.values);
@@ -71,9 +70,7 @@ final class DIRegistry {
   /// subtypes.
   @pragma('vm:prefer-inline')
   Iterable<Dependency> dependenciesWhereTypeK(Entity typeEntity) {
-    return reversedDependencies
-        .map((e) => e.typeEntity == typeEntity ? e : null)
-        .nonNulls;
+    return reversedDependencies.map((e) => e.typeEntity == typeEntity ? e : null).nonNulls;
   }
 
   /// A snapshot of the current group entities within [state].
@@ -102,8 +99,7 @@ final class DIRegistry {
   bool containsDependency<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
   }) {
-    return _state[groupEntity]?.values.any((e) => e.value is Resolvable<T>) ==
-        true;
+    return _state[groupEntity]?.values.any((e) => e.value is Resolvable<T>) == true;
   }
 
   /// Checks if any dependency with the exact [type] exists under the specified
@@ -119,8 +115,8 @@ final class DIRegistry {
     final a = TypeEntity(Sync, [type]);
     final b = TypeEntity(Async, [type]);
     return _state[groupEntity]?.values.any(
-          (e) => e.typeEntity == a || e.typeEntity == b,
-        ) ==
+              (e) => e.typeEntity == a || e.typeEntity == b,
+            ) ==
         true;
   }
 
@@ -137,8 +133,8 @@ final class DIRegistry {
     final a = TypeEntity(Sync, [typeEntity]);
     final b = TypeEntity(Async, [typeEntity]);
     return _state[groupEntity]?.values.any(
-          (e) => e.typeEntity == a || e.typeEntity == b,
-        ) ==
+              (e) => e.typeEntity == a || e.typeEntity == b,
+            ) ==
         true;
   }
 
@@ -182,18 +178,18 @@ final class DIRegistry {
     final b = TypeEntity(Async, [typeEntity]);
     return Option.fromNullable(
       _state[groupEntity]?.values.firstWhereOrNull(
-        (e) => e.typeEntity == a || e.typeEntity == b,
-      ),
+            (e) => e.typeEntity == a || e.typeEntity == b,
+          ),
     );
   }
 
   @protected
   @pragma('vm:prefer-inline')
-  Option<Dependency<T>> removeDependencyT<T extends Object>(
+  Option<Dependency> removeDependencyT<T extends Object>(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
   }) {
-    return removeDependencyK<T>(TypeEntity(type), groupEntity: groupEntity);
+    return removeDependencyK(TypeEntity(type), groupEntity: groupEntity);
   }
 
   Option<Dependency<T>> removeDependency<T extends Object>({
@@ -203,9 +199,7 @@ final class DIRegistry {
     if (group == null) {
       return const None();
     }
-    final key = group.entries
-        .firstWhereOrNull((e) => e.value.value is Resolvable<T>)
-        ?.key;
+    final key = group.entries.firstWhereOrNull((e) => e.value.value is Resolvable<T>)?.key;
     if (key == null) {
       return const None();
     }
@@ -213,28 +207,15 @@ final class DIRegistry {
     if (dependency == null) {
       return const None();
     }
+    if (group.isEmpty) {
+      removeGroup(groupEntity: groupEntity);
+    }
+    onChange.ifSome((e) => e.unwrap()());
     return Some(dependency.transf());
   }
 
-  Option<Dependency<T>> removeDependencyK<T extends Object>(
-    Entity typeEntity, {
-    Entity groupEntity = const DefaultEntity(),
-  }) {
-    final test = _removeDependencyK<T>(
-      TypeEntity(Sync, [typeEntity]),
-      groupEntity: groupEntity,
-    );
-    if (test.isNone()) {
-      return const None();
-    }
-    return _removeDependencyK<T>(
-      TypeEntity(Async, [typeEntity]),
-      groupEntity: groupEntity,
-    );
-  }
-
   @protected
-  Option<Dependency<T>> _removeDependencyK<T extends Object>(
+  Option<Dependency> removeDependencyK(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
   }) {
@@ -242,15 +223,16 @@ final class DIRegistry {
     if (group == null) {
       return const None();
     }
-
-    final removed = Option.fromNullable(group.remove(typeEntity));
+    Option<Dependency<Object>> removed;
+    removed = Option.fromNullable(group.remove(TypeEntity(Sync, [typeEntity])));
+    if (removed.isNone()) {
+      removed = Option.fromNullable(group.remove(TypeEntity(Async, [typeEntity])));
+    }
     if (removed.isNone()) {
       return const None();
     }
     if (group.isEmpty) {
       removeGroup(groupEntity: groupEntity);
-    } else {
-      setGroup(group, groupEntity: groupEntity);
     }
     onChange.ifSome((e) => e.unwrap()());
     return removed.map((e) => e.transf());

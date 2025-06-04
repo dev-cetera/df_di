@@ -154,10 +154,10 @@ base mixin SupportsMixinK on DIBase {
           final value = e.unwrap();
           registry.removeDependencyK(typeEntity, groupEntity: g);
           final metadata = option.unwrap().unwrap().metadata.map(
-            (e) => e.copyWith(
-              preemptivetypeEntity: TypeEntity(Sync, [typeEntity]),
-            ),
-          );
+                (e) => e.copyWith(
+                  preemptivetypeEntity: TypeEntity(Sync, [typeEntity]),
+                ),
+              );
           registerDependencyK(
             dependency: Dependency(Sync.value(Ok(value)), metadata: metadata),
             checkExisting: false,
@@ -173,9 +173,7 @@ base mixin SupportsMixinK on DIBase {
     required Dependency<T> dependency,
     bool checkExisting = false,
   }) {
-    final g = dependency.metadata.isSome()
-        ? dependency.metadata.unwrap().groupEntity
-        : focusGroup;
+    final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
     if (checkExisting) {
       final option = getDependencyK(
         dependency.typeEntity,
@@ -231,6 +229,7 @@ base mixin SupportsMixinK on DIBase {
       if (triggerOnUnregisterCallbacks) {
         final dependency = dependencyOption.unwrap();
         final metadataOption = dependency.metadata;
+
         if (metadataOption.isSome()) {
           final metadata = metadataOption.unwrap();
           final onUnregisterOption = metadata.onUnregister;
@@ -255,6 +254,48 @@ base mixin SupportsMixinK on DIBase {
     return sequential.last;
   }
 
+  Resolvable<None> unregisterAll({
+    OnUnregisterCallback<Dependency>? onBeforeUnregister,
+    OnUnregisterCallback<Dependency>? onAfterUnregister,
+    bool Function(Dependency)? condition,
+  }) {
+    final results = List.of(registry.reversedDependencies);
+    final sequential = SafeSequential();
+    for (final dependency in results) {
+      sequential
+        ..addSafe((_) {
+          return onBeforeUnregister?.call(Ok(dependency));
+        })
+        ..addSafe((_) {
+          if (condition != null && !condition(dependency)) {
+            return null;
+          }
+          registry.removeDependencyK(
+            dependency.typeEntity,
+            groupEntity:
+                dependency.metadata.map((e) => e.groupEntity).unwrapOr(const DefaultEntity()),
+          );
+
+          final metadataOption = dependency.metadata;
+          if (metadataOption.isSome()) {
+            final metadata = metadataOption.unwrap();
+            final onUnregisterOption = metadata.onUnregister;
+            if (onUnregisterOption.isSome()) {
+              final onUnregister = onUnregisterOption.unwrap();
+              return dependency.value
+                  .map((e) => onUnregister(Ok(e)) ?? SyncOk.value(const None()))
+                  .comb();
+            }
+          }
+          return null;
+        })
+        ..addSafe((_) {
+          return onAfterUnregister?.call(Ok(dependency));
+        });
+    }
+    return sequential.last;
+  }
+
   @protected
   @pragma('vm:prefer-inline')
   Option<Dependency> removeDependencyK<T extends Object>(
@@ -262,15 +303,17 @@ base mixin SupportsMixinK on DIBase {
     Entity groupEntity = const DefaultEntity(),
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
-    return registry
-            .removeDependencyK<T>(typeEntity, groupEntity: g)
-            .or(
-              registry.removeDependencyK<Lazy<T>>(
-                TypeEntity(Lazy, [typeEntity]),
-                groupEntity: g,
-              ),
-            )
-        as Option<Dependency>;
+    var result = registry.removeDependencyK(
+      typeEntity,
+      groupEntity: g,
+    );
+    if (result.isNone()) {
+      result = registry.removeDependencyK(
+        TypeEntity(Lazy, [typeEntity]),
+        groupEntity: g,
+      );
+    }
+    return result;
   }
 
   @protected
@@ -341,8 +384,6 @@ base mixin SupportsMixinK on DIBase {
       (finishersK[g] ??= []).add(finisher);
     }
     return finisher.resolvable().map((_) {
-      //
-      //
       final temp = finishersK[g] ?? [];
       for (var n = 0; n < temp.length; n++) {
         final e = temp[n];
@@ -351,8 +392,6 @@ base mixin SupportsMixinK on DIBase {
           break;
         }
       }
-      //
-      //
       return getK<T>(typeEntity, groupEntity: g).unwrap();
     }).comb2();
   }
