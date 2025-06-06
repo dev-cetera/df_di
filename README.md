@@ -8,7 +8,7 @@ Dart & Flutter Packages by dev-cetera.com & contributors.
 
 ---
 
-Documnetation coming soon.
+Documentation coming soon.
 
 <!-- Efficiently structure and manage the essential dependencies of your code, such as services, data, and utilities. This package helps you organize and access these dependencies using containers that store and provide them when needed, making your app more adaptable, testable, maintainable, and easier to debug.
 
