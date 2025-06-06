@@ -48,9 +48,7 @@ base class DIBase {
     final metadata = DependencyMetadata(
       index: Some(_indexIncrementer++),
       groupEntity: g,
-      onUnregister: onUnregister != null
-          ? Some((e) => onUnregister(e.transf()))
-          : const None(),
+      onUnregister: onUnregister != null ? Some((e) => onUnregister(e.transf())) : const None(),
     );
     final a = Resolvable(
       () => consec(value, (e) => consec(onRegister?.call(e), (_) => e)),
@@ -62,7 +60,7 @@ base class DIBase {
     if (b.isErr()) {
       return Sync.value(b.err().transErr());
     }
-    if (value is! ReservedSafeFinisher) {
+    if (value is! ReservedSafeFinisher<T>) {
       // Used for until.
       _maybeFinish<T>(value: value, g: g);
 
@@ -83,14 +81,7 @@ base class DIBase {
   Option<Iterable<DI>> children() {
     return childrenContainer.map(
       (e) => e.registry.unsortedDependencies.map(
-        (e) => e
-            .transf<Lazy<DI>>()
-            .value
-            .unwrapSync()
-            .unwrap()
-            .singleton
-            .unwrapSync()
-            .unwrap(),
+        (e) => e.transf<Lazy<DI>>().value.unwrapSync().unwrap().singleton.unwrapSync().unwrap(),
       ),
     );
   }
@@ -108,7 +99,7 @@ base class DIBase {
           .map((e) => e.unwrapSync().value)
           .where((e) => e.isOk())
           .map((e) => e.unwrap())
-          .whereType<ReservedSafeFinisher>();
+          .whereType<ReservedSafeFinisher<T>>();
       if (finishers == null) continue;
       // Try each one to see if they can finish. It will only be able to finish
       // if value is compatible with the finisher.
@@ -129,9 +120,7 @@ base class DIBase {
     bool checkExisting = false,
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
-    final g = dependency.metadata.isSome()
-        ? dependency.metadata.unwrap().groupEntity
-        : focusGroup;
+    final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
     if (checkExisting) {
       final option = getDependency<T>(groupEntity: g, traverse: false);
       if (option.isSome()) {

@@ -105,6 +105,56 @@ class Parent extends Grandparent {}
 
 class Child extends Parent {}
 
+// Source: ./example/unregister.dart
+//.title
+// ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+//
+// Dart/Flutter (DF) Packages by dev-cetera.com & contributors. The use of this
+// source code is governed by an MIT-style license described in the LICENSE
+// file located in this project's root directory.
+//
+// See: https://opensource.org/license/mit
+//
+// ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+//.title~
+
+// import 'package:df_di/df_di.dart';
+
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+void main() async {
+  final di = DI();
+  di.register<int>(
+    1,
+    onUnregister: (value) {
+      print('Unregistering value: $value');
+      return null;
+    },
+  );
+  di.register<int>(
+    2,
+    groupEntity: Entity.obj('group2'),
+    onUnregister: (value) {
+      print('Unregistering value: $value');
+      return null;
+    },
+  );
+  // di.unregisterT(
+  //   int,
+  //   groupEntity: Entity.obj('group2'),
+  // );
+  di.unregisterAll(
+    onBeforeUnregister: (value) {
+      print('Before unregistering value: $value');
+      return null;
+    },
+    onAfterUnregister: (value) {
+      print('After unregistering value: $value');
+      return null;
+    },
+  );
+}
+
 // Source: ./example/example.dart
 //.title
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
@@ -1186,7 +1236,7 @@ Future<void> b5() async {
     },
     di: () {
       final container2 = DI();
-      container2.registerLazy<Map<int, String>>(() => SyncOk({1: 'some data'}));
+      container2.registerLazy<Map<int, String>>(() => SyncOk.value({1: 'some data'}));
       container2.getLazySingleton<Map<int, String>>();
     },
   );
@@ -1202,7 +1252,7 @@ Future<void> b4() async {
   final container1 = GetIt.asNewInstance();
   container1.registerLazySingleton<Map<int, String>>(() => {1: 'some data'});
   final container2 = DI();
-  container2.registerLazy<Map<int, String>>(() => SyncOk({1: 'some data'}));
+  container2.registerLazy<Map<int, String>>(() => SyncOk.value({1: 'some data'}));
   await runBenchmarkComparison(
     'Comparing - get lazy singletons',
     getIt: () {
@@ -1864,6 +1914,9 @@ void main() {
   // flutter build web --wasm --release --optimization-level 4
   // dart pub global activate dhttpd
   // dhttpd --path build/web --port 8080
+  // KILLING:
+  // lsof -i :8080
+  // kill -9 <PID>
   final isObfuscated = 'List<int>' != '${List<int>}';
   print('Is obfuscated: $isObfuscated');
   testObfuscationIssue();
@@ -2216,80 +2269,10 @@ DateTime parseReleaseDate(String line) {
 /// A pragmatic dependency injection (DI) system, coupled with service classes for seamless state management in Dart.
 library;
 
-export 'src/_index.g.dart';
+export 'src/_src.g.dart';
 
 export 'package:df_type/df_type.dart';
 export 'package:df_safer_dart/df_safer_dart.dart';
-
-// Source: ./lib/src/core/di/di.dart.dart
-//.title
-// ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-//
-// Dart/Flutter (DF) Packages by dev-cetera.com & contributors. The use of this
-// source code is governed by an MIT-style license described in the LICENSE
-// file located in this project's root directory.
-//
-// See: https://opensource.org/license/mit
-//
-// ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-//.title~
-
-// import '/src/_common.dart';
-
-// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-
-final class DI extends DIBase
-    with
-        SupportsMixinK,
-        SupportsMixinT,
-        SupportsConstructorsMixin,
-        SupportsConstructorsMixinK,
-        SupportsConstructorsMixinT,
-        SupportsChildrenMixin,
-        SupportsServicesMixin,
-        SupportsServicesMixinK,
-        SupportsServicesMixinT {
-  DI();
-
-  /// A predefined container recommended for application-wide dependencies.
-  /// This container serves as the parent for other containers.
-  static final root = DI();
-
-  /// A predefined container recommended for global dependencies. This
-  /// container is a child of [root].
-  @pragma('vm:prefer-inline')
-  static DI get global => root.child(groupEntity: const GlobalEntity());
-
-  /// A predefined container recommended for session-specific dependencies.
-  /// This container is a child of [global].
-  @pragma('vm:prefer-inline')
-  static DI get session => global.child(groupEntity: const SessionEntity());
-
-  /// A predefined container recommended for user-specific dependencies.
-  /// This container is a child of [session].
-  @pragma('vm:prefer-inline')
-  static DI get user => session.child(groupEntity: const UserEntity());
-
-  /// A predefined container recommended for theme-related objects.
-  /// This container is a child of [root].
-  @pragma('vm:prefer-inline')
-  static DI get theme => root.child(groupEntity: const ThemeEntity());
-
-  /// A predefined container recommended for objects intended for development
-  /// environments. This container is a child of [root].
-  @pragma('vm:prefer-inline')
-  static DI get dev => root.child(groupEntity: const DevEntity());
-
-  /// A predefined container recommended for objects intended for production
-  /// environments. This container is a child of [root].
-  @pragma('vm:prefer-inline')
-  static DI get prod => root.child(groupEntity: const ProdEntity());
-
-  /// A predefined container recommended for objects intended for testing
-  /// environments. This container is a child of [root].
-  @pragma('vm:prefer-inline')
-  static DI get test => root.child(groupEntity: const TestEntity());
-}
 
 // Source: ./lib/src/core/di/_dependency.dart
 //.title
@@ -2463,6 +2446,76 @@ typedef OnUnregisterCallback<T extends Object> =
 @internal
 typedef DependencyValidator<T extends Object> = bool Function(T value);
 
+// Source: ./lib/src/core/di/di.dart
+//.title
+// ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+//
+// Dart/Flutter (DF) Packages by dev-cetera.com & contributors. The use of this
+// source code is governed by an MIT-style license described in the LICENSE
+// file located in this project's root directory.
+//
+// See: https://opensource.org/license/mit
+//
+// ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+//.title~
+
+// import '/src/_common.dart';
+
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+final class DI extends DIBase
+    with
+        SupportsMixinK,
+        SupportsMixinT,
+        SupportsConstructorsMixin,
+        SupportsConstructorsMixinK,
+        SupportsConstructorsMixinT,
+        SupportsChildrenMixin,
+        SupportsServicesMixin,
+        SupportsServicesMixinK,
+        SupportsServicesMixinT {
+  DI();
+
+  /// A predefined container recommended for application-wide dependencies.
+  /// This container serves as the parent for other containers.
+  static final root = DI();
+
+  /// A predefined container recommended for global dependencies. This
+  /// container is a child of [root].
+  @pragma('vm:prefer-inline')
+  static DI get global => root.child(groupEntity: const GlobalEntity());
+
+  /// A predefined container recommended for session-specific dependencies.
+  /// This container is a child of [global].
+  @pragma('vm:prefer-inline')
+  static DI get session => global.child(groupEntity: const SessionEntity());
+
+  /// A predefined container recommended for user-specific dependencies.
+  /// This container is a child of [session].
+  @pragma('vm:prefer-inline')
+  static DI get user => session.child(groupEntity: const UserEntity());
+
+  /// A predefined container recommended for theme-related objects.
+  /// This container is a child of [root].
+  @pragma('vm:prefer-inline')
+  static DI get theme => root.child(groupEntity: const ThemeEntity());
+
+  /// A predefined container recommended for objects intended for development
+  /// environments. This container is a child of [root].
+  @pragma('vm:prefer-inline')
+  static DI get dev => root.child(groupEntity: const DevEntity());
+
+  /// A predefined container recommended for objects intended for production
+  /// environments. This container is a child of [root].
+  @pragma('vm:prefer-inline')
+  static DI get prod => root.child(groupEntity: const ProdEntity());
+
+  /// A predefined container recommended for objects intended for testing
+  /// environments. This container is a child of [root].
+  @pragma('vm:prefer-inline')
+  static DI get test => root.child(groupEntity: const TestEntity());
+}
+
 // Source: ./lib/src/core/di/_di_registry.dart
 //.title
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
@@ -2498,13 +2551,12 @@ final class DIRegistry {
 
   /// A snapshot describing the current state of the dependencies.
   RegistryState get state => RegistryState.unmodifiable(
-    _state,
-  ).map((k, v) => MapEntry(k, Map.unmodifiable(v)));
+        _state,
+      ).map((k, v) => MapEntry(k, Map.unmodifiable(v)));
 
   @protected
   @pragma('vm:prefer-inline')
-  Iterable<Dependency> get unsortedDependencies =>
-      _state.entries.expand((e) => e.value.values);
+  Iterable<Dependency> get unsortedDependencies => _state.entries.expand((e) => e.value.values);
 
   List<Dependency> get reversedDependencies {
     final entries = _state.entries.expand((e) => e.value.values);
@@ -2537,9 +2589,7 @@ final class DIRegistry {
   /// subtypes.
   @pragma('vm:prefer-inline')
   Iterable<Dependency> dependenciesWhereTypeK(Entity typeEntity) {
-    return reversedDependencies
-        .map((e) => e.typeEntity == typeEntity ? e : null)
-        .nonNulls;
+    return reversedDependencies.map((e) => e.typeEntity == typeEntity ? e : null).nonNulls;
   }
 
   /// A snapshot of the current group entities within [state].
@@ -2568,8 +2618,7 @@ final class DIRegistry {
   bool containsDependency<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
   }) {
-    return _state[groupEntity]?.values.any((e) => e.value is Resolvable<T>) ==
-        true;
+    return _state[groupEntity]?.values.any((e) => e.value is Resolvable<T>) == true;
   }
 
   /// Checks if any dependency with the exact [type] exists under the specified
@@ -2585,8 +2634,8 @@ final class DIRegistry {
     final a = TypeEntity(Sync, [type]);
     final b = TypeEntity(Async, [type]);
     return _state[groupEntity]?.values.any(
-          (e) => e.typeEntity == a || e.typeEntity == b,
-        ) ==
+              (e) => e.typeEntity == a || e.typeEntity == b,
+            ) ==
         true;
   }
 
@@ -2603,8 +2652,8 @@ final class DIRegistry {
     final a = TypeEntity(Sync, [typeEntity]);
     final b = TypeEntity(Async, [typeEntity]);
     return _state[groupEntity]?.values.any(
-          (e) => e.typeEntity == a || e.typeEntity == b,
-        ) ==
+              (e) => e.typeEntity == a || e.typeEntity == b,
+            ) ==
         true;
   }
 
@@ -2614,8 +2663,7 @@ final class DIRegistry {
     Entity groupEntity = const DefaultEntity(),
   }) {
     return Option.fromNullable(
-      _state[groupEntity]?.values.whereType<Dependency<T>>().firstOrNull,
-      //_state[groupEntity]?.values.firstWhereOrNull((e) => e.value is Resolvable<T>)?.trans<T>(),
+      _state[groupEntity]?.values.firstWhereOrNull((e) => e.value is Resolvable<T>)?.transf<T>(),
     );
   }
 
@@ -2648,18 +2696,18 @@ final class DIRegistry {
     final b = TypeEntity(Async, [typeEntity]);
     return Option.fromNullable(
       _state[groupEntity]?.values.firstWhereOrNull(
-        (e) => e.typeEntity == a || e.typeEntity == b,
-      ),
+            (e) => e.typeEntity == a || e.typeEntity == b,
+          ),
     );
   }
 
   @protected
   @pragma('vm:prefer-inline')
-  Option<Dependency<T>> removeDependencyT<T extends Object>(
+  Option<Dependency> removeDependencyT<T extends Object>(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
   }) {
-    return removeDependencyK<T>(TypeEntity(type), groupEntity: groupEntity);
+    return removeDependencyK(TypeEntity(type), groupEntity: groupEntity);
   }
 
   Option<Dependency<T>> removeDependency<T extends Object>({
@@ -2669,9 +2717,7 @@ final class DIRegistry {
     if (group == null) {
       return const None();
     }
-    final key = group.entries
-        .firstWhereOrNull((e) => e.value.value is Resolvable<T>)
-        ?.key;
+    final key = group.entries.firstWhereOrNull((e) => e.value.value is Resolvable<T>)?.key;
     if (key == null) {
       return const None();
     }
@@ -2679,28 +2725,15 @@ final class DIRegistry {
     if (dependency == null) {
       return const None();
     }
+    if (group.isEmpty) {
+      removeGroup(groupEntity: groupEntity);
+    }
+    onChange.ifSome((e) => e.unwrap()());
     return Some(dependency.transf());
   }
 
-  Option<Dependency<T>> removeDependencyK<T extends Object>(
-    Entity typeEntity, {
-    Entity groupEntity = const DefaultEntity(),
-  }) {
-    final test = _removeDependencyK<T>(
-      TypeEntity(Sync, [typeEntity]),
-      groupEntity: groupEntity,
-    );
-    if (test.isNone()) {
-      return const None();
-    }
-    return _removeDependencyK<T>(
-      TypeEntity(Async, [typeEntity]),
-      groupEntity: groupEntity,
-    );
-  }
-
   @protected
-  Option<Dependency<T>> _removeDependencyK<T extends Object>(
+  Option<Dependency> removeDependencyK(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
   }) {
@@ -2708,15 +2741,18 @@ final class DIRegistry {
     if (group == null) {
       return const None();
     }
-
-    final removed = Option.fromNullable(group.remove(typeEntity));
+    Option<Dependency<Object>> removed;
+    removed = Option.fromNullable(group.remove(TypeEntity(Sync, [typeEntity])));
+    if (removed.isNone()) {
+      removed = Option.fromNullable(
+        group.remove(TypeEntity(Async, [typeEntity])),
+      );
+    }
     if (removed.isNone()) {
       return const None();
     }
     if (group.isEmpty) {
       removeGroup(groupEntity: groupEntity);
-    } else {
-      setGroup(group, groupEntity: groupEntity);
     }
     onChange.ifSome((e) => e.unwrap()());
     return removed.map((e) => e.transf());
@@ -2839,9 +2875,7 @@ base class DIBase {
     final metadata = DependencyMetadata(
       index: Some(_indexIncrementer++),
       groupEntity: g,
-      onUnregister: onUnregister != null
-          ? Some((e) => onUnregister(e.transf()))
-          : const None(),
+      onUnregister: onUnregister != null ? Some((e) => onUnregister(e.transf())) : const None(),
     );
     final a = Resolvable(
       () => consec(value, (e) => consec(onRegister?.call(e), (_) => e)),
@@ -2874,14 +2908,7 @@ base class DIBase {
   Option<Iterable<DI>> children() {
     return childrenContainer.map(
       (e) => e.registry.unsortedDependencies.map(
-        (e) => e
-            .transf<Lazy<DI>>()
-            .value
-            .unwrapSync()
-            .unwrap()
-            .singleton
-            .unwrapSync()
-            .unwrap(),
+        (e) => e.transf<Lazy<DI>>().value.unwrapSync().unwrap().singleton.unwrapSync().unwrap(),
       ),
     );
   }
@@ -2920,9 +2947,7 @@ base class DIBase {
     bool checkExisting = false,
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
-    final g = dependency.metadata.isSome()
-        ? dependency.metadata.unwrap().groupEntity
-        : focusGroup;
+    final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
     if (checkExisting) {
       final option = getDependency<T>(groupEntity: g, traverse: false);
       if (option.isSome()) {
@@ -2973,10 +2998,13 @@ base class DIBase {
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
     final g = groupEntity.preferOverDefault(focusGroup);
-    return registry
-            .removeDependency<T>(groupEntity: g)
-            .or(registry.removeDependency<Lazy<T>>(groupEntity: g))
-        as Option<Dependency>;
+    Option<Dependency> result;
+    result = registry.removeDependency<T>(groupEntity: g);
+
+    if (result.isNone()) {
+      result = registry.removeDependency<Lazy<T>>(groupEntity: g);
+    }
+    return result;
   }
 
   bool isRegistered<T extends Object>({
@@ -3183,49 +3211,15 @@ base class DIBase {
         .resolvable()
         .map((_) {
           unregister<ReservedSafeFinisher<TSuper>>(groupEntity: g);
-          return get<TSuper>(groupEntity: g).unwrap();
+
+          /// BUG: THE error happens here, unwrap throws because the item doesn't exist!!!! untilT works fine but this doesn't in -04
+          print('!! - 1');
+          final b = get<TSuper>(groupEntity: g).unwrap();
+          print('!! - 2');
+          return b;
         })
         .comb2()
         .transf();
-  }
-
-  Resolvable<None> unregisterAll({
-    OnUnregisterCallback<Dependency>? onBeforeUnregister,
-    OnUnregisterCallback<Dependency>? onAfterUnregister,
-  }) {
-    final results = List.of(registry.reversedDependencies);
-    final sequential = SafeSequential();
-    for (final dependency in results) {
-      sequential
-        ..addSafe((_) {
-          return onBeforeUnregister?.call(Ok(dependency));
-        })
-        ..addSafe((_) {
-          registry.removeDependencyK(
-            dependency.typeEntity,
-            groupEntity: dependency.metadata
-                .map((e) => e.groupEntity)
-                .unwrapOr(const DefaultEntity()),
-          );
-
-          final metadataOption = dependency.metadata;
-          if (metadataOption.isSome()) {
-            final metadata = metadataOption.unwrap();
-            final onUnregisterOption = metadata.onUnregister;
-            if (onUnregisterOption.isSome()) {
-              final onUnregister = onUnregisterOption.unwrap();
-              return dependency.value
-                  .map((e) => onUnregister(Ok(e)) ?? SyncOk.value(const None()))
-                  .comb();
-            }
-          }
-          return null;
-        })
-        ..addSafe((_) {
-          return onAfterUnregister?.call(Ok(dependency));
-        });
-    }
-    return sequential.last;
   }
 }
 
@@ -4141,6 +4135,7 @@ base mixin SupportsMixinK on DIBase {
       if (triggerOnUnregisterCallbacks) {
         final dependency = dependencyOption.unwrap();
         final metadataOption = dependency.metadata;
+
         if (metadataOption.isSome()) {
           final metadata = metadataOption.unwrap();
           final onUnregisterOption = metadata.onUnregister;
@@ -4165,6 +4160,49 @@ base mixin SupportsMixinK on DIBase {
     return sequential.last;
   }
 
+  Resolvable<None> unregisterAll({
+    OnUnregisterCallback<Dependency>? onBeforeUnregister,
+    OnUnregisterCallback<Dependency>? onAfterUnregister,
+    bool Function(Dependency)? condition,
+  }) {
+    final results = List.of(registry.reversedDependencies);
+    final sequential = SafeSequential();
+    for (final dependency in results) {
+      sequential
+        ..addSafe((_) {
+          return onBeforeUnregister?.call(Ok(dependency));
+        })
+        ..addSafe((_) {
+          if (condition != null && !condition(dependency)) {
+            return null;
+          }
+          registry.removeDependencyK(
+            dependency.typeEntity,
+            groupEntity: dependency.metadata
+                .map((e) => e.groupEntity)
+                .unwrapOr(const DefaultEntity()),
+          );
+
+          final metadataOption = dependency.metadata;
+          if (metadataOption.isSome()) {
+            final metadata = metadataOption.unwrap();
+            final onUnregisterOption = metadata.onUnregister;
+            if (onUnregisterOption.isSome()) {
+              final onUnregister = onUnregisterOption.unwrap();
+              return dependency.value
+                  .map((e) => onUnregister(Ok(e)) ?? SyncOk.value(const None()))
+                  .comb();
+            }
+          }
+          return null;
+        })
+        ..addSafe((_) {
+          return onAfterUnregister?.call(Ok(dependency));
+        });
+    }
+    return sequential.last;
+  }
+
   @protected
   @pragma('vm:prefer-inline')
   Option<Dependency> removeDependencyK<T extends Object>(
@@ -4172,15 +4210,14 @@ base mixin SupportsMixinK on DIBase {
     Entity groupEntity = const DefaultEntity(),
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
-    return registry
-            .removeDependencyK<T>(typeEntity, groupEntity: g)
-            .or(
-              registry.removeDependencyK<Lazy<T>>(
-                TypeEntity(Lazy, [typeEntity]),
-                groupEntity: g,
-              ),
-            )
-        as Option<Dependency>;
+    var result = registry.removeDependencyK(typeEntity, groupEntity: g);
+    if (result.isNone()) {
+      result = registry.removeDependencyK(
+        TypeEntity(Lazy, [typeEntity]),
+        groupEntity: g,
+      );
+    }
+    return result;
   }
 
   @protected
@@ -4251,8 +4288,6 @@ base mixin SupportsMixinK on DIBase {
       (finishersK[g] ??= []).add(finisher);
     }
     return finisher.resolvable().map((_) {
-      //
-      //
       final temp = finishersK[g] ?? [];
       for (var n = 0; n < temp.length; n++) {
         final e = temp[n];
@@ -4261,8 +4296,6 @@ base mixin SupportsMixinK on DIBase {
           break;
         }
       }
-      //
-      //
       return getK<T>(typeEntity, groupEntity: g).unwrap();
     }).comb2();
   }
@@ -4697,7 +4730,9 @@ final class TypeEntity extends Entity {
     String finalTypeString;
 
     if (subTypes.isNotEmpty) {
-      final isSimpleIdentifier = !initialCleanBaseTypeString.contains(RegExp(r'[<>,?]'));
+      final isSimpleIdentifier = !initialCleanBaseTypeString.contains(
+        RegExp(r'[<>,?]'),
+      );
       if (isSimpleIdentifier) {
         final subTypeStrings = subTypes.map((st) => _getTypeString(st)).join(',');
         finalTypeString = '$initialCleanBaseTypeString<$subTypeStrings>';
@@ -4711,7 +4746,10 @@ final class TypeEntity extends Entity {
         var n = 0;
         while (n < initialCleanBaseTypeString.length) {
           var matched = false;
-          if (initialCleanBaseTypeString.startsWith(objectNullablePlaceholder, n)) {
+          if (initialCleanBaseTypeString.startsWith(
+            objectNullablePlaceholder,
+            n,
+          )) {
             if (subTypeIndex < subTypes.length) {
               buffer.write(_getTypeString(subTypes[subTypeIndex]));
               subTypeIndex++;
@@ -4720,7 +4758,10 @@ final class TypeEntity extends Entity {
             }
             n += objectNullablePlaceholder.length;
             matched = true;
-          } else if (initialCleanBaseTypeString.startsWith(objectPlaceholder, n)) {
+          } else if (initialCleanBaseTypeString.startsWith(
+            objectPlaceholder,
+            n,
+          )) {
             if (subTypeIndex < subTypes.length) {
               buffer.write(_getTypeString(subTypes[subTypeIndex]));
               subTypeIndex++;
@@ -4729,7 +4770,10 @@ final class TypeEntity extends Entity {
             }
             n += objectPlaceholder.length;
             matched = true;
-          } else if (initialCleanBaseTypeString.startsWith(dynamicPlaceholder, n)) {
+          } else if (initialCleanBaseTypeString.startsWith(
+            dynamicPlaceholder,
+            n,
+          )) {
             if (subTypeIndex < subTypes.length) {
               buffer.write(_getTypeString(subTypes[subTypeIndex]));
               subTypeIndex++;
@@ -4756,7 +4800,7 @@ final class TypeEntity extends Entity {
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 final class GenericEntity<T> extends TypeEntity {
-  GenericEntity._(String typeString) : super._obj(typeString);
+  GenericEntity._(super.typeString) : super._obj();
 
   factory GenericEntity() {
     // This will use the TypeEntity factory to construct the canonical string for T
@@ -4993,17 +5037,6 @@ final class ReservedSafeFinisher<T extends Object> extends SafeFinisher<T> {
 
   @override
   bool operator ==(Object other) => identical(this, other);
-
-  // static ReservedSafeFinisher<T> castFrom<T extends Object, E extends Object>(
-  //   ReservedSafeFinisher<E> input,
-  // ) {
-  //   final test = <ReservedSafeFinisher<E>>[input];
-  //   return test.cast<ReservedSafeFinisher<T>>().first;
-  // }
-
-  // ReservedSafeFinisher<E> castTo<E extends Object>() {
-  //   return ReservedSafeFinisher.castFrom<E, T>(this);
-  // }
 
   @override
   int get hashCode {
@@ -5282,7 +5315,7 @@ export 'package:df_safer_dart/df_safer_dart.dart';
 export 'package:df_type/df_type.dart';
 export 'package:meta/meta.dart';
 
-export '_index.g.dart';
+export '_src.g.dart';
 
 export 'core/di/_di_registry.dart';
 export 'core/di/_dependency.dart';
@@ -5586,18 +5619,18 @@ abstract class Component extends Equatable {
   const Component();
 }
 
-// Source: ./lib/src/_index.g.dart
+// Source: ./lib/src/_src.g.dart
 //.title
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //
 // GENERATED - DO NOT MODIFY BY HAND
-// See: https://github.com/DevCetra/df_generate_dart_indexes
+// See: https://github.com/dev-cetera/df_generate_dart_indexes
 //
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-export './core/di/di.dart.dart';
-export 'core/entity/reserved_entities.dart';
+export 'core/di/di.dart';
+export './core/entity/reserved_entities.dart';
 export './core/entity/type_entity.dart';
 export './core/entity/entity.dart';
 export './core/entity/unique_entity.dart';

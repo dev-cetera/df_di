@@ -13,7 +13,7 @@
 /// A pragmatic dependency injection (DI) system, coupled with service classes for seamless state management in Dart.
 library;
 
-export 'src/_index.g.dart';
+export 'src/_src.g.dart';
 
 export 'package:df_type/df_type.dart';
 export 'package:df_safer_dart/df_safer_dart.dart';

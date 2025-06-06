@@ -8,14 +8,7 @@ Dart & Flutter Packages by dev-cetera.com & contributors.
 
 ---
 
-## WebAssembly (WASM) Support
-
-When building a Flutter web app with WebAssembly (WASM) support, you may encounter some limitations regarding the optimization levels. Level 3 and 4 are not supported for WASM builds.
-
-```sh
-flutter build web --release --wasm --optimization-level 3 # not supported
-flutter build web --release --wasm --optimization-level 4 # not supported
-```
+Documnetation coming soon.
 
 <!-- Efficiently structure and manage the essential dependencies of your code, such as services, data, and utilities. This package helps you organize and access these dependencies using containers that store and provide them when needed, making your app more adaptable, testable, maintainable, and easier to debug.
 

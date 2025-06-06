@@ -19,7 +19,7 @@ export 'package:df_safer_dart/df_safer_dart.dart';
 export 'package:df_type/df_type.dart';
 export 'package:meta/meta.dart';
 
-export '_index.g.dart';
+export '_src.g.dart';
 
 export 'core/di/_di_registry.dart';
 export 'core/di/_dependency.dart';

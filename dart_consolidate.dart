@@ -31,11 +31,7 @@ void main(List<String> arguments) async {
   print('Consolidation complete. Output written to ${outputFile.path}');
 }
 
-Future<void> _processDirectory(
-  Directory dir,
-  IOSink sink,
-  Set<String> imports,
-) async {
+Future<void> _processDirectory(Directory dir, IOSink sink, Set<String> imports) async {
   await for (final entity in dir.list(recursive: true, followLinks: false)) {
     if (entity is File && entity.path.endsWith('.dart')) {
       await _collectImports(entity, imports);
@@ -48,8 +44,7 @@ Future<void> _collectImports(File file, Set<String> imports) async {
   for (var line in lines) {
     final trimmedLine = line.trim();
     if (trimmedLine.startsWith('import ')) {
-      if (trimmedLine.startsWith("import 'package:") ||
-          trimmedLine.startsWith("import 'dart:")) {
+      if (trimmedLine.startsWith("import 'package:") || trimmedLine.startsWith("import 'dart:")) {
         imports.add(line); // Store non-local imports
       }
     }

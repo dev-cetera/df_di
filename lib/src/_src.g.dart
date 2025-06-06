@@ -2,13 +2,13 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //
 // GENERATED - DO NOT MODIFY BY HAND
-// See: https://github.com/DevCetra/df_generate_dart_indexes
+// See: https://github.com/dev-cetera/df_generate_dart_indexes
 //
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-export './core/di/di.dart.dart';
-export 'core/entity/reserved_entities.dart';
+export 'core/di/di.dart';
+export './core/entity/reserved_entities.dart';
 export './core/entity/type_entity.dart';
 export './core/entity/entity.dart';
 export './core/entity/unique_entity.dart';
