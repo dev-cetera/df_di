@@ -7,7 +7,9 @@ Future<void> b4() async {
   final container1 = GetIt.asNewInstance();
   container1.registerLazySingleton<Map<int, String>>(() => {1: 'some data'});
   final container2 = DI();
-  container2.registerLazy<Map<int, String>>(() => SyncOk.value({1: 'some data'}));
+  container2.registerLazy<Map<int, String>>(
+    () => SyncOk.value({1: 'some data'}),
+  );
   await runBenchmarkComparison(
     'Comparing - get lazy singletons',
     getIt: () {

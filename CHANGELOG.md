@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.10.25]
+
+- Released @ 6/2025 (UTC)
+- bugfix: Fix issue with until function when passing --wasm --optimization-level 4
+
 ## [0.10.24]
 
 - Released @ 6/2025 (UTC)

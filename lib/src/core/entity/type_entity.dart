@@ -53,8 +53,8 @@ final class TypeEntity extends Entity {
   }
 
   TypeEntity._obj(String typeString)
-      : _typeString = typeString,
-        super(Entity.objId(typeString));
+    : _typeString = typeString,
+      super(Entity.objId(typeString));
 
   factory TypeEntity(Object baseType, [List<Object> subTypes = const []]) {
     final initialCleanBaseTypeString = _getTypeString(baseType);
@@ -65,7 +65,9 @@ final class TypeEntity extends Entity {
         RegExp(r'[<>,?]'),
       );
       if (isSimpleIdentifier) {
-        final subTypeStrings = subTypes.map((st) => _getTypeString(st)).join(',');
+        final subTypeStrings = subTypes
+            .map((st) => _getTypeString(st))
+            .join(',');
         finalTypeString = '$initialCleanBaseTypeString<$subTypeStrings>';
       } else {
         final objectPlaceholder = _getTypeString(Object);
