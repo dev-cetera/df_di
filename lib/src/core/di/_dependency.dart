@@ -19,29 +19,47 @@ import '/src/_common.dart';
 /// lifecycle.
 @internal
 final class Dependency<T extends Object> {
-  Dependency(this.value, {this.metadata = const None()}) {
+  Resolvable<T> _value;
+
+  Dependency(this._value, {this.metadata = const None()}) {
     if (this.metadata.isSome()) {
       final a = this.metadata.unwrap();
       if (a._initialType.isSome()) {
-        a._initialType = Some(value.runtimeType);
+        a._initialType = Some(_value.runtimeType);
       }
     }
   }
 
-  Dependency._internal(this.value, {required this.metadata});
+  Dependency._internal(this._value, {required this.metadata});
 
   /// The value contained within this [Dependency].
-  final Resolvable<T> value;
+  Resolvable<T> get value => _value;
+
+  Async<T>? _cachedValue;
+
+  /// Caches the result of an asynchronous operation to prevent re-execution.
+  @protected
+  Async<T> cacheAsyncValue() {
+    if (_cachedValue != null) {
+      return _cachedValue!;
+    }
+    _cachedValue = Async(() async {
+      final result = await _value.async().unwrap().value;
+      _value = Sync.value(result);
+      return result.unwrap();
+    });
+    return _cachedValue!;
+  }
 
   /// The metadata associated with this [Dependency].
   final Option<DependencyMetadata> metadata;
 
   /// Returns the `preemptivetypeEntity` of [metadata] if not `null` or the
-  /// runtime type key of [value].
+  /// runtime type key of [_value].
   Entity get typeEntity {
     final preemptivetypeEntity = metadata.unwrap().preemptivetypeEntity;
     if (preemptivetypeEntity.isDefault()) {
-      return TypeEntity(value.runtimeType);
+      return TypeEntity(_value.runtimeType);
     } else {
       return preemptivetypeEntity;
     }
@@ -53,9 +71,9 @@ final class Dependency<T extends Object> {
     return Dependency<R>._internal(newValue, metadata: metadata);
   }
 
-  /// Returns a new [Dependency] instance where the current [value] is cast
+  /// Returns a new [Dependency] instance where the current [_value] is cast
   /// to type [R], while retaining the existing [metadata].
-  Dependency<R> transf<R extends Object>() => passNewValue(value.transf());
+  Dependency<R> transf<R extends Object>() => passNewValue(_value.transf());
 
   /// Creates a new instance with updated fields, preserving the values of any
   /// fields not explicitly specified.
@@ -64,7 +82,7 @@ final class Dependency<T extends Object> {
     Option<DependencyMetadata> metadata = const None(),
   }) {
     return Dependency<T>(
-      value.isNone() ? this.value : value.unwrap(),
+      value.isNone() ? this._value : value.unwrap(),
       metadata: metadata,
     );
   }
@@ -77,7 +95,7 @@ final class Dependency<T extends Object> {
 
   @override
   int get hashCode {
-    return Object.hashAll([value, metadata]);
+    return Object.hashAll([_value, metadata]);
   }
 }
 
@@ -103,8 +121,8 @@ class DependencyMetadata {
   /// not `null`, it will override the default type key.
   final Entity preemptivetypeEntity;
 
-  /// The type of [Dependency.value] at the time the [Dependency] was registered.
-  /// This type remains unchanged even if [Dependency.value] is updated through
+  /// The type of [Dependency._value] at the time the [Dependency] was registered.
+  /// This type remains unchanged even if [Dependency._value] is updated through
   /// [Dependency.passNewValue]. This property consistently reflects the original type
   /// with which the dependency was registered.
   Option<Type> get initialType => _initialType;
@@ -116,7 +134,7 @@ class DependencyMetadata {
   final Option<int> index;
 
   /// A callback to be invoked when this dependency is unregistered.
-  final Option<OnUnregisterCallback<Object>> onUnregister;
+  final Option<TOnUnregisterCallback<Object>> onUnregister;
 
   /// Creates a new instance with updated fields, preserving the values of any
   /// fields not explicitly specified.
@@ -125,13 +143,12 @@ class DependencyMetadata {
     Entity preemptivetypeEntity = const DefaultEntity(),
     Option<Type> initialType = const None(),
     Option<int> index = const None(),
-    Option<OnUnregisterCallback<Object>> onUnregister = const None(),
+    Option<TOnUnregisterCallback<Object>> onUnregister = const None(),
   }) {
     return DependencyMetadata(
       groupEntity: groupEntity.isNotDefault() ? groupEntity : this.groupEntity,
-      preemptivetypeEntity: preemptivetypeEntity.isNotDefault()
-          ? preemptivetypeEntity
-          : this.preemptivetypeEntity,
+      preemptivetypeEntity:
+          preemptivetypeEntity.isNotDefault() ? preemptivetypeEntity : this.preemptivetypeEntity,
       index: index.isSome() ? index : this.index,
       onUnregister: onUnregister.isSome() ? onUnregister : this.onUnregister,
     ).._initialType = initialType.isSome() ? initialType : _initialType;
@@ -162,9 +179,8 @@ class DependencyMetadata {
 /// in order to facilitate any necessary cleanup or additional processing
 /// that might be required for the [value].
 @internal
-typedef OnUnregisterCallback<T extends Object> =
-    Resolvable<None>? Function(Result<T> value);
+typedef TOnUnregisterCallback<T extends Object> = Resolvable<None>? Function(Result<T> value);
 
 /// A typedef for a function that evaluates the validity of a dependency.
 @internal
-typedef DependencyValidator<T extends Object> = bool Function(T value);
+typedef TDependencyValidator<T extends Object> = bool Function(T value);

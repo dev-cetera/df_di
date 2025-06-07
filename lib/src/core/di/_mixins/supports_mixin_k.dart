@@ -22,7 +22,6 @@ import '/src/core/_reserved_safe_finisher.dart';
 base mixin SupportsMixinK on DIBase {
   /// Retrieves the synchronous dependency unsafely, returning the instance
   /// directly.
-  @protected
   @pragma('vm:prefer-inline')
   T getSyncUnsafeK<T extends Object>(
     Entity typeEntity, {
@@ -37,7 +36,6 @@ base mixin SupportsMixinK on DIBase {
   }
 
   /// Retrieves the synchronous dependency.
-  @protected
   Option<Sync<T>> getSyncK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
@@ -56,7 +54,6 @@ base mixin SupportsMixinK on DIBase {
 
   /// Retrieves an asynchronous dependency unsafely, returning a future of the
   /// instance, directly or throwing an error if not found.
-  @protected
   @pragma('vm:prefer-inline')
   Future<T> getAsyncUnsafeK<T extends Object>(
     Entity typeEntity, {
@@ -74,7 +71,6 @@ base mixin SupportsMixinK on DIBase {
   }
 
   /// Retrieves an asynchronous dependency.
-  @protected
   @pragma('vm:prefer-inline')
   Option<Async<T>> getAsyncK<T extends Object>(
     Entity typeEntity, {
@@ -90,7 +86,6 @@ base mixin SupportsMixinK on DIBase {
 
   /// Retrieves a dependency unsafely, returning it directly or throwing an
   /// error if not found.
-  @protected
   @pragma('vm:prefer-inline')
   FutureOr<T> getUnsafeK<T extends Object>(
     Entity typeEntity, {
@@ -105,7 +100,6 @@ base mixin SupportsMixinK on DIBase {
   }
 
   /// Retrieves the synchronous dependency or `None` if not found or async.
-  @protected
   Option<T> getSyncOrNoneK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
@@ -132,7 +126,6 @@ base mixin SupportsMixinK on DIBase {
   }
 
   /// Retrieves the dependency.
-  @protected
   Option<Resolvable<T>> getK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
@@ -176,7 +169,6 @@ base mixin SupportsMixinK on DIBase {
   }
 
   /// Retrieves the underlying `Dependency` object.
-  @protected
   Result<Dependency<T>> registerDependencyK<T extends Object>({
     required Dependency<T> dependency,
     bool checkExisting = false,
@@ -197,7 +189,6 @@ base mixin SupportsMixinK on DIBase {
   }
 
   /// Retrieves the underlying `Dependency` object.
-  @protected
   Option<Result<Dependency<T>>> getDependencyK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
@@ -221,7 +212,6 @@ base mixin SupportsMixinK on DIBase {
   }
 
   /// Unregisters a dependency.
-  @protected
   Resolvable<None> unregisterK(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
@@ -265,7 +255,6 @@ base mixin SupportsMixinK on DIBase {
   }
 
   /// Removes a dependency from the registry.
-  @protected
   @pragma('vm:prefer-inline')
   Option<Dependency> removeDependencyK<T extends Object>(
     Entity typeEntity, {
@@ -283,7 +272,6 @@ base mixin SupportsMixinK on DIBase {
   }
 
   /// Checks if a dependency is registered.
-  @protected
   bool isRegisteredK(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
@@ -317,7 +305,6 @@ base mixin SupportsMixinK on DIBase {
   /// **Note:** Requires `enableUntilExactlyK: true` during registration.
   /// If `typeEntity` doesn't match an existing or future registration exactly,
   /// this will not resolve.
-  @protected
   Resolvable<T> untilExactlyK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
@@ -349,12 +336,10 @@ base mixin SupportsMixinK on DIBase {
   }
 
   /// Stores finishers for [untilExactlyK].
-  @protected
   final finishersK = <Entity, List<ReservedSafeFinisher>>{};
 
   /// Attempts to finish any pending [untilExactlyK] calls for the given
   /// type and group.
-  @protected
   void maybeFinishK<T extends Object>({required Entity g}) {
     assert(T != Object, 'T must be specified and cannot be Object.');
     final typeEntity = TypeEntity(T);

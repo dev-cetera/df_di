@@ -11,7 +11,6 @@
 //.title~
 
 import '/src/_common.dart';
-import '_mixins/supports_unregister_all.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -23,9 +22,6 @@ final class DI extends DIBase
         SupportsConstructorsMixinK,
         SupportsConstructorsMixinT,
         SupportsChildrenMixin,
-        SupportsServicesMixin,
-        SupportsServicesMixinK,
-        SupportsServicesMixinT,
         SupportsUnregisterAll {
   DI();
 

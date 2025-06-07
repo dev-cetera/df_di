@@ -12,7 +12,6 @@
 
 import 'package:df_safer_dart/df_safer_dart.dart';
 import 'package:equatable/equatable.dart';
-import 'package:meta/meta.dart';
 
 import '../core/di/_dependency.dart';
 import '../core/di/_di_registry.dart';
@@ -24,7 +23,6 @@ import '../core/entity/type_entity.dart';
 /// Manages entities and their associated components,  facilitating the
 /// creation, addition, querying, updating, and removal of components within an
 /// Entity-Component-System (ECS) framework.
-@visibleForTesting
 class World {
   /// Internal registry that holds and manages dependencies for components.
   final _di = DIRegistry();
@@ -66,8 +64,8 @@ class World {
   /// Returns the entities that have the specified component.
   Iterable<WorldEntity> withComponent<T extends Component>() {
     return _di.dependenciesWhereType<T>().map(
-      (e) => e.metadata.unwrap().groupEntity as WorldEntity,
-    );
+          (e) => e.metadata.unwrap().groupEntity as WorldEntity,
+        );
   }
 
   /// Updates the component of type [T] for the given entity.
@@ -128,19 +126,14 @@ class World {
   }
 
   /// Queries entities that have the specified components [T1], [T2], and [T3].
-  Iterable<WorldEntity>
-  query3<T1 extends Component, T2 extends Component, T3 extends Component>() {
+  Iterable<WorldEntity> query3<T1 extends Component, T2 extends Component, T3 extends Component>() {
     return query([withComponent<T1>, withComponent<T2>, withComponent<T3>]);
   }
 
   /// Queries entities that have the specified components [T1], [T2], [T3], and
   /// [T4].
-  Iterable<WorldEntity> query4<
-    T1 extends Component,
-    T2 extends Component,
-    T3 extends Component,
-    T4 extends Component
-  >() {
+  Iterable<WorldEntity> query4<T1 extends Component, T2 extends Component, T3 extends Component,
+      T4 extends Component>() {
     return query([
       withComponent<T1>,
       withComponent<T2>,
@@ -151,13 +144,8 @@ class World {
 
   /// Queries entities that have the specified components [T1], [T2], [T3],
   /// [T4], and [T5].
-  Iterable<WorldEntity> query5<
-    T1 extends Component,
-    T2 extends Component,
-    T3 extends Component,
-    T4 extends Component,
-    T5 extends Component
-  >() {
+  Iterable<WorldEntity> query5<T1 extends Component, T2 extends Component, T3 extends Component,
+      T4 extends Component, T5 extends Component>() {
     return query([
       withComponent<T1>,
       withComponent<T2>,
@@ -169,14 +157,8 @@ class World {
 
   /// Queries entities that have the specified components [T1], [T2], [T3],
   /// [T4], [T5], and [T6].
-  Iterable<WorldEntity> query6<
-    T1 extends Component,
-    T2 extends Component,
-    T3 extends Component,
-    T4 extends Component,
-    T5 extends Component,
-    T6 extends Component
-  >() {
+  Iterable<WorldEntity> query6<T1 extends Component, T2 extends Component, T3 extends Component,
+      T4 extends Component, T5 extends Component, T6 extends Component>() {
     return query([
       withComponent<T1>,
       withComponent<T2>,
@@ -189,15 +171,8 @@ class World {
 
   /// Queries entities that have the specified components [T1], [T2], [T3],
   /// [T4], [T5], [T6], and [T7].
-  Iterable<WorldEntity> query7<
-    T1 extends Component,
-    T2 extends Component,
-    T3 extends Component,
-    T4 extends Component,
-    T5 extends Component,
-    T6 extends Component,
-    T7 extends Component
-  >() {
+  Iterable<WorldEntity> query7<T1 extends Component, T2 extends Component, T3 extends Component,
+      T4 extends Component, T5 extends Component, T6 extends Component, T7 extends Component>() {
     return query([
       withComponent<T1>,
       withComponent<T2>,
@@ -212,15 +187,14 @@ class World {
   /// Queries entities that have the specified components [T1], [T2], [T3],
   /// [T4], [T5], [T6], [T7], and [T8].
   Iterable<WorldEntity> query8<
-    T1 extends Component,
-    T2 extends Component,
-    T3 extends Component,
-    T4 extends Component,
-    T5 extends Component,
-    T6 extends Component,
-    T7 extends Component,
-    T8 extends Component
-  >() {
+      T1 extends Component,
+      T2 extends Component,
+      T3 extends Component,
+      T4 extends Component,
+      T5 extends Component,
+      T6 extends Component,
+      T7 extends Component,
+      T8 extends Component>() {
     return query([
       withComponent<T1>,
       withComponent<T2>,
@@ -236,16 +210,15 @@ class World {
   /// Queries entities that have the specified components [T1], [T2], [T3],
   /// [T4], [T5], [T6], [T7], [T8], and [T9].
   Iterable<WorldEntity> query9<
-    T1 extends Component,
-    T2 extends Component,
-    T3 extends Component,
-    T4 extends Component,
-    T5 extends Component,
-    T6 extends Component,
-    T7 extends Component,
-    T8 extends Component,
-    T9 extends Component
-  >() {
+      T1 extends Component,
+      T2 extends Component,
+      T3 extends Component,
+      T4 extends Component,
+      T5 extends Component,
+      T6 extends Component,
+      T7 extends Component,
+      T8 extends Component,
+      T9 extends Component>() {
     return query([
       withComponent<T1>,
       withComponent<T2>,
@@ -264,10 +237,9 @@ class World {
 
 /// Represents an entity with components in the ECS/World system. Manages
 /// dependencies and allows retrieval of a specific component.
-@visibleForTesting
 final class WorldEntity extends Entity {
   final World world;
-  WorldEntity._(super.value, this.world);
+  const WorldEntity._(super.value, this.world);
 
   /// Retrieves all dependencies (components) associated with this entity.
   Iterable<Dependency> _getDependencies<T extends Object>() {
@@ -275,9 +247,10 @@ final class WorldEntity extends Entity {
   }
 
   /// Retrieves the component of type [T] associated with this entity.
-  T getComponent<T extends Object>() {
-    print(_getDependencies());
-    return _getDependencies().map((e) => e.value.unwrap()).whereType<T>().first;
+  Option<T> getComponent<T extends Object>() {
+    return Option.fromNullable(
+      _getDependencies().map((e) => e.value.unwrap()).whereType<T>().firstOrNull,
+    );
   }
 
   /// Returns the entity itself.
@@ -288,7 +261,6 @@ final class WorldEntity extends Entity {
 
 /// A base class for components that are equatable.
 /// Components should extend this class to be used in the ECS system.
-@visibleForTesting
 abstract class Component extends Equatable {
   const Component();
 }

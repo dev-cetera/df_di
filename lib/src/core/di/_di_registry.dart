@@ -25,21 +25,24 @@ final class DIRegistry {
 
   /// Represents the internal state of this [DIRegistry] instance, stored as a
   /// map.
-  final RegistryState _state = {};
+  final TRegistryState _state = {};
 
   /// A callback invoked whenever the [state] is updated.
-  final Option<_OnChangeRegistry> onChange;
+  final Option<TOnChangeRegistry> onChange;
 
   /// A snapshot describing the current state of the dependencies.
-  RegistryState get state => RegistryState.unmodifiable(
-    _state,
-  ).map((k, v) => MapEntry(k, Map.unmodifiable(v)));
+  @pragma('vm:prefer-inline')
+  TRegistryState get state => TRegistryState.unmodifiable(
+        _state,
+      ).map((k, v) => MapEntry(k, Map.unmodifiable(v)));
 
+  /// Returns an iterable of all dependencies in the registry, unsorted.
   @protected
   @pragma('vm:prefer-inline')
-  Iterable<Dependency> get unsortedDependencies =>
-      _state.entries.expand((e) => e.value.values);
+  Iterable<Dependency> get unsortedDependencies => _state.entries.expand((e) => e.value.values);
 
+  /// Returns a list of all dependencies, sorted in reverse order of registration (newest first).
+  /// Dependencies without a registration index are placed at the end.
   List<Dependency> get reversedDependencies {
     final entries = _state.entries.expand((e) => e.value.values);
     final sortedEntries = entries.map((d) {
@@ -55,6 +58,7 @@ final class DIRegistry {
 
   /// Returns all dependencies witin this [DIRegistry] instance of type
   /// [T].
+  @pragma('vm:prefer-inline')
   Iterable<Dependency> dependenciesWhereType<T extends Object>() {
     return reversedDependencies.map((e) => e.value is T ? e : null).nonNulls;
   }
@@ -71,12 +75,11 @@ final class DIRegistry {
   /// subtypes.
   @pragma('vm:prefer-inline')
   Iterable<Dependency> dependenciesWhereTypeK(Entity typeEntity) {
-    return reversedDependencies
-        .map((e) => e.typeEntity == typeEntity ? e : null)
-        .nonNulls;
+    return reversedDependencies.map((e) => e.typeEntity == typeEntity ? e : null).nonNulls;
   }
 
   /// A snapshot of the current group entities within [state].
+  @pragma('vm:prefer-inline')
   List<Entity> get groupEntities => List.unmodifiable(_state.keys);
 
   /// Updates the [state] by setting or updating [dependency].
@@ -102,8 +105,7 @@ final class DIRegistry {
   bool containsDependency<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
   }) {
-    return _state[groupEntity]?.values.any((e) => e.value is Resolvable<T>) ==
-        true;
+    return _state[groupEntity]?.values.any((e) => e.value is Resolvable<T>) == true;
   }
 
   /// Checks if any dependency with the exact [type] exists under the specified
@@ -119,8 +121,8 @@ final class DIRegistry {
     final a = TypeEntity(Sync, [type]);
     final b = TypeEntity(Async, [type]);
     return _state[groupEntity]?.values.any(
-          (e) => e.typeEntity == a || e.typeEntity == b,
-        ) ==
+              (e) => e.typeEntity == a || e.typeEntity == b,
+            ) ==
         true;
   }
 
@@ -137,23 +139,25 @@ final class DIRegistry {
     final a = TypeEntity(Sync, [typeEntity]);
     final b = TypeEntity(Async, [typeEntity]);
     return _state[groupEntity]?.values.any(
-          (e) => e.typeEntity == a || e.typeEntity == b,
-        ) ==
+              (e) => e.typeEntity == a || e.typeEntity == b,
+            ) ==
         true;
   }
 
   /// Returns any dependency of type [T] or subtypes under the specified
   /// [groupEntity].
+  @pragma('vm:prefer-inline')
   Option<Dependency<T>> getDependency<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
   }) {
     return Option.fromNullable(
-      _state[groupEntity]?.values
-          .firstWhereOrNull((e) => e.value is Resolvable<T>)
-          ?.transf<T>(),
+      _state[groupEntity]?.values.firstWhereOrNull((e) => e.value is Resolvable<T>)?.transf<T>(),
     );
   }
 
+  /// Returns an iterable of all dependencies of type [T] within the specified [groupEntity].
+  /// This method considers exact type matches, not subtypes.
+  @pragma('vm:prefer-inline')
   Iterable<Dependency<T>> getDependencies<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
   }) {
@@ -183,20 +187,24 @@ final class DIRegistry {
     final b = TypeEntity(Async, [typeEntity]);
     return Option.fromNullable(
       _state[groupEntity]?.values.firstWhereOrNull(
-        (e) => e.typeEntity == a || e.typeEntity == b,
-      ),
+            (e) => e.typeEntity == a || e.typeEntity == b,
+          ),
     );
   }
 
+  /// Removes the first dependency of type [T] (or its subtypes) found under the specified [groupEntity].
+  /// If the group becomes empty after removal, the group itself is removed.
   @protected
   @pragma('vm:prefer-inline')
-  Option<Dependency> removeDependencyT<T extends Object>(
+  Option<Dependency> removeDependencyT(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
   }) {
     return removeDependencyK(TypeEntity(type), groupEntity: groupEntity);
   }
 
+  /// Removes the first dependency of type [T] (or its subtypes) found under the specified [groupEntity].
+  /// If the group becomes empty after removal, the group itself is removed.
   Option<Dependency<T>> removeDependency<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
   }) {
@@ -204,9 +212,7 @@ final class DIRegistry {
     if (group == null) {
       return const None();
     }
-    final key = group.entries
-        .firstWhereOrNull((e) => e.value.value is Resolvable<T>)
-        ?.key;
+    final key = group.entries.firstWhereOrNull((e) => e.value.value is Resolvable<T>)?.key;
     if (key == null) {
       return const None();
     }
@@ -221,6 +227,8 @@ final class DIRegistry {
     return Some(dependency.transf());
   }
 
+  /// Removes the dependency with the exact [typeEntity] under the specified [groupEntity].
+  /// If the group becomes empty after removal, the group itself is removed.
   @protected
   Option<Dependency> removeDependencyK(
     Entity typeEntity, {
@@ -251,7 +259,7 @@ final class DIRegistry {
   /// specified [groupEntity].
   @protected
   void setGroup(
-    DependencyGroup<Object> group, {
+    TDependencyGroup<Object> group, {
     Entity groupEntity = const DefaultEntity(),
   }) {
     final currentGroup = _state[groupEntity];
@@ -265,13 +273,13 @@ final class DIRegistry {
     }
   }
 
-  /// Gets the [DependencyGroup] with the specified [groupEntity] from the [state]
+  /// Gets the [TDependencyGroup] with the specified [groupEntity] from the [state]
   /// or `null` if none exist.
   @pragma('vm:prefer-inline')
-  DependencyGroup<Object> getGroup({
+  TDependencyGroup<Object> getGroup({
     Entity groupEntity = const DefaultEntity(),
   }) {
-    return DependencyGroup.unmodifiable(_state[groupEntity] ?? {});
+    return TDependencyGroup.unmodifiable(_state[groupEntity] ?? {});
   }
 
   @pragma('vm:prefer-inline')
@@ -282,7 +290,7 @@ final class DIRegistry {
     _state[groupEntity]?.removeWhere(test);
   }
 
-  /// Removes the [DependencyGroup] with the specified [groupEntity] from the
+  /// Removes the [TDependencyGroup] with the specified [groupEntity] from the
   /// [state].
   @protected
   @pragma('vm:prefer-inline')
@@ -303,12 +311,12 @@ final class DIRegistry {
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 /// A typedef for a Map representing the state of a [DIRegistry].
-typedef RegistryState = Map<Entity, DependencyGroup<Object>>;
+typedef TRegistryState = Map<Entity, TDependencyGroup<Object>>;
 
 /// A typedef for a Map representing a group of dependencies organized by a
 /// group entity.
-typedef DependencyGroup<T extends Object> = Map<Entity, Dependency<T>>;
+typedef TDependencyGroup<T extends Object> = Map<Entity, Dependency<T>>;
 
-/// A typedef for a callback function to invoke when the [state] of a [DIRegistry]
+/// A typedef for a callback function to invoke when the `state` of a [DIRegistry]
 /// changes.
-typedef _OnChangeRegistry = void Function();
+typedef TOnChangeRegistry = void Function();

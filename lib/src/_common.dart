@@ -25,4 +25,4 @@ export 'core/di/_di_registry.dart';
 export 'core/di/_dependency.dart';
 export 'core/di/_di_base.dart';
 
-export 'core/di/_mixins/_index.g.dart';
+export 'core/di/_mixins/_mixins.g.dart';

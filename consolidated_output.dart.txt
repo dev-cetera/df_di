@@ -7,8 +7,6 @@ import 'package:get_it/get_it.dart';
 import 'dart:math';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'dart:ui_web' as ui_web;
-import 'package:flutter_example/main.dart' as entrypoint;
 import 'package:meta/meta.dart' show protected;
 import 'package:df_debouncer/df_debouncer.dart';
 import 'package:df_safer_dart/df_safer_dart.dart';
@@ -72,11 +70,11 @@ void main() async {
     }());
   }();
 
-  consec(DI.global.untilT<_T>(_T).value, (e) => print(e));
+  consec(DI.global.untilExactlyT<_T>(_T).value, (e) => print(e));
   consec(DI.global.untilSuper<List<Object>>().value, (e) => print(e));
   consec(DI.global.untilSuper<List<Object>>().value, (e) => print(e));
-  consec(DI.global.untilT<_T>(_T).value, (e) => print(e));
-  consec(DI.global.untilT(_T).value, (e) => print(e));
+  consec(DI.global.untilExactlyT<_T>(_T).value, (e) => print(e));
+  consec(DI.global.untilExactlyT(_T).value, (e) => print(e));
   consec(DI.global.untilSuper<_T>().value, (e) => print(e));
   consec(DI.global.untilSuper<_T>().value, (e) => print(e));
 }
@@ -547,17 +545,14 @@ base class TestService extends Service {}
 
 void main() {
   test('test', () async {
-    final u1 = DI.global.untilT(int);
-    final u2 = DI.global.untilT(double);
-    final u3 = DI.global.untilT(String);
+    final u1 = DI.global.untilExactlyT(int);
+    final u2 = DI.global.untilExactlyT(double);
+    final u3 = DI.global.untilExactlyT(String);
     final u4 = DI.global.untilSuper<int>();
     final u5 = DI.global.untilSuper<double>();
     final u6 = DI.global.untilSuper<String>();
     expect(
-      (DI.global.finishersK[const DefaultEntity()]
-              ?.map((e) => e.toString())
-              .toList()
-            ?..sort())
+      (DI.global.finishersK[const DefaultEntity()]?.map((e) => e.toString()).toList()?..sort())
           .toString(),
       "[Instance of 'ReservedSafeFinisher<Object>', Instance of 'ReservedSafeFinisher<Object>', Instance of 'ReservedSafeFinisher<Object>']",
     );
@@ -590,7 +585,7 @@ void main() {
       final di = DI();
       final a = <int>[1, 2, 3];
       di.register<List<int>>(a);
-      final b = di<Iterable<int>>().unwrap();
+      final b = di<Iterable<int>>();
       expect(a, b);
       expect(a.hashCode, b.hashCode);
       di.unregister<Iterable<int>>();
@@ -1236,7 +1231,9 @@ Future<void> b5() async {
     },
     di: () {
       final container2 = DI();
-      container2.registerLazy<Map<int, String>>(() => SyncOk.value({1: 'some data'}));
+      container2.registerLazy<Map<int, String>>(
+        () => SyncOk.value({1: 'some data'}),
+      );
       container2.getLazySingleton<Map<int, String>>();
     },
   );
@@ -1252,7 +1249,9 @@ Future<void> b4() async {
   final container1 = GetIt.asNewInstance();
   container1.registerLazySingleton<Map<int, String>>(() => {1: 'some data'});
   final container2 = DI();
-  container2.registerLazy<Map<int, String>>(() => SyncOk.value({1: 'some data'}));
+  container2.registerLazy<Map<int, String>>(
+    () => SyncOk.value({1: 'some data'}),
+  );
   await runBenchmarkComparison(
     'Comparing - get lazy singletons',
     getIt: () {
@@ -1850,7 +1849,11 @@ void main(List<String> arguments) async {
   print('Consolidation complete. Output written to ${outputFile.path}');
 }
 
-Future<void> _processDirectory(Directory dir, IOSink sink, Set<String> imports) async {
+Future<void> _processDirectory(
+  Directory dir,
+  IOSink sink,
+  Set<String> imports,
+) async {
   await for (final entity in dir.list(recursive: true, followLinks: false)) {
     if (entity is File && entity.path.endsWith('.dart')) {
       await _collectImports(entity, imports);
@@ -1863,7 +1866,8 @@ Future<void> _collectImports(File file, Set<String> imports) async {
   for (var line in lines) {
     final trimmedLine = line.trim();
     if (trimmedLine.startsWith('import ')) {
-      if (trimmedLine.startsWith("import 'package:") || trimmedLine.startsWith("import 'dart:")) {
+      if (trimmedLine.startsWith("import 'package:") ||
+          trimmedLine.startsWith("import 'dart:")) {
         imports.add(line); // Store non-local imports
       }
     }
@@ -1942,132 +1946,6 @@ void testObfuscationIssue() {
     print(a == c);
   }
 }
-
-// Source: ./flutter_example/.dart_tool/flutter_build/df1142543109bc9ebb74ba6852b87b1f/main.dart
-// @dart=3.7
-// Flutter web bootstrap script for package:flutter_example/main.dart.
-//
-// Generated file. Do not edit.
-//
-
-// ignore_for_file: type=lint
-
-// import 'dart:ui_web' as ui_web;
-// import 'dart:async';
-
-// import 'package:flutter_example/main.dart' as entrypoint;
-// import 'web_plugin_registrant.dart' as pluginRegistrant;
-
-typedef _UnaryFunction = dynamic Function(List<String> args);
-typedef _NullaryFunction = dynamic Function();
-
-Future<void> main() async {
-  await ui_web.bootstrapEngine(
-    runApp: () {
-      if (entrypoint.main is _UnaryFunction) {
-        return (entrypoint.main as _UnaryFunction)(<String>[]);
-      }
-      return (entrypoint.main as _NullaryFunction)();
-    },
-    registerPlugins: () {
-      pluginRegistrant.registerPlugins();
-    },
-  );
-}
-
-// Source: ./flutter_example/.dart_tool/flutter_build/df1142543109bc9ebb74ba6852b87b1f/web_plugin_registrant.dart
-// Flutter web plugin registrant file.
-//
-// Generated file. Do not edit.
-//
-
-// ignore_for_file: type=lint
-
-void registerPlugins() {}
-
-// Source: ./flutter_example/.dart_tool/flutter_build/cc617766f73c7b4992a4c8ac7a894203/main.dart
-// @dart=3.7
-// Flutter web bootstrap script for package:flutter_example/main.dart.
-//
-// Generated file. Do not edit.
-//
-
-// ignore_for_file: type=lint
-
-// import 'dart:ui_web' as ui_web;
-// import 'dart:async';
-
-// import 'package:flutter_example/main.dart' as entrypoint;
-// import 'web_plugin_registrant.dart' as pluginRegistrant;
-
-typedef _UnaryFunction = dynamic Function(List<String> args);
-typedef _NullaryFunction = dynamic Function();
-
-Future<void> main() async {
-  await ui_web.bootstrapEngine(
-    runApp: () {
-      if (entrypoint.main is _UnaryFunction) {
-        return (entrypoint.main as _UnaryFunction)(<String>[]);
-      }
-      return (entrypoint.main as _NullaryFunction)();
-    },
-    registerPlugins: () {
-      pluginRegistrant.registerPlugins();
-    },
-  );
-}
-
-// Source: ./flutter_example/.dart_tool/flutter_build/cc617766f73c7b4992a4c8ac7a894203/web_plugin_registrant.dart
-// Flutter web plugin registrant file.
-//
-// Generated file. Do not edit.
-//
-
-// ignore_for_file: type=lint
-
-void registerPlugins() {}
-
-// Source: ./flutter_example/.dart_tool/flutter_build/0ecb3152857292ee4d061854a40e4e22/main.dart
-// @dart=3.7
-// Flutter web bootstrap script for package:flutter_example/main.dart.
-//
-// Generated file. Do not edit.
-//
-
-// ignore_for_file: type=lint
-
-// import 'dart:ui_web' as ui_web;
-// import 'dart:async';
-
-// import 'package:flutter_example/main.dart' as entrypoint;
-// import 'web_plugin_registrant.dart' as pluginRegistrant;
-
-typedef _UnaryFunction = dynamic Function(List<String> args);
-typedef _NullaryFunction = dynamic Function();
-
-Future<void> main() async {
-  await ui_web.bootstrapEngine(
-    runApp: () {
-      if (entrypoint.main is _UnaryFunction) {
-        return (entrypoint.main as _UnaryFunction)(<String>[]);
-      }
-      return (entrypoint.main as _NullaryFunction)();
-    },
-    registerPlugins: () {
-      pluginRegistrant.registerPlugins();
-    },
-  );
-}
-
-// Source: ./flutter_example/.dart_tool/flutter_build/0ecb3152857292ee4d061854a40e4e22/web_plugin_registrant.dart
-// Flutter web plugin registrant file.
-//
-// Generated file. Do not edit.
-//
-
-// ignore_for_file: type=lint
-
-void registerPlugins() {}
 
 // Source: ./flutter_example/.dart_tool/dartpad/web_plugin_registrant.dart
 // Flutter web plugin registrant file.
@@ -2393,7 +2271,7 @@ class DependencyMetadata {
   final Option<int> index;
 
   /// A callback to be invoked when this dependency is unregistered.
-  final Option<OnUnregisterCallback<Object>> onUnregister;
+  final Option<TOnUnregisterCallback<Object>> onUnregister;
 
   /// Creates a new instance with updated fields, preserving the values of any
   /// fields not explicitly specified.
@@ -2402,13 +2280,12 @@ class DependencyMetadata {
     Entity preemptivetypeEntity = const DefaultEntity(),
     Option<Type> initialType = const None(),
     Option<int> index = const None(),
-    Option<OnUnregisterCallback<Object>> onUnregister = const None(),
+    Option<TOnUnregisterCallback<Object>> onUnregister = const None(),
   }) {
     return DependencyMetadata(
       groupEntity: groupEntity.isNotDefault() ? groupEntity : this.groupEntity,
-      preemptivetypeEntity: preemptivetypeEntity.isNotDefault()
-          ? preemptivetypeEntity
-          : this.preemptivetypeEntity,
+      preemptivetypeEntity:
+          preemptivetypeEntity.isNotDefault() ? preemptivetypeEntity : this.preemptivetypeEntity,
       index: index.isSome() ? index : this.index,
       onUnregister: onUnregister.isSome() ? onUnregister : this.onUnregister,
     ).._initialType = initialType.isSome() ? initialType : _initialType;
@@ -2439,12 +2316,11 @@ class DependencyMetadata {
 /// in order to facilitate any necessary cleanup or additional processing
 /// that might be required for the [value].
 @internal
-typedef OnUnregisterCallback<T extends Object> =
-    Resolvable<None>? Function(Result<T> value);
+typedef TOnUnregisterCallback<T extends Object> = Resolvable<None>? Function(Result<T> value);
 
 /// A typedef for a function that evaluates the validity of a dependency.
 @internal
-typedef DependencyValidator<T extends Object> = bool Function(T value);
+typedef TDependencyValidator<T extends Object> = bool Function(T value);
 
 // Source: ./lib/src/core/di/di.dart
 //.title
@@ -2460,6 +2336,7 @@ typedef DependencyValidator<T extends Object> = bool Function(T value);
 //.title~
 
 // import '/src/_common.dart';
+// import '_mixins/supports_unregister_all.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -2471,9 +2348,7 @@ final class DI extends DIBase
         SupportsConstructorsMixinK,
         SupportsConstructorsMixinT,
         SupportsChildrenMixin,
-        SupportsServicesMixin,
-        SupportsServicesMixinK,
-        SupportsServicesMixinT {
+        SupportsUnregisterAll {
   DI();
 
   /// A predefined container recommended for application-wide dependencies.
@@ -2544,20 +2419,24 @@ final class DIRegistry {
 
   /// Represents the internal state of this [DIRegistry] instance, stored as a
   /// map.
-  final RegistryState _state = {};
+  final TRegistryState _state = {};
 
   /// A callback invoked whenever the [state] is updated.
-  final Option<_OnChangeRegistry> onChange;
+  final Option<TOnChangeRegistry> onChange;
 
   /// A snapshot describing the current state of the dependencies.
-  RegistryState get state => RegistryState.unmodifiable(
+  @pragma('vm:prefer-inline')
+  TRegistryState get state => TRegistryState.unmodifiable(
         _state,
       ).map((k, v) => MapEntry(k, Map.unmodifiable(v)));
 
+  /// Returns an iterable of all dependencies in the registry, unsorted.
   @protected
   @pragma('vm:prefer-inline')
   Iterable<Dependency> get unsortedDependencies => _state.entries.expand((e) => e.value.values);
 
+  /// Returns a list of all dependencies, sorted in reverse order of registration (newest first).
+  /// Dependencies without a registration index are placed at the end.
   List<Dependency> get reversedDependencies {
     final entries = _state.entries.expand((e) => e.value.values);
     final sortedEntries = entries.map((d) {
@@ -2573,6 +2452,7 @@ final class DIRegistry {
 
   /// Returns all dependencies witin this [DIRegistry] instance of type
   /// [T].
+  @pragma('vm:prefer-inline')
   Iterable<Dependency> dependenciesWhereType<T extends Object>() {
     return reversedDependencies.map((e) => e.value is T ? e : null).nonNulls;
   }
@@ -2593,6 +2473,7 @@ final class DIRegistry {
   }
 
   /// A snapshot of the current group entities within [state].
+  @pragma('vm:prefer-inline')
   List<Entity> get groupEntities => List.unmodifiable(_state.keys);
 
   /// Updates the [state] by setting or updating [dependency].
@@ -2659,6 +2540,7 @@ final class DIRegistry {
 
   /// Returns any dependency of type [T] or subtypes under the specified
   /// [groupEntity].
+  @pragma('vm:prefer-inline')
   Option<Dependency<T>> getDependency<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
   }) {
@@ -2667,6 +2549,9 @@ final class DIRegistry {
     );
   }
 
+  /// Returns an iterable of all dependencies of type [T] within the specified [groupEntity].
+  /// This method considers exact type matches, not subtypes.
+  @pragma('vm:prefer-inline')
   Iterable<Dependency<T>> getDependencies<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
   }) {
@@ -2701,15 +2586,19 @@ final class DIRegistry {
     );
   }
 
+  /// Removes the first dependency of type [T] (or its subtypes) found under the specified [groupEntity].
+  /// If the group becomes empty after removal, the group itself is removed.
   @protected
   @pragma('vm:prefer-inline')
-  Option<Dependency> removeDependencyT<T extends Object>(
+  Option<Dependency> removeDependencyT(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
   }) {
     return removeDependencyK(TypeEntity(type), groupEntity: groupEntity);
   }
 
+  /// Removes the first dependency of type [T] (or its subtypes) found under the specified [groupEntity].
+  /// If the group becomes empty after removal, the group itself is removed.
   Option<Dependency<T>> removeDependency<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
   }) {
@@ -2732,6 +2621,8 @@ final class DIRegistry {
     return Some(dependency.transf());
   }
 
+  /// Removes the dependency with the exact [typeEntity] under the specified [groupEntity].
+  /// If the group becomes empty after removal, the group itself is removed.
   @protected
   Option<Dependency> removeDependencyK(
     Entity typeEntity, {
@@ -2762,7 +2653,7 @@ final class DIRegistry {
   /// specified [groupEntity].
   @protected
   void setGroup(
-    DependencyGroup<Object> group, {
+    TDependencyGroup<Object> group, {
     Entity groupEntity = const DefaultEntity(),
   }) {
     final currentGroup = _state[groupEntity];
@@ -2776,13 +2667,13 @@ final class DIRegistry {
     }
   }
 
-  /// Gets the [DependencyGroup] with the specified [groupEntity] from the [state]
+  /// Gets the [TDependencyGroup] with the specified [groupEntity] from the [state]
   /// or `null` if none exist.
   @pragma('vm:prefer-inline')
-  DependencyGroup<Object> getGroup({
+  TDependencyGroup<Object> getGroup({
     Entity groupEntity = const DefaultEntity(),
   }) {
-    return DependencyGroup.unmodifiable(_state[groupEntity] ?? {});
+    return TDependencyGroup.unmodifiable(_state[groupEntity] ?? {});
   }
 
   @pragma('vm:prefer-inline')
@@ -2793,7 +2684,7 @@ final class DIRegistry {
     _state[groupEntity]?.removeWhere(test);
   }
 
-  /// Removes the [DependencyGroup] with the specified [groupEntity] from the
+  /// Removes the [TDependencyGroup] with the specified [groupEntity] from the
   /// [state].
   @protected
   @pragma('vm:prefer-inline')
@@ -2814,15 +2705,15 @@ final class DIRegistry {
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 /// A typedef for a Map representing the state of a [DIRegistry].
-typedef RegistryState = Map<Entity, DependencyGroup<Object>>;
+typedef TRegistryState = Map<Entity, TDependencyGroup<Object>>;
 
 /// A typedef for a Map representing a group of dependencies organized by a
 /// group entity.
-typedef DependencyGroup<T extends Object> = Map<Entity, Dependency<T>>;
+typedef TDependencyGroup<T extends Object> = Map<Entity, Dependency<T>>;
 
-/// A typedef for a callback function to invoke when the [state] of a [DIRegistry]
+/// A typedef for a callback function to invoke when the `state` of a [DIRegistry]
 /// changes.
-typedef _OnChangeRegistry = void Function();
+typedef TOnChangeRegistry = void Function();
 
 // Source: ./lib/src/core/di/_di_base.dart
 //.title
@@ -2844,6 +2735,7 @@ typedef _OnChangeRegistry = void Function();
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
+/// Base class for the dependency injection container
 base class DIBase {
   //
   //
@@ -2863,10 +2755,29 @@ base class DIBase {
   @protected
   int _indexIncrementer = 0;
 
+  /// Container for child DI instances.
+  @protected
+  Option<DI> childrenContainer = const None();
+
+  /// Retrieves an iterable of child [DI] instances.
+  @protected
+  Option<Iterable<DI>> children() {
+    return childrenContainer.map(
+      (e) => e.registry.unsortedDependencies.map(
+        (e) => e.transf<Lazy<DI>>().value.unwrapSync().unwrap().singleton.unwrapSync().unwrap(),
+      ),
+    );
+  }
+
+  //
+  //
+  //
+
+  /// Registers a dependency with the container.
   Resolvable<T> register<T extends Object>(
     FutureOr<T> value, {
     FutureOr<void> Function(T value)? onRegister,
-    OnUnregisterCallback<T>? onUnregister,
+    TOnUnregisterCallback<T>? onUnregister,
     Entity groupEntity = const DefaultEntity(),
     bool enableUntilExactlyK = false,
   }) {
@@ -2885,9 +2796,9 @@ base class DIBase {
       checkExisting: true,
     );
     if (b.isErr()) {
-      return Sync.value(b.err().transErr());
+      return Sync.value(b.err().unwrap().transErr());
     }
-    if (value is! ReservedSafeFinisher) {
+    if (value is! ReservedSafeFinisher<T>) {
       // Used for until.
       _maybeFinish<T>(value: value, g: g);
 
@@ -2901,18 +2812,8 @@ base class DIBase {
     }).comb2();
   }
 
-  @protected
-  Option<DI> childrenContainer = const None();
-
-  @protected
-  Option<Iterable<DI>> children() {
-    return childrenContainer.map(
-      (e) => e.registry.unsortedDependencies.map(
-        (e) => e.transf<Lazy<DI>>().value.unwrapSync().unwrap().singleton.unwrapSync().unwrap(),
-      ),
-    );
-  }
-
+  /// Attempts to finish any pending [until] calls for the given type and group
+  /// when a new dependency is registered.
   void _maybeFinish<T extends Object>({
     required FutureOr<T> value,
     required Entity g,
@@ -2926,7 +2827,7 @@ base class DIBase {
           .map((e) => e.unwrapSync().value)
           .where((e) => e.isOk())
           .map((e) => e.unwrap())
-          .whereType<ReservedSafeFinisher>();
+          .whereType<ReservedSafeFinisher<T>>();
       if (finishers == null) continue;
       // Try each one to see if they can finish. It will only be able to finish
       // if value is compatible with the finisher.
@@ -2935,12 +2836,13 @@ base class DIBase {
           finisher.finish(value);
           break;
         } catch (_) {
-          // Skip this finisher.
+          // Skip finishers that throw.
         }
       }
     }
   }
 
+  /// Registers a [Dependency] object directly into the registry.
   @protected
   Result<Dependency<T>> registerDependency<T extends Object>({
     required Dependency<T> dependency,
@@ -2958,6 +2860,7 @@ base class DIBase {
     return Ok(dependency);
   }
 
+  /// Unregisters a dependency from the container.
   Resolvable<None> unregister<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
@@ -2991,6 +2894,7 @@ base class DIBase {
     return result ?? SyncOk.value(const None());
   }
 
+  /// Removes a dependency from the internal registry.
   @protected
   @pragma('vm:prefer-inline')
   Option<Dependency> removeDependency<T extends Object>({
@@ -3007,6 +2911,8 @@ base class DIBase {
     return result;
   }
 
+  /// Retrieves a synchronous dependency unsafely, returning the instance
+  /// directly or throwing an error if not found or async.
   bool isRegistered<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
@@ -3024,22 +2930,10 @@ base class DIBase {
         }
       }
     }
-
     return false;
   }
 
-  @pragma('vm:prefer-inline')
-  T getSyncUnsafe<T extends Object>({
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    assert(T != Object, 'T must be specified and cannot be Object.');
-    return getSync<T>(
-      groupEntity: groupEntity,
-      traverse: traverse,
-    ).unwrap().value.unwrap();
-  }
-
+  /// Retrieves a synchronous dependency.
   Option<Sync<T>> getSync<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
@@ -3052,6 +2946,45 @@ base class DIBase {
     );
   }
 
+  @pragma('vm:prefer-inline')
+  T call<T extends Object>({
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    assert(T != Object, 'T must be specified and cannot be Object.');
+    return getSyncUnsafe<T>(
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
+  }
+
+  /// Retrieves a synchronous dependency.
+  @pragma('vm:prefer-inline')
+  T getSyncUnsafe<T extends Object>({
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    assert(T != Object, 'T must be specified and cannot be Object.');
+    return getSync<T>(
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).unwrap().value.unwrap();
+  }
+
+  @pragma('vm:prefer-inline')
+  Option<Async<T>> getAsync<T extends Object>({
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    assert(T != Object, 'T must be specified and cannot be Object.');
+    return get<T>(
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).map((e) => e.toAsync());
+  }
+
+  /// Retrieves an asynchronous dependency unsafely, returning a future of the
+  /// instance or throwing an error if not found.
   @pragma('vm:prefer-inline')
   Future<T> getAsyncUnsafe<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
@@ -3067,39 +3000,7 @@ base class DIBase {
     });
   }
 
-  @pragma('vm:prefer-inline')
-  Option<Async<T>> getAsync<T extends Object>({
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    assert(T != Object, 'T must be specified and cannot be Object.');
-    return get<T>(
-      groupEntity: groupEntity,
-      traverse: traverse,
-    ).map((e) => e.toAsync());
-  }
-
-  @pragma('vm:prefer-inline')
-  FutureOr<T> getUnsafe<T extends Object>({
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    assert(T != Object, 'T must be specified and cannot be Object.');
-    return get<T>(
-      groupEntity: groupEntity,
-      traverse: traverse,
-    ).unwrap().unwrap();
-  }
-
-  @pragma('vm:prefer-inline')
-  Option<T> call<T extends Object>({
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    assert(T != Object, 'T must be specified and cannot be Object.');
-    return getSyncOrNone<T>(groupEntity: groupEntity, traverse: traverse);
-  }
-
+  /// Retrieves a synchronous dependency or `None` if not found or async.
   Option<T> getSyncOrNone<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
@@ -3121,6 +3022,7 @@ base class DIBase {
     return Some(value);
   }
 
+  /// Retrieves a dependency from the container.
   Option<Resolvable<T>> get<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
@@ -3133,14 +3035,13 @@ base class DIBase {
     }
     final result = option.unwrap();
     if (result.isErr()) {
-      return Some(Sync.value(result.err().transErr()));
+      return Some(Sync.value(result.err().unwrap().transErr()));
     }
     final dependency = result.unwrap();
     final value = dependency.value;
     if (value.isSync()) {
       return Some(value);
     }
-
     return Some(
       Async(
         () => value.async().unwrap().value.then((e) {
@@ -3159,15 +3060,30 @@ base class DIBase {
     );
   }
 
+  /// Retrieves a dependency unsafely, returning the instance or a future of it,
+  /// or throwing an error if not found.
+  @pragma('vm:prefer-inline')
+  FutureOr<T> getUnsafe<T extends Object>({
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    assert(T != Object, 'T must be specified and cannot be Object.');
+    return get<T>(
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).unwrap().unwrap();
+  }
+
+  /// Retrieves the underlying `Dependency` object from the registry.
   @protected
   Option<Result<Dependency<T>>> getDependency<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
-    final test = registry.getDependency<T>(groupEntity: g);
-    var temp = test.map((e) => Ok(e).asResult());
-    if (test.isNone() && traverse) {
+    final option = registry.getDependency<T>(groupEntity: g);
+    var temp = option.map((e) => Ok(e).transf<Dependency<T>>());
+    if (option.isNone() && traverse) {
       for (final parent in parents) {
         temp = parent.getDependency<T>(groupEntity: g);
         if (temp.isSome()) {
@@ -3178,6 +3094,8 @@ base class DIBase {
     return temp;
   }
 
+  /// Waits until a dependency of type `TSuper` is registered. `TSuper` should
+  /// typically be the most general type expected.
   @pragma('vm:prefer-inline')
   Resolvable<TSuper> untilSuper<TSuper extends Object>({
     Entity groupEntity = const DefaultEntity(),
@@ -3186,6 +3104,8 @@ base class DIBase {
     return until<TSuper, TSuper>(groupEntity: groupEntity, traverse: traverse);
   }
 
+  /// Waits until a dependency of type `TSuper` or its subtype `TSub` is
+  /// registered. `TSuper` should typically be the most general type expected.
   Resolvable<TSub> until<TSuper extends Object, TSub extends TSuper>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
@@ -3211,12 +3131,7 @@ base class DIBase {
         .resolvable()
         .map((_) {
           unregister<ReservedSafeFinisher<TSuper>>(groupEntity: g);
-
-          /// BUG: THE error happens here, unwrap throws because the item doesn't exist!!!! untilT works fine but this doesn't in -04
-          print('!! - 1');
-          final b = get<TSuper>(groupEntity: g).unwrap();
-          print('!! - 2');
-          return b;
+          return get<TSuper>(groupEntity: g).unwrap();
         })
         .comb2()
         .transf();
@@ -3240,67 +3155,10 @@ base class DIBase {
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
+/// A mixin that provides methods for working with constructors of dependencies,
+/// using `Entity` for type resolution.
 base mixin SupportsConstructorsMixinK on SupportsMixinK {
-  @protected
-  @pragma('vm:prefer-inline')
-  FutureOr<Lazy<T>> getLazyUnsafeK<T extends Object>(
-    Entity typeEntity, {
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    return getLazyK<T>(
-      typeEntity,
-      groupEntity: groupEntity,
-      traverse: traverse,
-    ).map((e) => e.unwrap()).unwrap();
-  }
-
-  @protected
-  Resolvable<None> resetLazySingletonK<T extends Object>(
-    Entity typeEntity, {
-    Entity groupEntity = const DefaultEntity(),
-  }) {
-    final temp = getK<T>(
-      TypeEntity(Lazy, [typeEntity]),
-      groupEntity: groupEntity,
-    );
-    if (temp.isSome()) {
-      return temp.unwrap().map((e) {
-        (e as Lazy).resetSingleton();
-        return const None();
-      });
-    }
-    return const Sync.value(Ok(None()));
-  }
-
-  @protected
-  @pragma('vm:prefer-inline')
-  FutureOr<T> getLazySingletonUnsafeK<T extends Object>(
-    Entity typeEntity, {
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    return getLazySingletonK<T>(
-      typeEntity,
-      groupEntity: groupEntity,
-      traverse: traverse,
-    ).unwrap().unwrap();
-  }
-
-  @protected
-  @pragma('vm:prefer-inline')
-  Option<Resolvable<Lazy<T>>> getLazyK<T extends Object>(
-    Entity typeEntity, {
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    return getK<Lazy<T>>(
-      TypeEntity(Lazy, [typeEntity]),
-      groupEntity: groupEntity,
-      traverse: traverse,
-    );
-  }
-
+  /// Retrieves the lazily loaded singleton dependency.
   @protected
   @pragma('vm:prefer-inline')
   Resolvable<None> unregisterLazyK(
@@ -3319,6 +3177,73 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
     );
   }
 
+  /// Retrieves the lazily loaded dependency.
+  @protected
+  @pragma('vm:prefer-inline')
+  Option<Resolvable<Lazy<T>>> getLazyK<T extends Object>(
+    Entity typeEntity, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return getK<Lazy<T>>(
+      TypeEntity(Lazy, [typeEntity]),
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
+  }
+
+  /// Retrieves the lazily loaded dependency, returning the instance directly or
+  /// throwing an error if not found.
+  @protected
+  @pragma('vm:prefer-inline')
+  FutureOr<Lazy<T>> getLazyUnsafeK<T extends Object>(
+    Entity typeEntity, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return getLazyK<T>(
+      typeEntity,
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).map((e) => e.unwrap()).unwrap();
+  }
+
+  /// You must register dependencies via [register] and set its parameter
+  /// `enableUntilExactlyK` to true to use this method.
+  @protected
+  @pragma('vm:prefer-inline')
+  Resolvable<Lazy<T>> untilLazyExactlyK<T extends Object>(
+    Entity typeEntity, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return untilExactlyK<Lazy<T>>(
+      TypeEntity(Lazy, [typeEntity]),
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
+  }
+
+  /// Resets the singleton instance of a lazily loaded dependency.
+  @protected
+  Resolvable<None> resetLazySingletonK<T extends Object>(
+    Entity typeEntity, {
+    Entity groupEntity = const DefaultEntity(),
+  }) {
+    final temp = getK<T>(
+      TypeEntity(Lazy, [typeEntity]),
+      groupEntity: groupEntity,
+    );
+    if (temp.isSome()) {
+      return temp.unwrap().map((e) {
+        (e as Lazy).resetSingleton();
+        return const None();
+      });
+    }
+    return const Sync.value(Ok(None()));
+  }
+
+  /// Retrieves the lazily loaded singleton dependency.
   @protected
   Option<Resolvable<T>> getLazySingletonK<T extends Object>(
     Entity typeEntity, {
@@ -3337,20 +3262,39 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
     return Some(lazy.singleton);
   }
 
+  /// Retrieves the lazily loaded singleton dependency unsafely, returning the
+  /// instance directly or throwing an error if not found or not a singleton.
   @protected
   @pragma('vm:prefer-inline')
-  FutureOr<T> getFactoryUnsafeK<T extends Object>(
+  FutureOr<T> getLazySingletonUnsafeK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getFactoryK<T>(
+    return getLazySingletonK<T>(
       typeEntity,
       groupEntity: groupEntity,
       traverse: traverse,
     ).unwrap().unwrap();
   }
 
+  /// Waits until a dependency of type `TSuper` is registered. `TSuper` should
+  /// typically be the most general type expected.
+  @protected
+  @pragma('vm:prefer-inline')
+  Resolvable<T> untilLazySingletonyExactlyK<T extends Object>(
+    Entity typeEntity, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return untilLazyExactlyK<T>(
+      typeEntity,
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).map((e) => e.singleton).comb2();
+  }
+
+  /// Retrieves the factory dependency.
   @protected
   Option<Resolvable<T>> getFactoryK<T extends Object>(
     Entity typeEntity, {
@@ -3369,21 +3313,35 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
     return Some(lazy.factory);
   }
 
-  /// You must register dependencies via [register] and set its parameter
-  /// `enableUntilExactlyK` to true to use this method.
-  @visibleForTesting
+  /// Retrieves the factory dependency, returning the instance directly or
+  /// throwing an error if not found.
   @protected
   @pragma('vm:prefer-inline')
-  Resolvable<Lazy<T>> untilLazyK<T extends Object>(
+  FutureOr<T> getFactoryUnsafeK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return untilK<Lazy<T>>(
-      TypeEntity(Lazy, [typeEntity]),
+    return getFactoryK<T>(
+      typeEntity,
       groupEntity: groupEntity,
       traverse: traverse,
-    );
+    ).unwrap().unwrap();
+  }
+
+  /// Waits until a dependency of type `TSuper` is registered. `TSuper` should
+  /// typically be the most general type expected.
+  @pragma('vm:prefer-inline')
+  Resolvable<T> untilFactoryExactlyK<T extends Object>(
+    Entity typeEntity, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return untilLazyExactlyK<T>(
+      typeEntity,
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).map((e) => e.factory).comb2();
   }
 }
 
@@ -3414,9 +3372,9 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
       childrenContainer = Some(DI());
     }
     return childrenContainer.unwrap().registerLazy<DI>(
-      () => Sync.value(Ok(DI()..parents.add(this as DI))),
-      groupEntity: groupEntity,
-    );
+          () => Sync.value(Ok(DI()..parents.add(this as DI))),
+          groupEntity: groupEntity,
+        );
   }
 
   Option<DI> getChildOrNone({Entity groupEntity = const DefaultEntity()}) {
@@ -3437,14 +3395,14 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
       return const None();
     }
     final option = childrenContainer.unwrap().getLazySingleton<DI>(
-      groupEntity: g,
-    );
+          groupEntity: g,
+        );
     if (option.isNone()) {
       return const None();
     }
     final result = option.unwrap().sync();
     if (result.isErr()) {
-      return Some(result.err().transErr());
+      return Some(result.err().unwrap().transErr());
     }
     final value = result.unwrap().value;
     return Some(value);
@@ -3456,15 +3414,15 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
       return const None();
     }
     final option = childrenContainer.unwrap().getLazySingletonT<DI>(
-      DI,
-      groupEntity: g,
-    );
+          DI,
+          groupEntity: g,
+        );
     if (option.isNone()) {
       return const None();
     }
     final result = option.unwrap().sync();
     if (result.isErr()) {
-      return Some(result.err().transErr());
+      return Some(result.err().unwrap().transErr());
     }
     final value = result.unwrap().value.transf<DI>();
     return Some(value);
@@ -3475,12 +3433,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     if (childrenContainer.isNone()) {
       return Err('No child container registered.');
     }
-    return childrenContainer
-        .unwrap()
-        .unregister<DI>(groupEntity: g)
-        .sync()
-        .unwrap()
-        .value;
+    return childrenContainer.unwrap().unregister<DI>(groupEntity: g).sync().unwrap().value;
   }
 
   Result<None> unregisterChildT(
@@ -3491,12 +3444,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     if (childrenContainer.isNone()) {
       return Err('No child container registered.');
     }
-    return childrenContainer
-        .unwrap()
-        .unregisterT(type, groupEntity: g)
-        .sync()
-        .unwrap()
-        .value;
+    return childrenContainer.unwrap().unregisterT(type, groupEntity: g).sync().unwrap().value;
   }
 
   bool isChildRegistered<T extends Object>({
@@ -3545,54 +3493,10 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
+/// A mixin that provides methods for working with constructors of dependencies,
+/// using `Type` for type resolution.
 base mixin SupportsConstructorsMixinT on SupportsConstructorsMixinK {
-  @pragma('vm:prefer-inline')
-  FutureOr<Lazy<T>> getLazyUnsafeT<T extends Object>(
-    Type type, {
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    return getLazyT<T>(
-      type,
-      groupEntity: groupEntity,
-      traverse: traverse,
-    ).map((e) => e.unwrap()).unwrap();
-  }
-
-  @pragma('vm:prefer-inline')
-  Resolvable<None> resetLazySingletonT<T extends Object>(
-    Type type, {
-    Entity groupEntity = const DefaultEntity(),
-  }) {
-    return resetLazySingletonK<T>(TypeEntity(type), groupEntity: groupEntity);
-  }
-
-  @pragma('vm:prefer-inline')
-  FutureOr<Object> getLazySingletonUnsafeT<T extends Object>(
-    Type type, {
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    return getLazySingletonUnsafeK<T>(
-      TypeEntity(type),
-      groupEntity: groupEntity,
-      traverse: traverse,
-    );
-  }
-
-  @pragma('vm:prefer-inline')
-  Option<Resolvable<Lazy<T>>> getLazyT<T extends Object>(
-    Type type, {
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    return getLazyK<T>(
-      TypeEntity(type),
-      groupEntity: groupEntity,
-      traverse: traverse,
-    );
-  }
-
+  /// Unregisters a lazily loaded dependency.
   @pragma('vm:prefer-inline')
   Resolvable<None> unregisterLazyT(
     Type type, {
@@ -3610,6 +3514,61 @@ base mixin SupportsConstructorsMixinT on SupportsConstructorsMixinK {
     );
   }
 
+  /// Retrieves the lazily loaded dependency.
+  @pragma('vm:prefer-inline')
+  Option<Resolvable<Lazy<T>>> getLazyT<T extends Object>(
+    Type type, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return getLazyK<T>(
+      TypeEntity(type),
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
+  }
+
+  /// Retrieves the lazily loaded dependency, returning the instance directly or
+  /// throwing an error if not found or not a singleton.
+  @protected
+  @pragma('vm:prefer-inline')
+  FutureOr<Lazy<T>> getLazyUnsafeT<T extends Object>(
+    Type type, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return getLazyUnsafeK<T>(
+      TypeEntity(type),
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
+  }
+
+  /// You must register dependencies via [register] and set its parameter
+  /// `enableUntilExactlyK` to true to use this method.
+  @pragma('vm:prefer-inline')
+  Resolvable<Lazy<T>> untilLazyExactlyT<T extends Object>(
+    Type type, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return untilLazyExactlyK<T>(
+      TypeEntity(type),
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
+  }
+
+  /// Resets the singleton instance of a lazily loaded dependency.
+  @pragma('vm:prefer-inline')
+  Resolvable<None> resetLazySingletonT<T extends Object>(
+    Type type, {
+    Entity groupEntity = const DefaultEntity(),
+  }) {
+    return resetLazySingletonK<T>(TypeEntity(type), groupEntity: groupEntity);
+  }
+
+  /// Retrieves the lazily loaded singleton dependency.
   @pragma('vm:prefer-inline')
   Option<Resolvable<T>> getLazySingletonT<T extends Object>(
     Type type, {
@@ -3623,19 +3582,37 @@ base mixin SupportsConstructorsMixinT on SupportsConstructorsMixinK {
     );
   }
 
+  /// Retrieves the lazily loaded singleton dependency unsafely, returning the
+  /// instance directly or throwing an error if not found or not a singleton.
   @pragma('vm:prefer-inline')
-  FutureOr<T> getFactoryUnsafeT<T extends Object>(
+  FutureOr<Object> getLazySingletonUnsafeT<T extends Object>(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getFactoryUnsafeK<T>(
+    return getLazySingletonUnsafeK<T>(
       TypeEntity(type),
       groupEntity: groupEntity,
       traverse: traverse,
     );
   }
 
+  /// Waits until a dependency of type `TSuper` is registered. `TSuper` should
+  /// typically be the most general type expected.
+  @pragma('vm:prefer-inline')
+  Resolvable<T> untilLazySingletonyExactlyT<T extends Object>(
+    T type, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return untilLazySingletonyExactlyK<T>(
+      TypeEntity(type),
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
+  }
+
+  /// Retrieves the factory dependency.
   @pragma('vm:prefer-inline')
   Option<Resolvable<T>> getFactoryT<T extends Object>(
     Type type, {
@@ -3649,60 +3626,35 @@ base mixin SupportsConstructorsMixinT on SupportsConstructorsMixinK {
     );
   }
 
-  /// You must register dependencies via [register] and set its parameter
-  /// `enableUntilExactlyK` to true to use this method.
-  @visibleForTesting
+  /// Retrieves the factory dependency unsafely, returning the instance directly
+  /// or throwing an error if not found.
   @pragma('vm:prefer-inline')
-  Resolvable<Lazy<T>> untilLazyT<T extends Object>(
+  FutureOr<T> getFactoryUnsafeT<T extends Object>(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return untilLazyK<T>(
+    return getFactoryUnsafeK<T>(
       TypeEntity(type),
       groupEntity: groupEntity,
       traverse: traverse,
     );
   }
 
-  /// You must register dependencies via [register] and set its parameter
-  /// `enableUntilExactlyK` to true to use this method.
-  @visibleForTesting
+  /// Waits until a dependency of type `TSuper` is registered. `TSuper` should
+  /// typically be the most general type expected.
   @pragma('vm:prefer-inline')
-  Resolvable<T> untilT<T extends Object>(
-    Type type, {
+  Resolvable<T> untilFactoryExactlyT<T extends Object>(
+    T type, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return untilK<T>(
+    return untilFactoryExactlyK<T>(
       TypeEntity(type),
       groupEntity: groupEntity,
       traverse: traverse,
     );
   }
-}
-
-// Source: ./lib/src/core/di/_mixins/supports_services_mixin_t.dart
-//.title
-// ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-//
-// Dart/Flutter (DF) Packages by dev-cetera.com & contributors. The use of this
-// source code is governed by an MIT-style license described in the LICENSE
-// file located in this project's root directory.
-//
-// See: https://opensource.org/license/mit
-//
-// ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-//.title~
-
-// import '/src/_common.dart';
-
-// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-
-base mixin SupportsServicesMixinT on SupportsServicesMixinK {
-  //
-  //
-  //
 }
 
 // Source: ./lib/src/core/di/_mixins/supports_constructors_mixin.dart
@@ -3722,15 +3674,15 @@ base mixin SupportsServicesMixinT on SupportsServicesMixinK {
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-base mixin SupportsConstructorsMixin on SupportsMixinT {
-  //
-  //
-  //
-
+/// A mixin that provides methods for working with constructors of dependencies,
+/// using generic types for type resolution.
+base mixin SupportsConstructorsMixin on DIBase {
+  /// Registers a lazy dependency.
+  @pragma('vm:prefer-inline')
   Resolvable<Lazy<T>> registerLazy<T extends Object>(
     LazyConstructor<T> constructor, {
     FutureOr<void> Function(Lazy<T> lazy)? onRegister,
-    OnUnregisterCallback<Lazy<T>>? onUnregister,
+    TOnUnregisterCallback<Lazy<T>>? onUnregister,
     Entity groupEntity = const DefaultEntity(),
   }) {
     return register<Lazy<T>>(
@@ -3741,25 +3693,7 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
     );
   }
 
-  @pragma('vm:prefer-inline')
-  FutureOr<Lazy<T>> getLazyUnsafe<T extends Object>({
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    return getLazy<T>(
-      groupEntity: groupEntity,
-      traverse: traverse,
-    ).map((e) => e.unwrap()).unwrap();
-  }
-
-  @pragma('vm:prefer-inline')
-  Option<Resolvable<Lazy<T>>> getLazy<T extends Object>({
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    return get<Lazy<T>>(groupEntity: groupEntity, traverse: traverse);
-  }
-
+  /// Unregisters a lazily loaded dependency.
   @pragma('vm:prefer-inline')
   Resolvable<None<Object>> unregisterLazy<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
@@ -3775,17 +3709,46 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
     );
   }
 
+  /// Retrieves the lazily loaded dependency.
   @pragma('vm:prefer-inline')
-  Resolvable<Lazy<TSuper>> untilLazySuper<TSuper extends Object>({
+  Option<Resolvable<Lazy<T>>> getLazy<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return untilLazy<TSuper, TSuper>(
+    return get<Lazy<T>>(
       groupEntity: groupEntity,
       traverse: traverse,
     );
   }
 
+  /// Retrieves the lazily loaded singleton dependency unsafely, returning the
+  /// instance directly or throwing an error if not found or not a singleton.
+  @pragma('vm:prefer-inline')
+  FutureOr<Lazy<T>> getLazyUnsafe<T extends Object>({
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return getLazy<T>(
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).map((e) => e.unwrap()).unwrap();
+  }
+
+  /// Waits until a dependency of type `TSuper` is registered. `TSuper` should
+  /// typically be the most general type expected.
+  @pragma('vm:prefer-inline')
+  Resolvable<Lazy<TSuper>> untilLazySuper<TSuper extends Object>({
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return untilSuper<Lazy<TSuper>>(
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
+  }
+
+  /// Waits until a dependency of type `TSuper` or its subtype `TSub` is
+  /// registered. `TSuper` should typically be the most general type expected.
   @pragma('vm:prefer-inline')
   Resolvable<Lazy<TSub>> untilLazy<TSuper extends Object, TSub extends TSuper>({
     Entity groupEntity = const DefaultEntity(),
@@ -3797,40 +3760,7 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
     );
   }
 
-  Option<Resolvable<T>> getLazySingleton<T extends Object>({
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    final option = getLazy<T>(groupEntity: groupEntity, traverse: traverse);
-    if (option.isNone()) {
-      return const None();
-    }
-    final lazy = option.unwrap().sync().unwrap().unwrap();
-    return Some(lazy.singleton);
-  }
-
-  @pragma('vm:prefer-inline')
-  Resolvable<TSuper> untilLazySingletonSuper<TSuper extends Object>({
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    return untilLazySingleton<TSuper, TSuper>(
-      groupEntity: groupEntity,
-      traverse: traverse,
-    );
-  }
-
-  @pragma('vm:prefer-inline')
-  Resolvable<TSub> untilLazySingleton<
-    TSuper extends Object,
-    TSub extends TSuper
-  >({Entity groupEntity = const DefaultEntity(), bool traverse = true}) {
-    return untilLazy<TSuper, TSub>(
-      groupEntity: groupEntity,
-      traverse: traverse,
-    ).map((e) => e.singleton).comb2();
-  }
-
+  /// Resets the singleton instance of a lazily loaded dependency.
   Resolvable<None> resetLazySingleton<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
   }) {
@@ -3844,6 +3774,21 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
     return const Sync.value(Ok(None()));
   }
 
+  /// Retrieves the lazily loaded singleton dependency.
+  Option<Resolvable<T>> getLazySingleton<T extends Object>({
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    final option = getLazy<T>(groupEntity: groupEntity, traverse: traverse);
+    if (option.isNone()) {
+      return const None();
+    }
+    final lazy = option.unwrap().sync().unwrap().unwrap();
+    return Some(lazy.singleton);
+  }
+
+  /// Retrieves the lazily loaded singleton dependency unsafely, returning the
+  /// instance directly or throwing an error if not found or not a singleton.
   @pragma('vm:prefer-inline')
   FutureOr<T> getLazySingletonUnsafe<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
@@ -3855,17 +3800,33 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
     ).map((e) => e.unwrap()).unwrap();
   }
 
+  /// Waits until a dependency of type `TSuper` is registered. `TSuper` should
+  /// typically be the most general type expected.
   @pragma('vm:prefer-inline')
-  FutureOr<T> getFactoryUnsafe<T extends Object>({
+  Resolvable<TSuper> untilLazySingletonSuper<TSuper extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getFactory<T>(
+    return untilLazySingleton<TSuper, TSuper>(
       groupEntity: groupEntity,
       traverse: traverse,
-    ).map((e) => e.unwrap()).unwrap();
+    );
   }
 
+  /// Waits until a dependency of type `TSuper` or its subtype `TSub` is
+  /// registered. `TSuper` should typically be the most general type expected.
+  @pragma('vm:prefer-inline')
+  Resolvable<TSub> untilLazySingleton<TSuper extends Object, TSub extends TSuper>({
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return untilLazy<TSuper, TSub>(
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).map((e) => e.singleton).comb2();
+  }
+
+  /// Retrieves the factory dependency.
   Option<Resolvable<T>> getFactory<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
@@ -3878,6 +3839,21 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
     return Some(lazy.factory);
   }
 
+  /// Retrieves the factory dependency unsafely, returning the instance directly
+  /// or throwing an error if not found.
+  @pragma('vm:prefer-inline')
+  FutureOr<T> getFactoryUnsafe<T extends Object>({
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return getFactory<T>(
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).map((e) => e.unwrap()).unwrap();
+  }
+
+  /// Waits until a dependency of type `TSuper` is registered. `TSuper` should
+  /// typically be the most general type expected.
   @pragma('vm:prefer-inline')
   Resolvable<TSuper> untilFactorySuper<TSuper extends Object>({
     Entity groupEntity = const DefaultEntity(),
@@ -3889,6 +3865,8 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
     );
   }
 
+  /// Waits until a dependency of type `TSuper` or its subtype `TSub` is
+  /// registered. `TSuper` should typically be the most general type expected.
   @pragma('vm:prefer-inline')
   Resolvable<TSub> untilFactory<TSuper extends Object, TSub extends TSuper>({
     Entity groupEntity = const DefaultEntity(),
@@ -3921,11 +3899,11 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
+/// A mixin that provides methods for working with dependencies,
+/// using `Entity` for type resolution.
 base mixin SupportsMixinK on DIBase {
-  //
-  //
-  //
-
+  /// Retrieves the synchronous dependency unsafely, returning the instance
+  /// directly.
   @protected
   @pragma('vm:prefer-inline')
   T getSyncUnsafeK<T extends Object>(
@@ -3940,6 +3918,7 @@ base mixin SupportsMixinK on DIBase {
     ).unwrap().value.unwrap();
   }
 
+  /// Retrieves the synchronous dependency.
   @protected
   Option<Sync<T>> getSyncK<T extends Object>(
     Entity typeEntity, {
@@ -3957,6 +3936,8 @@ base mixin SupportsMixinK on DIBase {
     );
   }
 
+  /// Retrieves an asynchronous dependency unsafely, returning a future of the
+  /// instance, directly or throwing an error if not found.
   @protected
   @pragma('vm:prefer-inline')
   Future<T> getAsyncUnsafeK<T extends Object>(
@@ -3974,6 +3955,7 @@ base mixin SupportsMixinK on DIBase {
     });
   }
 
+  /// Retrieves an asynchronous dependency.
   @protected
   @pragma('vm:prefer-inline')
   Option<Async<T>> getAsyncK<T extends Object>(
@@ -3988,6 +3970,8 @@ base mixin SupportsMixinK on DIBase {
     ).map((e) => e.toAsync());
   }
 
+  /// Retrieves a dependency unsafely, returning it directly or throwing an
+  /// error if not found.
   @protected
   @pragma('vm:prefer-inline')
   FutureOr<T> getUnsafeK<T extends Object>(
@@ -4002,6 +3986,7 @@ base mixin SupportsMixinK on DIBase {
     ).unwrap().unwrap();
   }
 
+  /// Retrieves the synchronous dependency or `None` if not found or async.
   @protected
   Option<T> getSyncOrNoneK<T extends Object>(
     Entity typeEntity, {
@@ -4028,6 +4013,7 @@ base mixin SupportsMixinK on DIBase {
     return Some(value);
   }
 
+  /// Retrieves the dependency.
   @protected
   Option<Resolvable<T>> getK<T extends Object>(
     Entity typeEntity, {
@@ -4045,23 +4031,22 @@ base mixin SupportsMixinK on DIBase {
     }
     final result = option.unwrap();
     if (result.isErr()) {
-      return Some(Sync.value(result.err().transErr()));
+      return Some(Sync.value(result.err().unwrap().transErr()));
     }
     final value = result.unwrap().value;
     if (value.isSync()) {
       return Some(value);
     }
-
     return Some(
       Async(
         () => value.async().unwrap().value.then((e) {
           final value = e.unwrap();
           registry.removeDependencyK(typeEntity, groupEntity: g);
           final metadata = option.unwrap().unwrap().metadata.map(
-            (e) => e.copyWith(
-              preemptivetypeEntity: TypeEntity(Sync, [typeEntity]),
-            ),
-          );
+                (e) => e.copyWith(
+                  preemptivetypeEntity: TypeEntity(Sync, [typeEntity]),
+                ),
+              );
           registerDependencyK(
             dependency: Dependency(Sync.value(Ok(value)), metadata: metadata),
             checkExisting: false,
@@ -4072,14 +4057,13 @@ base mixin SupportsMixinK on DIBase {
     );
   }
 
+  /// Retrieves the underlying `Dependency` object.
   @protected
   Result<Dependency<T>> registerDependencyK<T extends Object>({
     required Dependency<T> dependency,
     bool checkExisting = false,
   }) {
-    final g = dependency.metadata.isSome()
-        ? dependency.metadata.unwrap().groupEntity
-        : focusGroup;
+    final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
     if (checkExisting) {
       final option = getDependencyK(
         dependency.typeEntity,
@@ -4094,6 +4078,7 @@ base mixin SupportsMixinK on DIBase {
     return Ok(dependency);
   }
 
+  /// Retrieves the underlying `Dependency` object.
   @protected
   Option<Result<Dependency<T>>> getDependencyK<T extends Object>(
     Entity typeEntity, {
@@ -4102,7 +4087,7 @@ base mixin SupportsMixinK on DIBase {
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
     final option = registry.getDependencyK(typeEntity, groupEntity: g);
-    var temp = option.map((e) => Ok(e).asResult().transf<Dependency<T>>());
+    var temp = option.map((e) => Ok(e).transf<Dependency<T>>());
     if (option.isNone() && traverse) {
       for (final parent in parents) {
         temp = (parent as SupportsMixinK).getDependencyK(
@@ -4117,6 +4102,7 @@ base mixin SupportsMixinK on DIBase {
     return temp;
   }
 
+  /// Unregisters a dependency.
   @protected
   Resolvable<None> unregisterK(
     Entity typeEntity, {
@@ -4160,49 +4146,7 @@ base mixin SupportsMixinK on DIBase {
     return sequential.last;
   }
 
-  Resolvable<None> unregisterAll({
-    OnUnregisterCallback<Dependency>? onBeforeUnregister,
-    OnUnregisterCallback<Dependency>? onAfterUnregister,
-    bool Function(Dependency)? condition,
-  }) {
-    final results = List.of(registry.reversedDependencies);
-    final sequential = SafeSequential();
-    for (final dependency in results) {
-      sequential
-        ..addSafe((_) {
-          return onBeforeUnregister?.call(Ok(dependency));
-        })
-        ..addSafe((_) {
-          if (condition != null && !condition(dependency)) {
-            return null;
-          }
-          registry.removeDependencyK(
-            dependency.typeEntity,
-            groupEntity: dependency.metadata
-                .map((e) => e.groupEntity)
-                .unwrapOr(const DefaultEntity()),
-          );
-
-          final metadataOption = dependency.metadata;
-          if (metadataOption.isSome()) {
-            final metadata = metadataOption.unwrap();
-            final onUnregisterOption = metadata.onUnregister;
-            if (onUnregisterOption.isSome()) {
-              final onUnregister = onUnregisterOption.unwrap();
-              return dependency.value
-                  .map((e) => onUnregister(Ok(e)) ?? SyncOk.value(const None()))
-                  .comb();
-            }
-          }
-          return null;
-        })
-        ..addSafe((_) {
-          return onAfterUnregister?.call(Ok(dependency));
-        });
-    }
-    return sequential.last;
-  }
-
+  /// Removes a dependency from the registry.
   @protected
   @pragma('vm:prefer-inline')
   Option<Dependency> removeDependencyK<T extends Object>(
@@ -4220,6 +4164,7 @@ base mixin SupportsMixinK on DIBase {
     return result;
   }
 
+  /// Checks if a dependency is registered.
   @protected
   bool isRegisteredK(
     Entity typeEntity, {
@@ -4248,29 +4193,14 @@ base mixin SupportsMixinK on DIBase {
     return false;
   }
 
+  /// Waits until a dependency with the exact `typeEntity` is registered.
+  /// The result is cast to `T`.
+  ///
+  /// **Note:** Requires `enableUntilExactlyK: true` during registration.
+  /// If `typeEntity` doesn't match an existing or future registration exactly,
+  /// this will not resolve.
   @protected
-  final finishersK = <Entity, List<ReservedSafeFinisher>>{};
-
-  @protected
-  void maybeFinishK<T extends Object>({required Entity g}) {
-    assert(T != Object, 'T must be specified and cannot be Object.');
-    final typeEntity = TypeEntity(T);
-    for (final di in [this as DI, ...children().unwrapOr([])]) {
-      final test = di.finishersK[g]?.firstWhereOrNull((e) {
-        return e is ReservedSafeFinisher<T> || e.typeEntity == typeEntity;
-      });
-      if (test != null) {
-        test.finish(const None());
-        break;
-      }
-    }
-  }
-
-  /// You must register dependencies via [register] and set its parameter
-  /// `enableUntilExactlyK` to true to use this method.
-  @visibleForTesting
-  @protected
-  Resolvable<T> untilK<T extends Object>(
+  Resolvable<T> untilExactlyK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
@@ -4299,100 +4229,30 @@ base mixin SupportsMixinK on DIBase {
       return getK<T>(typeEntity, groupEntity: g).unwrap();
     }).comb2();
   }
+
+  /// Stores finishers for [untilExactlyK].
+  @protected
+  final finishersK = <Entity, List<ReservedSafeFinisher>>{};
+
+  /// Attempts to finish any pending [untilExactlyK] calls for the given
+  /// type and group.
+  @protected
+  void maybeFinishK<T extends Object>({required Entity g}) {
+    assert(T != Object, 'T must be specified and cannot be Object.');
+    final typeEntity = TypeEntity(T);
+    for (final di in [this as DI, ...children().unwrapOr([])]) {
+      final test = di.finishersK[g]?.firstWhereOrNull((e) {
+        return e is ReservedSafeFinisher<T> || e.typeEntity == typeEntity;
+      });
+      if (test != null) {
+        test.finish(const None());
+        break;
+      }
+    }
+  }
 }
 
-// Source: ./lib/src/core/di/_mixins/supports_services_mixin_k.dart
-//.title
-// ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-//
-// Dart/Flutter (DF) Packages by dev-cetera.com & contributors. The use of this
-// source code is governed by an MIT-style license described in the LICENSE
-// file located in this project's root directory.
-//
-// See: https://opensource.org/license/mit
-//
-// ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-//.title~
-
-// import '/src/_common.dart';
-
-// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-
-base mixin SupportsServicesMixinK
-    on SupportsConstructorsMixinK, SupportsMixinK {
-  //
-  //
-  //
-}
-
-// Source: ./lib/src/core/di/_mixins/supports_services_mixin.dart
-//.title
-// ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-//
-// Dart/Flutter (DF) Packages by dev-cetera.com & contributors. The use of this
-// source code is governed by an MIT-style license described in the LICENSE
-// file located in this project's root directory.
-//
-// See: https://opensource.org/license/mit
-//
-// ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-//.title~
-
-// import '/src/_common.dart';
-
-// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-
-base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
-  //
-  //
-  //
-
-  // @pragma('vm:prefer-inline')
-  // Future<TService> getServiceSingletonAsync<TService extends Service>({
-  //   Entity groupEntity = const DefaultEntity(),
-  //   bool traverse = true,
-  // }) {
-  //   return getLazySingleton<TService>(
-  //     groupEntity: groupEntity,
-  //     traverse: traverse,
-  //   ).unwrap().toAsync().unwrap();
-  // }
-
-  // @pragma('vm:prefer-inline')
-  // Future<TService> getServiceFactoryAsync<TService extends Service>({
-  //   Entity groupEntity = const DefaultEntity(),
-  //   bool traverse = true,
-  // }) {
-  //   return getFactory<TService>(
-  //     groupEntity: groupEntity,
-  //     traverse: traverse,
-  //   ).unwrap().toAsync().unwrap();
-  // }
-
-  // @pragma('vm:prefer-inline')
-  // TService getServiceSingletonSyncUnsafe<TService extends Service>({
-  //   Entity groupEntity = const DefaultEntity(),
-  //   bool traverse = true,
-  // }) {
-  //   return getLazySingleton<TService>(
-  //     groupEntity: groupEntity,
-  //     traverse: traverse,
-  //   ).unwrap().toSync().unwrap();
-  // }
-
-  // @pragma('vm:prefer-inline')
-  // TService getServiceFactorySyncUnsafe<TService extends Service>({
-  //   Entity groupEntity = const DefaultEntity(),
-  //   bool traverse = true,
-  // }) {
-  //   return getFactory<TService>(
-  //     groupEntity: groupEntity,
-  //     traverse: traverse,
-  //   ).unwrap().toSync().unwrap();
-  // }
-}
-
-// Source: ./lib/src/core/di/_mixins/_index.g.dart
+// Source: ./lib/src/core/di/_mixins/_mixins.g.dart
 //.title
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //
@@ -4405,12 +4265,74 @@ base mixin SupportsServicesMixin on SupportsConstructorsMixin, SupportsMixinT {
 export './supports_constructors_mixin_k.dart';
 export './supports_children_mixin.dart';
 export './supports_constructors_mixin_t.dart';
-export './supports_services_mixin_t.dart';
 export './supports_constructors_mixin.dart';
 export './supports_mixin_k.dart';
-export './supports_services_mixin_k.dart';
-export './supports_services_mixin.dart';
+export './supports_unregister_all.dart';
 export './supports_mixin_t.dart';
+
+// Source: ./lib/src/core/di/_mixins/supports_unregister_all.dart
+//.title
+// ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+//
+// Dart/Flutter (DF) Packages by dev-cetera.com & contributors. The use of this
+// source code is governed by an MIT-style license described in the LICENSE
+// file located in this project's root directory.
+//
+// See: https://opensource.org/license/mit
+//
+// ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+//.title~
+
+// ignore_for_file: invalid_use_of_visible_for_testing_member
+
+// import '/src/_common.dart';
+
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+/// A mixin that provides a method to unregister all dependencies.
+base mixin SupportsUnregisterAll on DIBase {
+  /// Unregisters all dependencies, optionally with callbacks and conditions.
+  Resolvable<None> unregisterAll({
+    TOnUnregisterCallback<Dependency>? onBeforeUnregister,
+    TOnUnregisterCallback<Dependency>? onAfterUnregister,
+    bool Function(Dependency)? condition,
+  }) {
+    final results = List.of(registry.reversedDependencies);
+    final sequential = SafeSequential();
+    for (final dependency in results) {
+      sequential
+        ..addSafe((_) {
+          return onBeforeUnregister?.call(Ok(dependency));
+        })
+        ..addSafe((_) {
+          if (condition != null && !condition(dependency)) {
+            return null;
+          }
+          registry.removeDependencyK(
+            dependency.typeEntity,
+            groupEntity:
+                dependency.metadata.map((e) => e.groupEntity).unwrapOr(const DefaultEntity()),
+          );
+          final metadataOption = dependency.metadata;
+          if (metadataOption.isSome()) {
+            final metadata = metadataOption.unwrap();
+            final onUnregisterOption = metadata.onUnregister;
+            if (onUnregisterOption.isSome()) {
+              final onUnregister = onUnregisterOption.unwrap();
+              return dependency.value
+                  .map((e) => onUnregister(Ok(e)) ?? SyncOk.value(const None()))
+                  .comb();
+            }
+          }
+          return null;
+        })
+        ..addSafe((_) {
+          return onAfterUnregister?.call(Ok(dependency));
+        });
+    }
+    return sequential.last;
+  }
+}
 
 // Source: ./lib/src/core/di/_mixins/supports_mixin_t.dart
 //.title
@@ -4429,11 +4351,11 @@ export './supports_mixin_t.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
+/// A mixin that provides methods for working with dependencies,
+/// using `Type` for type resolution.
 base mixin SupportsMixinT on SupportsMixinK {
-  //
-  //
-  //
-
+  /// Retrieves the synchronous dependency unsafely, returning the instance
+  /// directly.
   @pragma('vm:prefer-inline')
   T getSyncUnsafeT<T extends Object>(
     Type type, {
@@ -4447,6 +4369,7 @@ base mixin SupportsMixinT on SupportsMixinK {
     );
   }
 
+  /// Retrieves the synchronous dependency.
   @pragma('vm:prefer-inline')
   Option<Sync<T>> getSyncT<T extends Object>(
     Type type, {
@@ -4460,6 +4383,8 @@ base mixin SupportsMixinT on SupportsMixinK {
     );
   }
 
+  /// Retrieves an asynchronous dependency unsafely, returning a future of the
+  /// instance, directly or throwing an error if not found.
   @pragma('vm:prefer-inline')
   Future<T> getAsyncUnsafeT<T extends Object>(
     Type type, {
@@ -4473,6 +4398,7 @@ base mixin SupportsMixinT on SupportsMixinK {
     );
   }
 
+  /// Retrieves an asynchronous dependency.
   @pragma('vm:prefer-inline')
   Option<Async<T>> getAsyncT<T extends Object>(
     Type type, {
@@ -4486,6 +4412,8 @@ base mixin SupportsMixinT on SupportsMixinK {
     );
   }
 
+  /// Retrieves a dependency unsafely, returning it directly or throwing an
+  /// error if not found.
   @pragma('vm:prefer-inline')
   FutureOr<T> getUnsafeT<T extends Object>(
     Type type, {
@@ -4499,6 +4427,7 @@ base mixin SupportsMixinT on SupportsMixinK {
     );
   }
 
+  /// Retrieves the synchronous dependency or `None` if not found or async.
   @pragma('vm:prefer-inline')
   Option<T> getSyncOrNoneT<T extends Object>(
     Type type, {
@@ -4512,6 +4441,7 @@ base mixin SupportsMixinT on SupportsMixinK {
     );
   }
 
+  /// Retrieves the dependency.
   @pragma('vm:prefer-inline')
   Option<Resolvable<T>> getT<T extends Object>(
     Type type, {
@@ -4525,6 +4455,7 @@ base mixin SupportsMixinT on SupportsMixinK {
     );
   }
 
+  /// Retrieves the underlying `Dependency` object.
   @pragma('vm:prefer-inline')
   Option<Result<Dependency<T>>> getDependencyT<T extends Object>(
     Type type, {
@@ -4538,6 +4469,7 @@ base mixin SupportsMixinT on SupportsMixinK {
     );
   }
 
+  /// Unregisters a dependency.
   @pragma('vm:prefer-inline')
   Resolvable<None> unregisterT(
     Type type, {
@@ -4553,6 +4485,7 @@ base mixin SupportsMixinT on SupportsMixinK {
     );
   }
 
+  /// Removes a dependency from the registry.
   @protected
   @pragma('vm:prefer-inline')
   Option<Dependency> removeDependencyT<T extends Object>(
@@ -4562,6 +4495,7 @@ base mixin SupportsMixinT on SupportsMixinK {
     return removeDependencyK<T>(TypeEntity(type), groupEntity: groupEntity);
   }
 
+  /// Checks if a dependency is registered.
   @pragma('vm:prefer-inline')
   bool isRegisteredT(
     Type type, {
@@ -4569,6 +4503,25 @@ base mixin SupportsMixinT on SupportsMixinK {
     bool traverse = true,
   }) {
     return isRegisteredK(
+      TypeEntity(type),
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
+  }
+
+  /// Waits until a dependency with the exact `typeEntity` is registered.
+  /// The result is cast to `T`.
+  ///
+  /// **Note:** Requires `enableUntilExactlyK: true` during registration.
+  /// If `typeEntity` doesn't match an existing or future registration exactly,
+  /// this will not resolve.
+  @pragma('vm:prefer-inline')
+  Resolvable<T> untilExactlyT<T extends Object>(
+    Type type, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return untilExactlyK<T>(
       TypeEntity(type),
       groupEntity: groupEntity,
       traverse: traverse,
@@ -4712,7 +4665,15 @@ final class TestEntity extends Entity {
 /// print(type4); // Output: Map<String,List<int>>
 /// ```
 final class TypeEntity extends Entity {
+  //
+  //
+  //
+
   final String _typeString;
+
+  //
+  //
+  //
 
   static String _getTypeString(dynamic object) {
     if (object is TypeEntity) {
@@ -4721,9 +4682,17 @@ final class TypeEntity extends Entity {
     return object.toString().replaceAll(' ', '');
   }
 
+  //
+  //
+  //
+
   TypeEntity._obj(String typeString)
       : _typeString = typeString,
         super(Entity.objId(typeString));
+
+  //
+  //
+  //
 
   factory TypeEntity(Object baseType, [List<Object> subTypes = const []]) {
     final initialCleanBaseTypeString = _getTypeString(baseType);
@@ -4800,7 +4769,15 @@ final class TypeEntity extends Entity {
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 final class GenericEntity<T> extends TypeEntity {
+  //
+  //
+  //
+
   GenericEntity._(super.typeString) : super._obj();
+
+  //
+  //
+  //
 
   factory GenericEntity() {
     // This will use the TypeEntity factory to construct the canonical string for T
@@ -4808,102 +4785,6 @@ final class GenericEntity<T> extends TypeEntity {
     return GenericEntity._(typeEntityInstanceForT._typeString);
   }
 }
-
-// OLDER VERSION 1:
-// final class TypeEntity extends Entity {
-//   final String _typeString;
-//   static String _getTypeString(Object object) =>
-//       object is TypeEntity ? object._typeString : object.toString();
-//   TypeEntity._obj(Object object, this._typeString) : super(Entity.objId(object));
-//   factory TypeEntity(Object baseType, [List<Object> subTypes = const []]) {
-//     final objectStr = '$Object';
-//     final objectNullableStr = '$Object?';
-//     final dynamicStr = '$dynamic';
-//     //final dynamicNullableStr = '$dynamic?';
-//     final cleanBaseType = _getTypeString(baseType).replaceAll(' ', '');
-//     var subTypeIndex = 0;
-//     final buffer = StringBuffer();
-//     var n = 0;
-//     while (n < cleanBaseType.length) {
-//       // Check for nullable placeholders first (longer match takes precedence)
-//       if (cleanBaseType.startsWith(objectNullableStr, n)) {
-//         if (subTypeIndex < subTypes.length) {
-//           buffer.write(_getTypeString(subTypes[subTypeIndex]));
-//           subTypeIndex++;
-//         } else {
-//           buffer.write(objectNullableStr);
-//         }
-//         n += objectNullableStr.length;
-//         // } else if (cleanBaseType.startsWith(dynamicNullableStr, n)) {
-//         //   if (subTypeIndex < subTypes.length) {
-//         //     buffer.write(_getTypeString(subTypes[subTypeIndex]));
-//         //     subTypeIndex++;
-//         //   } else {
-//         //     buffer.write(dynamicNullableStr);
-//         //   }
-//         //   n += dynamicNullableStr.length;
-//       } else if (cleanBaseType.startsWith(objectStr, n)) {
-//         if (subTypeIndex < subTypes.length) {
-//           buffer.write(_getTypeString(subTypes[subTypeIndex]));
-//           subTypeIndex++;
-//         } else {
-//           buffer.write(objectStr);
-//         }
-//         n += objectStr.length;
-//       } else if (cleanBaseType.startsWith(dynamicStr, n)) {
-//         if (subTypeIndex < subTypes.length) {
-//           buffer.write(_getTypeString(subTypes[subTypeIndex]));
-//           subTypeIndex++;
-//         } else {
-//           buffer.write(dynamicStr);
-//         }
-//         n += dynamicStr.length;
-//       } else {
-//         buffer.write(cleanBaseType[n]);
-//         n++;
-//       }
-//     }
-//     final buffer1 = buffer.toString();
-//     return TypeEntity._obj(buffer1, buffer1);
-//   }
-// }
-// OLDER VERSION 2:
-//
-// factory TypeEntity(Object baseType, [List<Object> subTypes = const []]) {
-//   final objectStr = '$Object';
-//   final dynamicStr = '$dynamic';
-//   final cleanBaseType = _getTypeString(baseType).replaceAll(' ', '');
-//   var subTypeIndex = 0;
-//   // Build a new type string by replacing 'Object' or 'dynamic' with subTypes.
-//   final buffer = StringBuffer();
-//   for (var n = 0; n < cleanBaseType.length; n++) {
-//     // Check for 'Object' or 'dynamic' at the current position.
-//     if (cleanBaseType.startsWith(objectStr, n) ||
-//         cleanBaseType.startsWith(dynamicStr, n)) {
-//       // Replace with the next subtype from subTypes if available.
-//       if (subTypeIndex < subTypes.length) {
-//         buffer.write(_getTypeString(subTypes[subTypeIndex]));
-//         subTypeIndex++;
-//       } else {
-//         // Retain 'Object' or 'dynamic' if no subtypes are left.
-//         buffer.write(
-//           cleanBaseType.startsWith(objectStr, n) ? objectStr : dynamicStr,
-//         );
-//       }
-//       // Skip ahead over the matched word.
-//       n +=
-//           cleanBaseType.startsWith(objectStr, n)
-//               ? objectStr.length - 1
-//               : dynamicStr.length - 1;
-//     } else {
-//       // Append the current character if it's not part of 'Object' or 'dynamic'.
-//       buffer.write(cleanBaseType[n]);
-//     }
-//   }
-//   // Return the constructed type string wrapped in a Entity object.
-//   final buffer1 = buffer.toString();
-//   return TypeEntity._obj(buffer1, buffer1);
-// }
 
 // Source: ./lib/src/core/entity/entity.dart
 //.title
@@ -5032,11 +4913,28 @@ final class UniqueEntity extends Entity {
 
 @internal
 final class ReservedSafeFinisher<T extends Object> extends SafeFinisher<T> {
+  //
+  //
+  //
+
   final Entity typeEntity;
+
+  //
+  //
+  //
+
   ReservedSafeFinisher(this.typeEntity);
+
+  //
+  //
+  //
 
   @override
   bool operator ==(Object other) => identical(this, other);
+
+  //
+  //
+  //
 
   @override
   int get hashCode {
@@ -5108,8 +5006,7 @@ abstract class Service<TParams extends Option> {
     _sequential.addAll([
       // Call init listeners.
       ...provideInitListeners().map(
-        (e) =>
-            (_) => e(params),
+        (e) => (_) => e(params),
       ),
       (_) {
         // Mark the service as initialized.
@@ -5120,7 +5017,7 @@ abstract class Service<TParams extends Option> {
   }
 
   @mustCallSuper
-  ServiceListeners<TParams> provideInitListeners() => [];
+  TServiceListeners<TParams> provideInitListeners() => [];
 
   // --- RESTARTING OF SERVICE -------------------------------------------------
 
@@ -5148,7 +5045,7 @@ abstract class Service<TParams extends Option> {
   bool _disposed = false;
 
   @mustCallSuper
-  ServiceListeners<void> provideDisposeListeners() => [];
+  TServiceListeners<void> provideDisposeListeners() => [];
 
   /// Disposes of this service, making it unusable and ready for garbage
   /// collection.
@@ -5164,8 +5061,7 @@ abstract class Service<TParams extends Option> {
     _sequential.addAll([
       // Call dispose listeners.
       ...provideDisposeListeners().map(
-        (e) =>
-            (_) => e(null),
+        (e) => (_) => e(null),
       ),
       (_) {
         // Mark the service as disposed.
@@ -5178,9 +5074,7 @@ abstract class Service<TParams extends Option> {
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-typedef ServiceListeners<T> = List<FutureOr<void> Function(T data)>;
-
-// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+typedef TServiceListeners<T> = List<FutureOr<void> Function(T data)>;
 
 // Source: ./lib/src/core/services/stream_service.dart
 //.title
@@ -5220,7 +5114,7 @@ abstract class StreamService<TData extends Object?, TParams extends Option>
 
   @mustCallSuper
   @override
-  ServiceListeners<TParams> provideInitListeners() {
+  TServiceListeners<TParams> provideInitListeners() {
     return [...super.provideInitListeners(), _initListener];
   }
 
@@ -5240,7 +5134,7 @@ abstract class StreamService<TData extends Object?, TParams extends Option>
 
   @mustCallSuper
   @override
-  ServiceListeners<void> provideDisposeListeners() {
+  TServiceListeners<void> provideDisposeListeners() {
     return [_disposeListener, ...super.provideDisposeListeners()];
   }
 
@@ -5280,7 +5174,7 @@ abstract class StreamService<TData extends Object?, TParams extends Option>
   }
 
   @mustCallSuper
-  ServiceListeners<TData> provideOnPushToStreamListeners() => [];
+  TServiceListeners<TData> provideOnPushToStreamListeners() => [];
 
   /// Override this method to define the conditions under which a data item
   /// should be added.
@@ -5321,7 +5215,7 @@ export 'core/di/_di_registry.dart';
 export 'core/di/_dependency.dart';
 export 'core/di/_di_base.dart';
 
-export 'core/di/_mixins/_index.g.dart';
+export 'core/di/_mixins/_mixins.g.dart';
 
 // Source: ./lib/src/additional/world.dart
 //.title
@@ -5629,7 +5523,7 @@ abstract class Component extends Equatable {
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-export 'core/di/di.dart';
+export './core/di/di.dart';
 export './core/entity/reserved_entities.dart';
 export './core/entity/type_entity.dart';
 export './core/entity/entity.dart';

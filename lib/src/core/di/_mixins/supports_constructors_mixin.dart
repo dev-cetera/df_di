@@ -22,7 +22,7 @@ base mixin SupportsConstructorsMixin on DIBase {
   Resolvable<Lazy<T>> registerLazy<T extends Object>(
     LazyConstructor<T> constructor, {
     FutureOr<void> Function(Lazy<T> lazy)? onRegister,
-    OnUnregisterCallback<Lazy<T>>? onUnregister,
+    TOnUnregisterCallback<Lazy<T>>? onUnregister,
     Entity groupEntity = const DefaultEntity(),
   }) {
     return register<Lazy<T>>(

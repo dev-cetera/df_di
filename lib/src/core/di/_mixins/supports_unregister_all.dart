@@ -20,8 +20,8 @@ import '/src/_common.dart';
 base mixin SupportsUnregisterAll on DIBase {
   /// Unregisters all dependencies, optionally with callbacks and conditions.
   Resolvable<None> unregisterAll({
-    OnUnregisterCallback<Dependency>? onBeforeUnregister,
-    OnUnregisterCallback<Dependency>? onAfterUnregister,
+    TOnUnregisterCallback<Dependency>? onBeforeUnregister,
+    TOnUnregisterCallback<Dependency>? onAfterUnregister,
     bool Function(Dependency)? condition,
   }) {
     final results = List.of(registry.reversedDependencies);

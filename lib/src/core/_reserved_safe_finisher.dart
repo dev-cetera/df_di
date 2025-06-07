@@ -18,11 +18,28 @@ import '/src/_common.dart';
 
 @internal
 final class ReservedSafeFinisher<T extends Object> extends SafeFinisher<T> {
+  //
+  //
+  //
+
   final Entity typeEntity;
+
+  //
+  //
+  //
+
   ReservedSafeFinisher(this.typeEntity);
+
+  //
+  //
+  //
 
   @override
   bool operator ==(Object other) => identical(this, other);
+
+  //
+  //
+  //
 
   @override
   int get hashCode {

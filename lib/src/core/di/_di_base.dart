@@ -17,6 +17,7 @@ import '/src/core/_reserved_safe_finisher.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
+/// Base class for the dependency injection container
 base class DIBase {
   //
   //
@@ -36,10 +37,29 @@ base class DIBase {
   @protected
   int _indexIncrementer = 0;
 
+  /// Container for child DI instances.
+  @protected
+  Option<DI> childrenContainer = const None();
+
+  /// Retrieves an iterable of child [DI] instances.
+  @protected
+  Option<Iterable<DI>> children() {
+    return childrenContainer.map(
+      (e) => e.registry.unsortedDependencies.map(
+        (e) => e.transf<Lazy<DI>>().value.unwrapSync().unwrap().singleton.unwrapSync().unwrap(),
+      ),
+    );
+  }
+
+  //
+  //
+  //
+
+  /// Registers a dependency with the container.
   Resolvable<T> register<T extends Object>(
     FutureOr<T> value, {
     FutureOr<void> Function(T value)? onRegister,
-    OnUnregisterCallback<T>? onUnregister,
+    TOnUnregisterCallback<T>? onUnregister,
     Entity groupEntity = const DefaultEntity(),
     bool enableUntilExactlyK = false,
   }) {
@@ -62,7 +82,8 @@ base class DIBase {
     }
     if (value is! ReservedSafeFinisher<T>) {
       // Used for until.
-      _maybeFinish<T>(value: value, g: g);
+      // NOTE: CHANGED FROM T TO Object so that it attems to finish ANY ReservedSafeFinisher!
+      _maybeFinish<Object>(value: value, g: g);
 
       // Used for untilT and untilK. Disabled by default to improve performance.
       if (enableUntilExactlyK) {
@@ -74,23 +95,12 @@ base class DIBase {
     }).comb2();
   }
 
-  @protected
-  Option<DI> childrenContainer = const None();
-
-  @protected
-  Option<Iterable<DI>> children() {
-    return childrenContainer.map(
-      (e) => e.registry.unsortedDependencies.map(
-        (e) => e.transf<Lazy<DI>>().value.unwrapSync().unwrap().singleton.unwrapSync().unwrap(),
-      ),
-    );
-  }
-
+  /// Attempts to finish any pending [until] calls for the given type and group
+  /// when a new dependency is registered.
   void _maybeFinish<T extends Object>({
-    required FutureOr<T> value,
+    required FutureOr<Object> value, // General "Object"
     required Entity g,
   }) {
-    assert(T != Object, 'T must be specified and cannot be Object.');
     for (final di in [this as DI, ...children().unwrapOr([])]) {
       // Get all finishers in group g.
       final finishers = di.registry.state[g]?.values
@@ -99,21 +109,24 @@ base class DIBase {
           .map((e) => e.unwrapSync().value)
           .where((e) => e.isOk())
           .map((e) => e.unwrap())
+          // Get all finishers regardless of type.
           .whereType<ReservedSafeFinisher<T>>();
       if (finishers == null) continue;
       // Try each one to see if they can finish. It will only be able to finish
       // if value is compatible with the finisher.
       for (final finisher in finishers) {
         try {
-          finisher.finish(value);
+          finisher.finish(value as FutureOr<T>);
           break;
         } catch (_) {
-          // Skip this finisher.
+          // Skip finishers that throw. Either by incorrect type T or the
+          // finisher can't complete the Future.
         }
       }
     }
   }
 
+  /// Registers a [Dependency] object directly into the registry.
   @protected
   Result<Dependency<T>> registerDependency<T extends Object>({
     required Dependency<T> dependency,
@@ -131,6 +144,7 @@ base class DIBase {
     return Ok(dependency);
   }
 
+  /// Unregisters a dependency from the container.
   Resolvable<None> unregister<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
@@ -164,6 +178,7 @@ base class DIBase {
     return result ?? SyncOk.value(const None());
   }
 
+  /// Removes a dependency from the internal registry.
   @protected
   @pragma('vm:prefer-inline')
   Option<Dependency> removeDependency<T extends Object>({
@@ -180,6 +195,8 @@ base class DIBase {
     return result;
   }
 
+  /// Retrieves a synchronous dependency unsafely, returning the instance
+  /// directly or throwing an error if not found or async.
   bool isRegistered<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
@@ -197,22 +214,10 @@ base class DIBase {
         }
       }
     }
-
     return false;
   }
 
-  @pragma('vm:prefer-inline')
-  T getSyncUnsafe<T extends Object>({
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    assert(T != Object, 'T must be specified and cannot be Object.');
-    return getSync<T>(
-      groupEntity: groupEntity,
-      traverse: traverse,
-    ).unwrap().value.unwrap();
-  }
-
+  /// Retrieves a synchronous dependency.
   Option<Sync<T>> getSync<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
@@ -225,6 +230,45 @@ base class DIBase {
     );
   }
 
+  @pragma('vm:prefer-inline')
+  T call<T extends Object>({
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    assert(T != Object, 'T must be specified and cannot be Object.');
+    return getSyncUnsafe<T>(
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
+  }
+
+  /// Retrieves a synchronous dependency.
+  @pragma('vm:prefer-inline')
+  T getSyncUnsafe<T extends Object>({
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    assert(T != Object, 'T must be specified and cannot be Object.');
+    return getSync<T>(
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).unwrap().value.unwrap();
+  }
+
+  @pragma('vm:prefer-inline')
+  Option<Async<T>> getAsync<T extends Object>({
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    assert(T != Object, 'T must be specified and cannot be Object.');
+    return get<T>(
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).map((e) => e.toAsync());
+  }
+
+  /// Retrieves an asynchronous dependency unsafely, returning a future of the
+  /// instance or throwing an error if not found.
   @pragma('vm:prefer-inline')
   Future<T> getAsyncUnsafe<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
@@ -240,39 +284,7 @@ base class DIBase {
     });
   }
 
-  @pragma('vm:prefer-inline')
-  Option<Async<T>> getAsync<T extends Object>({
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    assert(T != Object, 'T must be specified and cannot be Object.');
-    return get<T>(
-      groupEntity: groupEntity,
-      traverse: traverse,
-    ).map((e) => e.toAsync());
-  }
-
-  @pragma('vm:prefer-inline')
-  FutureOr<T> getUnsafe<T extends Object>({
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    assert(T != Object, 'T must be specified and cannot be Object.');
-    return get<T>(
-      groupEntity: groupEntity,
-      traverse: traverse,
-    ).unwrap().unwrap();
-  }
-
-  @pragma('vm:prefer-inline')
-  Option<T> call<T extends Object>({
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    assert(T != Object, 'T must be specified and cannot be Object.');
-    return getSyncOrNone<T>(groupEntity: groupEntity, traverse: traverse);
-  }
-
+  /// Retrieves a synchronous dependency or `None` if not found or async.
   Option<T> getSyncOrNone<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
@@ -294,6 +306,7 @@ base class DIBase {
     return Some(value);
   }
 
+  /// Retrieves a dependency from the container.
   Option<Resolvable<T>> get<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
@@ -309,29 +322,65 @@ base class DIBase {
       return Some(Sync.value(result.err().unwrap().transErr()));
     }
     final dependency = result.unwrap();
-    final value = dependency.value;
-    if (value.isSync()) {
-      return Some(value);
+    if (dependency.value.isSync()) {
+      return Some(dependency.value);
     }
-
-    return Some(
-      Async(
-        () => value.async().unwrap().value.then((e) {
-          final value = e.unwrap();
-          registry.removeDependency<T>(groupEntity: g);
-          registerDependency<T>(
-            dependency: Dependency<T>(
-              Sync.value(Ok(value)),
-              metadata: option.unwrap().unwrap().metadata,
-            ),
-            checkExisting: false,
-          );
-          return value;
-        }),
-      ),
-    );
+    return Some(dependency.cacheAsyncValue());
   }
 
+  // NOTE: MAY WANT TO REVER IT THIS THROWS!!!
+  // Option<Resolvable<T>> get<T extends Object>({
+  //   Entity groupEntity = const DefaultEntity(),
+  //   bool traverse = true,
+  // }) {
+  //   assert(T != Object, 'T must be specified and cannot be Object.');
+  //   final g = groupEntity.preferOverDefault(focusGroup);
+  //   final option = getDependency<T>(groupEntity: g, traverse: traverse);
+  //   if (option.isNone()) {
+  //     return const None();
+  //   }
+  //   final result = option.unwrap();
+  //   if (result.isErr()) {
+  //     return Some(Sync.value(result.err().unwrap().transErr()));
+  //   }
+  //   final dependency = result.unwrap();
+  //   final value = dependency.value;
+  //   if (value.isSync()) {
+  //     return Some(value);
+  //   }
+  //   return Some(
+  //     Async(
+  //       () => value.async().unwrap().value.then((e) {
+  //         final value = e.unwrap();
+  //         registry.removeDependency<T>(groupEntity: g);
+  //         registerDependency<T>(
+  //           dependency: Dependency<T>(
+  //             Sync.value(Ok(value)),
+  //             metadata: option.unwrap().unwrap().metadata,
+  //           ),
+  //           checkExisting: false,
+  //         );
+  //         return value;
+  //       }),
+  //     ),
+  //   );
+  // }
+
+  /// Retrieves a dependency unsafely, returning the instance or a future of it,
+  /// or throwing an error if not found.
+  @pragma('vm:prefer-inline')
+  FutureOr<T> getUnsafe<T extends Object>({
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    assert(T != Object, 'T must be specified and cannot be Object.');
+    return get<T>(
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).unwrap().unwrap();
+  }
+
+  /// Retrieves the underlying `Dependency` object from the registry.
   @protected
   Option<Result<Dependency<T>>> getDependency<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
