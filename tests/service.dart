@@ -36,6 +36,7 @@ base class TestService extends Service {
       ...super.provideInitListeners(),
       (_) {
         print('Initializing TestService!!!');
+        return SyncOk.value(const None());
       },
     ];
   }

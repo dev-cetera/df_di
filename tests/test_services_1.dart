@@ -37,8 +37,11 @@ base class TestService extends Service {
   provideInitListeners() {
     return [
       ...super.provideInitListeners(),
-      (_) async {
-        return Future.delayed(const Duration(seconds: 1), () => print('Done!'));
+      (_) {
+        return Async(() async {
+          await Future.delayed(const Duration(seconds: 2), () => print('Done!'));
+          return const None();
+        });
       },
     ];
   }
