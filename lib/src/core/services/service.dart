@@ -10,301 +10,218 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-import 'package:df_debouncer/df_debouncer.dart';
 import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 /// Defines the possible lifecycle states of a [Service].
-enum _ServiceState {
-  uninitialized,
-  initializing,
-  initialized,
-  disposing,
-  disposed,
+enum ServiceState {
+  /// The service has not been initialized.
+  NOT_INITIALIZED,
+
+  /// The service is currently executing its initialization logic.
+  BUSY_INITIALIZING,
+
+  /// The service has been successfully initialized and is running.
+  INITIALIZED,
+
+  /// The service is currently paused.
+  PAUSED,
+
+  /// The service is currently executing its pausing logic.
+  BUSY_PAUSING,
+
+  /// The service is currently executing its resuming logic.
+  BUSY_RESUMING,
+
+  /// The service is currently executing its disposal logic.
+  BUSY_DISPOSING,
+
+  /// The service has been disposed and cannot be used again.
+  DISPOSED,
 }
 
-/// A base class for services that require initialization and disposal
-/// management.
+/// A base class for services that require a managed lifecycle.
 ///
 /// This class provides a robust, state-managed structure for service
-/// lifecycles, ensuring they are properly initialized and disposed of, even
-/// under concurrent access. It is intended for use within a Dependency
-/// Injection (DI) system.
+/// lifecycles (`init`, `pause`, `resume`, `dispose`), ensuring they are properly
+/// and sequentially executed, even under concurrent access. It is intended for
+/// use within a Dependency Injection (DI) system.
 abstract class Service<TParams extends Option> {
   Service();
 
-  static Resolvable<None> unregister(Result<Service> e) {
-    return Resolvable(() => consec(e.unwrap().dispose(), (_) => const None()));
+  /// A static hook for the DI system to properly dispose of the service upon unregistering.
+  static Resolvable<None> unregister(Result<Service> serviceResult) {
+    return serviceResult.isErr()
+        ? SyncOk.value(const None()) // If service creation failed, do nothing.
+        : serviceResult.unwrap().dispose().map((_) => const None());
   }
 
   // --- STATE MANAGEMENT ------------------------------------------------------
 
-  var _state = _ServiceState.uninitialized;
-  // ✅ Use SafeFinisher<None> to signal completion of void operations.
-  SafeFinisher<None>? _operationFinisher;
+  ServiceState _state = ServiceState.NOT_INITIALIZED;
 
-  /// Returns `true` if the service has been successfully initialized.
-  bool get initialized => _state == _ServiceState.initialized;
+  /// The current state of the service.
+  ServiceState get state => _state;
 
-  /// Returns `true` if the service has been disposed or is being disposed.
-  bool get disposed => _state == _ServiceState.disposed || _state == _ServiceState.disposing;
+  /// Returns `true` if the service has been successfully initialized and is not paused.
+  bool get isRunning => _state == ServiceState.INITIALIZED;
 
-  // --- INITIALIZATION OF SERVICE ---------------------------------------------
+  /// Returns `true` if the service is currently paused.
+  bool get isPaused => _state == ServiceState.PAUSED;
 
-  /// Initializes the service, making it ready for use.
-  ///
-  /// This method is idempotent and safe to call multiple times. If called
-  /// while already initializing, it returns the `FutureOr` of the ongoing operation.
-  /// Throws a [StateError] if called on a disposed or disposing service.
-  @nonVirtual
-  FutureOr<void> init(TParams params) {
-    if (_state == _ServiceState.initialized) return null;
+  /// Returns `true` if the service has been disposed or is in the process of disposing.
+  bool get isDisposed => _state == ServiceState.DISPOSED || _state == ServiceState.BUSY_DISPOSING;
 
-    if (_state == _ServiceState.initializing) {
-      return consec(_operationFinisher!.resolvable().value, (_) {});
-    }
-
-    if (disposed) {
-      throw StateError('Cannot initialize a service that has been disposed.');
-    }
-
-    _state = _ServiceState.initializing;
-    _operationFinisher = SafeFinisher<None>();
-
-    try {
-      final sequential = Sequential();
-      sequential.addAll([
-        ...provideInitListeners().map((e) => (_) => e(params)),
-        (_) => _state = _ServiceState.initialized,
-      ]);
-
-      // ✅ Chain the sequential operation to the finisher's completion.
-      return consec(
-        sequential.last,
-        (_) {
-          _operationFinisher!.finish(const None());
-        },
-        onError: (e) {
-          _operationFinisher!.resolve(Sync.value(Err(e)));
-        },
-      );
-    } catch (e) {
-      _state = _ServiceState.disposed;
-      _operationFinisher!.resolve(Sync.value(Err(e)));
-      rethrow;
-    }
-  }
-
-  /// Provides listeners to be executed sequentially during `init`.
-  @mustCallSuper
-  TServiceListeners<TParams> provideInitListeners() => [];
-
-  // --- RESTARTING OF SERVICE -------------------------------------------------
-
+  /// Orchestrates all lifecycle operations to run sequentially, preventing race conditions.
+  final _sequential = SafeSequential();
   late TParams _params;
 
-  /// Restarts the service by calling `init` again after a full `dispose`.
+  // --- INITIALIZATION (START) ------------------------------------------------
+
+  /// Initializes the service with the given [params], making it ready for use.
   ///
-  /// Uses a debouncer to prevent rapid-fire restarts. This is safe to call
-  /// at any time, as it relies on the robust `init` and `dispose` logic.
+  /// This operation is idempotent and will be ignored if the service is already
+  /// initialized. It will throw a `StateError` if called on a disposed service.
   @nonVirtual
-  @pragma('vm:prefer-inline')
-  FutureOr<void> restartService(TParams params) {
+  Resolvable<None> init(TParams params) {
+    if (state == ServiceState.INITIALIZED || state == ServiceState.BUSY_INITIALIZING) {
+      return _sequential.last;
+    }
+
+    if (isDisposed) {
+      return Sync.value(
+        Err(
+          'Cannot initialize a service that has been disposed.',
+        ),
+      );
+    }
+
     _params = params;
-    return _restartDebouncer.call();
+    _sequential.addSafe((_) {
+      _state = ServiceState.BUSY_INITIALIZING;
+      final operation = SafeSequential()
+        ..addAllSafe(
+          provideInitListeners().map((listener) => (_) => listener(params)),
+        );
+
+      return operation.last.map((_) {
+        _state = ServiceState.INITIALIZED;
+        return const None();
+      });
+    });
+
+    return _sequential.last;
   }
 
-  late final _restartDebouncer = Debouncer(
-    delay: Duration.zero,
-    // ✅ Correctly chain FutureOr operations.
-    onWaited: () => consec(dispose(), (_) => init(_params)),
-  );
-
-  // --- DISPOSAL OF SERVICE ---------------------------------------------------
-
-  /// Provides listeners to be executed sequentially during `dispose`.
+  /// Provides a list of listeners to be executed during initialization.
+  /// Override this to add custom initialization logic.
   @mustCallSuper
-  TServiceListeners<void> provideDisposeListeners() => [];
+  TServiceResolvables<TParams> provideInitListeners() => [];
 
-  /// Disposes of this service, making it unusable for garbage collection.
+  // --- PAUSE & RESUME --------------------------------------------------------
+
+  /// Pauses the service.
   ///
-  /// This method is idempotent. If called while already disposing, it returns
-  /// the `FutureOr` of the ongoing operation.
+  /// While paused, the service should halt its operations.
+  /// This operation is idempotent.
+  @nonVirtual
+  Resolvable<None> pause() {
+    if (state != ServiceState.INITIALIZED) {
+      return Sync.value(
+        Err(
+          'Service can only be paused when it is initialized and running.',
+        ),
+      );
+    }
+
+    _sequential.addSafe((_) {
+      _state = ServiceState.BUSY_PAUSING;
+      final operation = SafeSequential()
+        ..addAllSafe(
+          providePauseListeners().map((listener) => (_) => listener(_params)),
+        );
+
+      return operation.last.map((_) {
+        _state = ServiceState.PAUSED;
+        return const None();
+      });
+    });
+
+    return _sequential.last;
+  }
+
+  /// Provides a list of listeners to be executed when the service is paused.
+  @mustCallSuper
+  TServiceResolvables<TParams> providePauseListeners() => [];
+
+  /// Resumes the service from a paused state.
+  ///
+  /// This operation is idempotent if the service is already running.
+  @nonVirtual
+  Resolvable<None> resume() {
+    if (state != ServiceState.PAUSED) {
+      return Sync.value(
+        Err(
+          'Service can only be resumed when it is paused.',
+        ),
+      );
+    }
+
+    _sequential.addSafe((_) {
+      _state = ServiceState.BUSY_RESUMING;
+      final operation = SafeSequential()
+        ..addAllSafe(
+          provideResumeListeners().map((listener) => (_) => listener(_params)),
+        );
+
+      return operation.last.map((_) {
+        _state = ServiceState.INITIALIZED;
+        return const None();
+      });
+    });
+
+    return _sequential.last;
+  }
+
+  /// Provides a list of listeners to be executed when the service is resumed.
+  @mustCallSuper
+  TServiceResolvables<TParams> provideResumeListeners() => [];
+
+  // --- DISPOSAL (STOP) -------------------------------------------------------
+
+  /// Disposes of the service, releasing all resources.
+  ///
+  /// Once disposed, the service cannot be used again. This operation is idempotent.
   @protected
   @nonVirtual
-  FutureOr<void> dispose() {
-    if (_state == _ServiceState.disposed || _state == _ServiceState.disposing) {
-      return consec(_operationFinisher?.resolvable().value, (_) {});
+  Resolvable<None> dispose() {
+    if (isDisposed) {
+      return _sequential.last;
     }
 
-    if (_state == _ServiceState.uninitialized) {
-      _state = _ServiceState.disposed;
-      return null;
-    }
-
-    // Await any ongoing initialization to finish before disposing.
-    return consec(_operationFinisher?.resolvable().value, (_) {
-      _state = _ServiceState.disposing;
-      _operationFinisher = SafeFinisher<None>();
-
-      try {
-        final sequential = Sequential();
-        sequential.addAll([
-          ...provideDisposeListeners().map((e) => (_) => e(null)),
-          (_) => _state = _ServiceState.disposed,
-        ]);
-
-        return consec(
-          sequential.last,
-          (_) {
-            _operationFinisher!.finish(const None());
-          },
-          onError: (e) {
-            _state = _ServiceState.disposed;
-            _operationFinisher!.resolve(Sync.value(Err(e)));
-          },
+    _sequential.addSafe((_) {
+      _state = ServiceState.BUSY_DISPOSING;
+      final operation = SafeSequential()
+        ..addAllSafe(
+          provideDisposeListeners().map((listener) => (_) => listener(_params)),
         );
-      } catch (e) {
-        _state = _ServiceState.disposed;
-        _operationFinisher!.resolve(Sync.value(Err(e)));
-        rethrow;
-      }
+
+      return operation.last.map((_) {
+        _state = ServiceState.DISPOSED;
+        return const None();
+      });
     });
+    return _sequential.last;
   }
+
+  /// Provides a list of listeners to be executed during disposal.
+  @mustCallSuper
+  TServiceResolvables<TParams> provideDisposeListeners() => [];
 }
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-typedef TServiceListeners<T> = List<FutureOr<void> Function(T data)>;
-
-// //.title
-// // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-// //
-// // Dart/Flutter (DF) Packages by dev-cetera.com & contributors. The use of this
-// // source code is governed by an MIT-style license described in the LICENSE
-// // file located in this project's root directory.
-// //
-// // See: https://opensource.org/license/mit
-// //
-// // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-// //.title~
-
-// import 'package:df_debouncer/df_debouncer.dart';
-
-// import '/src/_common.dart';
-
-// // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-
-// /// A base class for services that require initialization and disposal
-// /// management.
-// ///
-// /// This class is intended to be used within a Dependency Injection [DI] system.
-// ///
-// /// It provides a standardized structure for managing the lifecycle of services,
-// /// ensuring they are properly initialized when needed and disposed of when no
-// /// longer in use.
-// abstract class Service<TParams extends Option> {
-//   //
-//   //
-//   //
-
-//   static Resolvable<None> unregister(Result<Service> e) {
-//     return Resolvable(() async {
-//       await e.unwrap().dispose();
-//       return const None();
-//     });
-//   }
-
-//   //
-//   //
-//   //
-
-//   Service();
-
-//   // Used to avoid concurrent initialization, resetting, and disposal.
-//   final _sequential = Sequential();
-
-//   // --- INITIALIZATION OF SERVICE ---------------------------------------------
-
-//   bool _initialized = false;
-//   bool get initialized => _initialized;
-
-//   /// Initializes and re-initializes this service, making it ready for use.
-//   @nonVirtual
-//   FutureOr<void> init(TParams params) {
-//     if (_disposed) {
-//       throw Err('Service has already been initialized.');
-//     }
-//     _sequential.addAll([
-//       // Call init listeners.
-//       ...provideInitListeners().map(
-//         (e) => (_) => e(params),
-//       ),
-//       (_) {
-//         // Mark the service as initialized.
-//         _initialized = true;
-//       },
-//     ]);
-//     return _sequential.last;
-//   }
-
-//   @mustCallSuper
-//   TServiceListeners<TParams> provideInitListeners() => [];
-
-//   // --- RESTARTING OF SERVICE -------------------------------------------------
-
-//   late TParams _params;
-
-//   @nonVirtual
-//   @pragma('vm:prefer-inline')
-//   FutureOr<void> restartService(TParams params) async {
-//     _params = params;
-//     return _restartDebouncer.call();
-//   }
-
-//   // Used to avoid restarting the service multiple times in quick succession.
-//   late final _restartDebouncer = Debouncer(
-//     delay: Duration.zero,
-//     onWaited: () => init(_params),
-//   );
-
-//   // --- DISPOSAL OF SERVICE ---------------------------------------------------
-
-//   /// Whether the service has been disposed.
-//   @pragma('vm:prefer-inline')
-//   bool get disposed => _disposed;
-
-//   bool _disposed = false;
-
-//   @mustCallSuper
-//   TServiceListeners<void> provideDisposeListeners() => [];
-
-//   /// Disposes of this service, making it unusable and ready for garbage
-//   /// collection.
-//   ///
-//   /// Do not call this method directly.
-//   @protected
-//   @nonVirtual
-//   FutureOr<void> dispose() {
-//     // Throw an exception if the service has already been disposed.
-//     if (_disposed) {
-//       throw Err('Service has already been disposed.');
-//     }
-//     _sequential.addAll([
-//       // Call dispose listeners.
-//       ...provideDisposeListeners().map(
-//         (e) => (_) => e(null),
-//       ),
-//       (_) {
-//         // Mark the service as disposed.
-//         _disposed = true;
-//       },
-//     ]);
-//     return _sequential.last;
-//   }
-// }
-
-// // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-
-// typedef TServiceListeners<T> = List<FutureOr<void> Function(T data)>;
+/// A type alias for a list of functions that take data and return a [Resolvable].
+/// This is the required signature for all service listeners.
+typedef TServiceResolvables<T> = List<Resolvable<None> Function(T data)>;

@@ -31,7 +31,7 @@ void main() {
   });
 
   // Print the current position.
-  final p0 = player1.getComponent<Position>();
+  final p0 = player1.getComponent<Position>().unwrap();
   print('Position 0: (${p0.x}, ${p0.y})');
 
   // Update the movement in the world.
@@ -39,11 +39,11 @@ void main() {
   movementSystem.update(world);
 
   // Print the position after the world update.
-  final p1 = player1.getComponent<Position>();
+  final p1 = player1.getComponent<Position>().unwrap();
   print('Position 1: (${p1.x}, ${p1.y})');
 
   // Print the player name.
-  final name = player1.getComponent<Name>().name;
+  final name = player1.getComponent<Name>().unwrap().name;
   print('Player name: "$name"');
 }
 
@@ -60,8 +60,8 @@ class MovementSystem extends UpdateSystem {
     final entities = entityManger.query2<Position, Velocity>();
     for (var entity in entities) {
       // Update the position based on the velocity
-      final Position position = entity.getComponent();
-      final Velocity velocity = entity.getComponent();
+      final position = entity.getComponent<Position>().unwrap();
+      final velocity = entity.getComponent<Velocity>().unwrap();
       final result = entityManger.updateComponent(
         entity,
         position.add(velocity),

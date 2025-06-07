@@ -11,7 +11,6 @@ import 'package:meta/meta.dart' show protected;
 import 'package:df_debouncer/df_debouncer.dart';
 import 'package:df_safer_dart/df_safer_dart.dart';
 import 'package:equatable/equatable.dart';
-import 'package:meta/meta.dart';
 
 // Source: ./dart_example/bin/dart_example.dart
 // import 'package:df_di/df_di.dart';
@@ -344,7 +343,7 @@ void main() {
   });
 
   // Print the current position.
-  final p0 = player1.getComponent<Position>();
+  final p0 = player1.getComponent<Position>().unwrap();
   print('Position 0: (${p0.x}, ${p0.y})');
 
   // Update the movement in the world.
@@ -352,11 +351,11 @@ void main() {
   movementSystem.update(world);
 
   // Print the position after the world update.
-  final p1 = player1.getComponent<Position>();
+  final p1 = player1.getComponent<Position>().unwrap();
   print('Position 1: (${p1.x}, ${p1.y})');
 
   // Print the player name.
-  final name = player1.getComponent<Name>().name;
+  final name = player1.getComponent<Name>().unwrap().name;
   print('Player name: "$name"');
 }
 
@@ -373,8 +372,8 @@ class MovementSystem extends UpdateSystem {
     final entities = entityManger.query2<Position, Velocity>();
     for (var entity in entities) {
       // Update the position based on the velocity
-      final Position position = entity.getComponent();
-      final Velocity velocity = entity.getComponent();
+      final position = entity.getComponent<Position>().unwrap();
+      final velocity = entity.getComponent<Velocity>().unwrap();
       final result = entityManger.updateComponent(
         entity,
         position.add(velocity),
@@ -2174,29 +2173,47 @@ export 'package:df_safer_dart/df_safer_dart.dart';
 /// lifecycle.
 @internal
 final class Dependency<T extends Object> {
-  Dependency(this.value, {this.metadata = const None()}) {
+  Resolvable<T> _value;
+
+  Dependency(this._value, {this.metadata = const None()}) {
     if (this.metadata.isSome()) {
       final a = this.metadata.unwrap();
       if (a._initialType.isSome()) {
-        a._initialType = Some(value.runtimeType);
+        a._initialType = Some(_value.runtimeType);
       }
     }
   }
 
-  Dependency._internal(this.value, {required this.metadata});
+  Dependency._internal(this._value, {required this.metadata});
 
   /// The value contained within this [Dependency].
-  final Resolvable<T> value;
+  Resolvable<T> get value => _value;
+
+  Async<T>? _cachedValue;
+
+  /// Caches the result of an asynchronous operation to prevent re-execution.
+  @protected
+  Async<T> cacheAsyncValue() {
+    if (_cachedValue != null) {
+      return _cachedValue!;
+    }
+    _cachedValue = Async(() async {
+      final result = await _value.async().unwrap().value;
+      _value = Sync.value(result);
+      return result.unwrap();
+    });
+    return _cachedValue!;
+  }
 
   /// The metadata associated with this [Dependency].
   final Option<DependencyMetadata> metadata;
 
   /// Returns the `preemptivetypeEntity` of [metadata] if not `null` or the
-  /// runtime type key of [value].
+  /// runtime type key of [_value].
   Entity get typeEntity {
     final preemptivetypeEntity = metadata.unwrap().preemptivetypeEntity;
     if (preemptivetypeEntity.isDefault()) {
-      return TypeEntity(value.runtimeType);
+      return TypeEntity(_value.runtimeType);
     } else {
       return preemptivetypeEntity;
     }
@@ -2208,9 +2225,9 @@ final class Dependency<T extends Object> {
     return Dependency<R>._internal(newValue, metadata: metadata);
   }
 
-  /// Returns a new [Dependency] instance where the current [value] is cast
+  /// Returns a new [Dependency] instance where the current [_value] is cast
   /// to type [R], while retaining the existing [metadata].
-  Dependency<R> transf<R extends Object>() => passNewValue(value.transf());
+  Dependency<R> transf<R extends Object>() => passNewValue(_value.transf());
 
   /// Creates a new instance with updated fields, preserving the values of any
   /// fields not explicitly specified.
@@ -2219,7 +2236,7 @@ final class Dependency<T extends Object> {
     Option<DependencyMetadata> metadata = const None(),
   }) {
     return Dependency<T>(
-      value.isNone() ? this.value : value.unwrap(),
+      value.isNone() ? this._value : value.unwrap(),
       metadata: metadata,
     );
   }
@@ -2232,7 +2249,7 @@ final class Dependency<T extends Object> {
 
   @override
   int get hashCode {
-    return Object.hashAll([value, metadata]);
+    return Object.hashAll([_value, metadata]);
   }
 }
 
@@ -2258,8 +2275,8 @@ class DependencyMetadata {
   /// not `null`, it will override the default type key.
   final Entity preemptivetypeEntity;
 
-  /// The type of [Dependency.value] at the time the [Dependency] was registered.
-  /// This type remains unchanged even if [Dependency.value] is updated through
+  /// The type of [Dependency._value] at the time the [Dependency] was registered.
+  /// This type remains unchanged even if [Dependency._value] is updated through
   /// [Dependency.passNewValue]. This property consistently reflects the original type
   /// with which the dependency was registered.
   Option<Type> get initialType => _initialType;
@@ -2336,7 +2353,6 @@ typedef TDependencyValidator<T extends Object> = bool Function(T value);
 //.title~
 
 // import '/src/_common.dart';
-// import '_mixins/supports_unregister_all.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -2800,7 +2816,8 @@ base class DIBase {
     }
     if (value is! ReservedSafeFinisher<T>) {
       // Used for until.
-      _maybeFinish<T>(value: value, g: g);
+      // NOTE: CHANGED FROM T TO Object so that it attems to finish ANY ReservedSafeFinisher!
+      _maybeFinish<Object>(value: value, g: g);
 
       // Used for untilT and untilK. Disabled by default to improve performance.
       if (enableUntilExactlyK) {
@@ -2815,10 +2832,9 @@ base class DIBase {
   /// Attempts to finish any pending [until] calls for the given type and group
   /// when a new dependency is registered.
   void _maybeFinish<T extends Object>({
-    required FutureOr<T> value,
+    required FutureOr<Object> value, // General "Object"
     required Entity g,
   }) {
-    assert(T != Object, 'T must be specified and cannot be Object.');
     for (final di in [this as DI, ...children().unwrapOr([])]) {
       // Get all finishers in group g.
       final finishers = di.registry.state[g]?.values
@@ -2827,16 +2843,18 @@ base class DIBase {
           .map((e) => e.unwrapSync().value)
           .where((e) => e.isOk())
           .map((e) => e.unwrap())
+          // Get all finishers regardless of type.
           .whereType<ReservedSafeFinisher<T>>();
       if (finishers == null) continue;
       // Try each one to see if they can finish. It will only be able to finish
       // if value is compatible with the finisher.
       for (final finisher in finishers) {
         try {
-          finisher.finish(value);
+          finisher.finish(value as FutureOr<T>);
           break;
         } catch (_) {
-          // Skip finishers that throw.
+          // Skip finishers that throw. Either by incorrect type T or the
+          // finisher can't complete the Future.
         }
       }
     }
@@ -3038,27 +3056,49 @@ base class DIBase {
       return Some(Sync.value(result.err().unwrap().transErr()));
     }
     final dependency = result.unwrap();
-    final value = dependency.value;
-    if (value.isSync()) {
-      return Some(value);
+    if (dependency.value.isSync()) {
+      return Some(dependency.value);
     }
-    return Some(
-      Async(
-        () => value.async().unwrap().value.then((e) {
-          final value = e.unwrap();
-          registry.removeDependency<T>(groupEntity: g);
-          registerDependency<T>(
-            dependency: Dependency<T>(
-              Sync.value(Ok(value)),
-              metadata: option.unwrap().unwrap().metadata,
-            ),
-            checkExisting: false,
-          );
-          return value;
-        }),
-      ),
-    );
+    return Some(dependency.cacheAsyncValue());
   }
+
+  // NOTE: MAY WANT TO REVER IT THIS THROWS!!!
+  // Option<Resolvable<T>> get<T extends Object>({
+  //   Entity groupEntity = const DefaultEntity(),
+  //   bool traverse = true,
+  // }) {
+  //   assert(T != Object, 'T must be specified and cannot be Object.');
+  //   final g = groupEntity.preferOverDefault(focusGroup);
+  //   final option = getDependency<T>(groupEntity: g, traverse: traverse);
+  //   if (option.isNone()) {
+  //     return const None();
+  //   }
+  //   final result = option.unwrap();
+  //   if (result.isErr()) {
+  //     return Some(Sync.value(result.err().unwrap().transErr()));
+  //   }
+  //   final dependency = result.unwrap();
+  //   final value = dependency.value;
+  //   if (value.isSync()) {
+  //     return Some(value);
+  //   }
+  //   return Some(
+  //     Async(
+  //       () => value.async().unwrap().value.then((e) {
+  //         final value = e.unwrap();
+  //         registry.removeDependency<T>(groupEntity: g);
+  //         registerDependency<T>(
+  //           dependency: Dependency<T>(
+  //             Sync.value(Ok(value)),
+  //             metadata: option.unwrap().unwrap().metadata,
+  //           ),
+  //           checkExisting: false,
+  //         );
+  //         return value;
+  //       }),
+  //     ),
+  //   );
+  // }
 
   /// Retrieves a dependency unsafely, returning the instance or a future of it,
   /// or throwing an error if not found.
@@ -3137,6 +3177,10 @@ base class DIBase {
         .transf();
   }
 }
+
+// Source: ./lib/src/core/di/dep.dart
+// TODO: Create a Fluent API one called Dep/
+class Dep {}
 
 // Source: ./lib/src/core/di/_mixins/supports_constructors_mixin_k.dart
 //.title
@@ -3904,7 +3948,6 @@ base mixin SupportsConstructorsMixin on DIBase {
 base mixin SupportsMixinK on DIBase {
   /// Retrieves the synchronous dependency unsafely, returning the instance
   /// directly.
-  @protected
   @pragma('vm:prefer-inline')
   T getSyncUnsafeK<T extends Object>(
     Entity typeEntity, {
@@ -3919,7 +3962,6 @@ base mixin SupportsMixinK on DIBase {
   }
 
   /// Retrieves the synchronous dependency.
-  @protected
   Option<Sync<T>> getSyncK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
@@ -3938,7 +3980,6 @@ base mixin SupportsMixinK on DIBase {
 
   /// Retrieves an asynchronous dependency unsafely, returning a future of the
   /// instance, directly or throwing an error if not found.
-  @protected
   @pragma('vm:prefer-inline')
   Future<T> getAsyncUnsafeK<T extends Object>(
     Entity typeEntity, {
@@ -3956,7 +3997,6 @@ base mixin SupportsMixinK on DIBase {
   }
 
   /// Retrieves an asynchronous dependency.
-  @protected
   @pragma('vm:prefer-inline')
   Option<Async<T>> getAsyncK<T extends Object>(
     Entity typeEntity, {
@@ -3972,7 +4012,6 @@ base mixin SupportsMixinK on DIBase {
 
   /// Retrieves a dependency unsafely, returning it directly or throwing an
   /// error if not found.
-  @protected
   @pragma('vm:prefer-inline')
   FutureOr<T> getUnsafeK<T extends Object>(
     Entity typeEntity, {
@@ -3987,7 +4026,6 @@ base mixin SupportsMixinK on DIBase {
   }
 
   /// Retrieves the synchronous dependency or `None` if not found or async.
-  @protected
   Option<T> getSyncOrNoneK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
@@ -4014,7 +4052,6 @@ base mixin SupportsMixinK on DIBase {
   }
 
   /// Retrieves the dependency.
-  @protected
   Option<Resolvable<T>> getK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
@@ -4058,7 +4095,6 @@ base mixin SupportsMixinK on DIBase {
   }
 
   /// Retrieves the underlying `Dependency` object.
-  @protected
   Result<Dependency<T>> registerDependencyK<T extends Object>({
     required Dependency<T> dependency,
     bool checkExisting = false,
@@ -4079,7 +4115,6 @@ base mixin SupportsMixinK on DIBase {
   }
 
   /// Retrieves the underlying `Dependency` object.
-  @protected
   Option<Result<Dependency<T>>> getDependencyK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
@@ -4103,7 +4138,6 @@ base mixin SupportsMixinK on DIBase {
   }
 
   /// Unregisters a dependency.
-  @protected
   Resolvable<None> unregisterK(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
@@ -4147,7 +4181,6 @@ base mixin SupportsMixinK on DIBase {
   }
 
   /// Removes a dependency from the registry.
-  @protected
   @pragma('vm:prefer-inline')
   Option<Dependency> removeDependencyK<T extends Object>(
     Entity typeEntity, {
@@ -4165,7 +4198,6 @@ base mixin SupportsMixinK on DIBase {
   }
 
   /// Checks if a dependency is registered.
-  @protected
   bool isRegisteredK(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
@@ -4199,7 +4231,6 @@ base mixin SupportsMixinK on DIBase {
   /// **Note:** Requires `enableUntilExactlyK: true` during registration.
   /// If `typeEntity` doesn't match an existing or future registration exactly,
   /// this will not resolve.
-  @protected
   Resolvable<T> untilExactlyK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
@@ -4231,12 +4262,10 @@ base mixin SupportsMixinK on DIBase {
   }
 
   /// Stores finishers for [untilExactlyK].
-  @protected
   final finishersK = <Entity, List<ReservedSafeFinisher>>{};
 
   /// Attempts to finish any pending [untilExactlyK] calls for the given
   /// type and group.
-  @protected
   void maybeFinishK<T extends Object>({required Entity g}) {
     assert(T != Object, 'T must be specified and cannot be Object.');
     final typeEntity = TypeEntity(T);
@@ -4958,62 +4987,85 @@ final class ReservedSafeFinisher<T extends Object> extends SafeFinisher<T> {
 //.title~
 
 // import 'package:df_debouncer/df_debouncer.dart';
-
 // import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
+/// Defines the possible lifecycle states of a [Service].
+enum _ServiceState {
+  NOT_INITIALIZED,
+  BUSY_INITIALIZING,
+  INITIALIZED,
+  BUSY_DISPOSING,
+  DISPOSED,
+}
+
 /// A base class for services that require initialization and disposal
 /// management.
 ///
-/// This class is intended to be used within a Dependency Injection [DI] system.
-///
-/// It provides a standardized structure for managing the lifecycle of services,
-/// ensuring they are properly initialized when needed and disposed of when no
-/// longer in use.
+/// This class provides a robust, state-managed structure for service
+/// lifecycles, ensuring they are properly initialized and disposed of, even
+/// under concurrent access. It is intended for use within a Dependency
+/// Injection (DI) system.
 abstract class Service<TParams extends Option> {
-  //
-  //
-  //
-
-  static Resolvable<None> unregister(Result<Service> e) {
-    return Resolvable(() async {
-      await e.unwrap().dispose();
-      return const None();
-    });
-  }
-
-  //
-  //
-  //
-
   Service();
 
-  // Used to avoid concurrent initialization, resetting, and disposal.
-  final _sequential = Sequential();
+  static Resolvable<None> unregister(Result<Service> e) {
+    return Resolvable(() => consec(e.unwrap().dispose(), (_) => const None()));
+  }
+
+  // --- STATE MANAGEMENT ------------------------------------------------------
+
+  var _state = _ServiceState.NOT_INITIALIZED;
+  // ✅ Use Option to make the potential absence of a finisher explicit.
+  Option<SafeFinisher<None>> _operationFinisher = const None();
+
+  /// Returns `true` if the service has been successfully initialized.
+  bool get initialized => _state == _ServiceState.INITIALIZED;
+
+  /// Returns `true` if the service has been disposed or is being disposed.
+  bool get disposed => _state == _ServiceState.DISPOSED || _state == _ServiceState.BUSY_DISPOSING;
 
   // --- INITIALIZATION OF SERVICE ---------------------------------------------
 
-  bool _initialized = false;
-  bool get initialized => _initialized;
-
-  /// Initializes and re-initializes this service, making it ready for use.
+  /// Initializes the service, making it ready for use.
   @nonVirtual
   FutureOr<void> init(TParams params) {
-    if (_disposed) {
-      throw Err('Service has already been initialized.');
+    if (_state == _ServiceState.INITIALIZED) return const None();
+
+    if (_state == _ServiceState.BUSY_INITIALIZING) {
+      return consec(_operationFinisher.unwrap().resolvable().value, (_) {});
     }
-    _sequential.addAll([
-      // Call init listeners.
-      ...provideInitListeners().map(
-        (e) => (_) => e(params),
-      ),
-      (_) {
-        // Mark the service as initialized.
-        _initialized = true;
-      },
-    ]);
-    return _sequential.last;
+
+    if (disposed) {
+      throw StateError('Cannot initialize a service that has been disposed.');
+    }
+
+    _state = _ServiceState.BUSY_INITIALIZING;
+    _operationFinisher = Some(SafeFinisher<None>());
+
+    try {
+      final sequential = Sequential();
+      sequential.addAll([
+        ...provideInitListeners().map((e) => (_) => e(params)),
+        (_) => _state = _ServiceState.INITIALIZED,
+      ]);
+
+      return consec(
+        sequential.last,
+        (_) {
+          _operationFinisher.ifSome((f) => f.unwrap().finish(const None()));
+        },
+        onError: (e) {
+          _state = _ServiceState.DISPOSED;
+          _operationFinisher.ifSome((f) => f.unwrap()..resolve(Sync.value(Err(e))));
+        },
+      );
+    } catch (e) {
+      _state = _ServiceState.DISPOSED;
+      _operationFinisher.ifSome((f) => f.unwrap()..resolve(Sync.value(Err(e))));
+      rethrow;
+    }
   }
 
   @mustCallSuper
@@ -5025,56 +5077,198 @@ abstract class Service<TParams extends Option> {
 
   @nonVirtual
   @pragma('vm:prefer-inline')
-  FutureOr<void> restartService(TParams params) async {
+  FutureOr<void> restartService(TParams params) {
     _params = params;
     return _restartDebouncer.call();
   }
 
-  // Used to avoid restarting the service multiple times in quick succession.
   late final _restartDebouncer = Debouncer(
     delay: Duration.zero,
-    onWaited: () => init(_params),
+    onWaited: () => consec(dispose(), (_) => init(_params)),
   );
 
   // --- DISPOSAL OF SERVICE ---------------------------------------------------
 
-  /// Whether the service has been disposed.
-  @pragma('vm:prefer-inline')
-  bool get disposed => _disposed;
-
-  bool _disposed = false;
-
   @mustCallSuper
-  TServiceListeners<void> provideDisposeListeners() => [];
+  TServiceListeners<TParams> provideDisposeListeners() => [];
 
-  /// Disposes of this service, making it unusable and ready for garbage
-  /// collection.
-  ///
-  /// Do not call this method directly.
   @protected
   @nonVirtual
   FutureOr<void> dispose() {
-    // Throw an exception if the service has already been disposed.
-    if (_disposed) {
-      throw Err('Service has already been disposed.');
+    if (_state == _ServiceState.DISPOSED || _state == _ServiceState.BUSY_DISPOSING) {
+      return _operationFinisher.map((f) => f.resolvable().value).unwrapOr(const Ok(None()));
     }
-    _sequential.addAll([
-      // Call dispose listeners.
-      ...provideDisposeListeners().map(
-        (e) => (_) => e(null),
-      ),
-      (_) {
-        // Mark the service as disposed.
-        _disposed = true;
-      },
-    ]);
-    return _sequential.last;
+
+    if (_state == _ServiceState.NOT_INITIALIZED) {
+      _state = _ServiceState.DISPOSED;
+      return const None();
+    }
+
+    return consec(_operationFinisher.map((f) => f.resolvable().value).unwrapOr(const Ok(None())),
+        (_) {
+      _state = _ServiceState.BUSY_DISPOSING;
+      _operationFinisher = Some(SafeFinisher<None>());
+
+      try {
+        final sequential = Sequential();
+        sequential.addAll([
+          ...provideDisposeListeners().map((e) => (_) => e(_params)),
+          (_) => _state = _ServiceState.DISPOSED,
+        ]);
+
+        return consec(
+          sequential.last,
+          (_) {
+            _operationFinisher.ifSome((f) => f.unwrap()..finish(const None()));
+          },
+          onError: (e) {
+            _state = _ServiceState.DISPOSED;
+            _operationFinisher.ifSome((f) => f.unwrap()..resolve(Sync.value(Err(e))));
+          },
+        );
+      } catch (e) {
+        _state = _ServiceState.DISPOSED;
+        _operationFinisher.ifSome((f) => f.unwrap()..resolve(Sync.value(Err(e))));
+        rethrow;
+      }
+    });
   }
 }
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 typedef TServiceListeners<T> = List<FutureOr<void> Function(T data)>;
+
+// //.title
+// // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+// //
+// // Dart/Flutter (DF) Packages by dev-cetera.com & contributors. The use of this
+// // source code is governed by an MIT-style license described in the LICENSE
+// // file located in this project's root directory.
+// //
+// // See: https://opensource.org/license/mit
+// //
+// // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+// //.title~
+
+// import 'package:df_debouncer/df_debouncer.dart';
+
+// import '/src/_common.dart';
+
+// // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+// /// A base class for services that require initialization and disposal
+// /// management.
+// ///
+// /// This class is intended to be used within a Dependency Injection [DI] system.
+// ///
+// /// It provides a standardized structure for managing the lifecycle of services,
+// /// ensuring they are properly initialized when needed and disposed of when no
+// /// longer in use.
+// abstract class Service<TParams extends Option> {
+//   //
+//   //
+//   //
+
+//   static Resolvable<None> unregister(Result<Service> e) {
+//     return Resolvable(() async {
+//       await e.unwrap().dispose();
+//       return const None();
+//     });
+//   }
+
+//   //
+//   //
+//   //
+
+//   Service();
+
+//   // Used to avoid concurrent initialization, resetting, and disposal.
+//   final _sequential = Sequential();
+
+//   // --- INITIALIZATION OF SERVICE ---------------------------------------------
+
+//   bool _initialized = false;
+//   bool get initialized => _initialized;
+
+//   /// Initializes and re-initializes this service, making it ready for use.
+//   @nonVirtual
+//   FutureOr<void> init(TParams params) {
+//     if (_disposed) {
+//       throw Err('Service has already been initialized.');
+//     }
+//     _sequential.addAll([
+//       // Call init listeners.
+//       ...provideInitListeners().map(
+//         (e) => (_) => e(params),
+//       ),
+//       (_) {
+//         // Mark the service as initialized.
+//         _initialized = true;
+//       },
+//     ]);
+//     return _sequential.last;
+//   }
+
+//   @mustCallSuper
+//   TServiceListeners<TParams> provideInitListeners() => [];
+
+//   // --- RESTARTING OF SERVICE -------------------------------------------------
+
+//   late TParams _params;
+
+//   @nonVirtual
+//   @pragma('vm:prefer-inline')
+//   FutureOr<void> restartService(TParams params) async {
+//     _params = params;
+//     return _restartDebouncer.call();
+//   }
+
+//   // Used to avoid restarting the service multiple times in quick succession.
+//   late final _restartDebouncer = Debouncer(
+//     delay: Duration.zero,
+//     onWaited: () => init(_params),
+//   );
+
+//   // --- DISPOSAL OF SERVICE ---------------------------------------------------
+
+//   /// Whether the service has been disposed.
+//   @pragma('vm:prefer-inline')
+//   bool get disposed => _disposed;
+
+//   bool _disposed = false;
+
+//   @mustCallSuper
+//   TServiceListeners<void> provideDisposeListeners() => [];
+
+//   /// Disposes of this service, making it unusable and ready for garbage
+//   /// collection.
+//   ///
+//   /// Do not call this method directly.
+//   @protected
+//   @nonVirtual
+//   FutureOr<void> dispose() {
+//     // Throw an exception if the service has already been disposed.
+//     if (_disposed) {
+//       throw Err('Service has already been disposed.');
+//     }
+//     _sequential.addAll([
+//       // Call dispose listeners.
+//       ...provideDisposeListeners().map(
+//         (e) => (_) => e(null),
+//       ),
+//       (_) {
+//         // Mark the service as disposed.
+//         _disposed = true;
+//       },
+//     ]);
+//     return _sequential.last;
+//   }
+// }
+
+// // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+// typedef TServiceListeners<T> = List<FutureOr<void> Function(T data)>;
 
 // Source: ./lib/src/core/services/stream_service.dart
 //.title
@@ -5093,24 +5287,13 @@ typedef TServiceListeners<T> = List<FutureOr<void> Function(T data)>;
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-/// A base class for services that handle streaming data and require disposal.
-///
-/// This class is intended to be used within a Dependency Injection [DI] system.
-///
-/// It provides a standardized way to manage a stream and its lifecycle,
-/// ensuring that resources are properly cleaned up when the service is
-/// disposed.
-abstract class StreamService<TData extends Object?, TParams extends Option>
+abstract class StreamService<TData extends Object, TParams extends Option>
     extends Service<TParams> {
-  //
-  //
-  //
-
   StreamService();
 
-  Finisher<TData>? _initialDataCompleter;
-  StreamSubscription<TData>? _streamSubscription;
-  StreamController<TData>? _streamController;
+  Option<SafeFinisher<TData>> _initialDataFinisher = const None();
+  Option<StreamSubscription<TData>> _streamSubscription = const None();
+  Option<StreamController<TData>> _streamController = const None();
 
   @mustCallSuper
   @override
@@ -5118,73 +5301,88 @@ abstract class StreamService<TData extends Object?, TParams extends Option>
     return [...super.provideInitListeners(), _initListener];
   }
 
-  FutureOr<void> _initListener(TParams params) async {
-    await _disposeListener(null);
-    _initialDataCompleter = Finisher<TData>();
-    _streamController = StreamController<TData>.broadcast();
-    _streamSubscription = provideInputStream(params).listen(
-      pushToStream,
-      onError: (Object e) => onError(e, dispose),
-      // Keep the stream open even after an error. All error handling is done
-      // by onError.
-      cancelOnError: false,
-    );
-    return null;
+  FutureOr<void> _initListener(TParams params) {
+    return consec(_disposeStreamResources(), (_) {
+      _initialDataFinisher = Some(SafeFinisher<TData>());
+      final controller = StreamController<TData>.broadcast();
+      _streamController = Some(controller);
+      _streamSubscription = Some(
+        provideInputStream(params).listen(
+          pushToStream,
+          onError: (Object e, StackTrace s) => onError(e, s, dispose),
+          cancelOnError: false,
+        ),
+      );
+    });
   }
 
   @mustCallSuper
   @override
   TServiceListeners<void> provideDisposeListeners() {
-    return [_disposeListener, ...super.provideDisposeListeners()];
+    return [
+      ...super.provideDisposeListeners(),
+      (_) => _disposeStreamResources(),
+    ];
   }
 
-  Future<void> _disposeListener(void _) async {
-    await _streamSubscription?.cancel();
-    await _streamController?.close();
-    _streamSubscription = null;
-    _streamController = null;
-    _initialDataCompleter = null;
+  FutureOr<void> _disposeStreamResources() {
+    final sub = _streamSubscription;
+    _streamSubscription = const None();
+
+    final controller = _streamController;
+    _streamController = const None();
+    _initialDataFinisher = const None();
+
+    return consec(sub.map((s) => s.cancel()).unwrapOr(), onError: (_) {
+      controller.ifSome((c) {
+        if (!c.unwrap().isClosed) {
+          c.unwrap().close();
+        }
+      });
+    });
   }
 
-  /// Override this method to provide the input stream that this service will
-  /// listen to.
   Stream<TData> provideInputStream(TParams params);
 
-  /// Pushes data into the internal stream and triggers.
+  final _listenerQueue = SafeSequential();
+
   @nonVirtual
   @mustCallSuper
   void pushToStream(TData data) {
-    if (_streamController == null || _streamController?.isClosed == true) {
-      return;
-    }
-    if (shouldAdd(data)) {
-      _streamController!.add(data);
-      final completed = _initialDataCompleter?.isCompleted ?? false;
-      if (!completed) {
-        _initialDataCompleter?.complete(data);
+    _streamController.ifSome((controller) {
+      if (controller.isClosed) return;
+
+      if (shouldAdd(data)) {
+        controller.add(data);
+        _initialDataFinisher.ifSome((f) => f.finish(data));
+
+        _listenerQueue.addAllSafe(
+          provideOnPushToStreamListeners().map((listener) {
+            return (_) => Resolvable(() => consec(listener(data), (_) => const None()));
+          }),
+        );
       }
-      provideOnPushToStreamListeners().forEach((e) => e(data));
-    }
+    });
   }
 
-  /// Override this method to handle any errors that occur within the stream.
-  /// The [dispose] callback allows for immediate cleanup if necessary.
-  void onError(Object e, FutureOr<void> Function() dispose) {
-    print('[$runtimeType] $e');
+  void onError(Object e, StackTrace s, FutureOr<void> Function() dispose) {
+    print('Error in StreamService source stream for $runtimeType: $e\n$s');
   }
 
   @mustCallSuper
   TServiceListeners<TData> provideOnPushToStreamListeners() => [];
 
-  /// Override this method to define the conditions under which a data item
-  /// should be added.
   bool shouldAdd(TData data) => true;
 
-  /// Completes with the initial data pushed to the stream.
-  FutureOr<TData>? get initialData => _initialDataCompleter?.futureOr;
+  Resolvable<TData> get initialData {
+    return _initialDataFinisher.map((finisher) {
+      return finisher.resolvable().flatMap((value) => value);
+    }).unwrapOr(
+      Sync.value(Err('initialData accessed before service was initialized.')),
+    );
+  }
 
-  /// Provides access to the stream managed by this service.
-  Stream<TData>? get stream => _streamController?.stream;
+  Option<Stream<TData>> get stream => _streamController.map((c) => c.stream);
 }
 
 // Source: ./lib/src/_common.dart
@@ -5232,7 +5430,6 @@ export 'core/di/_mixins/_mixins.g.dart';
 
 // import 'package:df_safer_dart/df_safer_dart.dart';
 // import 'package:equatable/equatable.dart';
-// import 'package:meta/meta.dart';
 
 // import '../core/di/_dependency.dart';
 // import '../core/di/_di_registry.dart';
@@ -5244,7 +5441,6 @@ export 'core/di/_mixins/_mixins.g.dart';
 /// Manages entities and their associated components,  facilitating the
 /// creation, addition, querying, updating, and removal of components within an
 /// Entity-Component-System (ECS) framework.
-@visibleForTesting
 class World {
   /// Internal registry that holds and manages dependencies for components.
   final _di = DIRegistry();
@@ -5286,8 +5482,8 @@ class World {
   /// Returns the entities that have the specified component.
   Iterable<WorldEntity> withComponent<T extends Component>() {
     return _di.dependenciesWhereType<T>().map(
-      (e) => e.metadata.unwrap().groupEntity as WorldEntity,
-    );
+          (e) => e.metadata.unwrap().groupEntity as WorldEntity,
+        );
   }
 
   /// Updates the component of type [T] for the given entity.
@@ -5348,19 +5544,14 @@ class World {
   }
 
   /// Queries entities that have the specified components [T1], [T2], and [T3].
-  Iterable<WorldEntity>
-  query3<T1 extends Component, T2 extends Component, T3 extends Component>() {
+  Iterable<WorldEntity> query3<T1 extends Component, T2 extends Component, T3 extends Component>() {
     return query([withComponent<T1>, withComponent<T2>, withComponent<T3>]);
   }
 
   /// Queries entities that have the specified components [T1], [T2], [T3], and
   /// [T4].
-  Iterable<WorldEntity> query4<
-    T1 extends Component,
-    T2 extends Component,
-    T3 extends Component,
-    T4 extends Component
-  >() {
+  Iterable<WorldEntity> query4<T1 extends Component, T2 extends Component, T3 extends Component,
+      T4 extends Component>() {
     return query([
       withComponent<T1>,
       withComponent<T2>,
@@ -5371,13 +5562,8 @@ class World {
 
   /// Queries entities that have the specified components [T1], [T2], [T3],
   /// [T4], and [T5].
-  Iterable<WorldEntity> query5<
-    T1 extends Component,
-    T2 extends Component,
-    T3 extends Component,
-    T4 extends Component,
-    T5 extends Component
-  >() {
+  Iterable<WorldEntity> query5<T1 extends Component, T2 extends Component, T3 extends Component,
+      T4 extends Component, T5 extends Component>() {
     return query([
       withComponent<T1>,
       withComponent<T2>,
@@ -5389,14 +5575,8 @@ class World {
 
   /// Queries entities that have the specified components [T1], [T2], [T3],
   /// [T4], [T5], and [T6].
-  Iterable<WorldEntity> query6<
-    T1 extends Component,
-    T2 extends Component,
-    T3 extends Component,
-    T4 extends Component,
-    T5 extends Component,
-    T6 extends Component
-  >() {
+  Iterable<WorldEntity> query6<T1 extends Component, T2 extends Component, T3 extends Component,
+      T4 extends Component, T5 extends Component, T6 extends Component>() {
     return query([
       withComponent<T1>,
       withComponent<T2>,
@@ -5409,15 +5589,8 @@ class World {
 
   /// Queries entities that have the specified components [T1], [T2], [T3],
   /// [T4], [T5], [T6], and [T7].
-  Iterable<WorldEntity> query7<
-    T1 extends Component,
-    T2 extends Component,
-    T3 extends Component,
-    T4 extends Component,
-    T5 extends Component,
-    T6 extends Component,
-    T7 extends Component
-  >() {
+  Iterable<WorldEntity> query7<T1 extends Component, T2 extends Component, T3 extends Component,
+      T4 extends Component, T5 extends Component, T6 extends Component, T7 extends Component>() {
     return query([
       withComponent<T1>,
       withComponent<T2>,
@@ -5432,15 +5605,14 @@ class World {
   /// Queries entities that have the specified components [T1], [T2], [T3],
   /// [T4], [T5], [T6], [T7], and [T8].
   Iterable<WorldEntity> query8<
-    T1 extends Component,
-    T2 extends Component,
-    T3 extends Component,
-    T4 extends Component,
-    T5 extends Component,
-    T6 extends Component,
-    T7 extends Component,
-    T8 extends Component
-  >() {
+      T1 extends Component,
+      T2 extends Component,
+      T3 extends Component,
+      T4 extends Component,
+      T5 extends Component,
+      T6 extends Component,
+      T7 extends Component,
+      T8 extends Component>() {
     return query([
       withComponent<T1>,
       withComponent<T2>,
@@ -5456,16 +5628,15 @@ class World {
   /// Queries entities that have the specified components [T1], [T2], [T3],
   /// [T4], [T5], [T6], [T7], [T8], and [T9].
   Iterable<WorldEntity> query9<
-    T1 extends Component,
-    T2 extends Component,
-    T3 extends Component,
-    T4 extends Component,
-    T5 extends Component,
-    T6 extends Component,
-    T7 extends Component,
-    T8 extends Component,
-    T9 extends Component
-  >() {
+      T1 extends Component,
+      T2 extends Component,
+      T3 extends Component,
+      T4 extends Component,
+      T5 extends Component,
+      T6 extends Component,
+      T7 extends Component,
+      T8 extends Component,
+      T9 extends Component>() {
     return query([
       withComponent<T1>,
       withComponent<T2>,
@@ -5484,10 +5655,9 @@ class World {
 
 /// Represents an entity with components in the ECS/World system. Manages
 /// dependencies and allows retrieval of a specific component.
-@visibleForTesting
 final class WorldEntity extends Entity {
   final World world;
-  WorldEntity._(super.value, this.world);
+  const WorldEntity._(super.value, this.world);
 
   /// Retrieves all dependencies (components) associated with this entity.
   Iterable<Dependency> _getDependencies<T extends Object>() {
@@ -5495,9 +5665,10 @@ final class WorldEntity extends Entity {
   }
 
   /// Retrieves the component of type [T] associated with this entity.
-  T getComponent<T extends Object>() {
-    print(_getDependencies());
-    return _getDependencies().map((e) => e.value.unwrap()).whereType<T>().first;
+  Option<T> getComponent<T extends Object>() {
+    return Option.fromNullable(
+      _getDependencies().map((e) => e.value.unwrap()).whereType<T>().firstOrNull,
+    );
   }
 
   /// Returns the entity itself.
@@ -5508,7 +5679,6 @@ final class WorldEntity extends Entity {
 
 /// A base class for components that are equatable.
 /// Components should extend this class to be used in the ECS system.
-@visibleForTesting
 abstract class Component extends Equatable {
   const Component();
 }
