@@ -41,16 +41,14 @@ base class DIBase {
     FutureOr<void> Function(T value)? onRegister,
     OnUnregisterCallback<T>? onUnregister,
     Entity groupEntity = const DefaultEntity(),
-    bool enableUntilK = false,
+    bool enableUntilExactlyK = false,
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
     final g = groupEntity.preferOverDefault(focusGroup);
     final metadata = DependencyMetadata(
       index: Some(_indexIncrementer++),
       groupEntity: g,
-      onUnregister: onUnregister != null
-          ? Some((e) => onUnregister(e.transf()))
-          : const None(),
+      onUnregister: onUnregister != null ? Some((e) => onUnregister(e.transf())) : const None(),
     );
     final a = Resolvable(
       () => consec(value, (e) => consec(onRegister?.call(e), (_) => e)),
@@ -60,14 +58,14 @@ base class DIBase {
       checkExisting: true,
     );
     if (b.isErr()) {
-      return Sync.value(b.err().transErr());
+      return Sync.value(b.err().unwrap().transErr());
     }
     if (value is! ReservedSafeFinisher<T>) {
       // Used for until.
       _maybeFinish<T>(value: value, g: g);
 
       // Used for untilT and untilK. Disabled by default to improve performance.
-      if (enableUntilK) {
+      if (enableUntilExactlyK) {
         (this as SupportsMixinK).maybeFinishK<T>(g: g);
       }
     }
@@ -83,14 +81,7 @@ base class DIBase {
   Option<Iterable<DI>> children() {
     return childrenContainer.map(
       (e) => e.registry.unsortedDependencies.map(
-        (e) => e
-            .transf<Lazy<DI>>()
-            .value
-            .unwrapSync()
-            .unwrap()
-            .singleton
-            .unwrapSync()
-            .unwrap(),
+        (e) => e.transf<Lazy<DI>>().value.unwrapSync().unwrap().singleton.unwrapSync().unwrap(),
       ),
     );
   }
@@ -129,9 +120,7 @@ base class DIBase {
     bool checkExisting = false,
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
-    final g = dependency.metadata.isSome()
-        ? dependency.metadata.unwrap().groupEntity
-        : focusGroup;
+    final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
     if (checkExisting) {
       final option = getDependency<T>(groupEntity: g, traverse: false);
       if (option.isSome()) {
@@ -317,7 +306,7 @@ base class DIBase {
     }
     final result = option.unwrap();
     if (result.isErr()) {
-      return Some(Sync.value(result.err().transErr()));
+      return Some(Sync.value(result.err().unwrap().transErr()));
     }
     final dependency = result.unwrap();
     final value = dependency.value;
@@ -349,9 +338,9 @@ base class DIBase {
     bool traverse = true,
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
-    final test = registry.getDependency<T>(groupEntity: g);
-    var temp = test.map((e) => Ok(e).asResult());
-    if (test.isNone() && traverse) {
+    final option = registry.getDependency<T>(groupEntity: g);
+    var temp = option.map((e) => Ok(e).transf<Dependency<T>>());
+    if (option.isNone() && traverse) {
       for (final parent in parents) {
         temp = parent.getDependency<T>(groupEntity: g);
         if (temp.isSome()) {
@@ -362,6 +351,8 @@ base class DIBase {
     return temp;
   }
 
+  /// Waits until a dependency of type `TSuper` is registered. `TSuper` should
+  /// typically be the most general type expected.
   @pragma('vm:prefer-inline')
   Resolvable<TSuper> untilSuper<TSuper extends Object>({
     Entity groupEntity = const DefaultEntity(),
@@ -370,6 +361,8 @@ base class DIBase {
     return until<TSuper, TSuper>(groupEntity: groupEntity, traverse: traverse);
   }
 
+  /// Waits until a dependency of type `TSuper` or its subtype `TSub` is
+  /// registered. `TSuper` should typically be the most general type expected.
   Resolvable<TSub> until<TSuper extends Object, TSub extends TSuper>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,

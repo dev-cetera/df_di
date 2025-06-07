@@ -17,11 +17,11 @@ import '/src/core/_reserved_safe_finisher.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
+/// A mixin that provides methods for working with dependencies,
+/// using `Entity` for type resolution.
 base mixin SupportsMixinK on DIBase {
-  //
-  //
-  //
-
+  /// Retrieves the synchronous dependency unsafely, returning the instance
+  /// directly.
   @protected
   @pragma('vm:prefer-inline')
   T getSyncUnsafeK<T extends Object>(
@@ -36,6 +36,7 @@ base mixin SupportsMixinK on DIBase {
     ).unwrap().value.unwrap();
   }
 
+  /// Retrieves the synchronous dependency.
   @protected
   Option<Sync<T>> getSyncK<T extends Object>(
     Entity typeEntity, {
@@ -53,6 +54,8 @@ base mixin SupportsMixinK on DIBase {
     );
   }
 
+  /// Retrieves an asynchronous dependency unsafely, returning a future of the
+  /// instance, directly or throwing an error if not found.
   @protected
   @pragma('vm:prefer-inline')
   Future<T> getAsyncUnsafeK<T extends Object>(
@@ -70,6 +73,7 @@ base mixin SupportsMixinK on DIBase {
     });
   }
 
+  /// Retrieves an asynchronous dependency.
   @protected
   @pragma('vm:prefer-inline')
   Option<Async<T>> getAsyncK<T extends Object>(
@@ -84,6 +88,8 @@ base mixin SupportsMixinK on DIBase {
     ).map((e) => e.toAsync());
   }
 
+  /// Retrieves a dependency unsafely, returning it directly or throwing an
+  /// error if not found.
   @protected
   @pragma('vm:prefer-inline')
   FutureOr<T> getUnsafeK<T extends Object>(
@@ -98,6 +104,7 @@ base mixin SupportsMixinK on DIBase {
     ).unwrap().unwrap();
   }
 
+  /// Retrieves the synchronous dependency or `None` if not found or async.
   @protected
   Option<T> getSyncOrNoneK<T extends Object>(
     Entity typeEntity, {
@@ -124,6 +131,7 @@ base mixin SupportsMixinK on DIBase {
     return Some(value);
   }
 
+  /// Retrieves the dependency.
   @protected
   Option<Resolvable<T>> getK<T extends Object>(
     Entity typeEntity, {
@@ -141,23 +149,22 @@ base mixin SupportsMixinK on DIBase {
     }
     final result = option.unwrap();
     if (result.isErr()) {
-      return Some(Sync.value(result.err().transErr()));
+      return Some(Sync.value(result.err().unwrap().transErr()));
     }
     final value = result.unwrap().value;
     if (value.isSync()) {
       return Some(value);
     }
-
     return Some(
       Async(
         () => value.async().unwrap().value.then((e) {
           final value = e.unwrap();
           registry.removeDependencyK(typeEntity, groupEntity: g);
           final metadata = option.unwrap().unwrap().metadata.map(
-            (e) => e.copyWith(
-              preemptivetypeEntity: TypeEntity(Sync, [typeEntity]),
-            ),
-          );
+                (e) => e.copyWith(
+                  preemptivetypeEntity: TypeEntity(Sync, [typeEntity]),
+                ),
+              );
           registerDependencyK(
             dependency: Dependency(Sync.value(Ok(value)), metadata: metadata),
             checkExisting: false,
@@ -168,14 +175,13 @@ base mixin SupportsMixinK on DIBase {
     );
   }
 
+  /// Retrieves the underlying `Dependency` object.
   @protected
   Result<Dependency<T>> registerDependencyK<T extends Object>({
     required Dependency<T> dependency,
     bool checkExisting = false,
   }) {
-    final g = dependency.metadata.isSome()
-        ? dependency.metadata.unwrap().groupEntity
-        : focusGroup;
+    final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
     if (checkExisting) {
       final option = getDependencyK(
         dependency.typeEntity,
@@ -190,6 +196,7 @@ base mixin SupportsMixinK on DIBase {
     return Ok(dependency);
   }
 
+  /// Retrieves the underlying `Dependency` object.
   @protected
   Option<Result<Dependency<T>>> getDependencyK<T extends Object>(
     Entity typeEntity, {
@@ -198,7 +205,7 @@ base mixin SupportsMixinK on DIBase {
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
     final option = registry.getDependencyK(typeEntity, groupEntity: g);
-    var temp = option.map((e) => Ok(e).asResult().transf<Dependency<T>>());
+    var temp = option.map((e) => Ok(e).transf<Dependency<T>>());
     if (option.isNone() && traverse) {
       for (final parent in parents) {
         temp = (parent as SupportsMixinK).getDependencyK(
@@ -213,6 +220,7 @@ base mixin SupportsMixinK on DIBase {
     return temp;
   }
 
+  /// Unregisters a dependency.
   @protected
   Resolvable<None> unregisterK(
     Entity typeEntity, {
@@ -256,49 +264,7 @@ base mixin SupportsMixinK on DIBase {
     return sequential.last;
   }
 
-  Resolvable<None> unregisterAll({
-    OnUnregisterCallback<Dependency>? onBeforeUnregister,
-    OnUnregisterCallback<Dependency>? onAfterUnregister,
-    bool Function(Dependency)? condition,
-  }) {
-    final results = List.of(registry.reversedDependencies);
-    final sequential = SafeSequential();
-    for (final dependency in results) {
-      sequential
-        ..addSafe((_) {
-          return onBeforeUnregister?.call(Ok(dependency));
-        })
-        ..addSafe((_) {
-          if (condition != null && !condition(dependency)) {
-            return null;
-          }
-          registry.removeDependencyK(
-            dependency.typeEntity,
-            groupEntity: dependency.metadata
-                .map((e) => e.groupEntity)
-                .unwrapOr(const DefaultEntity()),
-          );
-
-          final metadataOption = dependency.metadata;
-          if (metadataOption.isSome()) {
-            final metadata = metadataOption.unwrap();
-            final onUnregisterOption = metadata.onUnregister;
-            if (onUnregisterOption.isSome()) {
-              final onUnregister = onUnregisterOption.unwrap();
-              return dependency.value
-                  .map((e) => onUnregister(Ok(e)) ?? SyncOk.value(const None()))
-                  .comb();
-            }
-          }
-          return null;
-        })
-        ..addSafe((_) {
-          return onAfterUnregister?.call(Ok(dependency));
-        });
-    }
-    return sequential.last;
-  }
-
+  /// Removes a dependency from the registry.
   @protected
   @pragma('vm:prefer-inline')
   Option<Dependency> removeDependencyK<T extends Object>(
@@ -316,6 +282,7 @@ base mixin SupportsMixinK on DIBase {
     return result;
   }
 
+  /// Checks if a dependency is registered.
   @protected
   bool isRegisteredK(
     Entity typeEntity, {
@@ -344,29 +311,14 @@ base mixin SupportsMixinK on DIBase {
     return false;
   }
 
+  /// Waits until a dependency with the exact `typeEntity` is registered.
+  /// The result is cast to `T`.
+  ///
+  /// **Note:** Requires `enableUntilExactlyK: true` during registration.
+  /// If `typeEntity` doesn't match an existing or future registration exactly,
+  /// this will not resolve.
   @protected
-  final finishersK = <Entity, List<ReservedSafeFinisher>>{};
-
-  @protected
-  void maybeFinishK<T extends Object>({required Entity g}) {
-    assert(T != Object, 'T must be specified and cannot be Object.');
-    final typeEntity = TypeEntity(T);
-    for (final di in [this as DI, ...children().unwrapOr([])]) {
-      final test = di.finishersK[g]?.firstWhereOrNull((e) {
-        return e is ReservedSafeFinisher<T> || e.typeEntity == typeEntity;
-      });
-      if (test != null) {
-        test.finish(const None());
-        break;
-      }
-    }
-  }
-
-  /// You must register dependencies via [register] and set its parameter
-  /// `enableUntilK` to true to use this method.
-  @visibleForTesting
-  @protected
-  Resolvable<T> untilK<T extends Object>(
+  Resolvable<T> untilExactlyK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
@@ -394,5 +346,26 @@ base mixin SupportsMixinK on DIBase {
       }
       return getK<T>(typeEntity, groupEntity: g).unwrap();
     }).comb2();
+  }
+
+  /// Stores finishers for [untilExactlyK].
+  @protected
+  final finishersK = <Entity, List<ReservedSafeFinisher>>{};
+
+  /// Attempts to finish any pending [untilExactlyK] calls for the given
+  /// type and group.
+  @protected
+  void maybeFinishK<T extends Object>({required Entity g}) {
+    assert(T != Object, 'T must be specified and cannot be Object.');
+    final typeEntity = TypeEntity(T);
+    for (final di in [this as DI, ...children().unwrapOr([])]) {
+      final test = di.finishersK[g]?.firstWhereOrNull((e) {
+        return e is ReservedSafeFinisher<T> || e.typeEntity == typeEntity;
+      });
+      if (test != null) {
+        test.finish(const None());
+        break;
+      }
+    }
   }
 }

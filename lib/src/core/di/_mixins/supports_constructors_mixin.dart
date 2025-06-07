@@ -14,11 +14,11 @@ import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-base mixin SupportsConstructorsMixin on SupportsMixinT {
-  //
-  //
-  //
-
+/// A mixin that provides methods for working with constructors of dependencies,
+/// using generic types for type resolution.
+base mixin SupportsConstructorsMixin on DIBase {
+  /// Registers a lazy dependency.
+  @pragma('vm:prefer-inline')
   Resolvable<Lazy<T>> registerLazy<T extends Object>(
     LazyConstructor<T> constructor, {
     FutureOr<void> Function(Lazy<T> lazy)? onRegister,
@@ -33,25 +33,7 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
     );
   }
 
-  @pragma('vm:prefer-inline')
-  FutureOr<Lazy<T>> getLazyUnsafe<T extends Object>({
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    return getLazy<T>(
-      groupEntity: groupEntity,
-      traverse: traverse,
-    ).map((e) => e.unwrap()).unwrap();
-  }
-
-  @pragma('vm:prefer-inline')
-  Option<Resolvable<Lazy<T>>> getLazy<T extends Object>({
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    return get<Lazy<T>>(groupEntity: groupEntity, traverse: traverse);
-  }
-
+  /// Unregisters a lazily loaded dependency.
   @pragma('vm:prefer-inline')
   Resolvable<None<Object>> unregisterLazy<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
@@ -67,17 +49,46 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
     );
   }
 
+  /// Retrieves the lazily loaded dependency.
   @pragma('vm:prefer-inline')
-  Resolvable<Lazy<TSuper>> untilLazySuper<TSuper extends Object>({
+  Option<Resolvable<Lazy<T>>> getLazy<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return untilLazy<TSuper, TSuper>(
+    return get<Lazy<T>>(
       groupEntity: groupEntity,
       traverse: traverse,
     );
   }
 
+  /// Retrieves the lazily loaded singleton dependency unsafely, returning the
+  /// instance directly or throwing an error if not found or not a singleton.
+  @pragma('vm:prefer-inline')
+  FutureOr<Lazy<T>> getLazyUnsafe<T extends Object>({
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return getLazy<T>(
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).map((e) => e.unwrap()).unwrap();
+  }
+
+  /// Waits until a dependency of type `TSuper` is registered. `TSuper` should
+  /// typically be the most general type expected.
+  @pragma('vm:prefer-inline')
+  Resolvable<Lazy<TSuper>> untilLazySuper<TSuper extends Object>({
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return untilSuper<Lazy<TSuper>>(
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
+  }
+
+  /// Waits until a dependency of type `TSuper` or its subtype `TSub` is
+  /// registered. `TSuper` should typically be the most general type expected.
   @pragma('vm:prefer-inline')
   Resolvable<Lazy<TSub>> untilLazy<TSuper extends Object, TSub extends TSuper>({
     Entity groupEntity = const DefaultEntity(),
@@ -89,40 +100,7 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
     );
   }
 
-  Option<Resolvable<T>> getLazySingleton<T extends Object>({
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    final option = getLazy<T>(groupEntity: groupEntity, traverse: traverse);
-    if (option.isNone()) {
-      return const None();
-    }
-    final lazy = option.unwrap().sync().unwrap().unwrap();
-    return Some(lazy.singleton);
-  }
-
-  @pragma('vm:prefer-inline')
-  Resolvable<TSuper> untilLazySingletonSuper<TSuper extends Object>({
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    return untilLazySingleton<TSuper, TSuper>(
-      groupEntity: groupEntity,
-      traverse: traverse,
-    );
-  }
-
-  @pragma('vm:prefer-inline')
-  Resolvable<TSub> untilLazySingleton<
-    TSuper extends Object,
-    TSub extends TSuper
-  >({Entity groupEntity = const DefaultEntity(), bool traverse = true}) {
-    return untilLazy<TSuper, TSub>(
-      groupEntity: groupEntity,
-      traverse: traverse,
-    ).map((e) => e.singleton).comb2();
-  }
-
+  /// Resets the singleton instance of a lazily loaded dependency.
   Resolvable<None> resetLazySingleton<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
   }) {
@@ -136,6 +114,21 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
     return const Sync.value(Ok(None()));
   }
 
+  /// Retrieves the lazily loaded singleton dependency.
+  Option<Resolvable<T>> getLazySingleton<T extends Object>({
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    final option = getLazy<T>(groupEntity: groupEntity, traverse: traverse);
+    if (option.isNone()) {
+      return const None();
+    }
+    final lazy = option.unwrap().sync().unwrap().unwrap();
+    return Some(lazy.singleton);
+  }
+
+  /// Retrieves the lazily loaded singleton dependency unsafely, returning the
+  /// instance directly or throwing an error if not found or not a singleton.
   @pragma('vm:prefer-inline')
   FutureOr<T> getLazySingletonUnsafe<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
@@ -147,17 +140,33 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
     ).map((e) => e.unwrap()).unwrap();
   }
 
+  /// Waits until a dependency of type `TSuper` is registered. `TSuper` should
+  /// typically be the most general type expected.
   @pragma('vm:prefer-inline')
-  FutureOr<T> getFactoryUnsafe<T extends Object>({
+  Resolvable<TSuper> untilLazySingletonSuper<TSuper extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getFactory<T>(
+    return untilLazySingleton<TSuper, TSuper>(
       groupEntity: groupEntity,
       traverse: traverse,
-    ).map((e) => e.unwrap()).unwrap();
+    );
   }
 
+  /// Waits until a dependency of type `TSuper` or its subtype `TSub` is
+  /// registered. `TSuper` should typically be the most general type expected.
+  @pragma('vm:prefer-inline')
+  Resolvable<TSub> untilLazySingleton<TSuper extends Object, TSub extends TSuper>({
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return untilLazy<TSuper, TSub>(
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).map((e) => e.singleton).comb2();
+  }
+
+  /// Retrieves the factory dependency.
   Option<Resolvable<T>> getFactory<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
@@ -170,6 +179,21 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
     return Some(lazy.factory);
   }
 
+  /// Retrieves the factory dependency unsafely, returning the instance directly
+  /// or throwing an error if not found.
+  @pragma('vm:prefer-inline')
+  FutureOr<T> getFactoryUnsafe<T extends Object>({
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return getFactory<T>(
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).map((e) => e.unwrap()).unwrap();
+  }
+
+  /// Waits until a dependency of type `TSuper` is registered. `TSuper` should
+  /// typically be the most general type expected.
   @pragma('vm:prefer-inline')
   Resolvable<TSuper> untilFactorySuper<TSuper extends Object>({
     Entity groupEntity = const DefaultEntity(),
@@ -181,6 +205,8 @@ base mixin SupportsConstructorsMixin on SupportsMixinT {
     );
   }
 
+  /// Waits until a dependency of type `TSuper` or its subtype `TSub` is
+  /// registered. `TSuper` should typically be the most general type expected.
   @pragma('vm:prefer-inline')
   Resolvable<TSub> untilFactory<TSuper extends Object, TSub extends TSuper>({
     Entity groupEntity = const DefaultEntity(),

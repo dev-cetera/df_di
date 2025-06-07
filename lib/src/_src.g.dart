@@ -7,7 +7,7 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-export 'core/di/di.dart';
+export './core/di/di.dart';
 export './core/entity/reserved_entities.dart';
 export './core/entity/type_entity.dart';
 export './core/entity/entity.dart';

@@ -14,67 +14,10 @@ import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
+/// A mixin that provides methods for working with constructors of dependencies,
+/// using `Entity` for type resolution.
 base mixin SupportsConstructorsMixinK on SupportsMixinK {
-  @protected
-  @pragma('vm:prefer-inline')
-  FutureOr<Lazy<T>> getLazyUnsafeK<T extends Object>(
-    Entity typeEntity, {
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    return getLazyK<T>(
-      typeEntity,
-      groupEntity: groupEntity,
-      traverse: traverse,
-    ).map((e) => e.unwrap()).unwrap();
-  }
-
-  @protected
-  Resolvable<None> resetLazySingletonK<T extends Object>(
-    Entity typeEntity, {
-    Entity groupEntity = const DefaultEntity(),
-  }) {
-    final temp = getK<T>(
-      TypeEntity(Lazy, [typeEntity]),
-      groupEntity: groupEntity,
-    );
-    if (temp.isSome()) {
-      return temp.unwrap().map((e) {
-        (e as Lazy).resetSingleton();
-        return const None();
-      });
-    }
-    return const Sync.value(Ok(None()));
-  }
-
-  @protected
-  @pragma('vm:prefer-inline')
-  FutureOr<T> getLazySingletonUnsafeK<T extends Object>(
-    Entity typeEntity, {
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    return getLazySingletonK<T>(
-      typeEntity,
-      groupEntity: groupEntity,
-      traverse: traverse,
-    ).unwrap().unwrap();
-  }
-
-  @protected
-  @pragma('vm:prefer-inline')
-  Option<Resolvable<Lazy<T>>> getLazyK<T extends Object>(
-    Entity typeEntity, {
-    Entity groupEntity = const DefaultEntity(),
-    bool traverse = true,
-  }) {
-    return getK<Lazy<T>>(
-      TypeEntity(Lazy, [typeEntity]),
-      groupEntity: groupEntity,
-      traverse: traverse,
-    );
-  }
-
+  /// Retrieves the lazily loaded singleton dependency.
   @protected
   @pragma('vm:prefer-inline')
   Resolvable<None> unregisterLazyK(
@@ -93,6 +36,73 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
     );
   }
 
+  /// Retrieves the lazily loaded dependency.
+  @protected
+  @pragma('vm:prefer-inline')
+  Option<Resolvable<Lazy<T>>> getLazyK<T extends Object>(
+    Entity typeEntity, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return getK<Lazy<T>>(
+      TypeEntity(Lazy, [typeEntity]),
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
+  }
+
+  /// Retrieves the lazily loaded dependency, returning the instance directly or
+  /// throwing an error if not found.
+  @protected
+  @pragma('vm:prefer-inline')
+  FutureOr<Lazy<T>> getLazyUnsafeK<T extends Object>(
+    Entity typeEntity, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return getLazyK<T>(
+      typeEntity,
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).map((e) => e.unwrap()).unwrap();
+  }
+
+  /// You must register dependencies via [register] and set its parameter
+  /// `enableUntilExactlyK` to true to use this method.
+  @protected
+  @pragma('vm:prefer-inline')
+  Resolvable<Lazy<T>> untilLazyExactlyK<T extends Object>(
+    Entity typeEntity, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return untilExactlyK<Lazy<T>>(
+      TypeEntity(Lazy, [typeEntity]),
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
+  }
+
+  /// Resets the singleton instance of a lazily loaded dependency.
+  @protected
+  Resolvable<None> resetLazySingletonK<T extends Object>(
+    Entity typeEntity, {
+    Entity groupEntity = const DefaultEntity(),
+  }) {
+    final temp = getK<T>(
+      TypeEntity(Lazy, [typeEntity]),
+      groupEntity: groupEntity,
+    );
+    if (temp.isSome()) {
+      return temp.unwrap().map((e) {
+        (e as Lazy).resetSingleton();
+        return const None();
+      });
+    }
+    return const Sync.value(Ok(None()));
+  }
+
+  /// Retrieves the lazily loaded singleton dependency.
   @protected
   Option<Resolvable<T>> getLazySingletonK<T extends Object>(
     Entity typeEntity, {
@@ -111,20 +121,39 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
     return Some(lazy.singleton);
   }
 
+  /// Retrieves the lazily loaded singleton dependency unsafely, returning the
+  /// instance directly or throwing an error if not found or not a singleton.
   @protected
   @pragma('vm:prefer-inline')
-  FutureOr<T> getFactoryUnsafeK<T extends Object>(
+  FutureOr<T> getLazySingletonUnsafeK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return getFactoryK<T>(
+    return getLazySingletonK<T>(
       typeEntity,
       groupEntity: groupEntity,
       traverse: traverse,
     ).unwrap().unwrap();
   }
 
+  /// Waits until a dependency of type `TSuper` is registered. `TSuper` should
+  /// typically be the most general type expected.
+  @protected
+  @pragma('vm:prefer-inline')
+  Resolvable<T> untilLazySingletonyExactlyK<T extends Object>(
+    Entity typeEntity, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return untilLazyExactlyK<T>(
+      typeEntity,
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).map((e) => e.singleton).comb2();
+  }
+
+  /// Retrieves the factory dependency.
   @protected
   Option<Resolvable<T>> getFactoryK<T extends Object>(
     Entity typeEntity, {
@@ -143,20 +172,34 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
     return Some(lazy.factory);
   }
 
-  /// You must register dependencies via [register] and set its parameter
-  /// `enableUntilK` to true to use this method.
-  @visibleForTesting
+  /// Retrieves the factory dependency, returning the instance directly or
+  /// throwing an error if not found.
   @protected
   @pragma('vm:prefer-inline')
-  Resolvable<Lazy<T>> untilLazyK<T extends Object>(
+  FutureOr<T> getFactoryUnsafeK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return untilK<Lazy<T>>(
-      TypeEntity(Lazy, [typeEntity]),
+    return getFactoryK<T>(
+      typeEntity,
       groupEntity: groupEntity,
       traverse: traverse,
-    );
+    ).unwrap().unwrap();
+  }
+
+  /// Waits until a dependency of type `TSuper` is registered. `TSuper` should
+  /// typically be the most general type expected.
+  @pragma('vm:prefer-inline')
+  Resolvable<T> untilFactoryExactlyK<T extends Object>(
+    Entity typeEntity, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return untilLazyExactlyK<T>(
+      typeEntity,
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).map((e) => e.factory).comb2();
   }
 }

@@ -11,6 +11,7 @@
 //.title~
 
 import '/src/_common.dart';
+import '_mixins/supports_unregister_all.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -24,7 +25,8 @@ final class DI extends DIBase
         SupportsChildrenMixin,
         SupportsServicesMixin,
         SupportsServicesMixinK,
-        SupportsServicesMixinT {
+        SupportsServicesMixinT,
+        SupportsUnregisterAll {
   DI();
 
   /// A predefined container recommended for application-wide dependencies.

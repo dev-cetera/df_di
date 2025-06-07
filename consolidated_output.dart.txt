@@ -2868,7 +2868,7 @@ base class DIBase {
     FutureOr<void> Function(T value)? onRegister,
     OnUnregisterCallback<T>? onUnregister,
     Entity groupEntity = const DefaultEntity(),
-    bool enableUntilK = false,
+    bool enableUntilExactlyK = false,
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
     final g = groupEntity.preferOverDefault(focusGroup);
@@ -2892,7 +2892,7 @@ base class DIBase {
       _maybeFinish<T>(value: value, g: g);
 
       // Used for untilT and untilK. Disabled by default to improve performance.
-      if (enableUntilK) {
+      if (enableUntilExactlyK) {
         (this as SupportsMixinK).maybeFinishK<T>(g: g);
       }
     }
@@ -3370,7 +3370,7 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
   }
 
   /// You must register dependencies via [register] and set its parameter
-  /// `enableUntilK` to true to use this method.
+  /// `enableUntilExactlyK` to true to use this method.
   @visibleForTesting
   @protected
   @pragma('vm:prefer-inline')
@@ -3650,7 +3650,7 @@ base mixin SupportsConstructorsMixinT on SupportsConstructorsMixinK {
   }
 
   /// You must register dependencies via [register] and set its parameter
-  /// `enableUntilK` to true to use this method.
+  /// `enableUntilExactlyK` to true to use this method.
   @visibleForTesting
   @pragma('vm:prefer-inline')
   Resolvable<Lazy<T>> untilLazyT<T extends Object>(
@@ -3666,7 +3666,7 @@ base mixin SupportsConstructorsMixinT on SupportsConstructorsMixinK {
   }
 
   /// You must register dependencies via [register] and set its parameter
-  /// `enableUntilK` to true to use this method.
+  /// `enableUntilExactlyK` to true to use this method.
   @visibleForTesting
   @pragma('vm:prefer-inline')
   Resolvable<T> untilT<T extends Object>(
@@ -4267,7 +4267,7 @@ base mixin SupportsMixinK on DIBase {
   }
 
   /// You must register dependencies via [register] and set its parameter
-  /// `enableUntilK` to true to use this method.
+  /// `enableUntilExactlyK` to true to use this method.
   @visibleForTesting
   @protected
   Resolvable<T> untilK<T extends Object>(
