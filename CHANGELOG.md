@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.11.0]
+
+- Released @ 6/2025 (UTC)
+- breaking: Massive update and refactoring
+
 ## [0.10.25]
 
 - Released @ 6/2025 (UTC)

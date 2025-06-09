@@ -17,7 +17,17 @@ export 'dart:async';
 export 'package:collection/collection.dart';
 export 'package:df_safer_dart/df_safer_dart.dart';
 export 'package:df_type/df_type.dart'
-    show consecList, consec, consec2, consec3, consec4, consec5, consec6, consec7, consec8, consec9;
+    show
+        consecList,
+        consec,
+        consec2,
+        consec3,
+        consec4,
+        consec5,
+        consec6,
+        consec7,
+        consec8,
+        consec9;
 export 'package:df_log/df_log.dart';
 
 export 'package:meta/meta.dart';

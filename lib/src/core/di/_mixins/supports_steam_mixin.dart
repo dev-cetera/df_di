@@ -15,8 +15,11 @@ import '/src/_common.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 base mixin SupportsStreamServiceMixin on DIBase {
-  Resolvable<TStream> initSteamService<TData extends Result, TParams extends Option,
-      TStream extends StreamService<TData, TParams>>(
+  Resolvable<TStream> initSteamService<
+    TData extends Result,
+    TParams extends Option,
+    TStream extends StreamService<TData, TParams>
+  >(
     TStream stream, {
     required TParams params,
     FutureOr<void> Function(TStream stream)? onRegister,
@@ -27,7 +30,8 @@ base mixin SupportsStreamServiceMixin on DIBase {
     return register<TStream>(
       stream,
       onRegister: (e) => e.init(params).unwrap(),
-      onUnregister: (e) => Resolvable(() => e.map((e) => e.dispose().unwrap()).unwrap()),
+      onUnregister: (e) =>
+          Resolvable(() => e.map((e) => e.dispose().unwrap()).unwrap()),
       groupEntity: groupEntity,
       enableUntilExactlyK: enableUntilExactlyK,
     );

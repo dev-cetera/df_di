@@ -53,7 +53,9 @@ abstract class Service<TParams extends Option> {
   /// A static hook for the DI system to properly dispose of the service upon unregistering.
   static Resolvable<None> unregister(Result<Service> serviceResult) {
     return serviceResult.isErr()
-        ? const Sync.value(Ok(None())) // If service creation failed, do nothing.
+        ? const Sync.value(
+            Ok(None()),
+          ) // If service creation failed, do nothing.
         : serviceResult.unwrap().dispose().map((_) => const None());
   }
 
@@ -71,7 +73,8 @@ abstract class Service<TParams extends Option> {
   bool get isPaused => _state == ServiceState.PAUSED;
 
   /// Returns `true` if the service has been disposed or is in the process of disposing.
-  bool get isDisposed => _state == ServiceState.DISPOSED || _state == ServiceState.BUSY_DISPOSING;
+  bool get isDisposed =>
+      _state == ServiceState.DISPOSED || _state == ServiceState.BUSY_DISPOSING;
 
   /// Orchestrates all lifecycle operations to run sequentially, preventing race conditions.
   final _sequential = SafeSequential();
@@ -85,15 +88,14 @@ abstract class Service<TParams extends Option> {
   /// initialized. It will throw a `StateError` if called on a disposed service.
   @nonVirtual
   Resolvable<None> init(TParams params) {
-    if (state == ServiceState.INITIALIZED || state == ServiceState.BUSY_INITIALIZING) {
+    if (state == ServiceState.INITIALIZED ||
+        state == ServiceState.BUSY_INITIALIZING) {
       return _sequential.last;
     }
 
     if (isDisposed) {
       return Sync.value(
-        Err(
-          'Cannot initialize a service that has been disposed.',
-        ),
+        Err('Cannot initialize a service that has been disposed.'),
       );
     }
 
@@ -102,7 +104,10 @@ abstract class Service<TParams extends Option> {
       _state = ServiceState.BUSY_INITIALIZING;
       final operation = SafeSequential()
         ..addAllSafe(
-          provideInitListeners().map((listener) => (_) => listener(params)),
+          provideInitListeners().map(
+            (listener) =>
+                (_) => listener(params),
+          ),
         );
 
       return operation.last.map((_) {
@@ -129,9 +134,7 @@ abstract class Service<TParams extends Option> {
   Resolvable<None> pause() {
     if (state != ServiceState.INITIALIZED) {
       return Sync.value(
-        Err(
-          'Service can only be paused when it is initialized and running.',
-        ),
+        Err('Service can only be paused when it is initialized and running.'),
       );
     }
 
@@ -139,7 +142,10 @@ abstract class Service<TParams extends Option> {
       _state = ServiceState.BUSY_PAUSING;
       final operation = SafeSequential()
         ..addAllSafe(
-          providePauseListeners().map((listener) => (_) => listener(_params)),
+          providePauseListeners().map(
+            (listener) =>
+                (_) => listener(_params),
+          ),
         );
 
       return operation.last.map((_) {
@@ -161,18 +167,17 @@ abstract class Service<TParams extends Option> {
   @nonVirtual
   Resolvable<None> resume() {
     if (state != ServiceState.PAUSED) {
-      return Sync.value(
-        Err(
-          'Service can only be resumed when it is paused.',
-        ),
-      );
+      return Sync.value(Err('Service can only be resumed when it is paused.'));
     }
 
     _sequential.addSafe((_) {
       _state = ServiceState.BUSY_RESUMING;
       final operation = SafeSequential()
         ..addAllSafe(
-          provideResumeListeners().map((listener) => (_) => listener(_params)),
+          provideResumeListeners().map(
+            (listener) =>
+                (_) => listener(_params),
+          ),
         );
 
       return operation.last.map((_) {
@@ -203,7 +208,10 @@ abstract class Service<TParams extends Option> {
       _state = ServiceState.BUSY_DISPOSING;
       final operation = SafeSequential()
         ..addAllSafe(
-          provideDisposeListeners().map((listener) => (_) => listener(_params)),
+          provideDisposeListeners().map(
+            (listener) =>
+                (_) => listener(_params),
+          ),
         );
 
       return operation.last.map((_) {

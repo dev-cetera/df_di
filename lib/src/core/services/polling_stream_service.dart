@@ -21,7 +21,8 @@ import '/src/_common.dart';
 /// polling a REST API endpoint, or any other task that needs to be performed
 /// on a regular interval. The polling is automatically managed by the service's
 /// lifecycle (`init`, `pause`, `resume`, `dispose`).
-abstract class PollingStreamService<TData extends Result> extends StreamService<TData, None> {
+abstract class PollingStreamService<TData extends Result>
+    extends StreamService<TData, None> {
   PollingStreamService();
 
   // --- PRIVATE POLLING MEMBERS -----------------------------------------------
@@ -34,28 +35,19 @@ abstract class PollingStreamService<TData extends Result> extends StreamService<
   @override
   @mustCallSuper
   TServiceResolvables<None> provideInitListeners() {
-    return [
-      ...super.provideInitListeners(),
-      _startPolling,
-    ];
+    return [...super.provideInitListeners(), _startPolling];
   }
 
   @override
   @mustCallSuper
   TServiceResolvables<None> providePauseListeners() {
-    return [
-      ...super.providePauseListeners(),
-      _stopPolling,
-    ];
+    return [...super.providePauseListeners(), _stopPolling];
   }
 
   @override
   @mustCallSuper
   TServiceResolvables<None> provideResumeListeners() {
-    return [
-      ...super.provideResumeListeners(),
-      _startPolling,
-    ];
+    return [...super.provideResumeListeners(), _startPolling];
   }
 
   @override
@@ -64,10 +56,7 @@ abstract class PollingStreamService<TData extends Result> extends StreamService<
     // The parent StreamService's dispose listeners are called automatically,
     // which includes our custom _stopPolling via the teardown hook.
     // We just add our specific logic here.
-    return [
-      _stopPolling,
-      ...super.provideDisposeListeners(),
-    ];
+    return [_stopPolling, ...super.provideDisposeListeners()];
   }
 
   // --- CORE POLLING LOGIC ----------------------------------------------------
@@ -91,9 +80,7 @@ abstract class PollingStreamService<TData extends Result> extends StreamService<
           }
         } catch (e, s) {
           // Log the error and potentially push it to an error stream if needed.
-          print(
-            'Error during polling for $runtimeType: $e\n$s',
-          );
+          print('Error during polling for $runtimeType: $e\n$s');
         } finally {
           _isPolling = false;
         }
