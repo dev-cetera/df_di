@@ -1,14 +1,13 @@
 // Consolidated Imports
 import 'package:df_di/df_di.dart';
 import 'dart:async';
-import 'package:test/test.dart';
 import 'package:df_di/src/_common.dart';
+import 'package:test/test.dart';
 import 'package:get_it/get_it.dart';
 import 'dart:math';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:meta/meta.dart' show protected;
-import 'package:df_debouncer/df_debouncer.dart';
 import 'package:df_safer_dart/df_safer_dart.dart';
 import 'package:equatable/equatable.dart';
 
@@ -101,6 +100,36 @@ class Grandparent {}
 class Parent extends Grandparent {}
 
 class Child extends Parent {}
+
+// Source: ./example/example_service_1.dart
+//.title
+// ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+//
+// Dart/Flutter (DF) Packages by dev-cetera.com & contributors. The use of this
+// source code is governed by an MIT-style license described in the LICENSE
+// file located in this project's root directory.
+//
+// See: https://opensource.org/license/mit
+//
+// ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+//.title~
+
+// import 'package:df_di/df_di.dart';
+// import 'package:df_di/src/_common.dart';
+
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+void main() async {}
+
+class ExampleService extends StreamService {
+  //final timer = Timer.periodic(const Duration(seconds: 1), callback)
+
+  @override
+  Stream<Result> provideInputStream(Option<Object> params) {
+    // TODO: implement provideInputStream
+    throw UnimplementedError();
+  }
+}
 
 // Source: ./example/unregister.dart
 //.title
@@ -1322,6 +1351,7 @@ base class TestService extends Service {
       ...super.provideInitListeners(),
       (_) {
         print('Initializing TestService!!!');
+        return SyncOk.value(const None());
       },
     ];
   }
@@ -1692,8 +1722,11 @@ base class TestService extends Service {
   provideInitListeners() {
     return [
       ...super.provideInitListeners(),
-      (_) async {
-        return Future.delayed(const Duration(seconds: 1), () => print('Done!'));
+      (_) {
+        return Async(() async {
+          await Future.delayed(const Duration(seconds: 2), () => print('Done!'));
+          return const None();
+        });
       },
     ];
   }
@@ -3181,6 +3214,43 @@ base class DIBase {
 // Source: ./lib/src/core/di/dep.dart
 // TODO: Create a Fluent API one called Dep/
 class Dep {}
+
+// Source: ./lib/src/core/di/_mixins/supports_steam_mixin.dart
+//.title
+// ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+//
+// Dart/Flutter (DF) Packages by dev-cetera.com & contributors. The use of this
+// source code is governed by an MIT-style license described in the LICENSE
+// file located in this project's root directory.
+//
+// See: https://opensource.org/license/mit
+//
+// ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+//.title~
+
+// import '/src/_common.dart';
+
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+base mixin SupportsStreamServiceMixin on DIBase {
+  Resolvable<TStream> initSteamService<TData extends Result, TParams extends Option,
+      TStream extends StreamService<TData, TParams>>(
+    TStream stream, {
+    required TParams params,
+    FutureOr<void> Function(TStream stream)? onRegister,
+    TOnUnregisterCallback<TStream>? onUnregister,
+    Entity groupEntity = const DefaultEntity(),
+    bool enableUntilExactlyK = false,
+  }) {
+    return register<TStream>(
+      stream,
+      onRegister: (e) => e.init(params).unwrap(),
+      onUnregister: (e) => Resolvable(() => e.map((e) => e.dispose().unwrap()).unwrap()),
+      groupEntity: groupEntity,
+      enableUntilExactlyK: enableUntilExactlyK,
+    );
+  }
+}
 
 // Source: ./lib/src/core/di/_mixins/supports_constructors_mixin_k.dart
 //.title
@@ -4973,6 +5043,138 @@ final class ReservedSafeFinisher<T extends Object> extends SafeFinisher<T> {
   }
 }
 
+// Source: ./lib/src/core/services/polling_stream_service.dart
+//.title
+// ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+//
+// Dart/Flutter (DF) Packages by dev-cetera.com & contributors. The use of this
+// source code is governed by an MIT-style license described in the LICENSE
+// file located in this project's root directory.
+//
+// See: https://opensource.org/license/mit
+//
+// ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+//.title~
+
+// import '/src/_common.dart';
+
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+/// A specialized [StreamService] that generates data by periodically polling a
+/// data source.
+///
+/// This service is ideal for scenarios like checking a database for updates,
+/// polling a REST API endpoint, or any other task that needs to be performed
+/// on a regular interval. The polling is automatically managed by the service's
+/// lifecycle (`init`, `pause`, `resume`, `dispose`).
+abstract class PollingStreamService<TData extends Result> extends StreamService<TData, None> {
+  PollingStreamService();
+
+  // --- PRIVATE POLLING MEMBERS -----------------------------------------------
+
+  Option<Timer> _timer = const None();
+  bool _isPolling = false;
+
+  // --- LIFECYCLE INTEGRATION -------------------------------------------------
+
+  @override
+  @mustCallSuper
+  TServiceResolvables<None> provideInitListeners() {
+    return [
+      ...super.provideInitListeners(),
+      _startPolling,
+    ];
+  }
+
+  @override
+  @mustCallSuper
+  TServiceResolvables<None> providePauseListeners() {
+    return [
+      ...super.providePauseListeners(),
+      _stopPolling,
+    ];
+  }
+
+  @override
+  @mustCallSuper
+  TServiceResolvables<None> provideResumeListeners() {
+    return [
+      ...super.provideResumeListeners(),
+      _startPolling,
+    ];
+  }
+
+  @override
+  @mustCallSuper
+  TServiceResolvables<None> provideDisposeListeners() {
+    // The parent StreamService's dispose listeners are called automatically,
+    // which includes our custom _stopPolling via the teardown hook.
+    // We just add our specific logic here.
+    return [
+      _stopPolling,
+      ...super.provideDisposeListeners(),
+    ];
+  }
+
+  // --- CORE POLLING LOGIC ----------------------------------------------------
+
+  /// Starts the periodic polling timer.
+  Resolvable<None> _startPolling(None _) {
+    // Ensure any existing timer is stopped before starting a new one.
+    _stopPolling(const None());
+
+    _timer = Some(
+      Timer.periodic(providePollingInterval(), (_) async {
+        // Prevent overlapping polls if a poll takes longer than the interval.
+        if (_isPolling) return;
+        _isPolling = true;
+
+        try {
+          final data = await onPoll();
+          // The service could have been disposed while awaiting the poll.
+          if (!isDisposed) {
+            pushToStream(data);
+          }
+        } catch (e, s) {
+          // Log the error and potentially push it to an error stream if needed.
+          print(
+            'Error during polling for $runtimeType: $e\n$s',
+          );
+        } finally {
+          _isPolling = false;
+        }
+      }),
+    );
+    return SyncOk.value(const None());
+  }
+
+  /// Stops the polling timer.
+  Resolvable<None> _stopPolling(None _) {
+    _timer.ifSome((t) => t.unwrap().cancel());
+    _timer = const None();
+    _isPolling = false; // Reset the polling flag.
+    return SyncOk.value(const None());
+  }
+
+  // --- STREAM SERVICE IMPLEMENTATION -----------------------------------------
+
+  /// This service manages its own data source via a timer, so we provide an
+  /// empty stream to satisfy the parent class's requirement.
+  @override
+  Stream<TData> provideInputStream(None params) => const Stream.empty();
+
+  // --- USER OVERRIDES --------------------------------------------------------
+
+  /// **[MANDATORY]** The asynchronous action to perform on each poll.
+  ///
+  /// This function will be awaited. Its successful result will be pushed
+  /// to the stream.
+  Future<TData> onPoll();
+
+  /// **[MANDATORY]** The `Duration` to wait between each poll.
+  Duration providePollingInterval();
+}
+
 // Source: ./lib/src/core/services/service.dart
 //.title
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
@@ -4986,289 +5188,220 @@ final class ReservedSafeFinisher<T extends Object> extends SafeFinisher<T> {
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-// import 'package:df_debouncer/df_debouncer.dart';
 // import '/src/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 /// Defines the possible lifecycle states of a [Service].
-enum _ServiceState {
+enum ServiceState {
+  /// The service has not been initialized.
   NOT_INITIALIZED,
+
+  /// The service is currently executing its initialization logic.
   BUSY_INITIALIZING,
+
+  /// The service has been successfully initialized and is running.
   INITIALIZED,
+
+  /// The service is currently paused.
+  PAUSED,
+
+  /// The service is currently executing its pausing logic.
+  BUSY_PAUSING,
+
+  /// The service is currently executing its resuming logic.
+  BUSY_RESUMING,
+
+  /// The service is currently executing its disposal logic.
   BUSY_DISPOSING,
+
+  /// The service has been disposed and cannot be used again.
   DISPOSED,
 }
 
-/// A base class for services that require initialization and disposal
-/// management.
+/// A base class for services that require a managed lifecycle.
 ///
 /// This class provides a robust, state-managed structure for service
-/// lifecycles, ensuring they are properly initialized and disposed of, even
-/// under concurrent access. It is intended for use within a Dependency
-/// Injection (DI) system.
+/// lifecycles (`init`, `pause`, `resume`, `dispose`), ensuring they are properly
+/// and sequentially executed, even under concurrent access. It is intended for
+/// use within a Dependency Injection (DI) system.
 abstract class Service<TParams extends Option> {
   Service();
 
-  static Resolvable<None> unregister(Result<Service> e) {
-    return Resolvable(() => consec(e.unwrap().dispose(), (_) => const None()));
+  /// A static hook for the DI system to properly dispose of the service upon unregistering.
+  static Resolvable<None> unregister(Result<Service> serviceResult) {
+    return serviceResult.isErr()
+        ? SyncOk.value(const None()) // If service creation failed, do nothing.
+        : serviceResult.unwrap().dispose().map((_) => const None());
   }
 
   // --- STATE MANAGEMENT ------------------------------------------------------
 
-  var _state = _ServiceState.NOT_INITIALIZED;
-  // ✅ Use Option to make the potential absence of a finisher explicit.
-  Option<SafeFinisher<None>> _operationFinisher = const None();
+  ServiceState _state = ServiceState.NOT_INITIALIZED;
 
-  /// Returns `true` if the service has been successfully initialized.
-  bool get initialized => _state == _ServiceState.INITIALIZED;
+  /// The current state of the service.
+  ServiceState get state => _state;
 
-  /// Returns `true` if the service has been disposed or is being disposed.
-  bool get disposed => _state == _ServiceState.DISPOSED || _state == _ServiceState.BUSY_DISPOSING;
+  /// Returns `true` if the service has been successfully initialized and is not paused.
+  bool get isRunning => _state == ServiceState.INITIALIZED;
 
-  // --- INITIALIZATION OF SERVICE ---------------------------------------------
+  /// Returns `true` if the service is currently paused.
+  bool get isPaused => _state == ServiceState.PAUSED;
 
-  /// Initializes the service, making it ready for use.
-  @nonVirtual
-  FutureOr<void> init(TParams params) {
-    if (_state == _ServiceState.INITIALIZED) return const None();
+  /// Returns `true` if the service has been disposed or is in the process of disposing.
+  bool get isDisposed => _state == ServiceState.DISPOSED || _state == ServiceState.BUSY_DISPOSING;
 
-    if (_state == _ServiceState.BUSY_INITIALIZING) {
-      return consec(_operationFinisher.unwrap().resolvable().value, (_) {});
-    }
-
-    if (disposed) {
-      throw StateError('Cannot initialize a service that has been disposed.');
-    }
-
-    _state = _ServiceState.BUSY_INITIALIZING;
-    _operationFinisher = Some(SafeFinisher<None>());
-
-    try {
-      final sequential = Sequential();
-      sequential.addAll([
-        ...provideInitListeners().map((e) => (_) => e(params)),
-        (_) => _state = _ServiceState.INITIALIZED,
-      ]);
-
-      return consec(
-        sequential.last,
-        (_) {
-          _operationFinisher.ifSome((f) => f.unwrap().finish(const None()));
-        },
-        onError: (e) {
-          _state = _ServiceState.DISPOSED;
-          _operationFinisher.ifSome((f) => f.unwrap()..resolve(Sync.value(Err(e))));
-        },
-      );
-    } catch (e) {
-      _state = _ServiceState.DISPOSED;
-      _operationFinisher.ifSome((f) => f.unwrap()..resolve(Sync.value(Err(e))));
-      rethrow;
-    }
-  }
-
-  @mustCallSuper
-  TServiceListeners<TParams> provideInitListeners() => [];
-
-  // --- RESTARTING OF SERVICE -------------------------------------------------
-
+  /// Orchestrates all lifecycle operations to run sequentially, preventing race conditions.
+  final _sequential = SafeSequential();
   late TParams _params;
 
+  // --- INITIALIZATION (START) ------------------------------------------------
+
+  /// Initializes the service with the given [params], making it ready for use.
+  ///
+  /// This operation is idempotent and will be ignored if the service is already
+  /// initialized. It will throw a `StateError` if called on a disposed service.
   @nonVirtual
-  @pragma('vm:prefer-inline')
-  FutureOr<void> restartService(TParams params) {
+  Resolvable<None> init(TParams params) {
+    if (state == ServiceState.INITIALIZED || state == ServiceState.BUSY_INITIALIZING) {
+      return _sequential.last;
+    }
+
+    if (isDisposed) {
+      return Sync.value(
+        Err(
+          'Cannot initialize a service that has been disposed.',
+        ),
+      );
+    }
+
     _params = params;
-    return _restartDebouncer.call();
-  }
-
-  late final _restartDebouncer = Debouncer(
-    delay: Duration.zero,
-    onWaited: () => consec(dispose(), (_) => init(_params)),
-  );
-
-  // --- DISPOSAL OF SERVICE ---------------------------------------------------
-
-  @mustCallSuper
-  TServiceListeners<TParams> provideDisposeListeners() => [];
-
-  @protected
-  @nonVirtual
-  FutureOr<void> dispose() {
-    if (_state == _ServiceState.DISPOSED || _state == _ServiceState.BUSY_DISPOSING) {
-      return _operationFinisher.map((f) => f.resolvable().value).unwrapOr(const Ok(None()));
-    }
-
-    if (_state == _ServiceState.NOT_INITIALIZED) {
-      _state = _ServiceState.DISPOSED;
-      return const None();
-    }
-
-    return consec(_operationFinisher.map((f) => f.resolvable().value).unwrapOr(const Ok(None())),
-        (_) {
-      _state = _ServiceState.BUSY_DISPOSING;
-      _operationFinisher = Some(SafeFinisher<None>());
-
-      try {
-        final sequential = Sequential();
-        sequential.addAll([
-          ...provideDisposeListeners().map((e) => (_) => e(_params)),
-          (_) => _state = _ServiceState.DISPOSED,
-        ]);
-
-        return consec(
-          sequential.last,
-          (_) {
-            _operationFinisher.ifSome((f) => f.unwrap()..finish(const None()));
-          },
-          onError: (e) {
-            _state = _ServiceState.DISPOSED;
-            _operationFinisher.ifSome((f) => f.unwrap()..resolve(Sync.value(Err(e))));
-          },
+    _sequential.addSafe((_) {
+      _state = ServiceState.BUSY_INITIALIZING;
+      final operation = SafeSequential()
+        ..addAllSafe(
+          provideInitListeners().map((listener) => (_) => listener(params)),
         );
-      } catch (e) {
-        _state = _ServiceState.DISPOSED;
-        _operationFinisher.ifSome((f) => f.unwrap()..resolve(Sync.value(Err(e))));
-        rethrow;
-      }
+
+      return operation.last.map((_) {
+        _state = ServiceState.INITIALIZED;
+        return const None();
+      });
     });
+
+    return _sequential.last;
   }
+
+  /// Provides a list of listeners to be executed during initialization.
+  /// Override this to add custom initialization logic.
+  @mustCallSuper
+  TServiceResolvables<TParams> provideInitListeners() => [];
+
+  // --- PAUSE & RESUME --------------------------------------------------------
+
+  /// Pauses the service.
+  ///
+  /// While paused, the service should halt its operations.
+  /// This operation is idempotent.
+  @nonVirtual
+  Resolvable<None> pause() {
+    if (state != ServiceState.INITIALIZED) {
+      return Sync.value(
+        Err(
+          'Service can only be paused when it is initialized and running.',
+        ),
+      );
+    }
+
+    _sequential.addSafe((_) {
+      _state = ServiceState.BUSY_PAUSING;
+      final operation = SafeSequential()
+        ..addAllSafe(
+          providePauseListeners().map((listener) => (_) => listener(_params)),
+        );
+
+      return operation.last.map((_) {
+        _state = ServiceState.PAUSED;
+        return const None();
+      });
+    });
+
+    return _sequential.last;
+  }
+
+  /// Provides a list of listeners to be executed when the service is paused.
+  @mustCallSuper
+  TServiceResolvables<TParams> providePauseListeners() => [];
+
+  /// Resumes the service from a paused state.
+  ///
+  /// This operation is idempotent if the service is already running.
+  @nonVirtual
+  Resolvable<None> resume() {
+    if (state != ServiceState.PAUSED) {
+      return Sync.value(
+        Err(
+          'Service can only be resumed when it is paused.',
+        ),
+      );
+    }
+
+    _sequential.addSafe((_) {
+      _state = ServiceState.BUSY_RESUMING;
+      final operation = SafeSequential()
+        ..addAllSafe(
+          provideResumeListeners().map((listener) => (_) => listener(_params)),
+        );
+
+      return operation.last.map((_) {
+        _state = ServiceState.INITIALIZED;
+        return const None();
+      });
+    });
+
+    return _sequential.last;
+  }
+
+  /// Provides a list of listeners to be executed when the service is resumed.
+  @mustCallSuper
+  TServiceResolvables<TParams> provideResumeListeners() => [];
+
+  // --- DISPOSAL (STOP) -------------------------------------------------------
+
+  /// Disposes of the service, releasing all resources.
+  ///
+  /// Once disposed, the service cannot be used again. This operation is idempotent.
+  @nonVirtual
+  Resolvable<None> dispose() {
+    if (isDisposed) {
+      return _sequential.last;
+    }
+
+    _sequential.addSafe((_) {
+      _state = ServiceState.BUSY_DISPOSING;
+      final operation = SafeSequential()
+        ..addAllSafe(
+          provideDisposeListeners().map((listener) => (_) => listener(_params)),
+        );
+
+      return operation.last.map((_) {
+        _state = ServiceState.DISPOSED;
+        return const None();
+      });
+    });
+    return _sequential.last;
+  }
+
+  /// Provides a list of listeners to be executed during disposal.
+  @mustCallSuper
+  TServiceResolvables<TParams> provideDisposeListeners() => [];
 }
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-typedef TServiceListeners<T> = List<FutureOr<void> Function(T data)>;
-
-// //.title
-// // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-// //
-// // Dart/Flutter (DF) Packages by dev-cetera.com & contributors. The use of this
-// // source code is governed by an MIT-style license described in the LICENSE
-// // file located in this project's root directory.
-// //
-// // See: https://opensource.org/license/mit
-// //
-// // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-// //.title~
-
-// import 'package:df_debouncer/df_debouncer.dart';
-
-// import '/src/_common.dart';
-
-// // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-
-// /// A base class for services that require initialization and disposal
-// /// management.
-// ///
-// /// This class is intended to be used within a Dependency Injection [DI] system.
-// ///
-// /// It provides a standardized structure for managing the lifecycle of services,
-// /// ensuring they are properly initialized when needed and disposed of when no
-// /// longer in use.
-// abstract class Service<TParams extends Option> {
-//   //
-//   //
-//   //
-
-//   static Resolvable<None> unregister(Result<Service> e) {
-//     return Resolvable(() async {
-//       await e.unwrap().dispose();
-//       return const None();
-//     });
-//   }
-
-//   //
-//   //
-//   //
-
-//   Service();
-
-//   // Used to avoid concurrent initialization, resetting, and disposal.
-//   final _sequential = Sequential();
-
-//   // --- INITIALIZATION OF SERVICE ---------------------------------------------
-
-//   bool _initialized = false;
-//   bool get initialized => _initialized;
-
-//   /// Initializes and re-initializes this service, making it ready for use.
-//   @nonVirtual
-//   FutureOr<void> init(TParams params) {
-//     if (_disposed) {
-//       throw Err('Service has already been initialized.');
-//     }
-//     _sequential.addAll([
-//       // Call init listeners.
-//       ...provideInitListeners().map(
-//         (e) => (_) => e(params),
-//       ),
-//       (_) {
-//         // Mark the service as initialized.
-//         _initialized = true;
-//       },
-//     ]);
-//     return _sequential.last;
-//   }
-
-//   @mustCallSuper
-//   TServiceListeners<TParams> provideInitListeners() => [];
-
-//   // --- RESTARTING OF SERVICE -------------------------------------------------
-
-//   late TParams _params;
-
-//   @nonVirtual
-//   @pragma('vm:prefer-inline')
-//   FutureOr<void> restartService(TParams params) async {
-//     _params = params;
-//     return _restartDebouncer.call();
-//   }
-
-//   // Used to avoid restarting the service multiple times in quick succession.
-//   late final _restartDebouncer = Debouncer(
-//     delay: Duration.zero,
-//     onWaited: () => init(_params),
-//   );
-
-//   // --- DISPOSAL OF SERVICE ---------------------------------------------------
-
-//   /// Whether the service has been disposed.
-//   @pragma('vm:prefer-inline')
-//   bool get disposed => _disposed;
-
-//   bool _disposed = false;
-
-//   @mustCallSuper
-//   TServiceListeners<void> provideDisposeListeners() => [];
-
-//   /// Disposes of this service, making it unusable and ready for garbage
-//   /// collection.
-//   ///
-//   /// Do not call this method directly.
-//   @protected
-//   @nonVirtual
-//   FutureOr<void> dispose() {
-//     // Throw an exception if the service has already been disposed.
-//     if (_disposed) {
-//       throw Err('Service has already been disposed.');
-//     }
-//     _sequential.addAll([
-//       // Call dispose listeners.
-//       ...provideDisposeListeners().map(
-//         (e) => (_) => e(null),
-//       ),
-//       (_) {
-//         // Mark the service as disposed.
-//         _disposed = true;
-//       },
-//     ]);
-//     return _sequential.last;
-//   }
-// }
-
-// // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-
-// typedef TServiceListeners<T> = List<FutureOr<void> Function(T data)>;
+/// A type alias for a list of functions that take data and return a [Resolvable].
+/// This is the required signature for all service listeners.
+typedef TServiceResolvables<T> = List<Resolvable<None> Function(T data)>;
 
 // Source: ./lib/src/core/services/stream_service.dart
 //.title
@@ -5287,101 +5420,186 @@ typedef TServiceListeners<T> = List<FutureOr<void> Function(T data)>;
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-abstract class StreamService<TData extends Object, TParams extends Option>
+/// A specialized [Service] that manages and exposes a stream of data.
+///
+/// This class is designed to handle streaming data from a source (like a backend API,
+/// a WebSocket, or a database) and integrates seamlessly with the parent [Service]
+/// lifecycle, including `pause`, `resume`, and `dispose`.
+abstract class StreamService<TData extends Result, TParams extends Option>
     extends Service<TParams> {
   StreamService();
+
+  // --- PRIVATE STREAMING MEMBERS ---------------------------------------------
 
   Option<SafeFinisher<TData>> _initialDataFinisher = const None();
   Option<StreamSubscription<TData>> _streamSubscription = const None();
   Option<StreamController<TData>> _streamController = const None();
+  final _onPushListenerQueue = SafeSequential();
 
-  @mustCallSuper
+  // --- LIFECYCLE INTEGRATION -------------------------------------------------
+
   @override
-  TServiceListeners<TParams> provideInitListeners() {
-    return [...super.provideInitListeners(), _initListener];
-  }
-
-  FutureOr<void> _initListener(TParams params) {
-    return consec(_disposeStreamResources(), (_) {
-      _initialDataFinisher = Some(SafeFinisher<TData>());
-      final controller = StreamController<TData>.broadcast();
-      _streamController = Some(controller);
-      _streamSubscription = Some(
-        provideInputStream(params).listen(
-          pushToStream,
-          onError: (Object e, StackTrace s) => onError(e, s, dispose),
-          cancelOnError: false,
-        ),
-      );
-    });
-  }
-
   @mustCallSuper
-  @override
-  TServiceListeners<void> provideDisposeListeners() {
+  TServiceResolvables<TParams> provideInitListeners() {
     return [
-      ...super.provideDisposeListeners(),
-      (_) => _disposeStreamResources(),
+      ...super.provideInitListeners(),
+      _setupStream, // Setup stream resources on init.
     ];
   }
 
-  FutureOr<void> _disposeStreamResources() {
+  @override
+  @mustCallSuper
+  TServiceResolvables<TParams> providePauseListeners() {
+    return [
+      ...super.providePauseListeners(),
+      (_) {
+        _streamSubscription.ifSome((sub) => sub.unwrap().pause());
+        return SyncOk.value(const None());
+      },
+    ];
+  }
+
+  @override
+  @mustCallSuper
+  TServiceResolvables<TParams> provideResumeListeners() {
+    return [
+      ...super.provideResumeListeners(),
+      (_) {
+        _streamSubscription.ifSome((sub) => sub.unwrap().resume());
+        return SyncOk.value(const None());
+      },
+    ];
+  }
+
+  @override
+  @mustCallSuper
+  TServiceResolvables<TParams> provideDisposeListeners() {
+    return [
+      _teardownStream,
+      ...super.provideDisposeListeners(),
+    ];
+  }
+
+  // --- CORE STREAMING LOGIC --------------------------------------------------
+
+  /// Sets up the stream controller and subscription.
+  Resolvable<None> _setupStream(TParams params) {
+    return _teardownStream(params).map((_) {
+      _initialDataFinisher = Some(SafeFinisher<TData>());
+      final controller = StreamController<TData>.broadcast();
+      _streamController = Some(controller);
+
+      _streamSubscription = Some(
+        provideInputStream(params).listen(
+          pushToStream,
+          onError: controller.addError,
+          onDone: controller.close,
+          cancelOnError: false,
+        ),
+      );
+      return const None();
+    });
+  }
+
+  /// **ROBUST & CORRECTED:** Cleans up all stream resources sequentially using `SafeSequential`.
+  /// This guarantees every cleanup step is attempted, even if prior steps fail,
+  /// and propagates an aggregate `Err` of all failures.
+  Resolvable<None> _teardownStream(TParams _) {
     final sub = _streamSubscription;
     _streamSubscription = const None();
 
     final controller = _streamController;
     _streamController = const None();
+
     _initialDataFinisher = const None();
 
-    return consec(sub.map((s) => s.cancel()).unwrapOr(), onError: (_) {
-      controller.ifSome((c) {
-        if (!c.unwrap().isClosed) {
-          c.unwrap().close();
-        }
+    final teardownSequence = SafeSequential();
+    final errors = <Object>[];
+
+    if (sub.isSome()) {
+      teardownSequence.addSafe((_) {
+        // This Resolvable will complete with Ok(None) on success, or Ok(Err) on failure,
+        // but the error is also captured in the `errors` list.
+        return Resolvable(
+          () async {
+            await sub.unwrap().cancel();
+            return const None();
+          },
+          onError: (e) {
+            errors.add(e!);
+            return Err<None>(e);
+          },
+        );
       });
-    });
+    }
+
+    if (controller.isSome() && !controller.unwrap().isClosed) {
+      teardownSequence.addSafe((_) {
+        return Resolvable(
+          () async {
+            await controller.unwrap().close();
+            return const None();
+          },
+          onError: (e) {
+            errors.add(e!);
+            return Err<None>(e);
+          },
+        );
+      });
+    }
+
+    if (teardownSequence.isEmpty) {
+      return SyncOk.value(const None());
+    }
+
+    // <-- The key is to chain off the final result of the sequence.
+    // The `map` block will only execute after all async tasks in the sequence have completed.
+    return teardownSequence.last.map((_) {
+      if (errors.isNotEmpty) {
+        return Err(errors);
+      }
+      return const Ok(None());
+    }).map((_) => const None());
   }
 
+  /// The internal handler for new data from the input stream.
+  void pushToStream(TData data) {
+    if (isDisposed) return;
+
+    if (shouldAdd(data)) {
+      _streamController.ifSome((c) => c.unwrap().add(data));
+      _initialDataFinisher.ifSome((f) => f.unwrap().finish(data));
+
+      _onPushListenerQueue.addAllSafe(
+        provideOnPushToStreamListeners().map((listener) => (_) => listener(data)),
+      );
+    }
+  }
+
+  // --- PUBLIC API & USER OVERRIDES -------------------------------------------
+
+  /// **[MANDATORY]** Provides the source stream of data.
   Stream<TData> provideInputStream(TParams params);
 
-  final _listenerQueue = SafeSequential();
-
-  @nonVirtual
+  /// Provides a list of listeners to be executed whenever new data is pushed.
   @mustCallSuper
-  void pushToStream(TData data) {
-    _streamController.ifSome((controller) {
-      if (controller.isClosed) return;
+  TServiceResolvables<TData> provideOnPushToStreamListeners() => [];
 
-      if (shouldAdd(data)) {
-        controller.add(data);
-        _initialDataFinisher.ifSome((f) => f.finish(data));
-
-        _listenerQueue.addAllSafe(
-          provideOnPushToStreamListeners().map((listener) {
-            return (_) => Resolvable(() => consec(listener(data), (_) => const None()));
-          }),
-        );
-      }
-    });
-  }
-
-  void onError(Object e, StackTrace s, FutureOr<void> Function() dispose) {
-    print('Error in StreamService source stream for $runtimeType: $e\n$s');
-  }
-
-  @mustCallSuper
-  TServiceListeners<TData> provideOnPushToStreamListeners() => [];
-
+  /// An optional filter to decide whether a new data event should be added.
   bool shouldAdd(TData data) => true;
 
+  /// A `Resolvable` that completes with the very first item of data from the stream.
   Resolvable<TData> get initialData {
-    return _initialDataFinisher.map((finisher) {
-      return finisher.resolvable().flatMap((value) => value);
-    }).unwrapOr(
-      Sync.value(Err('initialData accessed before service was initialized.')),
-    );
+    return _initialDataFinisher.map((finisher) => finisher.resolvable()).unwrapOr(
+          Sync.value(
+            Err(
+              'initialData accessed before the service was initialized.',
+            ),
+          ),
+        );
   }
 
+  /// The public output stream that consumers can listen to.
   Option<Stream<TData>> get stream => _streamController.map((c) => c.stream);
 }
 
@@ -5405,6 +5623,8 @@ export 'dart:async';
 export 'package:collection/collection.dart';
 export 'package:df_safer_dart/df_safer_dart.dart';
 export 'package:df_type/df_type.dart';
+export 'package:df_log/df_log.dart';
+
 export 'package:meta/meta.dart';
 
 export '_src.g.dart';

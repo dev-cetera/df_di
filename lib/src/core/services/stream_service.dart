@@ -19,7 +19,7 @@ import '/src/_common.dart';
 /// This class is designed to handle streaming data from a source (like a backend API,
 /// a WebSocket, or a database) and integrates seamlessly with the parent [Service]
 /// lifecycle, including `pause`, `resume`, and `dispose`.
-abstract class StreamService<TData extends Object, TParams extends Option>
+abstract class StreamService<TData extends Result, TParams extends Option>
     extends Service<TParams> {
   StreamService();
 
@@ -85,7 +85,7 @@ abstract class StreamService<TData extends Object, TParams extends Option>
 
       _streamSubscription = Some(
         provideInputStream(params).listen(
-          _onData,
+          pushToStream,
           onError: controller.addError,
           onDone: controller.close,
           cancelOnError: false,
@@ -114,25 +114,31 @@ abstract class StreamService<TData extends Object, TParams extends Option>
       teardownSequence.addSafe((_) {
         // This Resolvable will complete with Ok(None) on success, or Ok(Err) on failure,
         // but the error is also captured in the `errors` list.
-        return Resolvable(() async {
-          await sub.unwrap().cancel();
-          return const None();
-        }, onError: (e) {
-          errors.add(e!);
-          return Err<None>(e);
-        });
+        return Resolvable(
+          () async {
+            await sub.unwrap().cancel();
+            return const None();
+          },
+          onError: (e) {
+            errors.add(e!);
+            return Err<None>(e);
+          },
+        );
       });
     }
 
     if (controller.isSome() && !controller.unwrap().isClosed) {
       teardownSequence.addSafe((_) {
-        return Resolvable(() async {
-          await controller.unwrap().close();
-          return const None();
-        }, onError: (e) {
-          errors.add(e!);
-          return Err<None>(e);
-        });
+        return Resolvable(
+          () async {
+            await controller.unwrap().close();
+            return const None();
+          },
+          onError: (e) {
+            errors.add(e!);
+            return Err<None>(e);
+          },
+        );
       });
     }
 
@@ -151,7 +157,7 @@ abstract class StreamService<TData extends Object, TParams extends Option>
   }
 
   /// The internal handler for new data from the input stream.
-  void _onData(TData data) {
+  void pushToStream(TData data) {
     if (isDisposed) return;
 
     if (shouldAdd(data)) {
@@ -179,9 +185,11 @@ abstract class StreamService<TData extends Object, TParams extends Option>
   /// A `Resolvable` that completes with the very first item of data from the stream.
   Resolvable<TData> get initialData {
     return _initialDataFinisher.map((finisher) => finisher.resolvable()).unwrapOr(
-          Sync.value(Err(
-            'initialData accessed before the service was initialized.',
-          )),
+          Sync.value(
+            Err(
+              'initialData accessed before the service was initialized.',
+            ),
+          ),
         );
   }
 

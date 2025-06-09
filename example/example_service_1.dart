@@ -10,21 +10,19 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-// Common exports for internal use.
+import 'package:df_di/df_di.dart';
+import 'package:df_di/src/_common.dart';
 
-export 'dart:async';
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-export 'package:collection/collection.dart';
-export 'package:df_safer_dart/df_safer_dart.dart';
-export 'package:df_type/df_type.dart';
-export 'package:df_log/df_log.dart';
+void main() async {}
 
-export 'package:meta/meta.dart';
+class ExampleService extends StreamService {
+  //final timer = Timer.periodic(const Duration(seconds: 1), callback)
 
-export '_src.g.dart';
-
-export 'core/di/_di_registry.dart';
-export 'core/di/_dependency.dart';
-export 'core/di/_di_base.dart';
-
-export 'core/di/_mixins/_mixins.g.dart';
+  @override
+  Stream<Result> provideInputStream(Option<Object> params) {
+    // TODO: implement provideInputStream
+    throw UnimplementedError();
+  }
+}

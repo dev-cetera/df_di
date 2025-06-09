@@ -193,7 +193,6 @@ abstract class Service<TParams extends Option> {
   /// Disposes of the service, releasing all resources.
   ///
   /// Once disposed, the service cannot be used again. This operation is idempotent.
-  @protected
   @nonVirtual
   Resolvable<None> dispose() {
     if (isDisposed) {
