@@ -150,7 +150,7 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
       typeEntity,
       groupEntity: groupEntity,
       traverse: traverse,
-    ).map((e) => e.singleton).comb2();
+    ).map((e) => e.singleton).flatten();
   }
 
   /// Retrieves the factory dependency.
@@ -200,6 +200,6 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
       typeEntity,
       groupEntity: groupEntity,
       traverse: traverse,
-    ).map((e) => e.factory).comb2();
+    ).map((e) => e.factory).flatten();
   }
 }

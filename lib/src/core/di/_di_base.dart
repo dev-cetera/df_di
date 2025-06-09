@@ -78,7 +78,7 @@ base class DIBase {
       checkExisting: true,
     );
     if (b.isErr()) {
-      return Sync.value(b.err().unwrap().transErr());
+      return Sync.value(b.err().unwrap().transfErr());
     }
     if (value is! ReservedSafeFinisher<T>) {
       // Used for until.
@@ -92,7 +92,7 @@ base class DIBase {
     }
     return a.map((e) {
       return b.unwrap().value;
-    }).comb2();
+    }).flatten();
   }
 
   /// Attempts to finish any pending [until] calls for the given type and group
@@ -167,7 +167,7 @@ base class DIBase {
           final onUnregisterOption = metadata.onUnregister;
           if (onUnregisterOption.isSome()) {
             final onUnregister = onUnregisterOption.unwrap();
-            result = dependency.value.map((e) => onUnregister(Ok(e))!).comb();
+            result = dependency.value.map((e) => onUnregister(Ok(e))!).flatten();
           }
         }
       }
@@ -175,7 +175,7 @@ base class DIBase {
         break;
       }
     }
-    return result ?? SyncOk.value(const None());
+    return result ?? const Sync.value(Ok(None()));
   }
 
   /// Removes a dependency from the internal registry.
@@ -319,7 +319,7 @@ base class DIBase {
     }
     final result = option.unwrap();
     if (result.isErr()) {
-      return Some(Sync.value(result.err().unwrap().transErr()));
+      return Some(Sync.value(result.err().unwrap().transfErr()));
     }
     final dependency = result.unwrap();
     if (dependency.value.isSync()) {
@@ -341,7 +341,7 @@ base class DIBase {
   //   }
   //   final result = option.unwrap();
   //   if (result.isErr()) {
-  //     return Some(Sync.value(result.err().unwrap().transErr()));
+  //     return Some(Sync.value(result.err().unwrap().transfErr()));
   //   }
   //   final dependency = result.unwrap();
   //   final value = dependency.value;
@@ -439,7 +439,7 @@ base class DIBase {
           unregister<ReservedSafeFinisher<TSuper>>(groupEntity: g);
           return get<TSuper>(groupEntity: g).unwrap();
         })
-        .comb2()
+        .flatten()
         .transf();
   }
 }

@@ -163,7 +163,7 @@ base mixin SupportsConstructorsMixin on DIBase {
     return untilLazy<TSuper, TSub>(
       groupEntity: groupEntity,
       traverse: traverse,
-    ).map((e) => e.singleton).comb2();
+    ).map((e) => e.singleton).flatten();
   }
 
   /// Retrieves the factory dependency.
@@ -215,6 +215,6 @@ base mixin SupportsConstructorsMixin on DIBase {
     return untilLazy<TSuper, TSub>(
       groupEntity: groupEntity,
       traverse: traverse,
-    ).map((e) => e.factory).comb2();
+    ).map((e) => e.factory).flatten();
   }
 }

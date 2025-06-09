@@ -99,7 +99,7 @@ abstract class PollingStreamService<TData extends Result> extends StreamService<
         }
       }),
     );
-    return SyncOk.value(const None());
+    return const Sync.value(Ok(None()));
   }
 
   /// Stops the polling timer.
@@ -107,7 +107,7 @@ abstract class PollingStreamService<TData extends Result> extends StreamService<
     _timer.ifSome((t) => t.unwrap().cancel());
     _timer = const None();
     _isPolling = false; // Reset the polling flag.
-    return SyncOk.value(const None());
+    return const Sync.value(Ok(None()));
   }
 
   // --- STREAM SERVICE IMPLEMENTATION -----------------------------------------

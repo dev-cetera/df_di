@@ -25,7 +25,7 @@ base mixin SupportsUnregisterAll on DIBase {
     bool Function(Dependency)? condition,
   }) {
     final results = List.of(registry.reversedDependencies);
-    final sequential = SafeSequential();
+    final sequential = Sequential();
     for (final dependency in results) {
       sequential
         ..addSafe((_) {
@@ -47,8 +47,8 @@ base mixin SupportsUnregisterAll on DIBase {
             if (onUnregisterOption.isSome()) {
               final onUnregister = onUnregisterOption.unwrap();
               return dependency.value
-                  .map((e) => onUnregister(Ok(e)) ?? SyncOk.value(const None()))
-                  .comb();
+                  .map((e) => onUnregister(Ok(e)) ?? const Sync.value(Ok(None())))
+                  .flatten();
             }
           }
           return null;

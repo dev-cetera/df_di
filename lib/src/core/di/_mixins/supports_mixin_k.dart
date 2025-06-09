@@ -142,7 +142,7 @@ base mixin SupportsMixinK on DIBase {
     }
     final result = option.unwrap();
     if (result.isErr()) {
-      return Some(Sync.value(result.err().unwrap().transErr()));
+      return Some(Sync.value(result.err().unwrap().transfErr()));
     }
     final value = result.unwrap().value;
     if (value.isSync()) {
@@ -332,7 +332,7 @@ base mixin SupportsMixinK on DIBase {
         }
       }
       return getK<T>(typeEntity, groupEntity: g).unwrap();
-    }).comb2();
+    }).flatten();
   }
 
   /// Stores finishers for [untilExactlyK].

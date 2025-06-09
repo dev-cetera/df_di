@@ -16,7 +16,7 @@ import 'package:df_di/df_di.dart';
 
 void main() async {
   final di = DI();
-  di.registerLazy<String>(() => SyncOk.value('Lazy init!'));
+  di.registerLazy<String>(() => const Sync.value(Ok('Lazy init!')));
   print(di.getLazySingleton<String>());
   print(di.getLazySingletonUnsafe<String>());
   print(di.getFactory<String>());

@@ -15,5 +15,6 @@ library;
 
 export 'src/_src.g.dart';
 
-export 'package:df_type/df_type.dart';
+export 'package:df_type/df_type.dart'
+    show consecList, consec, consec2, consec3, consec4, consec5, consec6, consec7, consec8, consec9;
 export 'package:df_safer_dart/df_safer_dart.dart';

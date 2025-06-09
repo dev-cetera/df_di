@@ -17,7 +17,7 @@ import '/src/_common.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 @internal
-final class ReservedSafeFinisher<T extends Object> extends SafeFinisher<T> {
+final class ReservedSafeFinisher<T extends Object> extends Finisher<T> {
   //
   //
   //

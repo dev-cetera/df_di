@@ -54,7 +54,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     }
     final result = option.unwrap().sync();
     if (result.isErr()) {
-      return Some(result.err().unwrap().transErr());
+      return Some(result.err().unwrap().transfErr());
     }
     final value = result.unwrap().value;
     return Some(value);
@@ -74,7 +74,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     }
     final result = option.unwrap().sync();
     if (result.isErr()) {
-      return Some(result.err().unwrap().transErr());
+      return Some(result.err().unwrap().transfErr());
     }
     final value = result.unwrap().value.transf<DI>();
     return Some(value);

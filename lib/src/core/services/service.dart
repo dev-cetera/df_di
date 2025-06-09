@@ -53,7 +53,7 @@ abstract class Service<TParams extends Option> {
   /// A static hook for the DI system to properly dispose of the service upon unregistering.
   static Resolvable<None> unregister(Result<Service> serviceResult) {
     return serviceResult.isErr()
-        ? SyncOk.value(const None()) // If service creation failed, do nothing.
+        ? const Sync.value(Ok(None())) // If service creation failed, do nothing.
         : serviceResult.unwrap().dispose().map((_) => const None());
   }
 

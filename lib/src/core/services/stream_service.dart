@@ -25,10 +25,10 @@ abstract class StreamService<TData extends Result, TParams extends Option>
 
   // --- PRIVATE STREAMING MEMBERS ---------------------------------------------
 
-  Option<SafeFinisher<TData>> _initialDataFinisher = const None();
+  Option<Finisher<TData>> _initialDataFinisher = const None();
   Option<StreamSubscription<TData>> _streamSubscription = const None();
   Option<StreamController<TData>> _streamController = const None();
-  final _onPushListenerQueue = SafeSequential();
+  final _onPushListenerQueue = Sequential();
 
   // --- LIFECYCLE INTEGRATION -------------------------------------------------
 
@@ -48,7 +48,7 @@ abstract class StreamService<TData extends Result, TParams extends Option>
       ...super.providePauseListeners(),
       (_) {
         _streamSubscription.ifSome((sub) => sub.unwrap().pause());
-        return SyncOk.value(const None());
+        return const Sync.value(Ok(None()));
       },
     ];
   }
@@ -60,7 +60,7 @@ abstract class StreamService<TData extends Result, TParams extends Option>
       ...super.provideResumeListeners(),
       (_) {
         _streamSubscription.ifSome((sub) => sub.unwrap().resume());
-        return SyncOk.value(const None());
+        return const Sync.value(Ok(None()));
       },
     ];
   }
@@ -79,7 +79,7 @@ abstract class StreamService<TData extends Result, TParams extends Option>
   /// Sets up the stream controller and subscription.
   Resolvable<None> _setupStream(TParams params) {
     return _teardownStream(params).map((_) {
-      _initialDataFinisher = Some(SafeFinisher<TData>());
+      _initialDataFinisher = Some(Finisher<TData>());
       final controller = StreamController<TData>.broadcast();
       _streamController = Some(controller);
 
@@ -143,7 +143,7 @@ abstract class StreamService<TData extends Result, TParams extends Option>
     }
 
     if (teardownSequence.isEmpty) {
-      return SyncOk.value(const None());
+      return const Sync.value(Ok(None()));
     }
 
     // <-- The key is to chain off the final result of the sequence.

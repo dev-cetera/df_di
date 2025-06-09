@@ -42,7 +42,7 @@ class World {
   void addComponent(Entity entity, Component component) {
     _di.setDependency(
       Dependency(
-        SyncOk.value(component),
+        Sync.value(Ok(component)),
         metadata: Some(
           DependencyMetadata(
             groupEntity: entity,
@@ -79,7 +79,7 @@ class World {
     if (dependency.isSome()) {
       _di.setDependency(
         Dependency<T>(
-          SyncOk.value(newComponent),
+          Sync.value(Ok(newComponent)),
           metadata: dependency.unwrap().metadata,
         ),
       );

@@ -20,7 +20,7 @@ void main() {
   test('Testing the registration and initialization of a service.', () async {
     final di = DI();
     final service = TestService();
-    await di.registerLazy<TestService>(() => SyncOk.value(service)).value;
+    await di.registerLazy<TestService>(() => Sync.value(Ok(service))).value;
     print('Just registered...');
     final value1 = await di.getLazySingletonUnsafe<TestService>();
     final value2 = await di.getLazySingletonUnsafe<TestService>();
@@ -36,7 +36,7 @@ base class TestService extends Service {
       ...super.provideInitListeners(),
       (_) {
         print('Initializing TestService!!!');
-        return SyncOk.value(const None());
+        return const Sync.value(Ok(None()));
       },
     ];
   }
