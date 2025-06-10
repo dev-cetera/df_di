@@ -19,15 +19,15 @@ import '/src/_common.dart';
 /// This class is designed to handle streaming data from a source (like a backend API,
 /// a WebSocket, or a database) and integrates seamlessly with the parent [Service]
 /// lifecycle, including `pause`, `resume`, and `dispose`.
-abstract class StreamService<TData extends Result, TParams extends Option>
+abstract class StreamService<TData extends Object, TParams extends Option>
     extends Service<TParams> {
   StreamService();
 
   // --- PRIVATE STREAMING MEMBERS ---------------------------------------------
 
-  Option<Finisher<TData>> _initialDataFinisher = const None();
-  Option<StreamSubscription<TData>> _streamSubscription = const None();
-  Option<StreamController<TData>> _streamController = const None();
+  Option<Finisher<Result<TData>>> _initialDataFinisher = const None();
+  Option<StreamSubscription<Result<TData>>> _streamSubscription = const None();
+  Option<StreamController<Result<TData>>> _streamController = const None();
   final _onPushListenerQueue = Sequential();
 
   // --- LIFECYCLE INTEGRATION -------------------------------------------------
@@ -76,8 +76,8 @@ abstract class StreamService<TData extends Result, TParams extends Option>
   /// Sets up the stream controller and subscription.
   Resolvable<None> _setupStream(TParams params) {
     return _teardownStream(params).map((_) {
-      _initialDataFinisher = Some(Finisher<TData>());
-      final controller = StreamController<TData>.broadcast();
+      _initialDataFinisher = Some(Finisher<Result<TData>>());
+      final controller = StreamController<Result<TData>>.broadcast();
       _streamController = Some(controller);
 
       _streamSubscription = Some(
@@ -104,7 +104,7 @@ abstract class StreamService<TData extends Result, TParams extends Option>
 
     _initialDataFinisher = const None();
 
-    final teardownSequence = SafeSequential();
+    final teardownSequence = Sequential();
     final errors = <Object>[];
 
     if (sub.isSome()) {
@@ -145,18 +145,16 @@ abstract class StreamService<TData extends Result, TParams extends Option>
 
     // <-- The key is to chain off the final result of the sequence.
     // The `map` block will only execute after all async tasks in the sequence have completed.
-    return teardownSequence.last
-        .map((_) {
-          if (errors.isNotEmpty) {
-            return Err(errors);
-          }
-          return const Ok(None());
-        })
-        .map((_) => const None());
+    return teardownSequence.last.map((_) {
+      if (errors.isNotEmpty) {
+        return Err(errors);
+      }
+      return const Ok(None());
+    }).map((_) => const None());
   }
 
   /// The internal handler for new data from the input stream.
-  void pushToStream(TData data) {
+  void pushToStream(Result<TData> data) {
     if (isDisposed) return;
 
     if (shouldAdd(data)) {
@@ -165,8 +163,7 @@ abstract class StreamService<TData extends Result, TParams extends Option>
 
       _onPushListenerQueue.addAllSafe(
         provideOnPushToStreamListeners().map(
-          (listener) =>
-              (_) => listener(data),
+          (listener) => (_) => listener(data),
         ),
       );
     }
@@ -174,27 +171,23 @@ abstract class StreamService<TData extends Result, TParams extends Option>
 
   // --- PUBLIC API & USER OVERRIDES -------------------------------------------
 
-  /// **[MANDATORY]** Provides the source stream of data.
-  Stream<TData> provideInputStream(TParams params);
+  ///  Provides the source stream of data.
+  Stream<Result<TData>> provideInputStream(TParams params);
 
   /// Provides a list of listeners to be executed whenever new data is pushed.
   @mustCallSuper
-  TServiceResolvables<TData> provideOnPushToStreamListeners() => [];
+  TServiceResolvables<Result<TData>> provideOnPushToStreamListeners() => [];
 
   /// An optional filter to decide whether a new data event should be added.
-  bool shouldAdd(TData data) => true;
+  bool shouldAdd(Result<TData> data) => true;
 
   /// A `Resolvable` that completes with the very first item of data from the stream.
-  Resolvable<TData> get initialData {
+  Resolvable<Result<TData>> get initialData {
     return _initialDataFinisher
         .map((finisher) => finisher.resolvable())
-        .unwrapOr(
-          Sync.value(
-            Err('initialData accessed before the service was initialized.'),
-          ),
-        );
+        .unwrapOr(Sync.value(Err('initialData accessed before the service was initialized.')));
   }
 
   /// The public output stream that consumers can listen to.
-  Option<Stream<TData>> get stream => _streamController.map((c) => c.stream);
+  Option<Stream<Result<TData>>> get stream => _streamController.map((c) => c.stream);
 }

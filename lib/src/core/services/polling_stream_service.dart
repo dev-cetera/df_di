@@ -21,8 +21,7 @@ import '/src/_common.dart';
 /// polling a REST API endpoint, or any other task that needs to be performed
 /// on a regular interval. The polling is automatically managed by the service's
 /// lifecycle (`init`, `pause`, `resume`, `dispose`).
-abstract class PollingStreamService<TData extends Result>
-    extends StreamService<TData, None> {
+abstract class PollingStreamService<TData extends Result> extends StreamService<TData, None> {
   PollingStreamService();
 
   // --- PRIVATE POLLING MEMBERS -----------------------------------------------
@@ -102,16 +101,16 @@ abstract class PollingStreamService<TData extends Result>
   /// This service manages its own data source via a timer, so we provide an
   /// empty stream to satisfy the parent class's requirement.
   @override
-  Stream<TData> provideInputStream(None params) => const Stream.empty();
+  provideInputStream(None params) => const Stream.empty();
 
   // --- USER OVERRIDES --------------------------------------------------------
 
-  /// **[MANDATORY]** The asynchronous action to perform on each poll.
+  ///  The asynchronous action to perform on each poll.
   ///
   /// This function will be awaited. Its successful result will be pushed
   /// to the stream.
-  Future<TData> onPoll();
+  Future<Result<TData>> onPoll();
 
-  /// **[MANDATORY]** The `Duration` to wait between each poll.
+  /// The `Duration` to wait between each poll.
   Duration providePollingInterval();
 }
