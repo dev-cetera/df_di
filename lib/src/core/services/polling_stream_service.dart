@@ -21,7 +21,8 @@ import '/src/_common.dart';
 /// polling a REST API endpoint, or any other task that needs to be performed
 /// on a regular interval. The polling is automatically managed by the service's
 /// lifecycle (`init`, `pause`, `resume`, `dispose`).
-abstract class PollingStreamService<TData extends Result> extends StreamService<TData, None> {
+abstract class PollingStreamService<TData extends Result>
+    extends StreamService<TData, None> {
   PollingStreamService();
 
   // --- PRIVATE POLLING MEMBERS -----------------------------------------------
