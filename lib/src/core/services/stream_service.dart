@@ -92,7 +92,7 @@ abstract class StreamService<TData extends Object, TParams extends Option>
     });
   }
 
-  /// **ROBUST & CORRECTED:** Cleans up all stream resources sequentially using `SafeSequential`.
+  /// **ROBUST & CORRECTED:** Cleans up all stream resources sequentially using `Sequential`.
   /// This guarantees every cleanup step is attempted, even if prior steps fail,
   /// and propagates an aggregate `Err` of all failures.
   Resolvable<None> _teardownStream(TParams _) {
@@ -145,14 +145,12 @@ abstract class StreamService<TData extends Object, TParams extends Option>
 
     // <-- The key is to chain off the final result of the sequence.
     // The `map` block will only execute after all async tasks in the sequence have completed.
-    return teardownSequence.last
-        .map((_) {
-          if (errors.isNotEmpty) {
-            return Err(errors);
-          }
-          return const Ok(None());
-        })
-        .map((_) => const None());
+    return teardownSequence.last.map((_) {
+      if (errors.isNotEmpty) {
+        return Err(errors);
+      }
+      return const Ok(None());
+    }).map((_) => const None());
   }
 
   /// The internal handler for new data from the input stream.
@@ -165,8 +163,7 @@ abstract class StreamService<TData extends Object, TParams extends Option>
 
       _onPushListenerQueue.addAllSafe(
         provideOnPushToStreamListeners().map(
-          (listener) =>
-              (_) => listener(data),
+          (listener) => (_) => listener(data),
         ),
       );
     }
@@ -186,9 +183,7 @@ abstract class StreamService<TData extends Object, TParams extends Option>
 
   /// A `Resolvable` that completes with the very first item of data from the stream.
   Resolvable<Result<TData>> get initialData {
-    return _initialDataFinisher
-        .map((finisher) => finisher.resolvable())
-        .unwrapOr(
+    return _initialDataFinisher.map((finisher) => finisher.resolvable()).unwrapOr(
           Sync.value(
             Err('initialData accessed before the service was initialized.'),
           ),
@@ -196,6 +191,5 @@ abstract class StreamService<TData extends Object, TParams extends Option>
   }
 
   /// The public output stream that consumers can listen to.
-  Option<Stream<Result<TData>>> get stream =>
-      _streamController.map((c) => c.stream);
+  Option<Stream<Result<TData>>> get stream => _streamController.map((c) => c.stream);
 }
