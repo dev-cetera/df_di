@@ -73,7 +73,8 @@ abstract class Service<TParams extends Option> {
   bool get isPaused => _state == ServiceState.PAUSED;
 
   /// Returns `true` if the service has been disposed or is in the process of disposing.
-  bool get isDisposed => _state == ServiceState.DISPOSED || _state == ServiceState.BUSY_DISPOSING;
+  bool get isDisposed =>
+      _state == ServiceState.DISPOSED || _state == ServiceState.BUSY_DISPOSING;
 
   /// Orchestrates all lifecycle operations to run sequentially, preventing race conditions.
   final _seq = SafeSequencer();
@@ -87,7 +88,8 @@ abstract class Service<TParams extends Option> {
   /// initialized. It will throw a `StateError` if called on a disposed service.
   @nonVirtual
   Resolvable<None> init(TParams params) {
-    if (state == ServiceState.INITIALIZED || state == ServiceState.BUSY_INITIALIZING) {
+    if (state == ServiceState.INITIALIZED ||
+        state == ServiceState.BUSY_INITIALIZING) {
       return _seq.last;
     }
 
@@ -103,7 +105,8 @@ abstract class Service<TParams extends Option> {
       final seq = SafeSequencer()
         ..addAllSafe(
           provideInitListeners().map(
-            (listener) => (_) => listener(params),
+            (listener) =>
+                (_) => listener(params),
           ),
         );
 
@@ -140,7 +143,8 @@ abstract class Service<TParams extends Option> {
       final seq = SafeSequencer()
         ..addAllSafe(
           providePauseListeners().map(
-            (listener) => (_) => listener(_params),
+            (listener) =>
+                (_) => listener(_params),
           ),
         );
 
@@ -171,7 +175,8 @@ abstract class Service<TParams extends Option> {
       final seq = SafeSequencer()
         ..addAllSafe(
           provideResumeListeners().map(
-            (listener) => (_) => listener(_params),
+            (listener) =>
+                (_) => listener(_params),
           ),
         );
 
@@ -204,7 +209,8 @@ abstract class Service<TParams extends Option> {
       final seq = SafeSequencer()
         ..addAllSafe(
           provideDisposeListeners().map(
-            (listener) => (_) => listener(_params),
+            (listener) =>
+                (_) => listener(_params),
           ),
         );
 

@@ -145,12 +145,14 @@ abstract class StreamService<TData extends Object, TParams extends Option>
 
     // <-- The key is to chain off the final result of the sequence.
     // The `map` block will only execute after all async tasks in the sequence have completed.
-    return seq.last.map((_) {
-      if (errors.isNotEmpty) {
-        return Err(errors);
-      }
-      return const Ok(None());
-    }).map((_) => const None());
+    return seq.last
+        .map((_) {
+          if (errors.isNotEmpty) {
+            return Err(errors);
+          }
+          return const Ok(None());
+        })
+        .map((_) => const None());
   }
 
   /// The internal handler for new data from the input stream.
@@ -163,7 +165,8 @@ abstract class StreamService<TData extends Object, TParams extends Option>
 
       _seq.addAllSafe(
         provideOnPushToStreamListeners().map(
-          (listener) => (_) => listener(data),
+          (listener) =>
+              (_) => listener(data),
         ),
       );
     }
@@ -183,7 +186,9 @@ abstract class StreamService<TData extends Object, TParams extends Option>
 
   /// A `Resolvable` that completes with the very first item of data from the stream.
   Resolvable<Result<TData>> get initialData {
-    return _initialDataFinisher.map((finisher) => finisher.resolvable()).unwrapOr(
+    return _initialDataFinisher
+        .map((finisher) => finisher.resolvable())
+        .unwrapOr(
           Sync.value(
             Err('initialData accessed before the service was initialized.'),
           ),
@@ -191,5 +196,6 @@ abstract class StreamService<TData extends Object, TParams extends Option>
   }
 
   /// The public output stream that consumers can listen to.
-  Option<Stream<Result<TData>>> get stream => _streamController.map((c) => c.stream);
+  Option<Stream<Result<TData>>> get stream =>
+      _streamController.map((c) => c.stream);
 }
