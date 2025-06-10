@@ -25,10 +25,10 @@ abstract class StreamService<TData extends Object, TParams extends Option>
 
   // --- PRIVATE STREAMING MEMBERS ---------------------------------------------
 
-  Option<Finisher<Result<TData>>> _initialDataFinisher = const None();
+  Option<SafeCompleter<Result<TData>>> _initialDataFinisher = const None();
   Option<StreamSubscription<Result<TData>>> _streamSubscription = const None();
   Option<StreamController<Result<TData>>> _streamController = const None();
-  final _onPushListenerQueue = Sequential();
+  final _seq = SafeSequencer();
 
   // --- LIFECYCLE INTEGRATION -------------------------------------------------
 
@@ -92,7 +92,7 @@ abstract class StreamService<TData extends Object, TParams extends Option>
     });
   }
 
-  /// **ROBUST & CORRECTED:** Cleans up all stream resources sequentially using `Sequential`.
+  /// **ROBUST & CORRECTED:** Cleans up all stream resources sequentially using `SafeSequencer`.
   /// This guarantees every cleanup step is attempted, even if prior steps fail,
   /// and propagates an aggregate `Err` of all failures.
   Resolvable<None> _teardownStream(TParams _) {
@@ -104,11 +104,11 @@ abstract class StreamService<TData extends Object, TParams extends Option>
 
     _initialDataFinisher = const None();
 
-    final teardownSequence = Sequential();
+    final seq = SafeSequencer();
     final errors = <Object>[];
 
     if (sub.isSome()) {
-      teardownSequence.addSafe((_) {
+      seq.addSafe((_) {
         // This Resolvable will complete with Ok(None) on success, or Ok(Err) on failure,
         // but the error is also captured in the `errors` list.
         return Resolvable(
@@ -125,7 +125,7 @@ abstract class StreamService<TData extends Object, TParams extends Option>
     }
 
     if (controller.isSome() && !controller.unwrap().isClosed) {
-      teardownSequence.addSafe((_) {
+      seq.addSafe((_) {
         return Resolvable(
           () async {
             await controller.unwrap().close();
@@ -139,13 +139,13 @@ abstract class StreamService<TData extends Object, TParams extends Option>
       });
     }
 
-    if (teardownSequence.isEmpty) {
+    if (seq.isEmpty) {
       return const Sync.value(Ok(None()));
     }
 
     // <-- The key is to chain off the final result of the sequence.
     // The `map` block will only execute after all async tasks in the sequence have completed.
-    return teardownSequence.last.map((_) {
+    return seq.last.map((_) {
       if (errors.isNotEmpty) {
         return Err(errors);
       }
@@ -159,9 +159,9 @@ abstract class StreamService<TData extends Object, TParams extends Option>
 
     if (shouldAdd(data)) {
       _streamController.ifSome((c) => c.unwrap().add(data));
-      _initialDataFinisher.ifSome((f) => f.unwrap().finish(data));
+      _initialDataFinisher.ifSome((f) => f.unwrap().complete(data));
 
-      _onPushListenerQueue.addAllSafe(
+      _seq.addAllSafe(
         provideOnPushToStreamListeners().map(
           (listener) => (_) => listener(data),
         ),

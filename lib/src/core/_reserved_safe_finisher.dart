@@ -17,7 +17,7 @@ import '/src/_common.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 @internal
-final class ReservedSafeFinisher<T extends Object> extends Finisher<T> {
+final class ReservedSafeCompleter<T extends Object> extends SafeCompleter<T> {
   //
   //
   //
@@ -28,7 +28,7 @@ final class ReservedSafeFinisher<T extends Object> extends Finisher<T> {
   //
   //
 
-  ReservedSafeFinisher(this.typeEntity);
+  ReservedSafeCompleter(this.typeEntity);
 
   //
   //
@@ -44,7 +44,7 @@ final class ReservedSafeFinisher<T extends Object> extends Finisher<T> {
   @override
   int get hashCode {
     final a = Object() is! T ? T.hashCode : typeEntity.hashCode;
-    final b = (ReservedSafeFinisher).hashCode;
+    final b = (ReservedSafeCompleter).hashCode;
     return Object.hash(a, b);
   }
 }

@@ -76,7 +76,7 @@ abstract class Service<TParams extends Option> {
   bool get isDisposed => _state == ServiceState.DISPOSED || _state == ServiceState.BUSY_DISPOSING;
 
   /// Orchestrates all lifecycle operations to run sequentially, preventing race conditions.
-  final _sequential = Sequential();
+  final _seq = SafeSequencer();
   late TParams _params;
 
   // --- INITIALIZATION (START) ------------------------------------------------
@@ -88,7 +88,7 @@ abstract class Service<TParams extends Option> {
   @nonVirtual
   Resolvable<None> init(TParams params) {
     if (state == ServiceState.INITIALIZED || state == ServiceState.BUSY_INITIALIZING) {
-      return _sequential.last;
+      return _seq.last;
     }
 
     if (isDisposed) {
@@ -98,22 +98,22 @@ abstract class Service<TParams extends Option> {
     }
 
     _params = params;
-    _sequential.addSafe((_) {
+    _seq.addSafe((_) {
       _state = ServiceState.BUSY_INITIALIZING;
-      final operation = Sequential()
+      final seq = SafeSequencer()
         ..addAllSafe(
           provideInitListeners().map(
             (listener) => (_) => listener(params),
           ),
         );
 
-      return operation.last.map((_) {
+      return seq.last.map((_) {
         _state = ServiceState.INITIALIZED;
         return const None();
       });
     });
 
-    return _sequential.last;
+    return _seq.last;
   }
 
   /// Provides a list of listeners to be executed during initialization.
@@ -135,22 +135,22 @@ abstract class Service<TParams extends Option> {
       );
     }
 
-    _sequential.addSafe((_) {
+    _seq.addSafe((_) {
       _state = ServiceState.BUSY_PAUSING;
-      final operation = Sequential()
+      final seq = SafeSequencer()
         ..addAllSafe(
           providePauseListeners().map(
             (listener) => (_) => listener(_params),
           ),
         );
 
-      return operation.last.map((_) {
+      return seq.last.map((_) {
         _state = ServiceState.PAUSED;
         return const None();
       });
     });
 
-    return _sequential.last;
+    return _seq.last;
   }
 
   /// Provides a list of listeners to be executed when the service is paused.
@@ -166,22 +166,22 @@ abstract class Service<TParams extends Option> {
       return Sync.value(Err('Service can only be resumed when it is paused.'));
     }
 
-    _sequential.addSafe((_) {
+    _seq.addSafe((_) {
       _state = ServiceState.BUSY_RESUMING;
-      final operation = Sequential()
+      final seq = SafeSequencer()
         ..addAllSafe(
           provideResumeListeners().map(
             (listener) => (_) => listener(_params),
           ),
         );
 
-      return operation.last.map((_) {
+      return seq.last.map((_) {
         _state = ServiceState.INITIALIZED;
         return const None();
       });
     });
 
-    return _sequential.last;
+    return _seq.last;
   }
 
   /// Provides a list of listeners to be executed when the service is resumed.
@@ -196,24 +196,24 @@ abstract class Service<TParams extends Option> {
   @nonVirtual
   Resolvable<None> dispose() {
     if (isDisposed) {
-      return _sequential.last;
+      return _seq.last;
     }
 
-    _sequential.addSafe((_) {
+    _seq.addSafe((_) {
       _state = ServiceState.BUSY_DISPOSING;
-      final operation = Sequential()
+      final seq = SafeSequencer()
         ..addAllSafe(
           provideDisposeListeners().map(
             (listener) => (_) => listener(_params),
           ),
         );
 
-      return operation.last.map((_) {
+      return seq.last.map((_) {
         _state = ServiceState.DISPOSED;
         return const None();
       });
     });
-    return _sequential.last;
+    return _seq.last;
   }
 
   /// Provides a list of listeners to be executed during disposal.

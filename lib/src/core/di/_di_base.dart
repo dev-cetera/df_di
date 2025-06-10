@@ -46,14 +46,7 @@ base class DIBase {
   Option<Iterable<DI>> children() {
     return childrenContainer.map(
       (e) => e.registry.unsortedDependencies.map(
-        (e) => e
-            .transf<Lazy<DI>>()
-            .value
-            .unwrapSync()
-            .unwrap()
-            .singleton
-            .unwrapSync()
-            .unwrap(),
+        (e) => e.transf<Lazy<DI>>().value.unwrapSync().unwrap().singleton.unwrapSync().unwrap(),
       ),
     );
   }
@@ -75,9 +68,7 @@ base class DIBase {
     final metadata = DependencyMetadata(
       index: Some(_indexIncrementer++),
       groupEntity: g,
-      onUnregister: onUnregister != null
-          ? Some((e) => onUnregister(e.transf()))
-          : const None(),
+      onUnregister: onUnregister != null ? Some((e) => onUnregister(e.transf())) : const None(),
     );
     final a = Resolvable(
       () => consec(value, (e) => consec(onRegister?.call(e), (_) => e)),
@@ -89,7 +80,7 @@ base class DIBase {
     if (b.isErr()) {
       return Sync.value(b.err().unwrap().transfErr());
     }
-    if (value is! ReservedSafeFinisher<T>) {
+    if (value is! ReservedSafeCompleter<T>) {
       // Used for until.
       // NOTE: CHANGED FROM T TO Object so that it attems to finish ANY ReservedSafeFinisher!
       _maybeFinish<Object>(value: value, g: g);
@@ -119,13 +110,13 @@ base class DIBase {
           .where((e) => e.isOk())
           .map((e) => e.unwrap())
           // Get all finishers regardless of type.
-          .whereType<ReservedSafeFinisher<T>>();
+          .whereType<ReservedSafeCompleter<T>>();
       if (finishers == null) continue;
       // Try each one to see if they can finish. It will only be able to finish
       // if value is compatible with the finisher.
       for (final finisher in finishers) {
         try {
-          finisher.finish(value as FutureOr<T>);
+          finisher.complete(value as FutureOr<T>);
           break;
         } catch (_) {
           // Skip finishers that throw. Either by incorrect type T or the
@@ -142,9 +133,7 @@ base class DIBase {
     bool checkExisting = false,
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
-    final g = dependency.metadata.isSome()
-        ? dependency.metadata.unwrap().groupEntity
-        : focusGroup;
+    final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
     if (checkExisting) {
       final option = getDependency<T>(groupEntity: g, traverse: false);
       if (option.isSome()) {
@@ -178,9 +167,7 @@ base class DIBase {
           final onUnregisterOption = metadata.onUnregister;
           if (onUnregisterOption.isSome()) {
             final onUnregister = onUnregisterOption.unwrap();
-            result = dependency.value
-                .map((e) => onUnregister(Ok(e))!)
-                .flatten();
+            result = dependency.value.map((e) => onUnregister(Ok(e))!).flatten();
           }
         }
       }
@@ -432,21 +419,21 @@ base class DIBase {
     if (test.isSome()) {
       return test.unwrap().transf();
     }
-    ReservedSafeFinisher<TSuper>? finisher;
-    var temp = getSyncOrNone<ReservedSafeFinisher<TSuper>>(
+    ReservedSafeCompleter<TSuper>? finisher;
+    var temp = getSyncOrNone<ReservedSafeCompleter<TSuper>>(
       groupEntity: g,
       traverse: traverse,
     );
     if (temp.isSome()) {
       finisher = temp.unwrap();
     } else {
-      finisher = ReservedSafeFinisher<TSuper>(typeEntity);
+      finisher = ReservedSafeCompleter<TSuper>(typeEntity);
       register(finisher, groupEntity: g);
     }
     return finisher
         .resolvable()
         .map((_) {
-          unregister<ReservedSafeFinisher<TSuper>>(groupEntity: g);
+          unregister<ReservedSafeCompleter<TSuper>>(groupEntity: g);
           return get<TSuper>(groupEntity: g).unwrap();
         })
         .flatten()

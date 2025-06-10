@@ -25,9 +25,9 @@ base mixin SupportsUnregisterAll on DIBase {
     bool Function(Dependency)? condition,
   }) {
     final results = List.of(registry.reversedDependencies);
-    final sequential = Sequential();
+    final seq = SafeSequencer();
     for (final dependency in results) {
-      sequential
+      seq
         ..addSafe((_) {
           return onBeforeUnregister?.call(Ok(dependency));
         })
@@ -37,9 +37,8 @@ base mixin SupportsUnregisterAll on DIBase {
           }
           registry.removeDependencyK(
             dependency.typeEntity,
-            groupEntity: dependency.metadata
-                .map((e) => e.groupEntity)
-                .unwrapOr(const DefaultEntity()),
+            groupEntity:
+                dependency.metadata.map((e) => e.groupEntity).unwrapOr(const DefaultEntity()),
           );
           final metadataOption = dependency.metadata;
           if (metadataOption.isSome()) {
@@ -60,6 +59,6 @@ base mixin SupportsUnregisterAll on DIBase {
           return onAfterUnregister?.call(Ok(dependency));
         });
     }
-    return sequential.last;
+    return seq.last;
   }
 }

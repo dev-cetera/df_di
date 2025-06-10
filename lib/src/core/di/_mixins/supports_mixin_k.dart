@@ -219,7 +219,7 @@ base mixin SupportsMixinK on DIBase {
     bool removeAll = true,
     bool triggerOnUnregisterCallbacks = true,
   }) {
-    final sequential = Sequential();
+    final seq = SafeSequencer();
     final g = groupEntity.preferOverDefault(focusGroup);
     for (final di in [this as DI, ...parents]) {
       final dependencyOption = di.removeDependencyK(typeEntity, groupEntity: g);
@@ -235,8 +235,8 @@ base mixin SupportsMixinK on DIBase {
           final onUnregisterOption = metadata.onUnregister;
           if (onUnregisterOption.isSome()) {
             final onUnregister = onUnregisterOption.unwrap();
-            sequential.addSafe((_) => dependency.value.map((e) => Some(e)));
-            sequential.addSafe((e) {
+            seq.addSafe((_) => dependency.value.map((e) => Some(e)));
+            seq.addSafe((e) {
               final option = e.swap();
               if (option.isSome()) {
                 final result = option.unwrap();
@@ -251,7 +251,7 @@ base mixin SupportsMixinK on DIBase {
         break;
       }
     }
-    return sequential.last;
+    return seq.last;
   }
 
   /// Removes a dependency from the registry.
@@ -319,7 +319,7 @@ base mixin SupportsMixinK on DIBase {
       (e) => e.typeEntity == typeEntity,
     );
     if (finisher == null) {
-      finisher = ReservedSafeFinisher(typeEntity);
+      finisher = ReservedSafeCompleter(typeEntity);
       (finishersK[g] ??= []).add(finisher);
     }
     return finisher.resolvable().map((_) {
@@ -336,7 +336,7 @@ base mixin SupportsMixinK on DIBase {
   }
 
   /// Stores finishers for [untilExactlyK].
-  final finishersK = <Entity, List<ReservedSafeFinisher>>{};
+  final finishersK = <Entity, List<ReservedSafeCompleter>>{};
 
   /// Attempts to finish any pending [untilExactlyK] calls for the given
   /// type and group.
@@ -345,10 +345,10 @@ base mixin SupportsMixinK on DIBase {
     final typeEntity = TypeEntity(T);
     for (final di in [this as DI, ...children().unwrapOr([])]) {
       final test = di.finishersK[g]?.firstWhereOrNull((e) {
-        return e is ReservedSafeFinisher<T> || e.typeEntity == typeEntity;
+        return e is ReservedSafeCompleter<T> || e.typeEntity == typeEntity;
       });
       if (test != null) {
-        test.finish(const None());
+        test.complete(const None());
         break;
       }
     }
