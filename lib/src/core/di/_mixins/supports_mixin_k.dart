@@ -13,7 +13,7 @@
 // ignore_for_file: invalid_use_of_visible_for_testing_member
 
 import '/src/_common.dart';
-import '/src/core/_reserved_safe_finisher.dart';
+import '/src/core/_reserved_safe_completer.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -154,10 +154,10 @@ base mixin SupportsMixinK on DIBase {
           final value = e.unwrap();
           registry.removeDependencyK(typeEntity, groupEntity: g);
           final metadata = option.unwrap().unwrap().metadata.map(
-            (e) => e.copyWith(
-              preemptivetypeEntity: TypeEntity(Sync, [typeEntity]),
-            ),
-          );
+                (e) => e.copyWith(
+                  preemptivetypeEntity: TypeEntity(Sync, [typeEntity]),
+                ),
+              );
           registerDependencyK(
             dependency: Dependency(Sync.value(Ok(value)), metadata: metadata),
             checkExisting: false,
@@ -173,9 +173,7 @@ base mixin SupportsMixinK on DIBase {
     required Dependency<T> dependency,
     bool checkExisting = false,
   }) {
-    final g = dependency.metadata.isSome()
-        ? dependency.metadata.unwrap().groupEntity
-        : focusGroup;
+    final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
     if (checkExisting) {
       final option = getDependencyK(
         dependency.typeEntity,
@@ -317,15 +315,15 @@ base mixin SupportsMixinK on DIBase {
     if (test.isSome()) {
       return test.unwrap().map((e) => e as T);
     }
-    var finisher = finishersK[g]?.firstWhereOrNull(
+    var completer = completersK[g]?.firstWhereOrNull(
       (e) => e.typeEntity == typeEntity,
     );
-    if (finisher == null) {
-      finisher = ReservedSafeCompleter(typeEntity);
-      (finishersK[g] ??= []).add(finisher);
+    if (completer == null) {
+      completer = ReservedSafeCompleter(typeEntity);
+      (completersK[g] ??= []).add(completer);
     }
-    return finisher.resolvable().map((_) {
-      final temp = finishersK[g] ?? [];
+    return completer.resolvable().map((_) {
+      final temp = completersK[g] ?? [];
       for (var n = 0; n < temp.length; n++) {
         final e = temp[n];
         if (e.typeEntity == typeEntity) {
@@ -337,8 +335,8 @@ base mixin SupportsMixinK on DIBase {
     }).flatten();
   }
 
-  /// Stores finishers for [untilExactlyK].
-  final finishersK = <Entity, List<ReservedSafeCompleter>>{};
+  /// Stores completers for [untilExactlyK].
+  final completersK = <Entity, List<ReservedSafeCompleter>>{};
 
   /// Attempts to finish any pending [untilExactlyK] calls for the given
   /// type and group.
@@ -346,7 +344,7 @@ base mixin SupportsMixinK on DIBase {
     assert(T != Object, 'T must be specified and cannot be Object.');
     final typeEntity = TypeEntity(T);
     for (final di in [this as DI, ...children().unwrapOr([])]) {
-      final test = di.finishersK[g]?.firstWhereOrNull((e) {
+      final test = di.completersK[g]?.firstWhereOrNull((e) {
         return e is ReservedSafeCompleter<T> || e.typeEntity == typeEntity;
       });
       if (test != null) {

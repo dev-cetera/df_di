@@ -13,7 +13,7 @@
 // ignore_for_file: invalid_use_of_visible_for_testing_member
 
 import '/src/_common.dart';
-import '/src/core/_reserved_safe_finisher.dart';
+import '/src/core/_reserved_safe_completer.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -46,14 +46,7 @@ base class DIBase {
   Option<Iterable<DI>> children() {
     return childrenContainer.map(
       (e) => e.registry.unsortedDependencies.map(
-        (e) => e
-            .transf<Lazy<DI>>()
-            .value
-            .unwrapSync()
-            .unwrap()
-            .singleton
-            .unwrapSync()
-            .unwrap(),
+        (e) => e.transf<Lazy<DI>>().value.unwrapSync().unwrap().singleton.unwrapSync().unwrap(),
       ),
     );
   }
@@ -75,9 +68,7 @@ base class DIBase {
     final metadata = DependencyMetadata(
       index: Some(_indexIncrementer++),
       groupEntity: g,
-      onUnregister: onUnregister != null
-          ? Some((e) => onUnregister(e.transf()))
-          : const None(),
+      onUnregister: onUnregister != null ? Some((e) => onUnregister(e.transf())) : const None(),
     );
     final a = Resolvable(
       () => consec(value, (e) => consec(onRegister?.call(e), (_) => e)),
@@ -111,25 +102,25 @@ base class DIBase {
     required Entity g,
   }) {
     for (final di in [this as DI, ...children().unwrapOr([])]) {
-      // Get all finishers in group g.
-      final finishers = di.registry.state[g]?.values
+      // Get all completers in group g.
+      final completers = di.registry.state[g]?.values
           .map((e) => e.value)
           .where((e) => e.isSync())
           .map((e) => e.unwrapSync().value)
           .where((e) => e.isOk())
           .map((e) => e.unwrap())
-          // Get all finishers regardless of type.
+          // Get all completers regardless of type.
           .whereType<ReservedSafeCompleter<T>>();
-      if (finishers == null) continue;
+      if (completers == null) continue;
       // Try each one to see if they can finish. It will only be able to finish
-      // if value is compatible with the finisher.
-      for (final finisher in finishers) {
+      // if value is compatible with the completer.
+      for (final completer in completers) {
         try {
-          finisher.complete(value as FutureOr<T>);
+          completer.complete(value as FutureOr<T>);
           break;
         } catch (_) {
-          // Skip finishers that throw. Either by incorrect type T or the
-          // finisher can't complete the Future.
+          // Skip completers that throw. Either by incorrect type T or the
+          // completer can't complete the Future.
         }
       }
     }
@@ -142,9 +133,7 @@ base class DIBase {
     bool checkExisting = false,
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
-    final g = dependency.metadata.isSome()
-        ? dependency.metadata.unwrap().groupEntity
-        : focusGroup;
+    final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
     if (checkExisting) {
       final option = getDependency<T>(groupEntity: g, traverse: false);
       if (option.isSome()) {
@@ -178,9 +167,7 @@ base class DIBase {
           final onUnregisterOption = metadata.onUnregister;
           if (onUnregisterOption.isSome()) {
             final onUnregister = onUnregisterOption.unwrap();
-            result = dependency.value
-                .map((e) => onUnregister(Ok(e))!)
-                .flatten();
+            result = dependency.value.map((e) => onUnregister(Ok(e))!).flatten();
           }
         }
       }
@@ -432,18 +419,18 @@ base class DIBase {
     if (test.isSome()) {
       return test.unwrap().transf();
     }
-    ReservedSafeCompleter<TSuper>? finisher;
+    ReservedSafeCompleter<TSuper>? completer;
     var temp = getSyncOrNone<ReservedSafeCompleter<TSuper>>(
       groupEntity: g,
       traverse: traverse,
     );
     if (temp.isSome()) {
-      finisher = temp.unwrap();
+      completer = temp.unwrap();
     } else {
-      finisher = ReservedSafeCompleter<TSuper>(typeEntity);
-      register(finisher, groupEntity: g);
+      completer = ReservedSafeCompleter<TSuper>(typeEntity);
+      register(completer, groupEntity: g);
     }
-    return finisher
+    return completer
         .resolvable()
         .map((_) {
           unregister<ReservedSafeCompleter<TSuper>>(groupEntity: g);
