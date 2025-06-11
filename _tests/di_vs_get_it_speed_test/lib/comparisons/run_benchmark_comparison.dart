@@ -44,8 +44,8 @@ Future<void> runBenchmarkComparison(
   final isGetItFaster = avgGetIt < avgDI;
   final slowerTime = isGetItFaster ? avgDI : avgGetIt;
   final fasterTime = isGetItFaster ? avgGetIt : avgDI;
-  final percentageImprovement = ((slowerTime - fasterTime) / slowerTime * 100)
-      .round();
+  final percentageImprovement =
+      ((slowerTime - fasterTime) / slowerTime * 100).round();
 
   final winner =
       '${isGetItFaster ? 'get_it' : 'df_di'} at $percentageImprovement% faster with $runs runs';
