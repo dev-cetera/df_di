@@ -173,9 +173,7 @@ base mixin SupportsMixinK on DIBase {
     required Dependency<T> dependency,
     bool checkExisting = false,
   }) {
-    final g = dependency.metadata.isSome()
-        ? dependency.metadata.unwrap().groupEntity
-        : focusGroup;
+    final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
     if (checkExisting) {
       final option = getDependencyK(
         dependency.typeEntity,
@@ -242,7 +240,12 @@ base mixin SupportsMixinK on DIBase {
               final option = e.swap();
               if (option.isSome()) {
                 final result = option.unwrap();
-                return onUnregister(result);
+                return Resolvable<Resolvable<None>>(
+                  () => consec(
+                    onUnregister(result),
+                    (e) => e ?? const Sync.value(Ok(None())),
+                  ),
+                ).flatten();
               }
               return null;
             });

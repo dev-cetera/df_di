@@ -134,7 +134,7 @@ class DependencyMetadata {
   final Option<int> index;
 
   /// A callback to be invoked when this dependency is unregistered.
-  final Option<TOnUnregisterCallback1<Object>> onUnregister;
+  final Option<TOnUnregisterCallback<Object>> onUnregister;
 
   /// Creates a new instance with updated fields, preserving the values of any
   /// fields not explicitly specified.
@@ -143,13 +143,12 @@ class DependencyMetadata {
     Entity preemptivetypeEntity = const DefaultEntity(),
     Option<Type> initialType = const None(),
     Option<int> index = const None(),
-    Option<TOnUnregisterCallback1<Object>> onUnregister = const None(),
+    Option<TOnUnregisterCallback<Object>> onUnregister = const None(),
   }) {
     return DependencyMetadata(
       groupEntity: groupEntity.isNotDefault() ? groupEntity : this.groupEntity,
-      preemptivetypeEntity: preemptivetypeEntity.isNotDefault()
-          ? preemptivetypeEntity
-          : this.preemptivetypeEntity,
+      preemptivetypeEntity:
+          preemptivetypeEntity.isNotDefault() ? preemptivetypeEntity : this.preemptivetypeEntity,
       index: index.isSome() ? index : this.index,
       onUnregister: onUnregister.isSome() ? onUnregister : this.onUnregister,
     ).._initialType = initialType.isSome() ? initialType : _initialType;
@@ -180,12 +179,9 @@ class DependencyMetadata {
 /// in order to facilitate any necessary cleanup or additional processing
 /// that might be required for the [value].
 @internal
-typedef TOnUnregisterCallback1<T extends Object> =
-    Resolvable<None> Function(Result<T> value);
-
-@internal
-typedef TOnUnregisterCallback<T extends Object> =
-    FutureOr<Resolvable<None>?> Function(Result<T> value);
+typedef TOnUnregisterCallback<T extends Object> = FutureOr<Resolvable<None>?> Function(
+  Result<T> value,
+);
 
 /// A typedef for a function that evaluates the validity of a dependency.
 @internal

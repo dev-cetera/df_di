@@ -30,8 +30,7 @@ base mixin SupportsStreamServiceMixin on DIBase {
     return register<TStream>(
       stream,
       onRegister: (e) => e.init(params).unwrap(),
-      onUnregister: (e) =>
-          Resolvable(() => e.map((e) => e.dispose().unwrap()).unwrap()),
+      onUnregister: (e) => Resolvable(() => e.map((e) => e.dispose().unwrap()).unwrap()),
       groupEntity: groupEntity,
       enableUntilExactlyK: enableUntilExactlyK,
     );
