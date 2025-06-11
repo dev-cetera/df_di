@@ -14,27 +14,119 @@ import 'package:df_di/df_di.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-void main() async {
-  final di = DI();
-  di.registerLazy<String>(() => const Sync.value(Ok('Lazy init!')));
-  print(di.getLazySingleton<String>());
-  print(di.getLazySingletonUnsafe<String>());
-  print(di.getFactory<String>());
-  print(di.getFactoryUnsafe<String>());
-  print(di.get<Lazy<String>>());
-  print(di.getLazy<String>());
-  print(di.getLazyUnsafe<String>());
-  print('---');
-  print(di.getLazySingletonT<String>(String));
-  print(di.getLazySingletonUnsafeT<String>(String));
-  print(di.getFactoryT<String>(String));
-  print(di.getFactoryUnsafeT<String>(String));
-  print(di.getT<Lazy<String>>(Lazy<String>));
-  print(di.getLazyT<String>(String));
-  print(di.getLazyUnsafeT<String>(String));
-  di.unregisterLazy<String>();
+/// A simple service to manage user data.
+class UserService {
+  //
+  //
+  //
+
+  final int id;
+  bool _isDisposed = false;
+
+  //
+  //
+  //
+
+  UserService(this.id);
+
+  //
+  //
+  //
+
+  /// Gets the user data for the user identified by [id].
+  Async<Map<String, dynamic>> getUserData() {
+    // Any errors thrown witin Async will be passed to the Async instance
+    // returned.
+    return Async(() async {
+      if (_isDisposed) {
+        throw Err(
+          'UserService has already been disposed!',
+        );
+      }
+      await Future<void>.delayed(const Duration(seconds: 1));
+      return {
+        'id': id,
+        'name': 'John Doe',
+      };
+    });
+  }
+
+  //
+  //
+  //
+
+  /// Cleans up resources used by the service.
+  Async<None> dispose() {
+    return Async(() async {
+      if (_isDisposed) {
+        throw Err('UserService has already been disposed!');
+      }
+      _isDisposed = true;
+      return const None();
+    });
+  }
 }
 
-class A {}
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-class B extends A {}
+Future<void> main() async {
+  // Create some future to a resource that may not yet exist in DI.global that
+  // we can await later.
+  final userServiceFuture = DI.global.untilSuper<UserService>().unwrap();
+
+  // Register the service after a delay.
+
+  // This simulates a part of your application that initializes and provides
+  // the service, for example, after a user logs in.
+  Future.delayed(const Duration(seconds: 2), () {
+    DI.global.register<UserService>(
+      UserService(123),
+      // Handle what happens when we unregister the dependency.
+      onUnregister: (result) async {
+        if (result.isOk()) {
+          final userService = result.unwrap();
+          await userService.dispose().unwrap();
+        }
+        return null;
+      },
+    );
+  });
+
+  // Await the service and use it.
+
+  // Execution will pause here until the `Future.delayed` block above registers
+  // the service, which in turn completes the `userServiceFuture`.
+  final userService = await userServiceFuture;
+
+  final userDataResult = await userService.getUserData().value;
+  if (userDataResult.isOk()) {
+    final userData = userDataResult.unwrap();
+    print(userData);
+  } else {
+    print('Error: ${userDataResult.err()}');
+  }
+
+  // Unregister the service to trigger cleanup.
+
+  // This is useful when a user logs out or a feature is no longer needed.
+  // Calling `unregister` will trigger the `onUnregister` callback we defined.
+  await DI.global.unregister<UserService>().value;
+
+  final isRegistered = DI.global.isRegistered<UserService>();
+  print('Is UserService still registered? $isRegistered');
+
+  // Let's see what happens if we get try and a dependency that is no longer
+  // egistered.
+  final userDataOpt = DI.global.get<UserService>();
+  if (userDataOpt.isSome()) {
+    print('This should never print!');
+  } else {
+    print('No UserService is registeted here! This is expected!');
+  }
+
+  // Let's see what happens if we get try and dispose the service again!
+  userService.dispose().unwrap().catchError((Object e) {
+    print(e);
+    return NONE;
+  });
+}

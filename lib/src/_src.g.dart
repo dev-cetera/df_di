@@ -7,11 +7,12 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-export './core/di/di.dart';
-export './core/entity/reserved_entities.dart';
-export './core/entity/type_entity.dart';
-export './core/entity/entity.dart';
-export './core/entity/unique_entity.dart';
-export './core/services/service.dart';
-export './core/services/stream_service.dart';
-export './additional/world.dart';
+export './di/di.dart';
+export './entity/reserved_entities.dart';
+export './entity/type_entity.dart';
+export './entity/entity.dart';
+export './entity/unique_entity.dart';
+export './additional/ecs.dart';
+export './services/polling_stream_service.dart';
+export './services/service.dart';
+export './services/stream_service.dart';

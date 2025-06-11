@@ -8,307 +8,185 @@ Dart & Flutter Packages by dev-cetera.com & contributors.
 
 ---
 
-Documentation coming soon.
+`df_di` is a lightweight, powerful "dependency injection" package for Dart and Flutter that makes your app modular, testable, and easy to maintain. It stops the confusion of finding and tracking services, like APIs or databases. With `df_di`, you store these services in "containers" that make them easy to access whenever you need them.
 
-<!-- Efficiently structure and manage the essential dependencies of your code, such as services, data, and utilities. This package helps you organize and access these dependencies using containers that store and provide them when needed, making your app more adaptable, testable, maintainable, and easier to debug.
+Why choose `df_di`? It’s inspired by [get_it](https://pub.dev/packages/get_it) but adds better type safety via monads provided by [df_safer_dart](https://pub.dev/packages/df_safer_dart), more robust async support, better debuggability and a very powerful `until` function that waits for dependencies to be ready, and much more. Whether you’re building a small Flutter app or a large-scale project, `df_di` keeps your code clean and your dependencies accessible.
 
-Inspired by [get_it](https://pub.dev/packages/get_it/), it offers a flexible, faster solution with enhanced async handling, support for retrieving dependencies by runtime or generic type, and a hierarchical container structure. This approach allows nested child containers that inherit from parent containers, all while providing clearer, more concise documentation.
+## Quick Start: Managing a User Service
 
-For a full feature set, please refer to the [API reference](https://pub.dev/documentation/df_di/). -->
+Let’s dive into a real-world example: managing a `UserService` that fetches user data. This shows how **df_di** containers shine in a Flutter app.
 
-<!-- ## Use Case 1
-
-Your app probably contains classes that act as managers, helpers, or services, for example:
+### Step 1: Create a User Service
 
 ```dart
-class UserManager {
-  final String uid;
-  const UserManager(this.uid);
+class UserService {
+  Future<String> getUserName() async {
+    // Simulate fetching user data
+    await Future.delayed(Duration(seconds: 1));
+    return 'Alice';
+  }
 
-  String? _userName;
-  String get userName => _userName ?? 'Guest';
-
-  Future<void> loadUserData() async {
-    // TODO: Implement functionality to load user data here.
-    _userName = 'John Doe'; // Example of loaded data
-
+  Future<void> logOut() async {
+    // Simulate the logout process.
+    await Future.delayed(Duration(seconds: 1));
   }
 }
 ```
 
-You can register dependencies like the `UserManager` above in the dedicated `DI.session` container. This container is one of many pre-defined containers you can use and is specifically intended to store dependencies that should persist throughout the app’s session (from login to logout):
+### Step 2: Register the Service in a Container
+
+Use a container to store the `UserService`. Here, we’ll put it in `DI.global` for app-wide access.
 
 ```dart
-Future<void> logIn() async {
-  // TODO: Log in and get the current user's uid.
-  final userManger = UserManager(uid);
-  await userManger.loadUserData();
-  // Register the UserManager in the session container once loaded.
-  DI.session.register<UserManager>(userManager);
-}
-```
+import 'package:df_di/df_di.dart';
 
-You can now use the `until` method that will only complete with an instance of `UserManager` once one has been registered in the `DI.session` container:
-
-```dart
-Widget build(BuildContext contect) {
-  return FutureBuilder<UserManager>(
-    future:  DI.session.until<UserManager>(),
-    builder: (context, snapshot) {
-      if (snapshot.connectionState == ConnectionState.waiting) {
-        return CircularProgressIndicator();
-      } else if (snapshot.hasError) {
-        return Text('Error: ${snapshot.error}');
-      } else {
-        return Text('Hello, ${snapshot.data?.userName}');
-      }
-    },
+void main() {
+  // Register the UserService in the global container
+  DI.global.register<UserService>(
+    UserService(),
+    onUnregister: (result) => result.unwrap().logOut(),
   );
 }
 ```
 
-Upon logging out, the `DI.session` ssion container can be cleared and reset for future use. Dependencies are unregistered in the reverse order of their registration, ensuring proper resource cleanup:
+- **`DI.global`**: A built-in container for app-wide dependencies.
+- **`register<UserService>`**: Stores the `UserService` instance, tagged by its type.
+
+### Step 3: Access the Service Anywhere
+
+Retrieve the `UserService` from the container and use it in your Flutter widget.
 
 ```dart
-Future<void> logOut() async {
-  // TODO: Log out the user.r
-  DI.session.unregisterAll();
-}
-```
+import 'package:flutter/material.dart';
 
-## Use Case 2
-
-Define a custom type to hold a `String` representing the getConfig API endpoint URL. Avoid registering types like `String` or `Map` in a container, as doing so introduces ambiguity about what will be retrieved.
-
-```dart
-class GetConfigEndpointUrl {
-  final String value;
-  const GetConfigEndpointUrl(this.value);
-}
-
-void setupEndpoints() {
-  DI.global.register<GetConfigEndpointUrl>(
-    GetConfigEndpointUrl('https://api.example.com/getConfig'),
-  );
-}
-```
-
-Define a class that is responsible for loading configuration data from the endpoint provided by `ConfigApiEndpointUrl`.
-
-```dart
-class ConfigManager {
-  Map<String, dynamic> _data = {};
-  Map<String, dynamic> get data => _data;
-
-  Future<void> loadDataFromApi() async {
-      // Don't proceed until ConfigApiEndpointUrl is registered.
-      final endpointUrl = (await DI.global.until<ConfigApiEndpointUrl>()).value;
-      // TODO: Get the data from the API...
-      _data = {'latestVersion': '1.2.3+4'}; // Example of data from API.
-  }
-
-  String? get latestVersion => _data['latestVersion'] as String?;
-}
-```
-
-Configure the app using the provided API and register the `ConfigManager`. This can only be done once thanks to the `isRegistered` check.
-
-```dart
-Future<void> configure() {
-  if (!isRegistered<ConfigManager>()) {
-    final configManager = ConfigManager();
-    await configManager.loadDataFromApi();
-    DI.global.register<ConfigManager>(configManager);
-  }
-}
-```
-
-If you’re confident that `ConfigManager` is already registered in the container, you can fetch it directly. Otherwise, check with `isRegistered` or use the `until` method.
-
-```dart
-Future<void> doStuff() async {
-  final configManager = DI.global<ConfigManager>().latestVersion;
-}
-```
-
-## Quickstart
-
-### Store a dependency in a container:
-
-```dart
-// Access the global DI instance anywhere in your app.
-DI.global;
-
-// Or create your own DI container.
-final di = DI();
-
-// Create nested child containers, useful for scoping dependencies in modular apps.
-final scopedDi = di.child().child().child(groupEntity: Entity('moduleGroup'));
-```
-
-```dart
-// Access the global DI instance anywhere in your app.
-DI.global;
-
-// Or create your own DI container.
-final di = DI();
-
-// Create nested child containers, useful for scoping dependencies in modular apps.
-final scopedDi = di.child().child().child(groupEntity: Entity('moduleGroup'));
-```
-
-### Registering Dependencies:
-
-```dart
-// Register the answer to life, the universe and everything.
-di.register<int>(42);
-
-// Register an integer under a specific groupEntity, useful in environments like testing.
-di.register<int>(0, groupEntity: Entity.testGroup);
-
-// Register a Future as a dependency.
-di.register(Future.value('Hello, DI!'));
-print(di.get<String>()); // Instance of 'Future<String>'
-
-// Register a factory or lazy singleton constructor.
-int n = 0;
-di.registerLazy<int>(() => n + 1);
-di.registerLazy(() => DateTime.now());
-```
-
-### Unregistering Dependencies:
-
-```dart
-// Unregister a specific type.
-  di.unregister<int>();
-  di.unregisterT(int);
-
-// Unregister all dependencies, resetting the container.
-  di.unregisterAll();
-
-// Unregister child containers when they’re no longer needed.
-  di.unregisterChild();
-```
-
-### Getting Dependencies:
-
-```dart
-// Retrieve a registered integer dependency.
-print(di<int>()); // 42
-Type intType = int;
-print(di.getT(intType)); // 42
-
-// Retrieve a dependency registered under a specific groupEntity.
-print(di.get<int>(groupEntity: Entity('testGroup'))); // 0
-
-// Handle asynchronous dependencies.
-final greeting = await di.get<String>();
-print(greeting); // Hello, DI!
-
-// Retrieve a factory-registered dependency.
-final now = di.getFactory<DateTime>();
-print(now); // Current timestamp
-await Future.delayed(Duration(seconds: 1));
-final now1 = di.getFactoryT(DateTime);
-print(now1);  // A second later
-```
-
-### Real-World Example - UserService:
-
-```dart
-final class UserService extends Service {
-  final _userName = ValueNotifier<String>('Guest');
-
-  // Getter for the UI to consume.
-  ValueListenable<String> get userName => _userName;
-
+class UserProfile extends StatelessWidget {
   @override
-  Future<void> onInitService(_) async {
-    // Simulate loading user data.
-    await Future.delayed(Duration(seconds: 2));
-    _userName.value = 'John Doe';
-  }
-
-  @override
-  void onDispose() {
-    _userName.dispose(); // Cleanup resources.
-  }
-}
-
-// Register the service.
-di.registerService(UserService.new);
-
-// Access the service.
-final userService = await di.getServiceSingleton<UserService>();
-print(userService.userName.value); // John Doe
-```
-
-### Handling Synchronous and Asynchronous Services:
-
-#### Service with Synchronous Initialization and Asynchronous Disposal
-
-```dart
-final class SyncInitAsyncDisposeService extends Service {
-  // di<SyncInitAsyncDisposeService>() will not return a Future.
-  @override
-  void onInitService(_) {
-    // Synchronous initialization logic
-  }
-
-  // di.unregister<SyncInitAsyncDisposeService>() will return a Future.
-  @override
-  Future<void> onDispose() async {
-    // Asynchronous cleanup logic
+  Widget build(BuildContext context) {
+    return FutureBuilder<String>(
+      future: DI.global<UserService>().getUserName(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return CircularProgressIndicator();
+        }
+        return Text('Welcome, ${snapshot.data ?? 'Guest'}!');
+      },
+    );
   }
 }
-
-// Register and use the service.
-di.registerService(SyncInitAsyncDisposeService.new);
-final service = di.getServiceSingleton<SyncInitAsyncDisposeService>();
-await di.unregister<SyncInitAsyncDisposeService>();
 ```
 
-#### Service with Asynchronous Initialization and Synchronous Disposal
+- **`DI.global<UserService>()`**: Grabs the `UserService` from the container.
+- The widget uses the service to fetch and display the user’s name.
+
+This is the quick way, but it assumes the service exists. Let’s see a safer approach.
+
+## Step 4: Safe Dependency Access
+
+To avoid crashes if a dependency is missing, use `getSyncOrNone`:
 
 ```dart
-final class AsyncInitSyncDisposeService extends Service {
-  // di<AsyncInitSyncDisposeService>() will not return a Future.
-  @override
-  Future<void> onInitService(_) async {
-    await Future.delayed(Duration(seconds: 3));
-    // Asynchronous initialization logic
-  }
-
-  // di.unregister<AsyncInitSyncDisposeService>() will not return a Future.
-  @override
-  void onDispose() {
-    // Synchronous cleanup logic
+void showUser() {
+  final maybeService = DI.global.getSyncOrNone<UserService>();
+  if (maybeService.isSome()) {
+    print('Service found: ${maybeService.unwrap()}');
+  } else {
+    print('No UserService registered.');
   }
 }
-
-// Register and use the service.
-di.registerService(AsyncInitSyncDisposeService.new);
-final service = await di.getServiceSingleton<AsyncInitSyncDisposeService>();
-di.unregister<AsyncInitSyncDisposeService>();
 ```
 
-### Getting the State for Debugging:
+- **`getSyncOrNone<UserService>()`**: Returns `Some<UserService>` if found, or `None` if not.
+- This prevents errors and lets you handle missing dependencies gracefully.
+
+## Step 5: Hierarchical Containers
+
+**df_di**’s containers can form a hierarchy, letting you scope dependencies. Built-in containers include:
+
+- **`DI.global`**: For app-wide services (e.g., `UserService`).
+- **`DI.session`**: For session-specific data (e.g., a logged-in user’s ID).
+- **`DI.user`**: For user-specific data.
+
+Child containers inherit from parents. Here’s an example:
 
 ```dart
-// Print the current state of the DI container.
-print(di.registry.state);
+void setupSession() {
+  // Register a session ID in the session container
+  DI.session.register<String>('session_123');
 
-// Check if a specific type is registered.
-print(di.isRegistered<int>()); // true
-``` -->
+  // Access it from the user container
+  final sessionId = DI.user<String>();
+  print(sessionId); // Outputs: session_123
+}
+```
 
----
+- **`DI.user`**: A child of `DI.session`, which is a child of `DI.global`.
+- If `DI.user` doesn’t have a `String`, it checks `DI.session`, then `DI.global`.
 
-<!-- <a href="https://medium.com/@dev-cetera" target="_blank"><img src="https://raw.githubusercontent.com/dev-cetera/resources/refs/heads/main/assets/medium_logo/medium_logo.svg" height="20"></a>
+You can also create custom hierarchies:
 
-[Dependency Injection Tutorial for Flutter]() - This article explains what Dependency Injection (DI) is and how to use it effectively in Flutter, improving code structure and testability by decoupling components.
+```dart
+final featureContainer = DI();
+final screenContainer = DI(parent: featureContainer);
 
-[State Management Done Right in Flutter]() - This article covers showcases techniques to manage app state efficiently and ensuring scalability and maintainability. -->
+featureContainer.register<String>('Feature data');
+print(screenContainer<String>()); // Outputs: Feature data
+```
+
+## Step 6: Handling Async Dependencies
+
+Need a dependency that’s not ready yet, like user data from an API? Wait for it with `untilSuper`:
+
+```dart
+Future<void> waitForService() async {
+  // If UserService isn't registered yet, it will just wait until it finds one.
+  // IMPORTANT: When using this function, make sure that XXX in untilSuper<XXX> is the
+  // super-most class or matches the exact type registered. In the case of UserService,
+  // this satisfies the requirement.
+  final service = await DI.global.untilSuper<UserService>().unwrap();
+  print(await service.getUserName()); // Outputs: Alice
+}
+```
+
+- **`untilSuper<UserService>()`**: Waits until a `UserService` is registered in the container or its parents.
+- Perfect for Flutter’s `FutureBuilder` to display data once it’s available.
+
+## Step 7: Lazy Initialization
+
+Save resources by registering dependencies that only create when needed:
+
+```dart
+DI.global.registerConstructor(UserService.new);
+
+// This will create a new instance each time.
+final a = DI.global.getLazySingletonSyncOrNone<UserService>(); // Created only now
+final b = DI.global.getLazySingletonSyncOrNone<UserService>(); // NOT created again
+print(a.unwrap() == b.unwrap()); // Outputs: true
+
+// This will create a new instance each time.
+final c = DI.global.getLazyFactorySyncOrNone<UserService>();
+final d = DI.global.getLazyFactorySyncOrNone<UserService>();
+print(c.unwrap() == d.unwrap()); // Outputs: false
+```
+
+- **`registerConstructor`**: The `UserService` is built only when first requested.
+
+## Step 8: Cleaning Up
+
+Remove dependencies when they’re no longer needed:
+
+```dart
+DI.session.register<String>('Temporary data');
+DI.session.unregister<String>();
+
+print(DI.session.isRegistered<String>()); // Outputs: true
+```
+
+You can also remove all dependencies all at once, i.e. when you log the user out of a session:
+
+```dart
+// This will unregister all dependencies in the reverse order by which they were registered.
+DI.session.unregisterAll();
+```
 
 ## Contributing and Discussions
 
