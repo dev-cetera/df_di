@@ -33,8 +33,8 @@ final class DIRegistry {
   /// A snapshot describing the current state of the dependencies.
   @pragma('vm:prefer-inline')
   TRegistryState get state => TRegistryState.unmodifiable(
-        _state,
-      ).map((k, v) => MapEntry(k, Map.unmodifiable(v)));
+    _state,
+  ).map((k, v) => MapEntry(k, Map.unmodifiable(v)));
 
   /// Returns an iterable of all dependencies in the registry, unsorted.
   @protected
@@ -125,8 +125,8 @@ final class DIRegistry {
     final a = TypeEntity(Sync, [type]);
     final b = TypeEntity(Async, [type]);
     return _state[groupEntity]?.values.any(
-              (e) => e.typeEntity == a || e.typeEntity == b,
-            ) ==
+          (e) => e.typeEntity == a || e.typeEntity == b,
+        ) ==
         true;
   }
 
@@ -143,8 +143,8 @@ final class DIRegistry {
     final a = TypeEntity(Sync, [typeEntity]);
     final b = TypeEntity(Async, [typeEntity]);
     return _state[groupEntity]?.values.any(
-              (e) => e.typeEntity == a || e.typeEntity == b,
-            ) ==
+          (e) => e.typeEntity == a || e.typeEntity == b,
+        ) ==
         true;
   }
 
@@ -155,8 +155,7 @@ final class DIRegistry {
     Entity groupEntity = const DefaultEntity(),
   }) {
     return Option.fromNullable(
-      _state[groupEntity]
-          ?.values
+      _state[groupEntity]?.values
           .firstWhereOrNull((e) => e.value is Resolvable<T>)
           ?.transf<T>(),
     );
@@ -194,8 +193,8 @@ final class DIRegistry {
     final b = TypeEntity(Async, [typeEntity]);
     return Option.fromNullable(
       _state[groupEntity]?.values.firstWhereOrNull(
-            (e) => e.typeEntity == a || e.typeEntity == b,
-          ),
+        (e) => e.typeEntity == a || e.typeEntity == b,
+      ),
     );
   }
 

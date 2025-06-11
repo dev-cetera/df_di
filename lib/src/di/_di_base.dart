@@ -77,13 +77,11 @@ base class DIBase {
       groupEntity: g,
       onUnregister: onUnregister != null
           ? Some((e) {
-              return Resolvable<Resolvable<None>>(
-                () {
-                  return consec(onUnregister(e.transf()), (e) {
-                    return e ?? const Sync.value(Ok(None()));
-                  });
-                },
-              ).flatten();
+              return Resolvable<Resolvable<None>>(() {
+                return consec(onUnregister(e.transf()), (e) {
+                  return e ?? const Sync.value(Ok(None()));
+                });
+              }).flatten();
             })
           : const None(),
     );

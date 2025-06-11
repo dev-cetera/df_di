@@ -180,12 +180,12 @@ class DependencyMetadata {
 /// in order to facilitate any necessary cleanup or additional processing
 /// that might be required for the [value].
 @internal
-typedef TOnUnregisterCallback1<T extends Object> = Resolvable<None> Function(
-    Result<T> value);
+typedef TOnUnregisterCallback1<T extends Object> =
+    Resolvable<None> Function(Result<T> value);
 
 @internal
-typedef TOnUnregisterCallback<T extends Object> = FutureOr<Resolvable<None>?>
-    Function(Result<T> value);
+typedef TOnUnregisterCallback<T extends Object> =
+    FutureOr<Resolvable<None>?> Function(Result<T> value);
 
 /// A typedef for a function that evaluates the validity of a dependency.
 @internal

@@ -105,7 +105,8 @@ abstract class Service<TParams extends Option> {
       final seq = SafeSequencer()
         ..addAllSafe(
           provideInitListeners().map(
-            (listener) => (_) => listener(params),
+            (listener) =>
+                (_) => listener(params),
           ),
         );
 
@@ -142,7 +143,8 @@ abstract class Service<TParams extends Option> {
       final seq = SafeSequencer()
         ..addAllSafe(
           providePauseListeners().map(
-            (listener) => (_) => listener(_params),
+            (listener) =>
+                (_) => listener(_params),
           ),
         );
 
@@ -173,7 +175,8 @@ abstract class Service<TParams extends Option> {
       final seq = SafeSequencer()
         ..addAllSafe(
           provideResumeListeners().map(
-            (listener) => (_) => listener(_params),
+            (listener) =>
+                (_) => listener(_params),
           ),
         );
 
@@ -206,7 +209,8 @@ abstract class Service<TParams extends Option> {
       final seq = SafeSequencer()
         ..addAllSafe(
           provideDisposeListeners().map(
-            (listener) => (_) => listener(_params),
+            (listener) =>
+                (_) => listener(_params),
           ),
         );
 

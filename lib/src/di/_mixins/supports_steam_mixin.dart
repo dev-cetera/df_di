@@ -15,8 +15,11 @@ import '/_common.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 base mixin SupportsStreamServiceMixin on DIBase {
-  Resolvable<TStream> initSteamService<TData extends Result,
-      TParams extends Option, TStream extends StreamService<TData, TParams>>(
+  Resolvable<TStream> initSteamService<
+    TData extends Result,
+    TParams extends Option,
+    TStream extends StreamService<TData, TParams>
+  >(
     TStream stream, {
     required TParams params,
     FutureOr<void> Function(TStream stream)? onRegister,

@@ -39,15 +39,10 @@ class UserService {
     // returned.
     return Async(() async {
       if (_isDisposed) {
-        throw Err(
-          'UserService has already been disposed!',
-        );
+        throw Err('UserService has already been disposed!');
       }
       await Future<void>.delayed(const Duration(seconds: 1));
-      return {
-        'id': id,
-        'name': 'John Doe',
-      };
+      return {'id': id, 'name': 'John Doe'};
     });
   }
 
