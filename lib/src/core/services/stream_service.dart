@@ -25,7 +25,7 @@ abstract class StreamService<TData extends Object, TParams extends Option>
 
   // --- PRIVATE STREAMING MEMBERS ---------------------------------------------
 
-  Option<SafeCompleter<Result<TData>>> _initialDataCompleter = const None();
+  Option<SafeCompleter<TData>> _initialDataCompleter = const None();
   Option<StreamSubscription<Result<TData>>> _streamSubscription = const None();
   Option<StreamController<Result<TData>>> _streamController = const None();
   final _seq = SafeSequencer();
@@ -76,7 +76,7 @@ abstract class StreamService<TData extends Object, TParams extends Option>
   /// Sets up the stream controller and subscription.
   Resolvable<None> _setupStream(TParams params) {
     return _teardownStream(params).map((_) {
-      _initialDataCompleter = Some(SafeCompleter<Result<TData>>());
+      _initialDataCompleter = Some(SafeCompleter<TData>());
       final controller = StreamController<Result<TData>>.broadcast();
       _streamController = Some(controller);
 
@@ -156,17 +156,11 @@ abstract class StreamService<TData extends Object, TParams extends Option>
   /// The internal handler for new data from the input stream.
   void pushToStream(Result<TData> data) {
     if (isDisposed) return;
-
-    if (shouldAdd(data)) {
-      _streamController.ifSome((c) => c.unwrap().add(data));
-      _initialDataCompleter.ifSome((f) => f.unwrap().complete(data));
-
-      _seq.addAllSafe(
-        provideOnPushToStreamListeners().map(
-          (listener) => (_) => listener(data),
-        ),
-      );
-    }
+    _streamController.ifSome((e) => e.unwrap().add(data));
+    _initialDataCompleter.ifSome((e) => e.unwrap().resolve(Sync.value(data)));
+    _seq.addAllSafe(
+      provideOnPushToStreamListeners().map((e) => (_) => e(data)),
+    );
   }
 
   // --- PUBLIC API & USER OVERRIDES -------------------------------------------
@@ -178,11 +172,8 @@ abstract class StreamService<TData extends Object, TParams extends Option>
   @mustCallSuper
   TServiceResolvables<Result<TData>> provideOnPushToStreamListeners() => [];
 
-  /// An optional filter to decide whether a new data event should be added.
-  bool shouldAdd(Result<TData> data) => true;
-
   /// A `Resolvable` that completes with the very first item of data from the stream.
-  Resolvable<Result<TData>> get initialData {
+  Resolvable<TData> get initialData {
     return _initialDataCompleter.map((e) => e.resolvable()).unwrapOr(
           Sync.value(
             Err('initialData accessed before the service was initialized.'),
