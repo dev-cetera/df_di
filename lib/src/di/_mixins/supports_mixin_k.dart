@@ -154,10 +154,10 @@ base mixin SupportsMixinK on DIBase {
           final value = e.unwrap();
           registry.removeDependencyK(typeEntity, groupEntity: g);
           final metadata = option.unwrap().unwrap().metadata.map(
-                (e) => e.copyWith(
-                  preemptivetypeEntity: TypeEntity(Sync, [typeEntity]),
-                ),
-              );
+            (e) => e.copyWith(
+              preemptivetypeEntity: TypeEntity(Sync, [typeEntity]),
+            ),
+          );
           registerDependencyK(
             dependency: Dependency(Sync.value(Ok(value)), metadata: metadata),
             checkExisting: false,

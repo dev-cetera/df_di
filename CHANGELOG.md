@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.12.1]
+
+- Released @ 6/2025 (UTC)
+- fix: Fix bug with get and async to sync re-registration
+
 ## [0.12.0]
 
 - Released @ 6/2025 (UTC)

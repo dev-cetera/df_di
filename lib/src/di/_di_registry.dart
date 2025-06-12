@@ -33,13 +33,14 @@ final class DIRegistry {
   /// A snapshot describing the current state of the dependencies.
   @pragma('vm:prefer-inline')
   TRegistryState get state => TRegistryState.unmodifiable(
-        _state,
-      ).map((k, v) => MapEntry(k, Map.unmodifiable(v)));
+    _state,
+  ).map((k, v) => MapEntry(k, Map.unmodifiable(v)));
 
   /// Returns an iterable of all dependencies in the registry, unsorted.
   @protected
   @pragma('vm:prefer-inline')
-  Iterable<Dependency> get unsortedDependencies => _state.entries.expand((e) => e.value.values);
+  Iterable<Dependency> get unsortedDependencies =>
+      _state.entries.expand((e) => e.value.values);
 
   /// Returns a list of all dependencies, sorted in reverse order of registration (newest first).
   /// Dependencies without a registration index are placed at the end.
@@ -75,7 +76,9 @@ final class DIRegistry {
   /// subtypes.
   @pragma('vm:prefer-inline')
   Iterable<Dependency> dependenciesWhereTypeK(Entity typeEntity) {
-    return reversedDependencies.map((e) => e.typeEntity == typeEntity ? e : null).nonNulls;
+    return reversedDependencies
+        .map((e) => e.typeEntity == typeEntity ? e : null)
+        .nonNulls;
   }
 
   /// A snapshot of the current group entities within [state].
@@ -105,7 +108,8 @@ final class DIRegistry {
   bool containsDependency<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
   }) {
-    return _state[groupEntity]?.values.any((e) => e.value is Resolvable<T>) == true;
+    return _state[groupEntity]?.values.any((e) => e.value is Resolvable<T>) ==
+        true;
   }
 
   /// Checks if any dependency with the exact [type] exists under the specified
@@ -121,8 +125,8 @@ final class DIRegistry {
     final a = TypeEntity(Sync, [type]);
     final b = TypeEntity(Async, [type]);
     return _state[groupEntity]?.values.any(
-              (e) => e.typeEntity == a || e.typeEntity == b,
-            ) ==
+          (e) => e.typeEntity == a || e.typeEntity == b,
+        ) ==
         true;
   }
 
@@ -139,8 +143,8 @@ final class DIRegistry {
     final a = TypeEntity(Sync, [typeEntity]);
     final b = TypeEntity(Async, [typeEntity]);
     return _state[groupEntity]?.values.any(
-              (e) => e.typeEntity == a || e.typeEntity == b,
-            ) ==
+          (e) => e.typeEntity == a || e.typeEntity == b,
+        ) ==
         true;
   }
 
@@ -151,7 +155,9 @@ final class DIRegistry {
     Entity groupEntity = const DefaultEntity(),
   }) {
     return Option.fromNullable(
-      _state[groupEntity]?.values.firstWhereOrNull((e) => e.value is Resolvable<T>)?.transf<T>(),
+      _state[groupEntity]?.values
+          .firstWhereOrNull((e) => e.value is Resolvable<T>)
+          ?.transf<T>(),
     );
   }
 
@@ -187,8 +193,8 @@ final class DIRegistry {
     final b = TypeEntity(Async, [typeEntity]);
     return Option.fromNullable(
       _state[groupEntity]?.values.firstWhereOrNull(
-            (e) => e.typeEntity == a || e.typeEntity == b,
-          ),
+        (e) => e.typeEntity == a || e.typeEntity == b,
+      ),
     );
   }
 
@@ -212,7 +218,9 @@ final class DIRegistry {
     if (group == null) {
       return const None();
     }
-    final key = group.entries.firstWhereOrNull((e) => e.value.value is Resolvable<T>)?.key;
+    final key = group.entries
+        .firstWhereOrNull((e) => e.value.value is Resolvable<T>)
+        ?.key;
     if (key == null) {
       return const None();
     }

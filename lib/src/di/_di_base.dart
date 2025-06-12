@@ -46,7 +46,14 @@ base class DIBase {
   Option<Iterable<DI>> children() {
     return childrenContainer.map(
       (e) => e.registry.unsortedDependencies.map(
-        (e) => e.transf<Lazy<DI>>().value.unwrapSync().unwrap().singleton.unwrapSync().unwrap(),
+        (e) => e
+            .transf<Lazy<DI>>()
+            .value
+            .unwrapSync()
+            .unwrap()
+            .singleton
+            .unwrapSync()
+            .unwrap(),
       ),
     );
   }
@@ -143,7 +150,9 @@ base class DIBase {
     bool checkExisting = false,
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
-    final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
+    final g = dependency.metadata.isSome()
+        ? dependency.metadata.unwrap().groupEntity
+        : focusGroup;
     if (checkExisting) {
       final option = getDependency<T>(groupEntity: g, traverse: false);
       if (option.isSome()) {
@@ -467,10 +476,7 @@ base class DIBase {
   FutureOr<void> idle() {
     final resolvables = registry.unsortedDependencies.map((e) => e.value);
     if (resolvables.any((e) => e is Async)) {
-      return consecList(
-        resolvables.map((e) => e.value),
-        (_) => idle(),
-      );
+      return consecList(resolvables.map((e) => e.value), (_) => idle());
     }
   }
 }
