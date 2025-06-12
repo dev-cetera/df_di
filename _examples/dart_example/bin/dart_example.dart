@@ -2,23 +2,15 @@ import 'package:df_di/df_di.dart';
 
 void main() async {
   DI.global.register(Future.delayed(const Duration(seconds: 1), () => 2));
-  print(
-    DI.global.registry.state.entries.first.value.values.first.value,
-  ); // Async
-  await DI.global.idle();
-  print(
-    DI.global.registry.state.entries.first.value.values.first.value,
-  ); // Sync
+  print(DI.global.registry.state.entries.first.value.values.first.value); // Async
+  await DI.global.resolveAll().unwrap();
+  print(DI.global.registry.state.entries.first.value.values.first.value); // Sync
 
   await Future.delayed(const Duration(milliseconds: 100), () {
-    print(
-      DI.global.registry.state.entries.first.value.values.first.value.value,
-    );
+    print(DI.global.registry.state.entries.first.value.values.first.value.value);
   });
 
-  final a1 = TypeEntity('minified:Class1377<Object>', [
-    'minified:Class1377<Object>',
-  ]);
+  final a1 = TypeEntity('minified:Class1377<Object>', ['minified:Class1377<Object>']);
   final b1 = TypeEntity('minified:Class1377<minified:Class1377<Object>>');
   print(a1 == b1); // expected true
 

@@ -46,14 +46,7 @@ base class DIBase {
   Option<Iterable<DI>> children() {
     return childrenContainer.map(
       (e) => e.registry.unsortedDependencies.map(
-        (e) => e
-            .transf<Lazy<DI>>()
-            .value
-            .unwrapSync()
-            .unwrap()
-            .singleton
-            .unwrapSync()
-            .unwrap(),
+        (e) => e.transf<Lazy<DI>>().value.unwrapSync().unwrap().singleton.unwrapSync().unwrap(),
       ),
     );
   }
@@ -150,9 +143,7 @@ base class DIBase {
     bool checkExisting = false,
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
-    final g = dependency.metadata.isSome()
-        ? dependency.metadata.unwrap().groupEntity
-        : focusGroup;
+    final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
     if (checkExisting) {
       final option = getDependency<T>(groupEntity: g, traverse: false);
       if (option.isSome()) {
@@ -474,19 +465,25 @@ base class DIBase {
 
   /// Completes once all [Async] dependencies associated with [groupEntity]
   /// complete or any group if [groupEntity] is `null`.
-  FutureOr<void> idle({Entity? groupEntity = const DefaultEntity()}) {
-    var resolvables = registry.unsortedDependencies;
-    if (groupEntity != null) {
-      resolvables = resolvables.where((e) {
-        if (e.metadata.isSome()) {
-          return e.metadata.unwrap().groupEntity == groupEntity;
-        }
-        return false;
-      });
-    }
-    final values = resolvables.map((e) => e.value);
-    if (values.any((e) => e is Async)) {
-      return consecList(resolvables.map((e) => e.value), (_) => idle());
-    }
+  Resolvable<None> resolveAll({Entity? groupEntity = const DefaultEntity()}) {
+    return Resolvable(() {
+      var resolvables = registry.unsortedDependencies;
+      if (groupEntity != null) {
+        resolvables = resolvables.where((e) {
+          if (e.metadata.isSome()) {
+            return e.metadata.unwrap().groupEntity == groupEntity;
+          }
+          return false;
+        });
+      }
+      final values = resolvables.map((e) => e.value);
+      if (values.any((e) => e is Async)) {
+        return consecList(
+          resolvables.map((e) => e.value.unwrap()),
+          (_) => resolveAll(groupEntity: groupEntity).unwrap(),
+        );
+      }
+      return const None();
+    });
   }
 }
