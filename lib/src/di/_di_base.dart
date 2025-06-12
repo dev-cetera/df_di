@@ -46,14 +46,7 @@ base class DIBase {
   Option<Iterable<DI>> children() {
     return childrenContainer.map(
       (e) => e.registry.unsortedDependencies.map(
-        (e) => e
-            .transf<Lazy<DI>>()
-            .value
-            .unwrapSync()
-            .unwrap()
-            .singleton
-            .unwrapSync()
-            .unwrap(),
+        (e) => e.transf<Lazy<DI>>().value.unwrapSync().unwrap().singleton.unwrapSync().unwrap(),
       ),
     );
   }
@@ -105,9 +98,11 @@ base class DIBase {
         (this as SupportsMixinK).maybeFinishK<T>(g: g);
       }
     }
-    return a.map((e) {
-      return b.unwrap().value;
-    }).flatten();
+    return get<T>(groupEntity: groupEntity).unwrap();
+    // NOTE: Do not do this:
+    // return a.map((e) {
+    //   return b.unwrap().value;
+    // }).flatten();
   }
 
   /// Attempts to finish any pending [until] calls for the given type and group
@@ -148,9 +143,7 @@ base class DIBase {
     bool checkExisting = false,
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
-    final g = dependency.metadata.isSome()
-        ? dependency.metadata.unwrap().groupEntity
-        : focusGroup;
+    final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
     if (checkExisting) {
       final option = getDependency<T>(groupEntity: g, traverse: false);
       if (option.isSome()) {
@@ -327,6 +320,30 @@ base class DIBase {
     return Some(value);
   }
 
+  // NOTE: This is another method aimed to optimize get but there's a bug and it
+  // doesn't properly re-registers the dependency.
+  /// Retrieves a dependency from the container.
+  // Option<Resolvable<T>> get<T extends Object>({
+  //   Entity groupEntity = const DefaultEntity(),
+  //   bool traverse = true,
+  // }) {
+  //   assert(T != Object, 'T must be specified and cannot be Object.');
+  //   final g = groupEntity.preferOverDefault(focusGroup);
+  //   final option = getDependency<T>(groupEntity: g, traverse: traverse);
+  //   if (option.isNone()) {
+  //     return const None();
+  //   }
+  //   final result = option.unwrap();
+  //   if (result.isErr()) {
+  //     return Some(Sync.value(result.err().unwrap().transfErr()));
+  //   }
+  //   final dependency = result.unwrap();
+  //   if (dependency.value.isSync()) {
+  //     return Some(dependency.value);
+  //   }
+  //   return Some(dependency.cacheAsyncValue());
+  // }
+
   /// Retrieves a dependency from the container.
   Option<Resolvable<T>> get<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
@@ -343,49 +360,27 @@ base class DIBase {
       return Some(Sync.value(result.err().unwrap().transfErr()));
     }
     final dependency = result.unwrap();
-    if (dependency.value.isSync()) {
-      return Some(dependency.value);
+    final value = dependency.value;
+    if (value.isSync()) {
+      return Some(value);
     }
-    return Some(dependency.cacheAsyncValue());
+    return Some(
+      Async(
+        () => value.async().unwrap().value.then((e) {
+          final value = e.unwrap();
+          registry.removeDependency<T>(groupEntity: g);
+          registerDependency<T>(
+            dependency: Dependency<T>(
+              Sync.value(Ok(value)),
+              metadata: option.unwrap().unwrap().metadata,
+            ),
+            checkExisting: false,
+          );
+          return value;
+        }),
+      ),
+    );
   }
-
-  // NOTE: MAY WANT TO REVER IT THIS THROWS!!!
-  // Option<Resolvable<T>> get<T extends Object>({
-  //   Entity groupEntity = const DefaultEntity(),
-  //   bool traverse = true,
-  // }) {
-  //   assert(T != Object, 'T must be specified and cannot be Object.');
-  //   final g = groupEntity.preferOverDefault(focusGroup);
-  //   final option = getDependency<T>(groupEntity: g, traverse: traverse);
-  //   if (option.isNone()) {
-  //     return const None();
-  //   }
-  //   final result = option.unwrap();
-  //   if (result.isErr()) {
-  //     return Some(Sync.value(result.err().unwrap().transfErr()));
-  //   }
-  //   final dependency = result.unwrap();
-  //   final value = dependency.value;
-  //   if (value.isSync()) {
-  //     return Some(value);
-  //   }
-  //   return Some(
-  //     Async(
-  //       () => value.async().unwrap().value.then((e) {
-  //         final value = e.unwrap();
-  //         registry.removeDependency<T>(groupEntity: g);
-  //         registerDependency<T>(
-  //           dependency: Dependency<T>(
-  //             Sync.value(Ok(value)),
-  //             metadata: option.unwrap().unwrap().metadata,
-  //           ),
-  //           checkExisting: false,
-  //         );
-  //         return value;
-  //       }),
-  //     ),
-  //   );
-  // }
 
   /// Retrieves a dependency unsafely, returning the instance or a future of it,
   /// or throwing an error if not found.
@@ -462,5 +457,20 @@ base class DIBase {
         })
         .flatten()
         .transf();
+  }
+
+  //
+  //
+  //
+
+  /// Completes once all [Async] dependencies complete.
+  FutureOr<void> idle() {
+    final resolvables = registry.unsortedDependencies.map((e) => e.value);
+    if (resolvables.any((e) => e is Async)) {
+      return consecList(
+        resolvables.map((e) => e.value),
+        (_) => idle(),
+      );
+    }
   }
 }

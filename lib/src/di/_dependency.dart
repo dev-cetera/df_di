@@ -35,21 +35,25 @@ final class Dependency<T extends Object> {
   /// The value contained within this [Dependency].
   Resolvable<T> get value => _value;
 
-  Async<T>? _cachedValue;
+  // NOTE: Something like this can be used to optimize re-registration from
+  // Async to Sync.
+  // Async<T>? _cachedValue;
 
-  /// Caches the result of an asynchronous operation to prevent re-execution.
-  @protected
-  Async<T> cacheAsyncValue() {
-    if (_cachedValue != null) {
-      return _cachedValue!;
-    }
-    _cachedValue = Async(() async {
-      final result = await _value.async().unwrap().value;
-      _value = Sync.value(result);
-      return result.unwrap();
-    });
-    return _cachedValue!;
-  }
+  // /// Caches the result of an asynchronous operation to prevent re-execution.
+  // @protected
+  // Async<T> cacheAsyncValue() {
+  //   if (_cachedValue != null) {
+  //     return _cachedValue!;
+  //   }
+  //   _cachedValue = Async(() async {
+  //     final result = await _value.async().unwrap().value;
+  //     _value = Sync.value(result);
+  //     print(this._value);
+  //     return result.unwrap();
+  //   });
+
+  //   return _cachedValue!;
+  // }
 
   /// The metadata associated with this [Dependency].
   final Option<DependencyMetadata> metadata;
@@ -147,9 +151,8 @@ class DependencyMetadata {
   }) {
     return DependencyMetadata(
       groupEntity: groupEntity.isNotDefault() ? groupEntity : this.groupEntity,
-      preemptivetypeEntity: preemptivetypeEntity.isNotDefault()
-          ? preemptivetypeEntity
-          : this.preemptivetypeEntity,
+      preemptivetypeEntity:
+          preemptivetypeEntity.isNotDefault() ? preemptivetypeEntity : this.preemptivetypeEntity,
       index: index.isSome() ? index : this.index,
       onUnregister: onUnregister.isSome() ? onUnregister : this.onUnregister,
     ).._initialType = initialType.isSome() ? initialType : _initialType;
@@ -180,8 +183,7 @@ class DependencyMetadata {
 /// in order to facilitate any necessary cleanup or additional processing
 /// that might be required for the [value].
 @internal
-typedef TOnUnregisterCallback<T extends Object> = FutureOr<Resolvable<None>?>
-    Function(
+typedef TOnUnregisterCallback<T extends Object> = FutureOr<Resolvable<None>?> Function(
   Result<T> value,
 );
 
