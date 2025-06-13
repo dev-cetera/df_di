@@ -21,12 +21,14 @@ abstract class StreamService<TData extends Object, TParams extends Option>
   //
 
   Option<SafeCompleter<TData>> _initDataCompleter = const None();
-  Option<Resolvable<TData>> get initialData => _initDataCompleter.map((e) => e.resolvable());
+  Option<Resolvable<TData>> get initialData =>
+      _initDataCompleter.map((e) => e.resolvable());
 
   Option<StreamSubscription<Result<TData>>> _streamSubscription = const None();
 
   Option<StreamController<Result<TData>>> _streamController = const None();
-  Option<Stream<Result<TData>>> get stream => _streamController.map((c) => c.stream);
+  Option<Stream<Result<TData>>> get stream =>
+      _streamController.map((c) => c.stream);
 
   //
   //
@@ -41,9 +43,7 @@ abstract class StreamService<TData extends Object, TParams extends Option>
   @override
   @mustCallSuper
   TServiceResolvables<void> provideInitListeners() {
-    return [
-      (_) => _startStream(),
-    ];
+    return [(_) => _startStream()];
   }
 
   @override
@@ -71,9 +71,7 @@ abstract class StreamService<TData extends Object, TParams extends Option>
   @override
   @mustCallSuper
   TServiceResolvables<void> provideDisposeListeners() {
-    return [
-      (_) => _stopStream(),
-    ];
+    return [(_) => _stopStream()];
   }
 
   //
@@ -107,38 +105,28 @@ abstract class StreamService<TData extends Object, TParams extends Option>
     _streamSubscription = const None();
     if (prevSubscription.isSome()) {
       sequencer.addSafe((prev) {
-        assert(
-          prev.isErr(),
-          prev.err().unwrap(),
-        );
-        return Async(
-          () async {
-            await prevSubscription.unwrap().cancel();
-            if (prev.isErr()) {
-              throw prev.err().unwrap();
-            }
-            return const None();
-          },
-        );
+        assert(prev.isErr(), prev.err().unwrap());
+        return Async(() async {
+          await prevSubscription.unwrap().cancel();
+          if (prev.isErr()) {
+            throw prev.err().unwrap();
+          }
+          return const None();
+        });
       });
     }
     final prevController = _streamController;
     _streamController = const None();
     if (prevController.isSome() && !prevController.unwrap().isClosed) {
       sequencer.addSafe((prev) {
-        assert(
-          prev.isErr(),
-          prev.err().unwrap(),
-        );
-        return Async(
-          () async {
-            await prevController.unwrap().close();
-            if (prev.isErr()) {
-              throw prev.err().unwrap();
-            }
-            return const None();
-          },
-        );
+        assert(prev.isErr(), prev.err().unwrap());
+        return Async(() async {
+          await prevController.unwrap().close();
+          if (prev.isErr()) {
+            throw prev.err().unwrap();
+          }
+          return const None();
+        });
       });
     }
     _initDataCompleter = const None();
@@ -163,17 +151,16 @@ abstract class StreamService<TData extends Object, TParams extends Option>
           if (_streamController.isSome()) {
             _streamController.unwrap().add(data);
           }
-          return _initDataCompleter.map((e) => e.resolve(Sync.value(data)).value);
+          return _initDataCompleter.map(
+            (e) => e.resolve(Sync.value(data)).value,
+          );
         });
       });
       sequencer.addAllSafe(
         provideOnPushToStreamListeners().map(
           (listener) => (prev2) {
             if (prev2.isErr()) {
-              assert(
-                prev2.isErr(),
-                prev2.err().unwrap(),
-              );
+              assert(prev2.isErr(), prev2.err().unwrap());
               if (eagerError) {
                 return Sync.value(prev2);
               }
