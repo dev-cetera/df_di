@@ -14,74 +14,80 @@ import '/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-/// A specialized [Service] that manages and exposes a stream of data.
-///
-/// This class is designed to handle streaming data from a source (like a backend API,
-/// a WebSocket, or a database) and integrates seamlessly with the parent [Service]
-/// lifecycle, including `pause`, `resume`, and `dispose`.
 abstract class StreamService<TData extends Object, TParams extends Option>
     extends Service<TParams> {
+  //
+  //
+  //
+
+  Option<SafeCompleter<TData>> _initDataCompleter = const None();
+  Option<Resolvable<TData>> get initialData => _initDataCompleter.map((e) => e.resolvable());
+
+  Option<StreamSubscription<Result<TData>>> _streamSubscription = const None();
+
+  Option<StreamController<Result<TData>>> _streamController = const None();
+  Option<Stream<Result<TData>>> get stream => _streamController.map((c) => c.stream);
+
+  //
+  //
+  //
+
   StreamService();
 
-  // --- PRIVATE STREAMING MEMBERS ---------------------------------------------
-
-  Option<SafeCompleter<TData>> _initialDataCompleter = const None();
-  Option<StreamSubscription<Result<TData>>> _streamSubscription = const None();
-  Option<StreamController<Result<TData>>> _streamController = const None();
-  final _seq = SafeSequencer();
-
-  // --- LIFECYCLE INTEGRATION -------------------------------------------------
+  //
+  //
+  //
 
   @override
   @mustCallSuper
-  TServiceResolvables<TParams> provideInitListeners() {
+  TServiceResolvables<void> provideInitListeners() {
     return [
-      ...super.provideInitListeners(),
-      _setupStream, // Setup stream resources on init.
+      (_) => _startStream(),
     ];
   }
 
   @override
   @mustCallSuper
-  TServiceResolvables<TParams> providePauseListeners() {
+  TServiceResolvables<void> providePauseListeners() {
     return [
-      ...super.providePauseListeners(),
       (_) {
         _streamSubscription.ifSome((sub) => sub.unwrap().pause());
-        return const Sync.value(Ok(None()));
+        return SYNC_NONE;
       },
     ];
   }
 
   @override
   @mustCallSuper
-  TServiceResolvables<TParams> provideResumeListeners() {
+  TServiceResolvables<void> provideResumeListeners() {
     return [
-      ...super.provideResumeListeners(),
       (_) {
         _streamSubscription.ifSome((sub) => sub.unwrap().resume());
-        return const Sync.value(Ok(None()));
+        return SYNC_NONE;
       },
     ];
   }
 
   @override
   @mustCallSuper
-  TServiceResolvables<TParams> provideDisposeListeners() {
-    return [_teardownStream, ...super.provideDisposeListeners()];
+  TServiceResolvables<void> provideDisposeListeners() {
+    return [
+      (_) => _stopStream(),
+    ];
   }
 
-  // --- CORE STREAMING LOGIC --------------------------------------------------
+  //
+  //
+  //
 
-  /// Sets up the stream controller and subscription.
-  Resolvable<None> _setupStream(TParams params) {
-    return _teardownStream(params).map((_) {
-      _initialDataCompleter = Some(SafeCompleter<TData>());
+  Resolvable<Object> _startStream() {
+    return _stopStream().map((_) {
+      _initDataCompleter = Some(SafeCompleter<TData>());
       final controller = StreamController<Result<TData>>.broadcast();
       _streamController = Some(controller);
 
       _streamSubscription = Some(
-        provideInputStream(params).listen(
+        provideInputStream().listen(
           pushToStream,
           onError: controller.addError,
           onDone: controller.close,
@@ -92,103 +98,100 @@ abstract class StreamService<TData extends Object, TParams extends Option>
     });
   }
 
-  /// **ROBUST & CORRECTED:** Cleans up all stream resources sequentially using `SafeSequencer`.
-  /// This guarantees every cleanup step is attempted, even if prior steps fail,
-  /// and propagates an aggregate `Err` of all failures.
-  Resolvable<None> _teardownStream(TParams _) {
-    final sub = _streamSubscription;
+  //
+  //
+  //
+
+  Resolvable<Object> _stopStream() {
+    final prevSubscription = _streamSubscription;
     _streamSubscription = const None();
-
-    final controller = _streamController;
+    if (prevSubscription.isSome()) {
+      sequencer.addSafe((prev) {
+        assert(
+          prev.isErr(),
+          prev.err().unwrap(),
+        );
+        return Async(
+          () async {
+            await prevSubscription.unwrap().cancel();
+            if (prev.isErr()) {
+              throw prev.err().unwrap();
+            }
+            return const None();
+          },
+        );
+      });
+    }
+    final prevController = _streamController;
     _streamController = const None();
-
-    _initialDataCompleter = const None();
-
-    final seq = SafeSequencer();
-    final errors = <Object>[];
-
-    if (sub.isSome()) {
-      seq.addSafe((_) {
-        // This Resolvable will complete with Ok(None) on success, or Ok(Err) on failure,
-        // but the error is also captured in the `errors` list.
-        return Resolvable(
+    if (prevController.isSome() && !prevController.unwrap().isClosed) {
+      sequencer.addSafe((prev) {
+        assert(
+          prev.isErr(),
+          prev.err().unwrap(),
+        );
+        return Async(
           () async {
-            await sub.unwrap().cancel();
+            await prevController.unwrap().close();
+            if (prev.isErr()) {
+              throw prev.err().unwrap();
+            }
             return const None();
-          },
-          onError: (e) {
-            errors.add(e!);
-            return Err<None>(e);
           },
         );
       });
     }
+    _initDataCompleter = const None();
+    return sequencer.last.map((e) => const None());
+  }
 
-    if (controller.isSome() && !controller.unwrap().isClosed) {
-      seq.addSafe((_) {
-        return Resolvable(
-          () async {
-            await controller.unwrap().close();
-            return const None();
-          },
-          onError: (e) {
-            errors.add(e!);
-            return Err<None>(e);
-          },
-        );
-      });
-    }
+  //
+  //
+  //
 
-    if (seq.isEmpty) {
-      return const Sync.value(Ok(None()));
-    }
-
-    // <-- The key is to chain off the final result of the sequence.
-    // The `map` block will only execute after all async tasks in the sequence have completed.
-    return seq.last
-        .map((_) {
-          if (errors.isNotEmpty) {
-            return Err(errors);
+  Resolvable<Option> pushToStream(
+    Result<TData> data, {
+    bool eagerError = false,
+  }) {
+    return sequencer.addSafe((prev1) {
+      assert(state.didDispose());
+      if (state.didDispose()) {
+        return Sync.value(prev1);
+      }
+      sequencer.addSafe((_) {
+        return Resolvable(() {
+          if (_streamController.isSome()) {
+            _streamController.unwrap().add(data);
           }
-          return const Ok(None());
-        })
-        .map((_) => const None());
+          return _initDataCompleter.map((e) => e.resolve(Sync.value(data)).value);
+        });
+      });
+      sequencer.addAllSafe(
+        provideOnPushToStreamListeners().map(
+          (listener) => (prev2) {
+            if (prev2.isErr()) {
+              assert(
+                prev2.isErr(),
+                prev2.err().unwrap(),
+              );
+              if (eagerError) {
+                return Sync.value(prev2);
+              }
+            }
+            return listener(data).map((e) => Some(e));
+          },
+        ),
+      );
+      return Sync.value(prev1);
+    });
   }
 
-  /// The internal handler for new data from the input stream.
-  void pushToStream(Result<TData> data) {
-    if (isDisposed) return;
-    _streamController.ifSome((e) => e.unwrap().add(data));
-    _initialDataCompleter.ifSome((e) => e.unwrap().resolve(Sync.value(data)));
-    _seq.addAllSafe(
-      provideOnPushToStreamListeners().map(
-        (e) =>
-            (_) => e(data),
-      ),
-    );
-  }
+  //
+  //
+  //
 
-  // --- PUBLIC API & USER OVERRIDES -------------------------------------------
+  Stream<Result<TData>> provideInputStream();
 
-  ///  Provides the source stream of data.
-  Stream<Result<TData>> provideInputStream(TParams params);
-
-  /// Provides a list of listeners to be executed whenever new data is pushed.
   @mustCallSuper
-  TServiceResolvables<Result<TData>> provideOnPushToStreamListeners() => [];
-
-  /// A `Resolvable` that completes with the very first item of data from the stream.
-  Resolvable<TData> get initialData {
-    return _initialDataCompleter
-        .map((e) => e.resolvable())
-        .unwrapOr(
-          Sync.value(
-            Err('initialData accessed before the service was initialized.'),
-          ),
-        );
-  }
-
-  /// The public output stream that consumers can listen to.
-  Option<Stream<Result<TData>>> get stream =>
-      _streamController.map((c) => c.stream);
+  TServiceResolvables<Result<TData>> provideOnPushToStreamListeners();
 }

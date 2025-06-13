@@ -151,9 +151,8 @@ class DependencyMetadata {
   }) {
     return DependencyMetadata(
       groupEntity: groupEntity.isNotDefault() ? groupEntity : this.groupEntity,
-      preemptivetypeEntity: preemptivetypeEntity.isNotDefault()
-          ? preemptivetypeEntity
-          : this.preemptivetypeEntity,
+      preemptivetypeEntity:
+          preemptivetypeEntity.isNotDefault() ? preemptivetypeEntity : this.preemptivetypeEntity,
       index: index.isSome() ? index : this.index,
       onUnregister: onUnregister.isSome() ? onUnregister : this.onUnregister,
     ).._initialType = initialType.isSome() ? initialType : _initialType;
@@ -184,8 +183,7 @@ class DependencyMetadata {
 /// in order to facilitate any necessary cleanup or additional processing
 /// that might be required for the [value].
 @internal
-typedef TOnUnregisterCallback<T extends Object> =
-    FutureOr<Resolvable<None>?> Function(Result<T> value);
+typedef TOnUnregisterCallback<T extends Object> = Resolvable<None>? Function(Result<T> value);
 
 /// A typedef for a function that evaluates the validity of a dependency.
 @internal

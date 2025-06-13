@@ -23,7 +23,7 @@ void main() {
     () async {
       di.register<TestService>(() async {
         final service = TestService();
-        service.init(const None());
+        service.init(params: const None());
         return service;
       }());
     }();
@@ -36,7 +36,6 @@ base class TestService extends Service {
   @override
   provideInitListeners() {
     return [
-      ...super.provideInitListeners(),
       (_) {
         return Async(() async {
           await Future.delayed(
@@ -47,5 +46,20 @@ base class TestService extends Service {
         });
       },
     ];
+  }
+
+  @override
+  provideDisposeListeners() {
+    return [];
+  }
+
+  @override
+  providePauseListeners() {
+    return [];
+  }
+
+  @override
+  provideResumeListeners() {
+    return [];
   }
 }

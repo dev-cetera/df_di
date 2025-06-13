@@ -41,9 +41,8 @@ base mixin SupportsUnregisterAll on DIBase {
         }
         registry.removeDependencyK(
           dependency.typeEntity,
-          groupEntity: dependency.metadata
-              .map((e) => e.groupEntity)
-              .unwrapOr(const DefaultEntity()),
+          groupEntity:
+              dependency.metadata.map((e) => e.groupEntity).unwrapOr(const DefaultEntity()),
         );
         final metadataOption = dependency.metadata;
         if (metadataOption.isSome()) {
@@ -71,6 +70,6 @@ base mixin SupportsUnregisterAll on DIBase {
         });
       }
     }
-    return seq.last;
+    return seq.last.map((e) => const None());
   }
 }

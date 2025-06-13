@@ -14,221 +14,238 @@ import '/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-/// Defines the possible lifecycle states of a [Service].
-enum ServiceState {
-  /// The service has not been initialized.
-  NOT_INITIALIZED,
-
-  /// The service is currently executing its initialization logic.
-  BUSY_INITIALIZING,
-
-  /// The service has been successfully initialized and is running.
-  INITIALIZED,
-
-  /// The service is currently paused.
-  PAUSED,
-
-  /// The service is currently executing its pausing logic.
-  BUSY_PAUSING,
-
-  /// The service is currently executing its resuming logic.
-  BUSY_RESUMING,
-
-  /// The service is currently executing its disposal logic.
-  BUSY_DISPOSING,
-
-  /// The service has been disposed and cannot be used again.
-  DISPOSED,
-}
-
-/// A base class for services that require a managed lifecycle.
-///
-/// This class provides a robust, state-managed structure for service
-/// lifecycles (`init`, `pause`, `resume`, `dispose`), ensuring they are properly
-/// and sequentially executed, even under concurrent access. It is intended for
-/// use within a Dependency Injection (DI) system.
 abstract class Service<TParams extends Option> {
   Service();
 
-  /// A static hook for the DI system to properly dispose of the service upon unregistering.
-  static Resolvable<None> unregister(Result<Service> serviceResult) {
-    return serviceResult.isErr()
-        ? const Sync.value(
-            Ok(None()),
-          ) // If service creation failed, do nothing.
-        : serviceResult.unwrap().dispose().map((_) => const None());
+  /// A static hook for the DI system to properly dispose of the service upon
+  /// unregistering.
+  static Resolvable<Object> unregister(Result<Service> serviceResult) {
+    if (serviceResult.isErr()) {
+      return const Sync.value(Ok(None()));
+    }
+    return serviceResult.unwrap().dispose().map((_) => const None());
   }
-
-  // --- STATE MANAGEMENT ------------------------------------------------------
 
   ServiceState _state = ServiceState.NOT_INITIALIZED;
 
   /// The current state of the service.
   ServiceState get state => _state;
 
-  /// Returns `true` if the service has been successfully initialized and is not paused.
-  bool get isRunning => _state == ServiceState.INITIALIZED;
+  @protected
+  final sequencer = SafeSequencer();
 
-  /// Returns `true` if the service is currently paused.
-  bool get isPaused => _state == ServiceState.PAUSED;
+  Option<TParams> params = const None();
 
-  /// Returns `true` if the service has been disposed or is in the process of disposing.
-  bool get isDisposed =>
-      _state == ServiceState.DISPOSED || _state == ServiceState.BUSY_DISPOSING;
+  //
+  //
+  //
 
-  /// Orchestrates all lifecycle operations to run sequentially, preventing race conditions.
-  final _seq = SafeSequencer();
-  late TParams _params;
-
-  // --- INITIALIZATION (START) ------------------------------------------------
-
-  /// Initializes the service with the given [params], making it ready for use.
-  ///
-  /// This operation is idempotent and will be ignored if the service is already
-  /// initialized. It will throw a `StateError` if called on a disposed service.
   @nonVirtual
-  Resolvable<None> init(TParams params) {
-    if (state == ServiceState.INITIALIZED ||
-        state == ServiceState.BUSY_INITIALIZING) {
-      return _seq.last;
-    }
-
-    if (isDisposed) {
-      return Sync.value(
-        Err('Cannot initialize a service that has been disposed.'),
+  Resolvable<Option> init({
+    TParams? params,
+    bool eagerError = true,
+  }) {
+    this.params = Option.fromNullable(params);
+    return sequencer.addSafe((prev) {
+      assert(state.didDispose());
+      if (state.didDispose()) {
+        return Sync.value(prev);
+      }
+      assert(state == ServiceState.NOT_INITIALIZED);
+      if (state != ServiceState.NOT_INITIALIZED) {
+        return Sync.value(prev);
+      }
+      return _updateState(
+        providerFunction: provideInitListeners,
+        eagerError: eagerError,
+        attemptState: ServiceState.RUN_ATTEMPT,
+        successState: ServiceState.RUN_SUCCESS,
+        errorState: ServiceState.RUN_ERROR,
       );
-    }
-
-    _params = params;
-    _seq.addSafe((_) {
-      _state = ServiceState.BUSY_INITIALIZING;
-      final seq = SafeSequencer()
-        ..addAllSafe(
-          provideInitListeners().map(
-            (listener) =>
-                (_) => listener(params),
-          ),
-        );
-
-      return seq.last.map((_) {
-        _state = ServiceState.INITIALIZED;
-        return const None();
-      });
     });
-
-    return _seq.last;
   }
 
-  /// Provides a list of listeners to be executed during initialization.
-  /// Override this to add custom initialization logic.
   @mustCallSuper
-  TServiceResolvables<TParams> provideInitListeners() => [];
+  TServiceResolvables<void> provideInitListeners();
 
-  // --- PAUSE & RESUME --------------------------------------------------------
+  //
+  //
+  //
 
-  /// Pauses the service.
-  ///
-  /// While paused, the service should halt its operations.
-  /// This operation is idempotent.
   @nonVirtual
-  Resolvable<None> pause() {
-    if (state != ServiceState.INITIALIZED) {
-      return Sync.value(
-        Err('Service can only be paused when it is initialized and running.'),
+  Resolvable<Option> pause({bool eagerError = false}) {
+    return sequencer.addSafe((prev) {
+      assert(state.didDispose());
+      if (state.didDispose()) {
+        return Sync.value(prev);
+      }
+      assert(!state.didPause());
+      if (state.didPause()) {
+        return Sync.value(prev);
+      }
+      return _updateState(
+        providerFunction: providePauseListeners,
+        eagerError: eagerError,
+        attemptState: ServiceState.PAUSE_ATTEMPT,
+        successState: ServiceState.PAUSE_SUCCESS,
+        errorState: ServiceState.PAUSE_ERROR,
       );
-    }
-
-    _seq.addSafe((_) {
-      _state = ServiceState.BUSY_PAUSING;
-      final seq = SafeSequencer()
-        ..addAllSafe(
-          providePauseListeners().map(
-            (listener) =>
-                (_) => listener(_params),
-          ),
-        );
-
-      return seq.last.map((_) {
-        _state = ServiceState.PAUSED;
-        return const None();
-      });
     });
-
-    return _seq.last;
   }
 
-  /// Provides a list of listeners to be executed when the service is paused.
   @mustCallSuper
-  TServiceResolvables<TParams> providePauseListeners() => [];
+  TServiceResolvables<void> providePauseListeners();
 
-  /// Resumes the service from a paused state.
-  ///
-  /// This operation is idempotent if the service is already running.
+  //
+  //
+  //
+
   @nonVirtual
-  Resolvable<None> resume() {
-    if (state != ServiceState.PAUSED) {
-      return Sync.value(Err('Service can only be resumed when it is paused.'));
-    }
-
-    _seq.addSafe((_) {
-      _state = ServiceState.BUSY_RESUMING;
-      final seq = SafeSequencer()
-        ..addAllSafe(
-          provideResumeListeners().map(
-            (listener) =>
-                (_) => listener(_params),
-          ),
-        );
-
-      return seq.last.map((_) {
-        _state = ServiceState.INITIALIZED;
-        return const None();
-      });
+  Resolvable<Option> resume({bool eagerError = false}) {
+    return sequencer.addSafe((prev) {
+      assert(state.didDispose());
+      if (state.didDispose()) {
+        return Sync.value(prev);
+      }
+      assert(!state.didResume());
+      if (state.didResume()) {
+        return Sync.value(prev);
+      }
+      return _updateState(
+        providerFunction: provideResumeListeners,
+        eagerError: eagerError,
+        attemptState: ServiceState.RESUME_ATTEMPT,
+        successState: ServiceState.RESUME_SUCCESS,
+        errorState: ServiceState.RESUME_ERROR,
+      );
     });
-
-    return _seq.last;
   }
 
-  /// Provides a list of listeners to be executed when the service is resumed.
   @mustCallSuper
-  TServiceResolvables<TParams> provideResumeListeners() => [];
+  TServiceResolvables<void> provideResumeListeners();
 
-  // --- DISPOSAL (STOP) -------------------------------------------------------
+  //
+  //
+  //
 
-  /// Disposes of the service, releasing all resources.
-  ///
-  /// Once disposed, the service cannot be used again. This operation is idempotent.
   @nonVirtual
-  Resolvable<None> dispose() {
-    if (isDisposed) {
-      return _seq.last;
-    }
-
-    _seq.addSafe((_) {
-      _state = ServiceState.BUSY_DISPOSING;
-      final seq = SafeSequencer()
-        ..addAllSafe(
-          provideDisposeListeners().map(
-            (listener) =>
-                (_) => listener(_params),
-          ),
-        );
-
-      return seq.last.map((_) {
-        _state = ServiceState.DISPOSED;
-        return const None();
-      });
+  Resolvable<Option> dispose({bool eagerError = false}) {
+    return sequencer.addSafe((prev) {
+      assert(state.didDispose());
+      if (state.didDispose()) {
+        return Sync.value(prev);
+      }
+      return _updateState(
+        providerFunction: provideDisposeListeners,
+        eagerError: eagerError,
+        attemptState: ServiceState.DISPOSE_ATTEMPT,
+        successState: ServiceState.DISPOSE_SUCCESS,
+        errorState: ServiceState.DISPOSE_ERROR,
+      );
     });
-    return _seq.last;
   }
 
-  /// Provides a list of listeners to be executed during disposal.
   @mustCallSuper
-  TServiceResolvables<TParams> provideDisposeListeners() => [];
+  TServiceResolvables<void> provideDisposeListeners();
+
+  //
+  //
+  //
+
+  Resolvable<Option> _updateState({
+    required TServiceResolvables<void> Function() providerFunction,
+    required bool eagerError,
+    required ServiceState attemptState,
+    required ServiceState successState,
+    required ServiceState errorState,
+  }) {
+    sequencer.addSafe((prev1) {
+      _state = attemptState;
+      sequencer.addAllSafe(
+        providerFunction().map(
+          (listener) => (prev2) {
+            if (prev2.isErr()) {
+              assert(
+                prev2.isErr(),
+                prev2.err().unwrap(),
+              );
+              _state = errorState;
+              if (eagerError) {
+                return Sync.value(prev2);
+              }
+            }
+            return listener(null).map((e) => Some(e));
+          },
+        ),
+      );
+      return Sync.value(prev1);
+    });
+    return sequencer.addSafe((prev3) {
+      assert(
+        _state == attemptState,
+        _state,
+      );
+      if (_state == attemptState) {
+        _state = successState;
+      }
+      return Sync.value(prev3);
+    });
+  }
 }
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-/// A type alias for a list of functions that take data and return a [Resolvable].
-/// This is the required signature for all service listeners.
-typedef TServiceResolvables<T> = List<Resolvable<None> Function(T data)>;
+typedef TServiceResolvables<TParams> = List<Resolvable Function(TParams data)>;
+
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+enum ServiceState {
+  //
+  //
+  //
+
+  NOT_INITIALIZED,
+  RUN_ATTEMPT,
+  RUN_SUCCESS,
+  RUN_ERROR,
+  PAUSE_ATTEMPT,
+  PAUSE_SUCCESS,
+  PAUSE_ERROR,
+  RESUME_ATTEMPT,
+  RESUME_SUCCESS,
+  RESUME_ERROR,
+  DISPOSE_ATTEMPT,
+  DISPOSE_SUCCESS,
+  DISPOSE_ERROR;
+
+  //
+  //
+  //
+
+  bool get isNotInitialized => this == ServiceState.NOT_INITIALIZED;
+
+  //
+  //
+  //
+
+  bool didRun() => [
+        ServiceState.RUN_ATTEMPT,
+        ServiceState.RUN_SUCCESS,
+        ServiceState.RUN_ERROR,
+      ].contains(this);
+  bool didPause() => [
+        ServiceState.PAUSE_ATTEMPT,
+        ServiceState.PAUSE_SUCCESS,
+        ServiceState.PAUSE_ERROR,
+      ].contains(this);
+  bool didResume() => [
+        ServiceState.RESUME_ATTEMPT,
+        ServiceState.RESUME_SUCCESS,
+        ServiceState.RESUME_ERROR,
+      ].contains(this);
+  bool didDispose() => [
+        ServiceState.DISPOSE_ATTEMPT,
+        ServiceState.DISPOSE_SUCCESS,
+        ServiceState.DISPOSE_ERROR,
+      ].contains(this);
+}

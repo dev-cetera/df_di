@@ -103,5 +103,3 @@ void main() {
   //   expect(await service, value);
   //});
 }
-
-base class TestService extends Service {}

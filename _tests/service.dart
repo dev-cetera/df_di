@@ -33,11 +33,25 @@ base class TestService extends Service {
   @override
   provideInitListeners() {
     return [
-      ...super.provideInitListeners(),
       (_) {
         print('Initializing TestService!!!');
-        return const Sync.value(Ok(None()));
+        return SYNC_NONE;
       },
     ];
+  }
+
+  @override
+  provideDisposeListeners() {
+    return [];
+  }
+
+  @override
+  providePauseListeners() {
+    return [];
+  }
+
+  @override
+  provideResumeListeners() {
+    return [];
   }
 }

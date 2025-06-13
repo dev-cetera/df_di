@@ -77,10 +77,10 @@ Future<void> main() async {
     DI.global.register<UserService>(
       UserService(123),
       // Handle what happens when we unregister the dependency.
-      onUnregister: (result) async {
+      onUnregister: (result) {
         if (result.isOk()) {
           final userService = result.unwrap();
-          await userService.dispose().unwrap();
+          return userService.dispose().unwrap().toResolvable();
         }
         return null;
       },
