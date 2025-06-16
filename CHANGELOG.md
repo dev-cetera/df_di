@@ -4,6 +4,7 @@
 
 - Released @ 6/2025 (UTC)
 - chore: Downgrade meta version
+- chore: Update dependencies
 
 ## [0.12.4]
 

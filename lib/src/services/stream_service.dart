@@ -21,12 +21,14 @@ abstract class StreamService<TData extends Object, TParams extends Option>
   //
 
   Option<SafeCompleter<TData>> _initDataCompleter = const None();
-  Option<Resolvable<TData>> get initialData => _initDataCompleter.map((e) => e.resolvable());
+  Option<Resolvable<TData>> get initialData =>
+      _initDataCompleter.map((e) => e.resolvable());
 
   Option<StreamSubscription<Result<TData>>> _streamSubscription = const None();
 
   Option<StreamController<Result<TData>>> _streamController = const None();
-  Option<Stream<Result<TData>>> get stream => _streamController.map((c) => c.stream);
+  Option<Stream<Result<TData>>> get stream =>
+      _streamController.map((c) => c.stream);
 
   //
   //
@@ -158,21 +160,17 @@ abstract class StreamService<TData extends Object, TParams extends Option>
           );
         });
       }).end();
-      provideOnPushToStreamListeners().map(
-        (listener) {
-          sequencer.addSafe(
-            (prev2) {
-              if (prev2.isErr()) {
-                assert(prev2.isErr(), prev2.err().unwrap());
-                if (eagerError) {
-                  return Sync.value(prev2);
-                }
-              }
-              return listener(data).map((e) => Some(e));
-            },
-          ).end();
-        },
-      );
+      provideOnPushToStreamListeners().map((listener) {
+        sequencer.addSafe((prev2) {
+          if (prev2.isErr()) {
+            assert(prev2.isErr(), prev2.err().unwrap());
+            if (eagerError) {
+              return Sync.value(prev2);
+            }
+          }
+          return listener(data).map((e) => Some(e));
+        }).end();
+      });
       return Sync.value(prev1);
     });
   }

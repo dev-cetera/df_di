@@ -42,8 +42,9 @@ base mixin SupportsUnregisterAll on DIBase {
         registry
             .removeDependencyK(
               dependency.typeEntity,
-              groupEntity:
-                  dependency.metadata.map((e) => e.groupEntity).unwrapOr(const DefaultEntity()),
+              groupEntity: dependency.metadata
+                  .map((e) => e.groupEntity)
+                  .unwrapOr(const DefaultEntity()),
             )
             .end();
         final metadataOption = dependency.metadata;
