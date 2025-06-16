@@ -19,13 +19,16 @@ import 'package:test/test.dart';
 void main() {
   test('Testing the registration and initialization of a service.', () async {
     final di = DI();
-    final service = TestService();
-    await di.registerLazy<TestService>(() => Sync.value(Ok(service))).value;
-    print('Just registered...');
-    final value1 = await di.getLazySingletonUnsafe<TestService>();
-    final value2 = await di.getLazySingletonUnsafe<TestService>();
-    expect(value1, service);
-    expect(value1, value2);
+
+    () async {
+      di.register<TestService>(() async {
+        final service = TestService();
+        service.init(params: const None()).end();
+        return service;
+      }()).end();
+    }();
+
+    print(await di.untilSuper<TestService>().value);
   });
 }
 
@@ -34,8 +37,13 @@ base class TestService extends Service {
   provideInitListeners() {
     return [
       (_) {
-        print('Initializing TestService!!!');
-        return SYNC_NONE;
+        return Async(() async {
+          await Future.delayed(
+            const Duration(seconds: 2),
+            () => print('Done!'),
+          );
+          return const None();
+        });
       },
     ];
   }

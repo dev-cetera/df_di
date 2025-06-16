@@ -8,7 +8,7 @@ Future<void> b4() async {
   container1.registerLazySingleton<Map<int, String>>(() => {1: 'some data'});
   final container2 = DI();
   container2.registerLazy<Map<int, String>>(
-    () => const Sync.value(Ok({1: 'some data'})),
+    () => const Sync.unsafe(Ok({1: 'some data'})),
   );
   await runBenchmarkComparison(
     'Comparing - get lazy singletons',

@@ -10,7 +10,7 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-// ignore_for_file: invalid_use_of_visible_for_testing_member
+// ignore_for_file: invalid_use_of_visible_for_testing_member, invalid_use_of_protected_member
 
 import '/_common.dart';
 import '../../_reserved_safe_completer.dart';
@@ -152,16 +152,16 @@ base mixin SupportsMixinK on DIBase {
       Async(
         () => value.async().unwrap().value.then((e) {
           final value = e.unwrap();
-          registry.removeDependencyK(typeEntity, groupEntity: g);
+          registry.removeDependencyK(typeEntity, groupEntity: g).end();
           final metadata = option.unwrap().unwrap().metadata.map(
-            (e) => e.copyWith(
-              preemptivetypeEntity: TypeEntity(Sync, [typeEntity]),
-            ),
-          );
+                (e) => e.copyWith(
+                  preemptivetypeEntity: TypeEntity(Sync, [typeEntity]),
+                ),
+              );
           registerDependencyK(
             dependency: Dependency(Sync.value(Ok(value)), metadata: metadata),
             checkExisting: false,
-          );
+          ).end();
           return value;
         }),
       ),
@@ -173,9 +173,7 @@ base mixin SupportsMixinK on DIBase {
     required Dependency<T> dependency,
     bool checkExisting = false,
   }) {
-    final g = dependency.metadata.isSome()
-        ? dependency.metadata.unwrap().groupEntity
-        : focusGroup;
+    final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
     if (checkExisting) {
       final option = getDependencyK(
         dependency.typeEntity,
@@ -237,7 +235,7 @@ base mixin SupportsMixinK on DIBase {
           final onUnregisterOption = metadata.onUnregister;
           if (onUnregisterOption.isSome()) {
             final onUnregister = onUnregisterOption.unwrap();
-            seq.addSafe((_) => dependency.value.map((e) => Some(e)));
+            seq.addSafe((_) => dependency.value.map((e) => Some(e))).end();
             seq.addSafe((e) {
               final option = e.swap();
               if (option.isSome()) {
@@ -245,12 +243,12 @@ base mixin SupportsMixinK on DIBase {
                 return Resolvable<Resolvable<None>>(
                   () => consec(
                     onUnregister(result),
-                    (e) => e ?? const Sync.value(Ok(None())),
+                    (e) => e ?? const Sync.unsafe(Ok(None())),
                   ),
                 ).flatten();
               }
               return null;
-            });
+            }).end();
           }
         }
       }
@@ -355,7 +353,7 @@ base mixin SupportsMixinK on DIBase {
         return e is ReservedSafeCompleter<T> || e.typeEntity == typeEntity;
       });
       if (test != null) {
-        test.complete(const None());
+        test.complete(const None()).end();
         break;
       }
     }

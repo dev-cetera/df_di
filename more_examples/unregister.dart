@@ -12,54 +12,37 @@
 
 import 'package:df_di/df_di.dart';
 
-import 'package:test/test.dart';
-
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-void main() {
-  test('Testing the registration and initialization of a service.', () async {
-    final di = DI();
-
-    () async {
-      di.register<TestService>(() async {
-        final service = TestService();
-        service.init(params: const None());
-        return service;
-      }());
-    }();
-
-    print(await di.untilSuper<TestService>().value);
-  });
-}
-
-base class TestService extends Service {
-  @override
-  provideInitListeners() {
-    return [
-      (_) {
-        return Async(() async {
-          await Future.delayed(
-            const Duration(seconds: 2),
-            () => print('Done!'),
-          );
-          return const None();
-        });
-      },
-    ];
-  }
-
-  @override
-  provideDisposeListeners() {
-    return [];
-  }
-
-  @override
-  providePauseListeners() {
-    return [];
-  }
-
-  @override
-  provideResumeListeners() {
-    return [];
-  }
+void main() async {
+  final di = DI();
+  di.register<int>(
+    1,
+    onUnregister: (value) {
+      print('Unregistering value: $value');
+      return null;
+    },
+  ).end();
+  di.register<int>(
+    2,
+    groupEntity: Entity.obj('group2'),
+    onUnregister: (value) {
+      print('Unregistering value: $value');
+      return null;
+    },
+  ).end();
+  // di.unregisterT(
+  //   int,
+  //   groupEntity: Entity.obj('group2'),
+  // );
+  di.unregisterAll(
+    onBeforeUnregister: (value) {
+      print('Before unregistering value: $value');
+      return null;
+    },
+    onAfterUnregister: (value) {
+      print('After unregistering value: $value');
+      return null;
+    },
+  ).end();
 }

@@ -10,7 +10,7 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-// ignore_for_file: invalid_use_of_visible_for_testing_member
+// ignore_for_file: invalid_use_of_visible_for_testing_member, invalid_use_of_protected_member
 
 import '/_common.dart';
 import '../_reserved_safe_completer.dart';
@@ -72,7 +72,7 @@ base class DIBase {
           ? Some((e) {
               return Resolvable<Resolvable<None>>(() {
                 return consec(onUnregister(e.transf()), (e) {
-                  return e ?? const Sync.value(Ok(None()));
+                  return e ?? const Sync.unsafe(Ok(None()));
                 });
               }).flatten();
             })
@@ -126,7 +126,7 @@ base class DIBase {
       // if value is compatible with the completer.
       for (final completer in completers) {
         try {
-          completer.complete(value as FutureOr<T>);
+          completer.complete(value as FutureOr<T>).end();
           break;
         } catch (_) {
           // Skip completers that throw. Either by incorrect type T or the
@@ -181,7 +181,7 @@ base class DIBase {
               return Resolvable<Resolvable<None>>(
                 () => consec(
                   onUnregister(Ok(e)),
-                  (e) => e ?? const Sync.value(Ok(None())),
+                  (e) => e ?? const Sync.unsafe(Ok(None())),
                 ),
               ).flatten();
             }).flatten();
@@ -192,7 +192,7 @@ base class DIBase {
         break;
       }
     }
-    return result ?? const Sync.value(Ok(None()));
+    return result ?? const Sync.unsafe(Ok(None()));
   }
 
   /// Removes a dependency from the internal registry.
@@ -368,14 +368,14 @@ base class DIBase {
       Async(
         () => value.async().unwrap().value.then((e) {
           final value = e.unwrap();
-          registry.removeDependency<T>(groupEntity: g);
+          registry.removeDependency<T>(groupEntity: g).end();
           registerDependency<T>(
             dependency: Dependency<T>(
               Sync.value(Ok(value)),
               metadata: option.unwrap().unwrap().metadata,
             ),
             checkExisting: false,
-          );
+          ).end();
           return value;
         }),
       ),
@@ -447,12 +447,12 @@ base class DIBase {
       completer = temp.unwrap();
     } else {
       completer = ReservedSafeCompleter<TSuper>(typeEntity);
-      register(completer, groupEntity: g);
+      register(completer, groupEntity: g).end();
     }
     return completer
         .resolvable()
         .map((_) {
-          unregister<ReservedSafeCompleter<TSuper>>(groupEntity: g);
+          unregister<ReservedSafeCompleter<TSuper>>(groupEntity: g).end();
           return get<TSuper>(groupEntity: g).unwrap();
         })
         .flatten()

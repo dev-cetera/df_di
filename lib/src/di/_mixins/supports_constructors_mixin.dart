@@ -42,6 +42,7 @@ base mixin SupportsConstructorsMixin on DIBase {
     Entity groupEntity = const DefaultEntity(),
   }) {
     return registerLazy<T>(
+      // ignore: must_be_anonymous
       () => Resolvable(constructor),
       onRegister: onRegister,
       onUnregister: onUnregister,
@@ -133,7 +134,7 @@ base mixin SupportsConstructorsMixin on DIBase {
         return const None();
       });
     }
-    return const Sync.value(Ok(None()));
+    return const Sync.unsafe(Ok(None()));
   }
 
   /// Retrieves the lazily loaded singleton dependency.
@@ -200,10 +201,10 @@ base mixin SupportsConstructorsMixin on DIBase {
   /// Waits until a dependency of type `TSuper` or its subtype `TSub` is
   /// registered. `TSuper` should typically be the most general type expected.
   @pragma('vm:prefer-inline')
-  Resolvable<TSub> untilLazySingleton<
-    TSuper extends Object,
-    TSub extends TSuper
-  >({Entity groupEntity = const DefaultEntity(), bool traverse = true}) {
+  Resolvable<TSub> untilLazySingleton<TSuper extends Object, TSub extends TSuper>({
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
     return untilLazy<TSuper, TSub>(
       groupEntity: groupEntity,
       traverse: traverse,

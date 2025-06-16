@@ -10,7 +10,7 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-// ignore_for_file: invalid_use_of_visible_for_testing_member
+// ignore_for_file: invalid_use_of_visible_for_testing_member, invalid_use_of_protected_member
 
 import '/_common.dart';
 
@@ -32,19 +32,20 @@ base mixin SupportsUnregisterAll on DIBase {
           return Resolvable(
             () => consec(onBeforeUnregister(Ok(dependency)), (_) => NONE),
           );
-        });
+        }).end();
       }
 
       seq.addSafe((_) {
         if (condition != null && !condition(dependency)) {
           return null;
         }
-        registry.removeDependencyK(
-          dependency.typeEntity,
-          groupEntity: dependency.metadata
-              .map((e) => e.groupEntity)
-              .unwrapOr(const DefaultEntity()),
-        );
+        registry
+            .removeDependencyK(
+              dependency.typeEntity,
+              groupEntity:
+                  dependency.metadata.map((e) => e.groupEntity).unwrapOr(const DefaultEntity()),
+            )
+            .end();
         final metadataOption = dependency.metadata;
         if (metadataOption.isSome()) {
           final metadata = metadataOption.unwrap();
@@ -55,20 +56,20 @@ base mixin SupportsUnregisterAll on DIBase {
               return Resolvable<Resolvable<None>>(
                 () => consec(
                   onUnregister(Ok(e)),
-                  (e) => e ?? const Sync.value(Ok(None())),
+                  (e) => e ?? const Sync.unsafe(Ok(None())),
                 ),
               ).flatten();
             }).flatten();
           }
         }
         return null;
-      });
+      }).end();
       if (onAfterUnregister != null) {
         seq.addSafe((_) {
           return Resolvable(
             () => consec(onAfterUnregister(Ok(dependency)), (_) => NONE),
           );
-        });
+        }).end();
       }
     }
     return seq.last.map((e) => const None());

@@ -133,7 +133,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     if (isChildRegistered(groupEntity: groupEntity)) {
       return getChild(groupEntity: groupEntity).unwrap().unwrap();
     }
-    registerChild(groupEntity: groupEntity);
+    registerChild(groupEntity: groupEntity).end();
     return getChild(groupEntity: groupEntity).unwrap().unwrap();
   }
 }

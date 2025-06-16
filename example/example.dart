@@ -84,7 +84,7 @@ Future<void> main() async {
         }
         return null;
       },
-    );
+    ).end();
   });
 
   // Await the service and use it.
@@ -105,7 +105,7 @@ Future<void> main() async {
 
   // This is useful when a user logs out or a feature is no longer needed.
   // Calling `unregister` will trigger the `onUnregister` callback we defined.
-  await DI.global.unregister<UserService>().value;
+  final _ = await DI.global.unregister<UserService>().value;
 
   final isRegistered = DI.global.isRegistered<UserService>();
   print('Is UserService still registered? $isRegistered');

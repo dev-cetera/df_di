@@ -10,11 +10,32 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
+// ignore_for_file: invalid_use_of_visible_for_testing_member
+
+import 'dart:async';
+
 import 'package:df_di/df_di.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 void main() async {
-  DI.global.register<int>(22);
-  print(DI.global.untilSuper<num>().unwrap());
+  () async {
+    await Future<void>.delayed(const Duration(seconds: 1));
+    DI.global.register<_T>(() async {
+      await Future<void>.delayed(const Duration(seconds: 1));
+      return [
+        [42],
+      ];
+    }()).end();
+  }();
+
+  consec(DI.global.untilExactlyT<_T>(_T).value, (e) => print(e));
+  consec(DI.global.untilSuper<List<Object>>().value, (e) => print(e));
+  consec(DI.global.untilSuper<List<Object>>().value, (e) => print(e));
+  consec(DI.global.untilExactlyT<_T>(_T).value, (e) => print(e));
+  consec(DI.global.untilExactlyT(_T).value, (e) => print(e));
+  consec(DI.global.untilSuper<_T>().value, (e) => print(e));
+  consec(DI.global.untilSuper<_T>().value, (e) => print(e));
 }
+
+typedef _T = List<List<int>>;

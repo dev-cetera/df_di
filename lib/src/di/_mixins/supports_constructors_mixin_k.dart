@@ -114,7 +114,7 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
         return const None();
       });
     }
-    return const Sync.value(Ok(None()));
+    return const Sync.unsafe(Ok(None()));
   }
 
   /// Retrieves the lazily loaded singleton dependency.
