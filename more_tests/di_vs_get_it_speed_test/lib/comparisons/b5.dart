@@ -8,7 +8,9 @@ Future<void> b5() async {
     'Comparing - register then get lazy singletons',
     getIt: () {
       final container1 = GetIt.asNewInstance();
-      container1.registerLazySingleton<Map<int, String>>(() => {1: 'some data'});
+      container1.registerLazySingleton<Map<int, String>>(
+        () => {1: 'some data'},
+      );
       container1.get<Map<int, String>>();
     },
     di: () {

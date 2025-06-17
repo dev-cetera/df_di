@@ -16,23 +16,21 @@ import 'package:df_di/df_di.dart';
 
 void main() async {
   final di = DI();
-  di
-      .register<int>(
-        1,
-        onUnregister: (value) {
-          print('Unregistering value: $value');
-          return null;
-        },
-      );
-  di
-      .register<int>(
-        2,
-        groupEntity: Entity.obj('group2'),
-        onUnregister: (value) {
-          print('Unregistering value: $value');
-          return null;
-        },
-      );
+  di.register<int>(
+    1,
+    onUnregister: (value) {
+      print('Unregistering value: $value');
+      return null;
+    },
+  );
+  di.register<int>(
+    2,
+    groupEntity: Entity.obj('group2'),
+    onUnregister: (value) {
+      print('Unregistering value: $value');
+      return null;
+    },
+  );
   // di.unregisterT(
   //   int,
   //   groupEntity: Entity.obj('group2'),
