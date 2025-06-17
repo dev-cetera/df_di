@@ -15,7 +15,8 @@ import '/_common.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 base mixin SupportsServiceMixin on DIBase {
-  FutureOr<void> initService<TParams extends Option, TService extends Service<TParams>>(
+  FutureOr<void>
+  initService<TParams extends Option, TService extends Service<TParams>>(
     TService service, {
     required TParams params,
     FutureOr<void> Function(TService stream)? onRegister,
