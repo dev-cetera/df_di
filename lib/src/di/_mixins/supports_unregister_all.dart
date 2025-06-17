@@ -54,7 +54,7 @@ base mixin SupportsUnregisterAll on DIBase {
           if (onUnregisterOption.isSome()) {
             final onUnregister = onUnregisterOption.unwrap();
             return dependency.value.map((e) {
-              return Resolvable<Resolvable<None>>(
+              return Resolvable<Resolvable<Option>>(
                 () => consec(
                   onUnregister(Ok(e)),
                   (e) => e ?? const Sync.unsafe(Ok(None())),

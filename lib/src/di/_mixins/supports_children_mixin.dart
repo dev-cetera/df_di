@@ -78,7 +78,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     return Some(value);
   }
 
-  Result<None> unregisterChild({Entity groupEntity = const DefaultEntity()}) {
+  Result<Option> unregisterChild({Entity groupEntity = const DefaultEntity()}) {
     final g = groupEntity.preferOverDefault(focusGroup);
     if (childrenContainer.isNone()) {
       return Err('No child container registered.');
@@ -91,7 +91,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
         .value;
   }
 
-  Result<None> unregisterChildT(
+  Result<Option> unregisterChildT(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
   }) {

@@ -20,7 +20,7 @@ base mixin SupportsConstructorsMixinT
     on SupportsConstructorsMixinK, SupportsMixinT {
   /// Unregisters a lazily loaded dependency.
   @pragma('vm:prefer-inline')
-  Resolvable<None> unregisterLazyT(
+  Resolvable<Option> unregisterLazyT(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,

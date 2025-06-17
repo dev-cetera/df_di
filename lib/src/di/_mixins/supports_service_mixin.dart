@@ -15,8 +15,7 @@ import '/_common.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 base mixin SupportsServiceMixin on DIBase {
-  FutureOr<void>
-  initService<TParams extends Option, TService extends Service<TParams>>(
+  FutureOr<void> initService<TParams extends Option, TService extends Service<TParams>>(
     TService service, {
     required TParams params,
     FutureOr<void> Function(TService stream)? onRegister,
@@ -27,8 +26,9 @@ base mixin SupportsServiceMixin on DIBase {
     return register<TService>(
       service,
       onRegister: (e) {
-        e.params = Some(params);
-        return e.init(params: params).unwrap();
+        final paramsOpt = Some(params);
+        e.params = paramsOpt;
+        return e.init(params: paramsOpt).unwrap();
       },
       onUnregister: (e) {
         final seq = SafeSequencer();

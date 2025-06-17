@@ -34,7 +34,7 @@ void main() {
 
 base class TestService extends Service {
   @override
-  provideInitListeners() {
+  provideInitListeners(void _) {
     return [
       (_) {
         return Async(() async {
@@ -49,17 +49,17 @@ base class TestService extends Service {
   }
 
   @override
-  provideDisposeListeners() {
+  provideDisposeListeners(void _) {
     return [];
   }
 
   @override
-  providePauseListeners() {
+  providePauseListeners(void _) {
     return [];
   }
 
   @override
-  provideResumeListeners() {
+  provideResumeListeners(void _) {
     return [];
   }
 }

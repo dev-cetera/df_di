@@ -14,12 +14,12 @@ import '/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-abstract class Service<TParams extends Option> {
+abstract class Service<TParams extends Object> {
   Service();
 
   /// A static hook for the DI system to properly dispose of the service upon
   /// unregistering.
-  static Resolvable<Object> unregister(Result<Service> serviceResult) {
+  static Resolvable<Option> unregister(Result<Service> serviceResult) {
     if (serviceResult.isErr()) {
       return const Sync.unsafe(Ok(None()));
     }
@@ -41,8 +41,8 @@ abstract class Service<TParams extends Option> {
   //
 
   @nonVirtual
-  Resolvable<Option> init({TParams? params, bool eagerError = true}) {
-    this.params = Option.from(params);
+  Resolvable<Option> init({Option<TParams> params = const None(), bool eagerError = true}) {
+    this.params = params;
     return sequencer.addSafe((prev) {
       assert(state.didDispose());
       if (state.didDispose()) {
@@ -63,7 +63,7 @@ abstract class Service<TParams extends Option> {
   }
 
   @mustCallSuper
-  TServiceResolvables<void> provideInitListeners();
+  TServiceResolvables<void> provideInitListeners(void _);
 
   //
   //
@@ -91,7 +91,7 @@ abstract class Service<TParams extends Option> {
   }
 
   @mustCallSuper
-  TServiceResolvables<void> providePauseListeners();
+  TServiceResolvables<void> providePauseListeners(void _);
 
   //
   //
@@ -119,7 +119,7 @@ abstract class Service<TParams extends Option> {
   }
 
   @mustCallSuper
-  TServiceResolvables<void> provideResumeListeners();
+  TServiceResolvables<void> provideResumeListeners(void _);
 
   //
   //
@@ -143,14 +143,14 @@ abstract class Service<TParams extends Option> {
   }
 
   @mustCallSuper
-  TServiceResolvables<void> provideDisposeListeners();
+  TServiceResolvables<void> provideDisposeListeners(void _);
 
   //
   //
   //
 
   Resolvable<Option> _updateState({
-    required TServiceResolvables<void> Function() providerFunction,
+    required TServiceResolvables<void> Function(void _) providerFunction,
     required bool eagerError,
     required ServiceState attemptState,
     required ServiceState successState,
@@ -158,7 +158,7 @@ abstract class Service<TParams extends Option> {
   }) {
     sequencer.addSafe((prev1) {
       _state = attemptState;
-      providerFunction().map((listener) {
+      providerFunction(null).map((listener) {
         sequencer.addSafe((prev2) {
           if (prev2.isErr()) {
             assert(prev2.isErr(), prev2.err().unwrap());
@@ -217,23 +217,23 @@ enum ServiceState {
   //
 
   bool didRun() => [
-    ServiceState.RUN_ATTEMPT,
-    ServiceState.RUN_SUCCESS,
-    ServiceState.RUN_ERROR,
-  ].contains(this);
+        ServiceState.RUN_ATTEMPT,
+        ServiceState.RUN_SUCCESS,
+        ServiceState.RUN_ERROR,
+      ].contains(this);
   bool didPause() => [
-    ServiceState.PAUSE_ATTEMPT,
-    ServiceState.PAUSE_SUCCESS,
-    ServiceState.PAUSE_ERROR,
-  ].contains(this);
+        ServiceState.PAUSE_ATTEMPT,
+        ServiceState.PAUSE_SUCCESS,
+        ServiceState.PAUSE_ERROR,
+      ].contains(this);
   bool didResume() => [
-    ServiceState.RESUME_ATTEMPT,
-    ServiceState.RESUME_SUCCESS,
-    ServiceState.RESUME_ERROR,
-  ].contains(this);
+        ServiceState.RESUME_ATTEMPT,
+        ServiceState.RESUME_SUCCESS,
+        ServiceState.RESUME_ERROR,
+      ].contains(this);
   bool didDispose() => [
-    ServiceState.DISPOSE_ATTEMPT,
-    ServiceState.DISPOSE_SUCCESS,
-    ServiceState.DISPOSE_ERROR,
-  ].contains(this);
+        ServiceState.DISPOSE_ATTEMPT,
+        ServiceState.DISPOSE_SUCCESS,
+        ServiceState.DISPOSE_ERROR,
+      ].contains(this);
 }

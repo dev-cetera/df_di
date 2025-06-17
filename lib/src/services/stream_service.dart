@@ -14,21 +14,19 @@ import '/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-abstract class StreamService<TData extends Object, TParams extends Option>
+abstract class StreamService<TData extends Object, TParams extends Object>
     extends Service<TParams> {
   //
   //
   //
 
   Option<SafeCompleter<TData>> _initDataCompleter = const None();
-  Option<Resolvable<TData>> get initialData =>
-      _initDataCompleter.map((e) => e.resolvable());
+  Option<Resolvable<TData>> get initialData => _initDataCompleter.map((e) => e.resolvable());
 
   Option<StreamSubscription<Result<TData>>> _streamSubscription = const None();
 
   Option<StreamController<Result<TData>>> _streamController = const None();
-  Option<Stream<Result<TData>>> get stream =>
-      _streamController.map((c) => c.stream);
+  Option<Stream<Result<TData>>> get stream => _streamController.map((c) => c.stream);
 
   //
   //
@@ -42,13 +40,13 @@ abstract class StreamService<TData extends Object, TParams extends Option>
 
   @override
   @mustCallSuper
-  TServiceResolvables<void> provideInitListeners() {
+  TServiceResolvables<void> provideInitListeners(void _) {
     return [(_) => _startStream()];
   }
 
   @override
   @mustCallSuper
-  TServiceResolvables<void> providePauseListeners() {
+  TServiceResolvables<void> providePauseListeners(void _) {
     return [
       (_) {
         _streamSubscription.ifSome((sub) => sub.unwrap().pause()).end();
@@ -59,7 +57,7 @@ abstract class StreamService<TData extends Object, TParams extends Option>
 
   @override
   @mustCallSuper
-  TServiceResolvables<void> provideResumeListeners() {
+  TServiceResolvables<void> provideResumeListeners(void _) {
     return [
       (_) {
         _streamSubscription.ifSome((sub) => sub.unwrap().resume()).end();
@@ -70,7 +68,7 @@ abstract class StreamService<TData extends Object, TParams extends Option>
 
   @override
   @mustCallSuper
-  TServiceResolvables<void> provideDisposeListeners() {
+  TServiceResolvables<void> provideDisposeListeners(void _) {
     return [(_) => _stopStream()];
   }
 

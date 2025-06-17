@@ -52,7 +52,7 @@ base mixin SupportsConstructorsMixin on DIBase {
 
   /// Unregisters a lazily loaded dependency.
   @pragma('vm:prefer-inline')
-  Resolvable<None<Object>> unregisterLazy<T extends Object>({
+  Resolvable<Option> unregisterLazy<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
     bool removeAll = true,

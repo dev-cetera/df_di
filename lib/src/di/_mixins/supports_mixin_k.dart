@@ -214,7 +214,7 @@ base mixin SupportsMixinK on DIBase {
   }
 
   /// Unregisters a dependency.
-  Resolvable<None> unregisterK(
+  Resolvable<Option> unregisterK(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
@@ -242,7 +242,7 @@ base mixin SupportsMixinK on DIBase {
               final option = e.swap();
               if (option.isSome()) {
                 final result = option.unwrap();
-                return Resolvable<Resolvable<None>>(
+                return Resolvable<Resolvable<Option>>(
                   () => consec(
                     onUnregister(result),
                     (e) => e ?? const Sync.unsafe(Ok(None())),

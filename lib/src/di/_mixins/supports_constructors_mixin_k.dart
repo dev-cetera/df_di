@@ -20,7 +20,7 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
   /// Retrieves the lazily loaded singleton dependency.
   @protected
   @pragma('vm:prefer-inline')
-  Resolvable<None> unregisterLazyK(
+  Resolvable<Option> unregisterLazyK(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,

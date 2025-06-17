@@ -46,14 +46,7 @@ base class DIBase {
   Option<Iterable<DI>> children() {
     return childrenContainer.map(
       (e) => e.registry.unsortedDependencies.map(
-        (e) => e
-            .transf<Lazy<DI>>()
-            .value
-            .unwrapSync()
-            .unwrap()
-            .singleton
-            .unwrapSync()
-            .unwrap(),
+        (e) => e.transf<Lazy<DI>>().value.unwrapSync().unwrap().singleton.unwrapSync().unwrap(),
       ),
     );
   }
@@ -77,7 +70,7 @@ base class DIBase {
       groupEntity: g,
       onUnregister: onUnregister != null
           ? Some((e) {
-              return Resolvable<Resolvable<None>>(() {
+              return Resolvable<Resolvable<Option>>(() {
                 return consec(onUnregister(e.transf()), (e) {
                   return e ?? const Sync.unsafe(Ok(None()));
                 });
@@ -146,9 +139,7 @@ base class DIBase {
     bool checkExisting = false,
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
-    final g = dependency.metadata.isSome()
-        ? dependency.metadata.unwrap().groupEntity
-        : focusGroup;
+    final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
     if (checkExisting) {
       final option = getDependency<T>(groupEntity: g, traverse: false);
       if (option.isSome()) {
@@ -160,14 +151,14 @@ base class DIBase {
   }
 
   /// Unregisters a dependency from the container.
-  Resolvable<None> unregister<T extends Object>({
+  Resolvable<Option> unregister<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
     bool removeAll = true,
     bool triggerOnUnregisterCallbacks = true,
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
-    Resolvable<None>? result;
+    Resolvable<Option>? result;
     final g = groupEntity.preferOverDefault(focusGroup);
     for (final di in [this as DI, ...parents]) {
       final dependencyOption = di.removeDependency<T>(groupEntity: g);
@@ -183,7 +174,7 @@ base class DIBase {
           if (onUnregisterOption.isSome()) {
             final onUnregister = onUnregisterOption.unwrap();
             result = dependency.value.map((e) {
-              return Resolvable<Resolvable<None>>(
+              return Resolvable<Resolvable<Option>>(
                 () => consec(
                   onUnregister(Ok(e)),
                   (e) => e ?? const Sync.unsafe(Ok(None())),

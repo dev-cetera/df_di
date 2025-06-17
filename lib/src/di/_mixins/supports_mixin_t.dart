@@ -134,7 +134,7 @@ base mixin SupportsMixinT on SupportsMixinK {
 
   /// Unregisters a dependency.
   @pragma('vm:prefer-inline')
-  Resolvable<None> unregisterT(
+  Resolvable<Option> unregisterT(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
