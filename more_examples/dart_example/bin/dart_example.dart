@@ -3,11 +3,11 @@
 import 'package:df_di/df_di.dart';
 
 void main() async {
-  DI.global.register(Future.delayed(const Duration(seconds: 1), () => 2));
+  DI.global.register(Future.delayed(const Duration(seconds: 1), () => 2)).end();
   print(
     DI.global.registry.state.entries.first.value.values.first.value,
   ); // Async
-  await DI.global.resolveAll().unwrap();
+  (await DI.global.resolveAll().value).end();
   print(
     DI.global.registry.state.entries.first.value.values.first.value,
   ); // Sync
@@ -28,7 +28,7 @@ void main() async {
   final b2 = TypeEntity(Service, [Params]);
   print(a2 == b2); // expected true
 
-  DI.global.register<List<int>>([42]);
+  DI.global.register<List<int>>([42]).end();
   final answer = DI.global.getT(List<int>).unwrap().unwrap();
   final output = '${List<int>}: $answer';
   print(output);

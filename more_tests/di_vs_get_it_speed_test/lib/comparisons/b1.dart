@@ -5,7 +5,7 @@ import 'run_benchmark_comparison.dart';
 
 Future<void> b1() async {
   GetIt.instance.registerSingleton<Map<int, String>>({1: 'some data'});
-  DI.root.register<Map<int, String>>({1: 'some data'});
+  DI.root.register<Map<int, String>>({1: 'some data'}).end();
   var lengthA = 0;
   var lengthB = 0;
   await runBenchmarkComparison(
