@@ -17,16 +17,16 @@ import '/_common.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
-  Resolvable<Lazy<DI>> registerChild({
+  FutureOr<void> registerChild({
     Entity groupEntity = const DefaultEntity(),
   }) {
     if (childrenContainer.isNone()) {
       childrenContainer = Some(DI());
     }
     return childrenContainer.unwrap().registerLazy<DI>(
-      () => Sync.value(Ok(DI()..parents.add(this as DI))),
-      groupEntity: groupEntity,
-    );
+          () => Sync.value(Ok(DI()..parents.add(this as DI))),
+          groupEntity: groupEntity,
+        );
   }
 
   Option<DI> getChildOrNone({Entity groupEntity = const DefaultEntity()}) {
@@ -47,8 +47,8 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
       return const None();
     }
     final option = childrenContainer.unwrap().getLazySingleton<DI>(
-      groupEntity: g,
-    );
+          groupEntity: g,
+        );
     if (option.isNone()) {
       return const None();
     }
@@ -66,9 +66,9 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
       return const None();
     }
     final option = childrenContainer.unwrap().getLazySingletonT<DI>(
-      DI,
-      groupEntity: g,
-    );
+          DI,
+          groupEntity: g,
+        );
     if (option.isNone()) {
       return const None();
     }
@@ -85,12 +85,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     if (childrenContainer.isNone()) {
       return Err('No child container registered.');
     }
-    return childrenContainer
-        .unwrap()
-        .unregister<DI>(groupEntity: g)
-        .sync()
-        .unwrap()
-        .value;
+    return childrenContainer.unwrap().unregister<DI>(groupEntity: g).sync().unwrap().value;
   }
 
   Result<None> unregisterChildT(
@@ -101,12 +96,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     if (childrenContainer.isNone()) {
       return Err('No child container registered.');
     }
-    return childrenContainer
-        .unwrap()
-        .unregisterT(type, groupEntity: g)
-        .sync()
-        .unwrap()
-        .value;
+    return childrenContainer.unwrap().unregisterT(type, groupEntity: g).sync().unwrap().value;
   }
 
   bool isChildRegistered<T extends Object>({
@@ -133,7 +123,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     if (isChildRegistered(groupEntity: groupEntity)) {
       return getChild(groupEntity: groupEntity).unwrap().unwrap();
     }
-    registerChild(groupEntity: groupEntity).end();
+    registerChild(groupEntity: groupEntity);
     return getChild(groupEntity: groupEntity).unwrap().unwrap();
   }
 }

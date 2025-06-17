@@ -22,7 +22,7 @@ void main() {
     () async {
       final di = DI();
       final child = DI();
-      di.register(child).end();
+      di.register(child);
       expect(child, di.getUnsafe<DI>());
       expect(child, di.getUnsafeT(DI));
       expect(di.isRegistered<DI>(), true);
@@ -37,7 +37,7 @@ void main() {
     () {
       final di = DI();
       final child = DI();
-      di.registerLazy<DI>(() => Sync.value(Ok(child))).end();
+      di.registerLazy<DI>(() => Sync.value(Ok(child)));
       expect(child, di.getLazySingletonUnsafe<DI>());
       expect(child, di.getLazySingletonUnsafeT(DI));
       expect(true, di.isRegistered<DI>());
@@ -47,7 +47,7 @@ void main() {
   );
   test('Testing children of children.', () async {
     final c1 = DI();
-    c1.register<int>(1).end();
+    c1.register<int>(1);
     final c4 = c1.child().child().child().child();
     expect(1, c4.getUnsafe<int>());
     expect(true, c4.isRegistered<int>());

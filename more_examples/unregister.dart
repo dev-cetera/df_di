@@ -23,8 +23,7 @@ void main() async {
           print('Unregistering value: $value');
           return null;
         },
-      )
-      .end();
+      );
   di
       .register<int>(
         2,
@@ -33,8 +32,7 @@ void main() async {
           print('Unregistering value: $value');
           return null;
         },
-      )
-      .end();
+      );
   // di.unregisterT(
   //   int,
   //   groupEntity: Entity.obj('group2'),

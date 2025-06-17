@@ -46,14 +46,7 @@ base class DIBase {
   Option<Iterable<DI>> children() {
     return childrenContainer.map(
       (e) => e.registry.unsortedDependencies.map(
-        (e) => e
-            .transf<Lazy<DI>>()
-            .value
-            .unwrapSync()
-            .unwrap()
-            .singleton
-            .unwrapSync()
-            .unwrap(),
+        (e) => e.transf<Lazy<DI>>().value.unwrapSync().unwrap().singleton.unwrapSync().unwrap(),
       ),
     );
   }
@@ -63,7 +56,7 @@ base class DIBase {
   //
 
   /// Registers a dependency with the container.
-  Resolvable<T> register<T extends Object>(
+  FutureOr<void> register<T extends Object>(
     FutureOr<T> value, {
     FutureOr<void> Function(T value)? onRegister,
     TOnUnregisterCallback<T>? onUnregister,
@@ -105,11 +98,7 @@ base class DIBase {
         (this as SupportsMixinK).maybeFinishK<T>(g: g);
       }
     }
-    return get<T>(groupEntity: groupEntity).unwrap();
-    // NOTE: Do not do this:
-    // return a.map((e) {
-    //   return b.unwrap().value;
-    // }).flatten();
+    return get<T>(groupEntity: groupEntity).unwrap().value;
   }
 
   /// Attempts to finish any pending [until] calls for the given type and group
@@ -150,9 +139,7 @@ base class DIBase {
     bool checkExisting = false,
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
-    final g = dependency.metadata.isSome()
-        ? dependency.metadata.unwrap().groupEntity
-        : focusGroup;
+    final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
     if (checkExisting) {
       final option = getDependency<T>(groupEntity: g, traverse: false);
       if (option.isSome()) {
@@ -456,7 +443,7 @@ base class DIBase {
       completer = temp.unwrap();
     } else {
       completer = ReservedSafeCompleter<TSuper>(typeEntity);
-      register(completer, groupEntity: g).end();
+      register(completer, groupEntity: g);
     }
     return completer
         .resolvable()

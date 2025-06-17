@@ -33,7 +33,7 @@ void setup() async {
   // await Future<void>.delayed(const Duration(seconds: 1));
   // di.register(Future<Test2>.value(Test2()));
   // await Future<void>.delayed(const Duration(seconds: 1));
-  di.register(Future<int>.delayed(const Duration(seconds: 2), () => 1)).end();
+  di.register(Future<int>.delayed(const Duration(seconds: 2), () => 1));
 }
 
 void main() async {
@@ -43,7 +43,7 @@ void main() async {
 
   //setup();
   Future.delayed(const Duration(seconds: 1), () {
-    di.register<num>(Future.delayed(const Duration(seconds: 2), () => 1)).end();
+    di.register<num>(Future.delayed(const Duration(seconds: 2), () => 1));
   });
 
   print(await di.untilSuper<int>().value);

@@ -25,7 +25,7 @@ void main() {
         final service = TestService();
         service.init(params: const None()).end();
         return service;
-      }()).end();
+      }());
     }();
 
     print(await di.untilSuper<TestService>().value);

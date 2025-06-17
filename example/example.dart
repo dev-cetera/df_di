@@ -85,8 +85,7 @@ Future<void> main() async {
             }
             return null;
           },
-        )
-        .end();
+        );
   });
 
   // Await the service and use it.

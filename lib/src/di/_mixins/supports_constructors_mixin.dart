@@ -19,7 +19,7 @@ import '/_common.dart';
 base mixin SupportsConstructorsMixin on DIBase {
   /// Registers a lazy dependency.
   @pragma('vm:prefer-inline')
-  Resolvable<Lazy<T>> registerLazy<T extends Object>(
+  FutureOr<void> registerLazy<T extends Object>(
     LazyConstructor<T> constructor, {
     FutureOr<void> Function(Lazy<T> lazy)? onRegister,
     TOnUnregisterCallback<Lazy<T>>? onUnregister,
@@ -35,7 +35,7 @@ base mixin SupportsConstructorsMixin on DIBase {
 
   /// Registers a lazy dependency.
   @pragma('vm:prefer-inline')
-  Resolvable<Lazy<T>> registerConstructor<T extends Object>(
+  FutureOr<void> registerConstructor<T extends Object>(
     FutureOr<T> Function() constructor, {
     FutureOr<void> Function(Lazy<T> lazy)? onRegister,
     TOnUnregisterCallback<Lazy<T>>? onUnregister,
@@ -201,10 +201,8 @@ base mixin SupportsConstructorsMixin on DIBase {
   /// Waits until a dependency of type `TSuper` or its subtype `TSub` is
   /// registered. `TSuper` should typically be the most general type expected.
   @pragma('vm:prefer-inline')
-  Resolvable<TSub> untilLazySingleton<
-    TSuper extends Object,
-    TSub extends TSuper
-  >({Entity groupEntity = const DefaultEntity(), bool traverse = true}) {
+  Resolvable<TSub> untilLazySingleton<TSuper extends Object, TSub extends TSuper>(
+      {Entity groupEntity = const DefaultEntity(), bool traverse = true}) {
     return untilLazy<TSuper, TSub>(
       groupEntity: groupEntity,
       traverse: traverse,
