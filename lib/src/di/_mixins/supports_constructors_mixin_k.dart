@@ -100,7 +100,7 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
 
   /// Resets the singleton instance of a lazily loaded dependency.
   @protected
-  Resolvable<None> resetLazySingletonK<T extends Object>(
+  Resolvable<void> resetLazySingletonK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
   }) {

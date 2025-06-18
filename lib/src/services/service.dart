@@ -19,11 +19,11 @@ abstract class Service<TParams extends Object> {
 
   /// A static hook for the DI system to properly dispose of the service upon
   /// unregistering.
-  static Resolvable<Option> unregister(Result<Service> serviceResult) {
+  static Resolvable<void> unregister(Result<Service> serviceResult) {
     if (serviceResult.isErr()) {
       return const Sync.unsafe(Ok(None()));
     }
-    return serviceResult.unwrap().dispose().map((_) => const None());
+    return serviceResult.unwrap().dispose();
   }
 
   ServiceState _state = ServiceState.NOT_INITIALIZED;
@@ -36,12 +36,15 @@ abstract class Service<TParams extends Object> {
 
   Option<TParams> params = const None();
 
+  var _didEverInitAndSuccessfully = false;
+  bool get didEverInitAndSuccessfully => _didEverInitAndSuccessfully;
+
   //
   //
   //
 
   @nonVirtual
-  Resolvable<Option> init({
+  Resolvable<void> init({
     Option<TParams> params = const None(),
     bool eagerError = true,
   }) {
@@ -61,6 +64,9 @@ abstract class Service<TParams extends Object> {
         attemptState: ServiceState.RUN_ATTEMPT,
         successState: ServiceState.RUN_SUCCESS,
         errorState: ServiceState.RUN_ERROR,
+        onSuccessMustNotThrow: () {
+          _didEverInitAndSuccessfully = true;
+        },
       );
     });
   }
@@ -73,7 +79,7 @@ abstract class Service<TParams extends Object> {
   //
 
   @nonVirtual
-  Resolvable<Option> pause({bool eagerError = false}) {
+  Resolvable<void> pause({bool eagerError = false}) {
     return sequencer.addSafe((prev) {
       assert(state.didDispose());
       if (state.didDispose()) {
@@ -101,7 +107,7 @@ abstract class Service<TParams extends Object> {
   //
 
   @nonVirtual
-  Resolvable<Option> resume({bool eagerError = false}) {
+  Resolvable<void> resume({bool eagerError = false}) {
     return sequencer.addSafe((prev) {
       assert(state.didDispose());
       if (state.didDispose()) {
@@ -129,7 +135,7 @@ abstract class Service<TParams extends Object> {
   //
 
   @nonVirtual
-  Resolvable<Option> dispose({bool eagerError = false}) {
+  Resolvable<void> dispose({bool eagerError = false}) {
     return sequencer.addSafe((prev) {
       assert(state.didDispose());
       if (state.didDispose()) {
@@ -158,26 +164,32 @@ abstract class Service<TParams extends Object> {
     required ServiceState attemptState,
     required ServiceState successState,
     required ServiceState errorState,
+    //void Function()? onErrorMustNotThrow,
+    void Function()? onSuccessMustNotThrow,
   }) {
-    sequencer.addSafe((prev1) {
+    sequencer.addSafe<Object>((prev1) {
       _state = attemptState;
       providerFunction(null).map((listener) {
-        sequencer.addSafe((prev2) {
-          if (prev2.isErr()) {
-            assert(prev2.isErr(), prev2.err().unwrap());
-            if (eagerError) {
-              return Sync.value(prev2);
-            }
+        sequencer.addSafe<Object>((prev2) {
+          switch (prev2) {
+            case Err(error: final error):
+              assert(false, error);
+              //onErrorMustNotThrow?.call();
+              _state = errorState;
+              if (eagerError) {
+                return Sync.value(prev2);
+              }
+            default:
           }
           return listener(null).map((e) => Some(e));
         }).end();
       });
       return Sync.value(prev1);
     }).end();
-    return sequencer.addSafe((prev3) {
-      assert(_state == attemptState, _state);
+    return sequencer.addSafe<Object>((prev3) {
       if (_state == attemptState) {
         _state = successState;
+        onSuccessMustNotThrow?.call();
       }
       return Sync.value(prev3);
     });
@@ -220,23 +232,23 @@ enum ServiceState {
   //
 
   bool didRun() => [
-    ServiceState.RUN_ATTEMPT,
-    ServiceState.RUN_SUCCESS,
-    ServiceState.RUN_ERROR,
-  ].contains(this);
+        ServiceState.RUN_ATTEMPT,
+        ServiceState.RUN_SUCCESS,
+        ServiceState.RUN_ERROR,
+      ].contains(this);
   bool didPause() => [
-    ServiceState.PAUSE_ATTEMPT,
-    ServiceState.PAUSE_SUCCESS,
-    ServiceState.PAUSE_ERROR,
-  ].contains(this);
+        ServiceState.PAUSE_ATTEMPT,
+        ServiceState.PAUSE_SUCCESS,
+        ServiceState.PAUSE_ERROR,
+      ].contains(this);
   bool didResume() => [
-    ServiceState.RESUME_ATTEMPT,
-    ServiceState.RESUME_SUCCESS,
-    ServiceState.RESUME_ERROR,
-  ].contains(this);
+        ServiceState.RESUME_ATTEMPT,
+        ServiceState.RESUME_SUCCESS,
+        ServiceState.RESUME_ERROR,
+      ].contains(this);
   bool didDispose() => [
-    ServiceState.DISPOSE_ATTEMPT,
-    ServiceState.DISPOSE_SUCCESS,
-    ServiceState.DISPOSE_ERROR,
-  ].contains(this);
+        ServiceState.DISPOSE_ATTEMPT,
+        ServiceState.DISPOSE_SUCCESS,
+        ServiceState.DISPOSE_ERROR,
+      ].contains(this);
 }

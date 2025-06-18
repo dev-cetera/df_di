@@ -21,14 +21,12 @@ abstract class StreamService<TData extends Object, TParams extends Object>
   //
 
   Option<SafeCompleter<TData>> _initDataCompleter = const None();
-  Option<Resolvable<TData>> get initialData =>
-      _initDataCompleter.map((e) => e.resolvable());
+  Option<Resolvable<TData>> get initialData => _initDataCompleter.map((e) => e.resolvable());
 
   Option<StreamSubscription<Result<TData>>> _streamSubscription = const None();
 
   Option<StreamController<Result<TData>>> _streamController = const None();
-  Option<Stream<Result<TData>>> get stream =>
-      _streamController.map((c) => c.stream);
+  Option<Stream<Result<TData>>> get stream => _streamController.map((c) => c.stream);
 
   //
   //
@@ -123,7 +121,7 @@ abstract class StreamService<TData extends Object, TParams extends Object>
       sequencer.addSafe((prev) {
         assert(prev.isErr(), prev.err().unwrap());
         return Async(() async {
-          // THIS IS A LINTER ISSUE! addSafe cannot contain futures!
+          // TODO: THIS IS A LINTER ISSUE! addSafe cannot contain futures!
           // ignore: no_futures_allowed
           await prevController.unwrap().close();
           if (prev.isErr()) {
@@ -145,12 +143,12 @@ abstract class StreamService<TData extends Object, TParams extends Object>
     Result<TData> data, {
     bool eagerError = false,
   }) {
-    return sequencer.addSafe((prev1) {
+    return sequencer.addSafe<Object>((prev1) {
       assert(state.didDispose());
       if (state.didDispose()) {
         return Sync.value(prev1);
       }
-      sequencer.addSafe((_) {
+      sequencer.addSafe<Object>((_) {
         return Resolvable(() {
           if (_streamController.isSome()) {
             _streamController.unwrap().add(data);
@@ -161,7 +159,7 @@ abstract class StreamService<TData extends Object, TParams extends Object>
         });
       }).end();
       provideOnPushToStreamListeners().map((listener) {
-        sequencer.addSafe((prev2) {
+        sequencer.addSafe<Object>((prev2) {
           if (prev2.isErr()) {
             assert(prev2.isErr(), prev2.err().unwrap());
             if (eagerError) {

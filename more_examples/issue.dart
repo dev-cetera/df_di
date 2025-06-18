@@ -4,7 +4,7 @@ import 'package:df_di/df_di.dart';
 
 void register() async {
   await Future<void>.delayed(const Duration(seconds: 1));
-  DI.global.register(Child());
+  DI.global.register(Child()).end();
   // ignore: invalid_use_of_protected_member
   print(DI.global.registry.state);
 }

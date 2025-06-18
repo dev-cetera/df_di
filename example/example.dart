@@ -51,13 +51,13 @@ class UserService {
   //
 
   /// Cleans up resources used by the service.
-  Async<None> dispose() {
+  Async<void> dispose() {
     return Async(() async {
       if (_isDisposed) {
         throw Err('UserService has already been disposed!');
       }
       _isDisposed = true;
-      return const None();
+      return Unit.instance;
     });
   }
 }
@@ -80,11 +80,11 @@ Future<void> main() async {
       onUnregister: (result) {
         if (result.isOk()) {
           final userService = result.unwrap();
-          return userService.dispose().unwrap().toResolvable();
+          return Future<void>.value(userService.dispose().unwrap());
         }
         return null;
       },
-    );
+    ).end;
   });
 
   // Await the service and use it.
@@ -122,6 +122,5 @@ Future<void> main() async {
   // Let's see what happens if we get try and dispose the service again!
   userService.dispose().unwrap().catchError((Object e) {
     print(e);
-    return NONE;
   });
 }

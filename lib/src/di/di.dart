@@ -22,7 +22,8 @@ final class DI extends DIBase
         SupportsConstructorsMixinK,
         SupportsConstructorsMixinT,
         SupportsChildrenMixin,
-        SupportsUnregisterAll {
+        SupportsUnregisterAll,
+        SupportsServiceMixin {
   DI();
 
   /// A predefined container recommended for application-wide dependencies.

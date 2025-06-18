@@ -15,38 +15,28 @@ import '/_common.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 base mixin SupportsServiceMixin on DIBase {
-  FutureOr<void>
-  initService<TParams extends Option, TService extends Service<TParams>>(
+  Resolvable<void>
+      registerAndInitService<TParams extends Object, TService extends Service<TParams>>(
     TService service, {
     required TParams params,
-    FutureOr<void> Function(TService stream)? onRegister,
+    TOnRegisterCallback<TService>? onRegister,
     TOnUnregisterCallback<TService>? onUnregister,
     Entity groupEntity = const DefaultEntity(),
     bool enableUntilExactlyK = false,
   }) {
     return register<TService>(
       service,
-      onRegister: (e) {
+      onRegister: (service) {
         final paramsOpt = Some(params);
-        e.params = paramsOpt;
-        return e.init(params: paramsOpt).unwrap();
+        service.params = paramsOpt;
+        return service.init(params: paramsOpt).unwrap();
       },
-      onUnregister: (e) {
-        final seq = SafeSequencer();
-        seq.addSafe((_) => e.unwrap().dispose()).end();
-        if (onUnregister != null) {
-          seq.addSafe((_) {
-            final result = onUnregister(e)?.value;
-            if (result == null) {
-              return SYNC_NONE;
-            }
-            return Resolvable(
-              () => consec(onUnregister(e)?.value, (e) => const None()),
-            );
-          }).end();
-        }
-
-        return seq.last.map((e) => const None());
+      onUnregister: (serviceOpt) {
+        final service = serviceOpt.unwrap();
+        return consec(service.dispose().value, (disposeResult) {
+          disposeResult.unwrap();
+          return consec(onUnregister, (_) => service);
+        });
       },
       groupEntity: groupEntity,
       enableUntilExactlyK: enableUntilExactlyK,

@@ -154,10 +154,10 @@ base mixin SupportsMixinK on DIBase {
           final value = e.unwrap();
           registry.removeDependencyK(typeEntity, groupEntity: g).end();
           final metadata = option.unwrap().unwrap().metadata.map(
-            (e) => e.copyWith(
-              preemptivetypeEntity: TypeEntity(Sync, [typeEntity]),
-            ),
-          );
+                (e) => e.copyWith(
+                  preemptivetypeEntity: TypeEntity(Sync, [typeEntity]),
+                ),
+              );
           registerDependencyK(
             dependency: Dependency(Sync.value(Ok(value)), metadata: metadata),
             checkExisting: false,
@@ -173,9 +173,7 @@ base mixin SupportsMixinK on DIBase {
     required Dependency<T> dependency,
     bool checkExisting = false,
   }) {
-    final g = dependency.metadata.isSome()
-        ? dependency.metadata.unwrap().groupEntity
-        : focusGroup;
+    final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
     if (checkExisting) {
       final option = getDependencyK(
         dependency.typeEntity,
@@ -221,7 +219,6 @@ base mixin SupportsMixinK on DIBase {
     bool removeAll = true,
     bool triggerOnUnregisterCallbacks = true,
   }) {
-    final seq = SafeSequencer();
     final g = groupEntity.preferOverDefault(focusGroup);
     for (final di in [this as DI, ...parents]) {
       final dependencyOption = di.removeDependencyK(typeEntity, groupEntity: g);
@@ -231,26 +228,19 @@ base mixin SupportsMixinK on DIBase {
       if (triggerOnUnregisterCallbacks) {
         final dependency = dependencyOption.unwrap();
         final metadataOption = dependency.metadata;
-
         if (metadataOption.isSome()) {
           final metadata = metadataOption.unwrap();
           final onUnregisterOption = metadata.onUnregister;
           if (onUnregisterOption.isSome()) {
             final onUnregister = onUnregisterOption.unwrap();
-            seq.addSafe((_) => dependency.value.map((e) => Some(e))).end();
-            seq.addSafe((e) {
-              final option = e.swap();
-              if (option.isSome()) {
-                final result = option.unwrap();
-                return Resolvable<Resolvable<Option>>(
-                  () => consec(
-                    onUnregister(result),
-                    (e) => e ?? const Sync.unsafe(Ok(None())),
-                  ),
-                ).flatten();
-              }
-              return null;
-            }).end();
+            return dependency.value.map((e) {
+              return Resolvable(() {
+                return consec(
+                  onUnregister(Ok(e)),
+                  (_) => Some(e).transf().unwrap(),
+                );
+              });
+            }).flatten();
           }
         }
       }
@@ -258,7 +248,7 @@ base mixin SupportsMixinK on DIBase {
         break;
       }
     }
-    return seq.last.map((e) => const None());
+    return const Sync.unsafe(Ok(None()));
   }
 
   /// Removes a dependency from the registry.

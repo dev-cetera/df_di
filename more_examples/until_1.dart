@@ -26,7 +26,7 @@ void main() async {
       return [
         [42],
       ];
-    }());
+    }()).end();
   }();
 
   consec(DI.global.untilExactlyT<_T>(_T).value, (e) => print(e));

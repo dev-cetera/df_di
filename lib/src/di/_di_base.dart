@@ -46,14 +46,7 @@ base class DIBase {
   Option<Iterable<DI>> children() {
     return childrenContainer.map(
       (e) => e.registry.unsortedDependencies.map(
-        (e) => e
-            .transf<Lazy<DI>>()
-            .value
-            .unwrapSync()
-            .unwrap()
-            .singleton
-            .unwrapSync()
-            .unwrap(),
+        (e) => e.transf<Lazy<DI>>().value.unwrapSync().unwrap().singleton.unwrapSync().unwrap(),
       ),
     );
   }
@@ -63,9 +56,9 @@ base class DIBase {
   //
 
   /// Registers a dependency with the container.
-  FutureOr<void> register<T extends Object>(
+  Resolvable<T> register<T extends Object>(
     FutureOr<T> value, {
-    FutureOr<void> Function(T value)? onRegister,
+    TOnRegisterCallback<T>? onRegister,
     TOnUnregisterCallback<T>? onUnregister,
     Entity groupEntity = const DefaultEntity(),
     bool enableUntilExactlyK = false,
@@ -75,15 +68,7 @@ base class DIBase {
     final metadata = DependencyMetadata(
       index: Some(_indexIncrementer++),
       groupEntity: g,
-      onUnregister: onUnregister != null
-          ? Some((e) {
-              return Resolvable<Resolvable<Option>>(() {
-                return consec(onUnregister(e.transf()), (e) {
-                  return e ?? const Sync.unsafe(Ok(None()));
-                });
-              }).flatten();
-            })
-          : const None(),
+      onUnregister: onUnregister != null ? Some((e) => onUnregister(e.transf())) : const None(),
     );
     final a = Resolvable(
       () => consec(value, (e) => consec(onRegister?.call(e), (_) => e)),
@@ -93,7 +78,7 @@ base class DIBase {
       checkExisting: true,
     );
     if (b.isErr()) {
-      return Sync.value(b.err().unwrap().transfErr());
+      return Sync.value(b.err().unwrap().transfErr<T>());
     }
     if (value is! ReservedSafeCompleter<T>) {
       // Used for until.
@@ -105,7 +90,7 @@ base class DIBase {
         (this as SupportsMixinK).maybeFinishK<T>(g: g);
       }
     }
-    return get<T>(groupEntity: groupEntity).unwrap().value;
+    return get<T>(groupEntity: groupEntity).unwrap();
   }
 
   /// Attempts to finish any pending [until] calls for the given type and group
@@ -146,9 +131,7 @@ base class DIBase {
     bool checkExisting = false,
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
-    final g = dependency.metadata.isSome()
-        ? dependency.metadata.unwrap().groupEntity
-        : focusGroup;
+    final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
     if (checkExisting) {
       final option = getDependency<T>(groupEntity: g, traverse: false);
       if (option.isSome()) {
@@ -159,15 +142,14 @@ base class DIBase {
     return Ok(dependency);
   }
 
-  /// Unregisters a dependency from the container.
-  Resolvable<Option> unregister<T extends Object>({
+  /// Unregisters a dependency.
+  Resolvable<Option<T>> unregister<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
     bool removeAll = true,
     bool triggerOnUnregisterCallbacks = true,
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
-    Resolvable<Option>? result;
     final g = groupEntity.preferOverDefault(focusGroup);
     for (final di in [this as DI, ...parents]) {
       final dependencyOption = di.removeDependency<T>(groupEntity: g);
@@ -182,13 +164,13 @@ base class DIBase {
           final onUnregisterOption = metadata.onUnregister;
           if (onUnregisterOption.isSome()) {
             final onUnregister = onUnregisterOption.unwrap();
-            result = dependency.value.map((e) {
-              return Resolvable<Resolvable<Option>>(
-                () => consec(
+            return dependency.value.map((e) {
+              return Resolvable(() {
+                return consec(
                   onUnregister(Ok(e)),
-                  (e) => e ?? const Sync.unsafe(Ok(None())),
-                ),
-              ).flatten();
+                  (_) => Some(e).transf<T>().unwrap(),
+                );
+              });
             }).flatten();
           }
         }
@@ -197,7 +179,7 @@ base class DIBase {
         break;
       }
     }
-    return result ?? const Sync.unsafe(Ok(None()));
+    return Sync.unsafe(Ok(None<T>()));
   }
 
   /// Removes a dependency from the internal registry.
@@ -210,7 +192,6 @@ base class DIBase {
     final g = groupEntity.preferOverDefault(focusGroup);
     Option<Dependency> result;
     result = registry.removeDependency<T>(groupEntity: g);
-
     if (result.isNone()) {
       result = registry.removeDependency<Lazy<T>>(groupEntity: g);
     }
@@ -310,19 +291,21 @@ base class DIBase {
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
     final option = get<T>(groupEntity: groupEntity, traverse: traverse);
-    if (option.isNone()) {
-      return const None();
+    // TODO: THIS IS CLEEEEEEAN switches BUT WE NEED TO DO IT FOR THE REST OF THE CODEBASE!!!
+    switch (option) {
+      case Some(value: final resolvable):
+        switch (resolvable) {
+          case Sync(value: final result):
+            switch (result) {
+              case Ok(value: final value):
+                return Some(value);
+              default:
+            }
+          default:
+        }
+      default:
     }
-    final resolvable = option.unwrap();
-    if (resolvable.isAsync()) {
-      return const None();
-    }
-    final result = resolvable.sync().unwrap().value;
-    if (result.isErr()) {
-      return const None();
-    }
-    final value = result.unwrap();
-    return Some(value);
+    return const None();
   }
 
   // NOTE: This is another method aimed to optimize get but there's a bug and it
@@ -452,7 +435,7 @@ base class DIBase {
       completer = temp.unwrap();
     } else {
       completer = ReservedSafeCompleter<TSuper>(typeEntity);
-      register(completer, groupEntity: g);
+      register(completer, groupEntity: g).end();
     }
     return completer
         .resolvable()
@@ -470,7 +453,7 @@ base class DIBase {
 
   /// Completes once all [Async] dependencies associated with [groupEntity]
   /// complete or any group if [groupEntity] is `null`.
-  Resolvable<None> resolveAll({Entity? groupEntity = const DefaultEntity()}) {
+  Resolvable<void> resolveAll({Entity? groupEntity = const DefaultEntity()}) {
     return Resolvable(() {
       var resolvables = registry.unsortedDependencies;
       if (groupEntity != null) {
@@ -485,10 +468,10 @@ base class DIBase {
       if (values.any((e) => e is Async)) {
         return wait(
           resolvables.map((e) => e.value.unwrap()),
-          (_) => resolveAll(groupEntity: groupEntity).unwrap(),
+          (_) => resolveAll(groupEntity: groupEntity).toUnit().unwrap(),
         );
       }
-      return const None();
+      return Unit.instance;
     });
   }
 }

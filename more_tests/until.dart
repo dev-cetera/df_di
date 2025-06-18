@@ -30,7 +30,7 @@ void main() {
     final child = parent.child();
 
     Future.delayed(const Duration(seconds: 1), () {
-      parent.register<int>(Future.value(1));
+      parent.register<int>(Future.value(1)).end();
     });
 
     print(await child.untilSuper<int>().unwrap());

@@ -15,6 +15,6 @@ import 'package:df_di/df_di.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 void main() async {
-  DI.global.register<int>(22);
+  DI.global.register<int>(22).end();
   print(DI.global.untilSuper<num>().unwrap());
 }
