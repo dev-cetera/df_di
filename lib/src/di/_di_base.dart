@@ -356,14 +356,14 @@ base class DIBase {
       Async(
         () => value.async().unwrap().value.then((e) {
           final value = e.unwrap();
-          registry.removeDependency<T>(groupEntity: g).end();
+          registry.removeDependency<T>(groupEntity: g).unwrap();
           registerDependency<T>(
             dependency: Dependency<T>(
               Sync.value(Ok(value)),
               metadata: option.unwrap().unwrap().metadata,
             ),
             checkExisting: false,
-          ).end();
+          ).unwrap();
           return value;
         }),
       ),
@@ -423,8 +423,13 @@ base class DIBase {
     final typeEntity = TypeEntity(TSuper);
     final g = groupEntity.preferOverDefault(focusGroup);
     final test = get<TSuper>(groupEntity: g);
+
     if (test.isSome()) {
-      return test.unwrap().transf();
+      print('$test');
+      print('a');
+      final aa = test.unwrap().transf<TSub>();
+      print('b');
+      return aa;
     }
     ReservedSafeCompleter<TSuper>? completer;
     var temp = getSyncOrNone<ReservedSafeCompleter<TSuper>>(
@@ -437,10 +442,12 @@ base class DIBase {
       completer = ReservedSafeCompleter<TSuper>(typeEntity);
       register(completer, groupEntity: g).end();
     }
+
     return completer
         .resolvable()
-        .map((_) {
-          unregister<ReservedSafeCompleter<TSuper>>(groupEntity: g).end();
+        .map((eeee) {
+          print('!!!!!!!! $eeee $TSuper');
+          unregister<ReservedSafeCompleter<TSuper>>(groupEntity: g).unwrap();
           return get<TSuper>(groupEntity: g).unwrap();
         })
         .flatten()

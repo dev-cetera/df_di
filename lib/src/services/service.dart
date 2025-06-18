@@ -50,7 +50,7 @@ abstract class Service<TParams extends Object> {
   }) {
     this.params = params;
     return sequencer.addSafe((prev) {
-      assert(state.didDispose());
+      assert(!state.didDispose());
       if (state.didDispose()) {
         return Sync.value(prev);
       }
@@ -81,7 +81,7 @@ abstract class Service<TParams extends Object> {
   @nonVirtual
   Resolvable<void> pause({bool eagerError = false}) {
     return sequencer.addSafe((prev) {
-      assert(state.didDispose());
+      assert(!state.didDispose());
       if (state.didDispose()) {
         return Sync.value(prev);
       }
@@ -109,7 +109,7 @@ abstract class Service<TParams extends Object> {
   @nonVirtual
   Resolvable<void> resume({bool eagerError = false}) {
     return sequencer.addSafe((prev) {
-      assert(state.didDispose());
+      assert(!state.didDispose());
       if (state.didDispose()) {
         return Sync.value(prev);
       }
@@ -137,7 +137,7 @@ abstract class Service<TParams extends Object> {
   @nonVirtual
   Resolvable<void> dispose({bool eagerError = false}) {
     return sequencer.addSafe((prev) {
-      assert(state.didDispose());
+      assert(!state.didDispose());
       if (state.didDispose()) {
         return Sync.value(prev);
       }
