@@ -98,7 +98,7 @@ abstract class StreamService<TData extends Object, TParams extends Object>
   //
   //
 
-  Resolvable<Object> _stopStream() {
+  Resolvable<void> _stopStream() {
     final prevSubscription = _streamSubscription;
     _streamSubscription = const None();
     if (prevSubscription.isSome()) {
@@ -132,7 +132,7 @@ abstract class StreamService<TData extends Object, TParams extends Object>
       }).end();
     }
     _initDataCompleter = const None();
-    return sequencer.last.map((e) => const None());
+    return sequencer.last;
   }
 
   //
@@ -166,7 +166,7 @@ abstract class StreamService<TData extends Object, TParams extends Object>
               return Sync.value(prev2);
             }
           }
-          return listener(data).map((e) => Some(e));
+          return listener(data).map((e) => prev2).flatten2();
         }).end();
       });
       return Sync.value(prev1);

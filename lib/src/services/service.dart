@@ -164,7 +164,6 @@ abstract class Service<TParams extends Object> {
     required ServiceState attemptState,
     required ServiceState successState,
     required ServiceState errorState,
-    //void Function()? onErrorMustNotThrow,
     void Function()? onSuccessMustNotThrow,
   }) {
     sequencer.addSafe<Object>((prev1) {
@@ -174,14 +173,13 @@ abstract class Service<TParams extends Object> {
           switch (prev2) {
             case Err(error: final error):
               assert(false, error);
-              //onErrorMustNotThrow?.call();
               _state = errorState;
               if (eagerError) {
                 return Sync.value(prev2);
               }
             default:
           }
-          return listener(null).map((e) => Some(e));
+          return listener(null).map((e) => prev2).flatten2(); // TODO: rename to flatten
         }).end();
       });
       return Sync.value(prev1);
@@ -198,7 +196,7 @@ abstract class Service<TParams extends Object> {
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-typedef TServiceResolvables<TParams> = List<Resolvable Function(TParams data)>;
+typedef TServiceResolvables<TParams> = List<Resolvable<void> Function(TParams data)>;
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
