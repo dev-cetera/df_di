@@ -14,7 +14,8 @@ import '/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-abstract class PollingStreamService<TData extends Object> extends StreamService<TData, None> {
+abstract class PollingStreamService<TData extends Object>
+    extends StreamService<TData, None> {
   //
   //
   //
@@ -26,7 +27,8 @@ abstract class PollingStreamService<TData extends Object> extends StreamService<
   //
 
   @override
-  provideInputStream() => _pollerStream<TData>(onPoll, providePollingInterval());
+  provideInputStream() =>
+      _pollerStream<TData>(onPoll, providePollingInterval());
 
   Resolvable<TData> onPoll();
 

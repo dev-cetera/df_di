@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.12.11]
+
+- Released @ 6/2025 (UTC)
+- Update services
+
 ## [0.12.10]
 
 - Released @ 6/2025 (UTC)
