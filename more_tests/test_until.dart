@@ -20,8 +20,7 @@ void main() async {
   Future.delayed(const Duration(seconds: 1), () {
     DI.global.register<int>(Future.delayed(const Duration(microseconds: 100), () => 123)).end();
   });
-
   print(DI.global.registry.state);
-
+  UNSAFE:
   print(await DI.global.untilSuper<int>().unwrap());
 }
