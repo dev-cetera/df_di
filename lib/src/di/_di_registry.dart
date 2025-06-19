@@ -47,6 +47,7 @@ final class DIRegistry {
     final entries = _state.entries.expand((e) => e.value.values);
     final sortedEntries = entries.map((d) {
       final metadata = d.metadata;
+      UNSAFE:
       final index = metadata.isSome() && metadata.unwrap().index.isSome()
           ? metadata.unwrap().index.unwrap()
           : -1;
@@ -85,15 +86,19 @@ final class DIRegistry {
   /// Updates the [state] by setting or updating [dependency].
   @protected
   void setDependency(Dependency dependency) {
-    final groupEntity = dependency.metadata.isSome()
-        ? dependency.metadata.unwrap().groupEntity
-        : const DefaultEntity();
-    final typeEntity = dependency.typeEntity;
-    final currentDep = Option.from(_state[groupEntity]?[typeEntity]);
+    UNSAFE:
+    UNSAFE:
+    {
+      final groupEntity = dependency.metadata.isSome()
+          ? dependency.metadata.unwrap().groupEntity
+          : const DefaultEntity();
+      final typeEntity = dependency.typeEntity;
+      final currentDep = Option.from(_state[groupEntity]?[typeEntity]);
 
-    if (currentDep.isNone() || currentDep.unwrap() != dependency) {
-      (_state[groupEntity] ??= {})[typeEntity] = dependency;
-      onChange.ifSome((e) => e.unwrap()()).end();
+      if (currentDep.isNone() || currentDep.unwrap() != dependency) {
+        (_state[groupEntity] ??= {})[typeEntity] = dependency;
+        onChange.ifSome((e) => e.unwrap()()).end();
+      }
     }
   }
 
@@ -223,6 +228,7 @@ final class DIRegistry {
     if (group.isEmpty) {
       removeGroup(groupEntity: groupEntity);
     }
+    UNSAFE:
     onChange.ifSome((e) => e.unwrap()()).end();
     return Some(dependency.transf());
   }
@@ -249,6 +255,7 @@ final class DIRegistry {
     if (group.isEmpty) {
       removeGroup(groupEntity: groupEntity);
     }
+    UNSAFE:
     onChange.ifSome((e) => e.unwrap()()).end();
     return removed.map((e) => e.transf());
   }
@@ -267,6 +274,7 @@ final class DIRegistry {
     );
     if (!equals) {
       _state[groupEntity] = group;
+      UNSAFE:
       onChange.ifSome((e) => e.unwrap()()).end();
     }
   }
@@ -294,6 +302,7 @@ final class DIRegistry {
   @pragma('vm:prefer-inline')
   void removeGroup({Entity groupEntity = const DefaultEntity()}) {
     _state.remove(groupEntity);
+    UNSAFE:
     onChange.ifSome((e) => e.unwrap()()).end();
   }
 
@@ -302,6 +311,7 @@ final class DIRegistry {
   @pragma('vm:prefer-inline')
   void clear() {
     _state.clear();
+    UNSAFE:
     onChange.ifSome((e) => e.unwrap()()).end();
   }
 }

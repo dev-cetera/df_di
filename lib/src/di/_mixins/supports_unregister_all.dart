@@ -47,6 +47,7 @@ base mixin SupportsUnregisterAll on DIBase {
             )
             .end();
         final metadataOption = dependency.metadata;
+        UNSAFE:
         if (metadataOption.isSome()) {
           final metadata = metadataOption.unwrap();
           final onUnregisterOption = metadata.onUnregister;

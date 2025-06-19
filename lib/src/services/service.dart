@@ -23,7 +23,9 @@ abstract class Service<TParams extends Object> {
     if (serviceResult.isErr()) {
       return const Sync.unsafe(Ok(None()));
     }
+    UNSAFE:
     return serviceResult.unwrap().dispose();
+
   }
 
   ServiceState _state = ServiceState.NOT_INITIALIZED;
@@ -166,10 +168,10 @@ abstract class Service<TParams extends Object> {
     required ServiceState errorState,
     void Function()? onSuccessMustNotThrow,
   }) {
-    sequencer.addSafe<Object>((prev1) {
+    sequencer.addSafe((prev1) {
       _state = attemptState;
       providerFunction(null).map((listener) {
-        sequencer.addSafe<Object>((prev2) {
+        sequencer.addSafe((prev2) {
           switch (prev2) {
             case Err(error: final error):
               assert(false, error);
@@ -179,12 +181,12 @@ abstract class Service<TParams extends Object> {
               }
             default:
           }
-          return listener(null).map((e) => prev2).flatten2(); // TODO: rename to flatten
+          return listener(null).map((e) => prev2).flatten();
         }).end();
       });
       return Sync.value(prev1);
     }).end();
-    return sequencer.addSafe<Object>((prev3) {
+    return sequencer.addSafe((prev3) {
       if (_state == attemptState) {
         _state = successState;
         onSuccessMustNotThrow?.call();

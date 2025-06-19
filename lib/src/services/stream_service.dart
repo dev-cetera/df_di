@@ -49,6 +49,7 @@ abstract class StreamService<TData extends Object, TParams extends Object>
   TServiceResolvables<void> providePauseListeners(void _) {
     return [
       (_) {
+        UNSAFE:
         _streamSubscription.ifSome((sub) => sub.unwrap().pause()).end();
         return SYNC_NONE;
       },
@@ -60,6 +61,7 @@ abstract class StreamService<TData extends Object, TParams extends Object>
   TServiceResolvables<void> provideResumeListeners(void _) {
     return [
       (_) {
+        UNSAFE:
         _streamSubscription.ifSome((sub) => sub.unwrap().resume()).end();
         return SYNC_NONE;
       },
@@ -99,40 +101,39 @@ abstract class StreamService<TData extends Object, TParams extends Object>
   //
 
   Resolvable<void> _stopStream() {
-    final prevSubscription = _streamSubscription;
-    _streamSubscription = const None();
-    if (prevSubscription.isSome()) {
-      sequencer.addSafe((prev) {
-        assert(prev.isErr(), prev.err().unwrap());
-        return Async(() async {
-          // THIS IS A LINTER ISSUE! addSafe cannot contain futures!
-          // ignore: no_futures_allowed
-          final _ = await prevSubscription.unwrap().cancel();
-          if (prev.isErr()) {
-            throw prev.err().unwrap();
-          }
-          return const None();
-        });
-      }).end();
+    UNSAFE:
+    {
+      final prevSubscription = _streamSubscription;
+      _streamSubscription = const None();
+      if (prevSubscription.isSome()) {
+        sequencer.addSafe((prev) {
+          assert(prev.isErr(), prev.err().unwrap());
+          return Async(() async {
+            final _ = await prevSubscription.unwrap().cancel();
+            if (prev.isErr()) {
+              throw prev.err().unwrap();
+            }
+            return const None();
+          });
+        }).end();
+      }
+      final prevController = _streamController;
+      _streamController = const None();
+      if (prevController.isSome() && !prevController.unwrap().isClosed) {
+        sequencer.addSafe((prev) {
+          assert(prev.isErr(), prev.err().unwrap());
+          return Async(() async {
+            await prevController.unwrap().close();
+            if (prev.isErr()) {
+              throw prev.err().unwrap();
+            }
+            return const None();
+          });
+        }).end();
+      }
+      _initDataCompleter = const None();
+      return sequencer.last;
     }
-    final prevController = _streamController;
-    _streamController = const None();
-    if (prevController.isSome() && !prevController.unwrap().isClosed) {
-      sequencer.addSafe((prev) {
-        assert(prev.isErr(), prev.err().unwrap());
-        return Async(() async {
-          // TODO: THIS IS A LINTER ISSUE! addSafe cannot contain futures!
-          // ignore: no_futures_allowed
-          await prevController.unwrap().close();
-          if (prev.isErr()) {
-            throw prev.err().unwrap();
-          }
-          return const None();
-        });
-      }).end();
-    }
-    _initDataCompleter = const None();
-    return sequencer.last;
   }
 
   //
@@ -143,12 +144,13 @@ abstract class StreamService<TData extends Object, TParams extends Object>
     Result<TData> data, {
     bool eagerError = false,
   }) {
-    return sequencer.addSafe<Object>((prev1) {
+    UNSAFE:
+    return sequencer.addSafe((prev1) {
       assert(state.didDispose());
       if (state.didDispose()) {
         return Sync.value(prev1);
       }
-      sequencer.addSafe<Object>((_) {
+      sequencer.addSafe((_) {
         return Resolvable(() {
           if (_streamController.isSome()) {
             _streamController.unwrap().add(data);
@@ -159,7 +161,7 @@ abstract class StreamService<TData extends Object, TParams extends Object>
         });
       }).end();
       provideOnPushToStreamListeners().map((listener) {
-        sequencer.addSafe<Object>((prev2) {
+        sequencer.addSafe((prev2) {
           if (prev2.isErr()) {
             assert(prev2.isErr(), prev2.err().unwrap());
             if (eagerError) {

@@ -44,6 +44,7 @@ base class DIBase {
   /// Retrieves an iterable of child [DI] instances.
   @protected
   Option<Iterable<DI>> children() {
+    UNSAFE:
     return childrenContainer.map(
       (e) => e.registry.unsortedDependencies.map(
         (e) => e.transf<Lazy<DI>>().value.unwrapSync().unwrap().singleton.unwrapSync().unwrap(),
@@ -77,20 +78,23 @@ base class DIBase {
       dependency: Dependency(a, metadata: Some(metadata)),
       checkExisting: true,
     );
-    if (b.isErr()) {
-      return Sync.value(b.err().unwrap().transfErr<T>());
-    }
-    if (value is! ReservedSafeCompleter<T>) {
-      // Used for until.
-      // NOTE: CHANGED FROM T TO Object so that it attems to finish ANY ReservedSafeFinisher!
-      _maybeFinish<Object>(value: value, g: g);
-
-      // Used for untilT and untilK. Disabled by default to improve performance.
-      if (enableUntilExactlyK) {
-        (this as SupportsMixinK).maybeFinishK<T>(g: g);
+    UNSAFE:
+    {
+      if (b.isErr()) {
+        return Sync.value(b.err().unwrap().transfErr<T>());
       }
+      if (value is! ReservedSafeCompleter<T>) {
+        // Used for until.
+        // NOTE: CHANGED FROM T TO Object so that it attems to finish ANY ReservedSafeFinisher!
+        _maybeFinish<Object>(value: value, g: g);
+
+        // Used for untilT and untilK. Disabled by default to improve performance.
+        if (enableUntilExactlyK) {
+          (this as SupportsMixinK).maybeFinishK<T>(g: g);
+        }
+      }
+      return get<T>(groupEntity: groupEntity).unwrap();
     }
-    return get<T>(groupEntity: groupEntity).unwrap();
   }
 
   /// Attempts to finish any pending [until] calls for the given type and group
@@ -101,6 +105,7 @@ base class DIBase {
   }) {
     for (final di in [this as DI, ...children().unwrapOr([])]) {
       // Get all completers in group g.
+      UNSAFE:
       final completers = di.registry.state[g]?.values
           .map((e) => e.value)
           .where((e) => e.isSync())
@@ -131,6 +136,7 @@ base class DIBase {
     bool checkExisting = false,
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
+    UNSAFE:
     final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
     if (checkExisting) {
       final option = getDependency<T>(groupEntity: g, traverse: false);
@@ -156,6 +162,7 @@ base class DIBase {
       if (dependencyOption.isNone()) {
         continue;
       }
+      UNSAFE:
       if (triggerOnUnregisterCallbacks) {
         final dependency = dependencyOption.unwrap();
         final metadataOption = dependency.metadata;
@@ -226,6 +233,7 @@ base class DIBase {
     bool traverse = true,
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
+    UNSAFE:
     return get<T>(groupEntity: groupEntity, traverse: traverse).map(
       (e) => e.isSync()
           ? e.sync().unwrap()
@@ -249,6 +257,7 @@ base class DIBase {
     bool traverse = true,
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
+    UNSAFE:
     return getSync<T>(
       groupEntity: groupEntity,
       traverse: traverse,
@@ -275,6 +284,7 @@ base class DIBase {
     bool traverse = true,
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
+    UNSAFE:
     return Future.sync(() async {
       final result = await getAsync<T>(
         groupEntity: groupEntity,
@@ -343,31 +353,34 @@ base class DIBase {
     if (option.isNone()) {
       return const None();
     }
-    final result = option.unwrap();
-    if (result.isErr()) {
-      return Some(Sync.value(result.err().unwrap().transfErr()));
+    UNSAFE:
+    {
+      final result = option.unwrap();
+      if (result.isErr()) {
+        return Some(Sync.value(result.err().unwrap().transfErr()));
+      }
+      final dependency = result.unwrap();
+      final value = dependency.value;
+      if (value.isSync()) {
+        return Some(value);
+      }
+      return Some(
+        Async(
+          () => value.async().unwrap().value.then((e) {
+            final value = e.unwrap();
+            registry.removeDependency<T>(groupEntity: g).unwrap();
+            registerDependency<T>(
+              dependency: Dependency<T>(
+                Sync.value(Ok(value)),
+                metadata: option.unwrap().unwrap().metadata,
+              ),
+              checkExisting: false,
+            ).unwrap();
+            return value;
+          }),
+        ),
+      );
     }
-    final dependency = result.unwrap();
-    final value = dependency.value;
-    if (value.isSync()) {
-      return Some(value);
-    }
-    return Some(
-      Async(
-        () => value.async().unwrap().value.then((e) {
-          final value = e.unwrap();
-          registry.removeDependency<T>(groupEntity: g).unwrap();
-          registerDependency<T>(
-            dependency: Dependency<T>(
-              Sync.value(Ok(value)),
-              metadata: option.unwrap().unwrap().metadata,
-            ),
-            checkExisting: false,
-          ).unwrap();
-          return value;
-        }),
-      ),
-    );
   }
 
   /// Retrieves a dependency unsafely, returning the instance or a future of it,
@@ -378,6 +391,7 @@ base class DIBase {
     bool traverse = true,
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
+    UNSAFE:
     return get<T>(
       groupEntity: groupEntity,
       traverse: traverse,
@@ -423,35 +437,31 @@ base class DIBase {
     final typeEntity = TypeEntity(TSuper);
     final g = groupEntity.preferOverDefault(focusGroup);
     final test = get<TSuper>(groupEntity: g);
-
-    if (test.isSome()) {
-      print('$test');
-      print('a');
-      final aa = test.unwrap().transf<TSub>();
-      print('b');
-      return aa;
+    UNSAFE:
+    {
+      if (test.isSome()) {
+        return test.unwrap().transf();
+      }
+      ReservedSafeCompleter<TSuper>? completer;
+      var temp = getSyncOrNone<ReservedSafeCompleter<TSuper>>(
+        groupEntity: g,
+        traverse: traverse,
+      );
+      if (temp.isSome()) {
+        completer = temp.unwrap();
+      } else {
+        completer = ReservedSafeCompleter<TSuper>(typeEntity);
+        register(completer, groupEntity: g).end();
+      }
+      return completer
+          .resolvable()
+          .map((_) {
+            unregister<ReservedSafeCompleter<TSuper>>(groupEntity: g).end();
+            return get<TSuper>(groupEntity: g).unwrap();
+          })
+          .flatten()
+          .transf();
     }
-    ReservedSafeCompleter<TSuper>? completer;
-    var temp = getSyncOrNone<ReservedSafeCompleter<TSuper>>(
-      groupEntity: g,
-      traverse: traverse,
-    );
-    if (temp.isSome()) {
-      completer = temp.unwrap();
-    } else {
-      completer = ReservedSafeCompleter<TSuper>(typeEntity);
-      register(completer, groupEntity: g).end();
-    }
-
-    return completer
-        .resolvable()
-        .map((eeee) {
-          print('!!!!!!!! $eeee $TSuper');
-          unregister<ReservedSafeCompleter<TSuper>>(groupEntity: g).unwrap();
-          return get<TSuper>(groupEntity: g).unwrap();
-        })
-        .flatten()
-        .transf();
   }
 
   //
@@ -461,6 +471,7 @@ base class DIBase {
   /// Completes once all [Async] dependencies associated with [groupEntity]
   /// complete or any group if [groupEntity] is `null`.
   Resolvable<void> resolveAll({Entity? groupEntity = const DefaultEntity()}) {
+    UNSAFE:
     return Resolvable(() {
       var resolvables = registry.unsortedDependencies;
       if (groupEntity != null) {

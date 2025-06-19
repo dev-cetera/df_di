@@ -28,6 +28,7 @@ base mixin SupportsMixinK on DIBase {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
+    UNSAFE:
     return getSyncK<T>(
       typeEntity,
       groupEntity: groupEntity,
@@ -41,6 +42,7 @@ base mixin SupportsMixinK on DIBase {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
+    UNSAFE:
     return getK<T>(
       typeEntity,
       groupEntity: groupEntity,
@@ -60,6 +62,7 @@ base mixin SupportsMixinK on DIBase {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
+    UNSAFE:
     return Future.sync(() async {
       final result = await getAsyncK<T>(
         typeEntity,
@@ -92,6 +95,7 @@ base mixin SupportsMixinK on DIBase {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
+    UNSAFE:
     return getK<T>(
       typeEntity,
       groupEntity: groupEntity,
@@ -113,16 +117,19 @@ base mixin SupportsMixinK on DIBase {
     if (option.isNone()) {
       return const None();
     }
-    final resolvable = option.unwrap();
-    if (resolvable.isAsync()) {
-      return const None();
+    UNSAFE:
+    {
+      final resolvable = option.unwrap();
+      if (resolvable.isAsync()) {
+        return const None();
+      }
+      final result = resolvable.sync().unwrap().value;
+      if (result.isErr()) {
+        return const None();
+      }
+      final value = result.transf<T>().unwrap();
+      return Some(value);
     }
-    final result = resolvable.sync().unwrap().value;
-    if (result.isErr()) {
-      return const None();
-    }
-    final value = result.transf<T>().unwrap();
-    return Some(value);
   }
 
   /// Retrieves the dependency.
@@ -140,32 +147,35 @@ base mixin SupportsMixinK on DIBase {
     if (option.isNone()) {
       return const None();
     }
-    final result = option.unwrap();
-    if (result.isErr()) {
-      return Some(Sync.value(result.err().unwrap().transfErr()));
+    UNSAFE:
+    {
+      final result = option.unwrap();
+      if (result.isErr()) {
+        return Some(Sync.value(result.err().unwrap().transfErr()));
+      }
+      final value = result.unwrap().value;
+      if (value.isSync()) {
+        return Some(value);
+      }
+      return Some(
+        Async(
+          () => value.async().unwrap().value.then((e) {
+            final value = e.unwrap();
+            registry.removeDependencyK(typeEntity, groupEntity: g).end();
+            final metadata = option.unwrap().unwrap().metadata.map(
+                  (e) => e.copyWith(
+                    preemptivetypeEntity: TypeEntity(Sync, [typeEntity]),
+                  ),
+                );
+            registerDependencyK(
+              dependency: Dependency(Sync.value(Ok(value)), metadata: metadata),
+              checkExisting: false,
+            ).end();
+            return value;
+          }),
+        ),
+      );
     }
-    final value = result.unwrap().value;
-    if (value.isSync()) {
-      return Some(value);
-    }
-    return Some(
-      Async(
-        () => value.async().unwrap().value.then((e) {
-          final value = e.unwrap();
-          registry.removeDependencyK(typeEntity, groupEntity: g).end();
-          final metadata = option.unwrap().unwrap().metadata.map(
-                (e) => e.copyWith(
-                  preemptivetypeEntity: TypeEntity(Sync, [typeEntity]),
-                ),
-              );
-          registerDependencyK(
-            dependency: Dependency(Sync.value(Ok(value)), metadata: metadata),
-            checkExisting: false,
-          ).end();
-          return value;
-        }),
-      ),
-    );
   }
 
   /// Retrieves the underlying `Dependency` object.
@@ -173,6 +183,7 @@ base mixin SupportsMixinK on DIBase {
     required Dependency<T> dependency,
     bool checkExisting = false,
   }) {
+    UNSAFE:
     final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
     if (checkExisting) {
       final option = getDependencyK(
@@ -225,6 +236,7 @@ base mixin SupportsMixinK on DIBase {
       if (dependencyOption.isNone()) {
         continue;
       }
+      UNSAFE:
       if (triggerOnUnregisterCallbacks) {
         final dependency = dependencyOption.unwrap();
         final metadataOption = dependency.metadata;
@@ -309,27 +321,30 @@ base mixin SupportsMixinK on DIBase {
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
     final test = getK(typeEntity, groupEntity: g);
-    if (test.isSome()) {
-      return test.unwrap().map((e) => e as T);
-    }
-    var completer = completersK[g]?.firstWhereOrNull(
-      (e) => e.typeEntity == typeEntity,
-    );
-    if (completer == null) {
-      completer = ReservedSafeCompleter(typeEntity);
-      (completersK[g] ??= []).add(completer);
-    }
-    return completer.resolvable().map((_) {
-      final temp = completersK[g] ?? [];
-      for (var n = 0; n < temp.length; n++) {
-        final e = temp[n];
-        if (e.typeEntity == typeEntity) {
-          temp.removeAt(n);
-          break;
-        }
+    UNSAFE:
+    {
+      if (test.isSome()) {
+        return test.unwrap().map((e) => e as T);
       }
-      return getK<T>(typeEntity, groupEntity: g).unwrap();
-    }).flatten();
+      var completer = completersK[g]?.firstWhereOrNull(
+        (e) => e.typeEntity == typeEntity,
+      );
+      if (completer == null) {
+        completer = ReservedSafeCompleter(typeEntity);
+        (completersK[g] ??= []).add(completer);
+      }
+      return completer.resolvable().map((_) {
+        final temp = completersK[g] ?? [];
+        for (var n = 0; n < temp.length; n++) {
+          final e = temp[n];
+          if (e.typeEntity == typeEntity) {
+            temp.removeAt(n);
+            break;
+          }
+        }
+        return getK<T>(typeEntity, groupEntity: g).unwrap();
+      }).flatten();
+    }
   }
 
   /// Stores completers for [untilExactlyK].

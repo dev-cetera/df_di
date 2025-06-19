@@ -21,6 +21,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     if (childrenContainer.isNone()) {
       childrenContainer = Some(DI());
     }
+    UNSAFE:
     return childrenContainer.unwrap().registerLazy<DI>(
           () => Sync.value(Ok(DI()..parents.add(this as DI))),
           groupEntity: groupEntity,
@@ -32,11 +33,14 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     if (option.isNone()) {
       return const None();
     }
-    final result = option.unwrap();
-    if (result.isErr()) {
-      return const None();
+    UNSAFE:
+    {
+      final result = option.unwrap();
+      if (result.isErr()) {
+        return const None();
+      }
+      return Some(result.unwrap());
     }
-    return Some(result.unwrap());
   }
 
   Option<Result<DI>> getChild({Entity groupEntity = const DefaultEntity()}) {
@@ -44,18 +48,21 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     if (childrenContainer.isNone()) {
       return const None();
     }
-    final option = childrenContainer.unwrap().getLazySingleton<DI>(
-          groupEntity: g,
-        );
-    if (option.isNone()) {
-      return const None();
+    UNSAFE:
+    {
+      final option = childrenContainer.unwrap().getLazySingleton<DI>(
+            groupEntity: g,
+          );
+      if (option.isNone()) {
+        return const None();
+      }
+      final result = option.unwrap().sync();
+      if (result.isErr()) {
+        return Some(result.err().unwrap().transfErr());
+      }
+      final value = result.unwrap().value;
+      return Some(value);
     }
-    final result = option.unwrap().sync();
-    if (result.isErr()) {
-      return Some(result.err().unwrap().transfErr());
-    }
-    final value = result.unwrap().value;
-    return Some(value);
   }
 
   Option<Result<DI>> getChildT({Entity groupEntity = const DefaultEntity()}) {
@@ -63,19 +70,22 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     if (childrenContainer.isNone()) {
       return const None();
     }
-    final option = childrenContainer.unwrap().getLazySingletonT<DI>(
-          DI,
-          groupEntity: g,
-        );
-    if (option.isNone()) {
-      return const None();
+    UNSAFE:
+    {
+      final option = childrenContainer.unwrap().getLazySingletonT<DI>(
+            DI,
+            groupEntity: g,
+          );
+      if (option.isNone()) {
+        return const None();
+      }
+      final result = option.unwrap().sync();
+      if (result.isErr()) {
+        return Some(result.err().unwrap().transfErr());
+      }
+      final value = result.unwrap().value.transf<DI>();
+      return Some(value);
     }
-    final result = option.unwrap().sync();
-    if (result.isErr()) {
-      return Some(result.err().unwrap().transfErr());
-    }
-    final value = result.unwrap().value.transf<DI>();
-    return Some(value);
   }
 
   Result<Option<DI>> unregisterChild({Entity groupEntity = const DefaultEntity()}) {
@@ -83,6 +93,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     if (childrenContainer.isNone()) {
       return Err('No child container registered.');
     }
+    UNSAFE:
     return childrenContainer.unwrap().unregister<DI>(groupEntity: g).sync().unwrap().value;
   }
 
@@ -94,6 +105,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     if (childrenContainer.isNone()) {
       return Err('No child container registered.');
     }
+    UNSAFE:
     return childrenContainer
         .unwrap()
         .unregisterT(type, groupEntity: g)
@@ -111,6 +123,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     if (childrenContainer.isNone()) {
       return false;
     }
+    UNSAFE:
     return childrenContainer.unwrap().isRegistered<DI>(groupEntity: g);
   }
 
@@ -121,14 +134,18 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     if (childrenContainer.isNone()) {
       return false;
     }
+    UNSAFE:
     return childrenContainer.unwrap().isRegisteredT(DI, groupEntity: g);
   }
 
   DI child({Entity groupEntity = const DefaultEntity()}) {
-    if (isChildRegistered(groupEntity: groupEntity)) {
+    UNSAFE:
+    {
+      if (isChildRegistered(groupEntity: groupEntity)) {
+        return getChild(groupEntity: groupEntity).unwrap().unwrap();
+      }
+      registerChild(groupEntity: groupEntity).end();
       return getChild(groupEntity: groupEntity).unwrap().unwrap();
     }
-    registerChild(groupEntity: groupEntity).end();
-    return getChild(groupEntity: groupEntity).unwrap().unwrap();
   }
 }

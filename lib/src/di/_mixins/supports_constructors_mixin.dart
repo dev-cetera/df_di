@@ -91,6 +91,7 @@ base mixin SupportsConstructorsMixin on DIBase {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
+    UNSAFE:
     return getLazy<T>(
       groupEntity: groupEntity,
       traverse: traverse,
@@ -129,6 +130,7 @@ base mixin SupportsConstructorsMixin on DIBase {
   }) {
     final temp = getLazy<T>(groupEntity: groupEntity);
     if (temp.isSome()) {
+      UNSAFE:
       return temp.unwrap().map((e) {
         e.resetSingleton();
         return const None();
@@ -146,6 +148,7 @@ base mixin SupportsConstructorsMixin on DIBase {
     if (option.isNone()) {
       return const None();
     }
+    UNSAFE:
     final lazy = option.unwrap().sync().unwrap().unwrap();
     return Some(lazy.singleton);
   }
@@ -156,6 +159,7 @@ base mixin SupportsConstructorsMixin on DIBase {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
+    UNSAFE:
     return getLazySyncOrNone<T>(
       groupEntity: groupEntity,
       traverse: traverse,
@@ -179,6 +183,7 @@ base mixin SupportsConstructorsMixin on DIBase {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
+    UNSAFE:
     return getLazySingleton<T>(
       groupEntity: groupEntity,
       traverse: traverse,
@@ -220,6 +225,7 @@ base mixin SupportsConstructorsMixin on DIBase {
     if (option.isNone()) {
       return const None();
     }
+    UNSAFE:
     final lazy = option.unwrap().sync().unwrap().unwrap();
     return Some(lazy.factory);
   }
@@ -230,6 +236,7 @@ base mixin SupportsConstructorsMixin on DIBase {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
+    UNSAFE:
     return getLazySyncOrNone<T>(
       groupEntity: groupEntity,
       traverse: traverse,
@@ -253,6 +260,7 @@ base mixin SupportsConstructorsMixin on DIBase {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
+    UNSAFE:
     return getFactory<T>(
       groupEntity: groupEntity,
       traverse: traverse,

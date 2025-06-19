@@ -75,6 +75,7 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
+    UNSAFE:
     return getLazyK<T>(
       typeEntity,
       groupEntity: groupEntity,
@@ -109,6 +110,7 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
       groupEntity: groupEntity,
     );
     if (temp.isSome()) {
+      UNSAFE:
       return temp.unwrap().map((e) {
         (e as Lazy).resetSingleton();
         return const None();
@@ -132,6 +134,7 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
     if (option.isNone()) {
       return const None();
     }
+    UNSAFE:
     final lazy = option.unwrap().sync().unwrap().unwrap();
     return Some(lazy.singleton);
   }
@@ -143,6 +146,7 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
+    UNSAFE:
     return getLazySyncOrNoneK<T>(
       typeEntity,
       groupEntity: groupEntity,
@@ -169,6 +173,7 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
+    UNSAFE:
     return getLazySingletonK<T>(
       typeEntity,
       groupEntity: groupEntity,
@@ -207,6 +212,7 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
     if (option.isNone()) {
       return const None();
     }
+    UNSAFE:
     final lazy = option.unwrap().sync().unwrap().unwrap();
     return Some(lazy.factory);
   }
@@ -218,6 +224,7 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
+    UNSAFE:
     return getLazySyncOrNoneK<T>(
       typeEntity,
       groupEntity: groupEntity,
@@ -244,6 +251,7 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
+    UNSAFE:
     return getFactoryK<T>(
       typeEntity,
       groupEntity: groupEntity,

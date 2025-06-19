@@ -22,6 +22,7 @@ final class Dependency<T extends Object> {
   final Resolvable<T> _value;
 
   Dependency(this._value, {this.metadata = const None()}) {
+    UNSAFE:
     if (this.metadata.isSome()) {
       final a = this.metadata.unwrap();
       if (a._initialType.isSome()) {
@@ -61,6 +62,7 @@ final class Dependency<T extends Object> {
   /// Returns the `preemptivetypeEntity` of [metadata] if not `null` or the
   /// runtime type key of [_value].
   Entity get typeEntity {
+    UNSAFE:
     final preemptivetypeEntity = metadata.unwrap().preemptivetypeEntity;
     if (preemptivetypeEntity.isDefault()) {
       return TypeEntity(_value.runtimeType);
@@ -85,6 +87,7 @@ final class Dependency<T extends Object> {
     Option<Resolvable<T>> value = const None(),
     Option<DependencyMetadata> metadata = const None(),
   }) {
+    UNSAFE:
     return Dependency<T>(
       value.isNone() ? this._value : value.unwrap(),
       metadata: metadata,

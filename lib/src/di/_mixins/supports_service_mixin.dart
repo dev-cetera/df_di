@@ -24,6 +24,7 @@ base mixin SupportsServiceMixin on DIBase {
     Entity groupEntity = const DefaultEntity(),
     bool enableUntilExactlyK = false,
   }) {
+    UNSAFE:
     return register<TService>(
       service,
       onRegister: (service) {

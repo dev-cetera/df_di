@@ -32,10 +32,10 @@ environment:
 ## -----------------------------------------------------------------------------
 
 dependencies:
-  df_debouncer: ^0.4.12
-  df_safer_dart: ^0.14.12
+  df_debouncer: ^0.4.13
+  df_safer_dart: ^0.15.2
   df_type: ^0.12.3
-  df_log: ^0.3.13
+  df_log: ^0.3.17
   collection: ^1.19.1
   meta: ^1.16.0
   equatable: ^2.0.7
@@ -46,5 +46,5 @@ dev_dependencies:
   lints: ^6.0.0
   test: ^1.25.0
   custom_lint: ^0.7.5
-  df_safer_dart_lints: ^0.1.3
+  df_safer_dart_lints: ^0.2.2
 

@@ -10,41 +10,18 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
+// ignore_for_file: invalid_use_of_protected_member
+
 import 'package:df_di/df_di.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 void main() async {
-  final di = DI();
-  di.register<int>(
-    1,
-    onUnregister: (value) {
-      print('Unregistering value: $value');
-      return null;
-    },
-  ).end();
-  di.register<int>(
-    2,
-    groupEntity: Entity.obj('group2'),
-    onUnregister: (value) {
-      print('Unregistering value: $value');
-      return null;
-    },
-  ).end();
-  // di.unregisterT(
-  //   int,
-  //   groupEntity: Entity.obj('group2'),
-  // );
-  di
-      .unregisterAll(
-        onBeforeUnregister: (value) {
-          print('Before unregistering value: $value');
-          return null;
-        },
-        onAfterUnregister: (value) {
-          print('After unregistering value: $value');
-          return null;
-        },
-      )
-      .end();
+  Future.delayed(const Duration(seconds: 1), () {
+    DI.global.register<int>(Future.delayed(const Duration(microseconds: 100), () => 123)).end();
+  });
+
+  print(DI.global.registry.state);
+
+  print(await DI.global.untilSuper<int>().unwrap());
 }

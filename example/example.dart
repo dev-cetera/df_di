@@ -65,62 +65,65 @@ class UserService {
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 Future<void> main() async {
-  // Create some future to a resource that may not yet exist in DI.global that
-  // we can await later.
-  final userServiceFuture = DI.global.untilSuper<UserService>().unwrap();
+  UNSAFE:
+  {
+    // Create some future to a resource that may not yet exist in DI.global that
+    // we can await later.
+    final userServiceFuture = DI.global.untilSuper<UserService>().unwrap();
 
-  // Register the service after a delay.
+    // Register the service after a delay.
 
-  // This simulates a part of your application that initializes and provides
-  // the service, for example, after a user logs in.
-  Future.delayed(const Duration(seconds: 2), () {
-    DI.global.register<UserService>(
-      UserService(123),
-      // Handle what happens when we unregister the dependency.
-      onUnregister: (result) {
-        if (result.isOk()) {
-          final userService = result.unwrap();
-          return Future<void>.value(userService.dispose().unwrap());
-        }
-        return null;
-      },
-    ).end;
-  });
+    // This simulates a part of your application that initializes and provides
+    // the service, for example, after a user logs in.
+    Future.delayed(const Duration(seconds: 2), () {
+      DI.global.register<UserService>(
+        UserService(123),
+        // Handle what happens when we unregister the dependency.
+        onUnregister: (result) {
+          if (result.isOk()) {
+            final userService = result.unwrap();
+            return Future<void>.value(userService.dispose().unwrap());
+          }
+          return null;
+        },
+      ).end;
+    });
 
-  // Await the service and use it.
+    // Await the service and use it.
 
-  // Execution will pause here until the `Future.delayed` block above registers
-  // the service, which in turn completes the `userServiceFuture`.
-  final userService = await userServiceFuture;
+    // Execution will pause here until the `Future.delayed` block above registers
+    // the service, which in turn completes the `userServiceFuture`.
+    final userService = await userServiceFuture;
 
-  final userDataResult = await userService.getUserData().value;
-  if (userDataResult.isOk()) {
-    final userData = userDataResult.unwrap();
-    print(userData);
-  } else {
-    print('Error: ${userDataResult.err()}');
+    final userDataResult = await userService.getUserData().value;
+    if (userDataResult.isOk()) {
+      final userData = userDataResult.unwrap();
+      print(userData);
+    } else {
+      print('Error: ${userDataResult.err()}');
+    }
+
+    // Unregister the service to trigger cleanup.
+
+    // This is useful when a user logs out or a feature is no longer needed.
+    // Calling `unregister` will trigger the `onUnregister` callback we defined.
+    final _ = await DI.global.unregister<UserService>().value;
+
+    final isRegistered = DI.global.isRegistered<UserService>();
+    print('Is UserService still registered? $isRegistered');
+
+    // Let's see what happens if we get try and a dependency that is no longer
+    // egistered.
+    final userDataOpt = DI.global.get<UserService>();
+    if (userDataOpt.isSome()) {
+      print('This should never print!');
+    } else {
+      print('No UserService is registeted here! This is expected!');
+    }
+
+    // Let's see what happens if we get try and dispose the service again!
+    userService.dispose().unwrap().catchError((Object e) {
+      print(e);
+    });
   }
-
-  // Unregister the service to trigger cleanup.
-
-  // This is useful when a user logs out or a feature is no longer needed.
-  // Calling `unregister` will trigger the `onUnregister` callback we defined.
-  final _ = await DI.global.unregister<UserService>().value;
-
-  final isRegistered = DI.global.isRegistered<UserService>();
-  print('Is UserService still registered? $isRegistered');
-
-  // Let's see what happens if we get try and a dependency that is no longer
-  // egistered.
-  final userDataOpt = DI.global.get<UserService>();
-  if (userDataOpt.isSome()) {
-    print('This should never print!');
-  } else {
-    print('No UserService is registeted here! This is expected!');
-  }
-
-  // Let's see what happens if we get try and dispose the service again!
-  userService.dispose().unwrap().catchError((Object e) {
-    print(e);
-  });
 }
