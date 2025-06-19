@@ -17,15 +17,17 @@ import '/_common.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
-  Resolvable<Lazy<DI>> registerChild({Entity groupEntity = const DefaultEntity()}) {
+  Resolvable<Lazy<DI>> registerChild({
+    Entity groupEntity = const DefaultEntity(),
+  }) {
     if (childrenContainer.isNone()) {
       childrenContainer = Some(DI());
     }
     UNSAFE:
     return childrenContainer.unwrap().registerLazy<DI>(
-          () => Sync.value(Ok(DI()..parents.add(this as DI))),
-          groupEntity: groupEntity,
-        );
+      () => Sync.value(Ok(DI()..parents.add(this as DI))),
+      groupEntity: groupEntity,
+    );
   }
 
   Option<DI> getChildOrNone({Entity groupEntity = const DefaultEntity()}) {
@@ -51,8 +53,8 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     UNSAFE:
     {
       final option = childrenContainer.unwrap().getLazySingleton<DI>(
-            groupEntity: g,
-          );
+        groupEntity: g,
+      );
       if (option.isNone()) {
         return const None();
       }
@@ -73,9 +75,9 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     UNSAFE:
     {
       final option = childrenContainer.unwrap().getLazySingletonT<DI>(
-            DI,
-            groupEntity: g,
-          );
+        DI,
+        groupEntity: g,
+      );
       if (option.isNone()) {
         return const None();
       }
@@ -88,13 +90,20 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     }
   }
 
-  Result<Option<DI>> unregisterChild({Entity groupEntity = const DefaultEntity()}) {
+  Result<Option<DI>> unregisterChild({
+    Entity groupEntity = const DefaultEntity(),
+  }) {
     final g = groupEntity.preferOverDefault(focusGroup);
     if (childrenContainer.isNone()) {
       return Err('No child container registered.');
     }
     UNSAFE:
-    return childrenContainer.unwrap().unregister<DI>(groupEntity: g).sync().unwrap().value;
+    return childrenContainer
+        .unwrap()
+        .unregister<DI>(groupEntity: g)
+        .sync()
+        .unwrap()
+        .value;
   }
 
   Result<Option<DI>> unregisterChildT(

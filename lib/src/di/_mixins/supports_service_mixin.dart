@@ -15,8 +15,10 @@ import '/_common.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 base mixin SupportsServiceMixin on DIBase {
-  Resolvable<void>
-      registerAndInitService<TParams extends Object, TService extends Service<TParams>>(
+  Resolvable<void> registerAndInitService<
+    TParams extends Object,
+    TService extends Service<TParams>
+  >(
     TService service, {
     required TParams params,
     TOnRegisterCallback<TService>? onRegister,

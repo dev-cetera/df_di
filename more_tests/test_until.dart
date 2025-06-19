@@ -18,7 +18,11 @@ import 'package:df_di/df_di.dart';
 
 void main() async {
   Future.delayed(const Duration(seconds: 1), () {
-    DI.global.register<int>(Future.delayed(const Duration(microseconds: 100), () => 123)).end();
+    DI.global
+        .register<int>(
+          Future.delayed(const Duration(microseconds: 100), () => 123),
+        )
+        .end();
   });
   print(DI.global.registry.state);
   UNSAFE:
