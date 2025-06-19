@@ -21,14 +21,12 @@ abstract class StreamService<TData extends Object, TParams extends Object>
   //
 
   Option<SafeCompleter<TData>> _initDataCompleter = const None();
-  Option<Resolvable<TData>> get initialData =>
-      _initDataCompleter.map((e) => e.resolvable());
+  Option<Resolvable<TData>> get initialData => _initDataCompleter.map((e) => e.resolvable());
 
   Option<StreamSubscription<Result<TData>>> _streamSubscription = const None();
 
   Option<StreamController<Result<TData>>> _streamController = const None();
-  Option<Stream<Result<TData>>> get stream =>
-      _streamController.map((c) => c.stream);
+  Option<Stream<Result<TData>>> get stream => _streamController.map((c) => c.stream);
 
   //
   //
@@ -42,50 +40,51 @@ abstract class StreamService<TData extends Object, TParams extends Object>
 
   @override
   @mustCallSuper
-  TServiceResolvables<void> provideInitListeners(void _) {
-    return [(_) => _startStream()];
-  }
+  provideInitListeners(void _) => [(_) => _startStream()];
 
   @override
   @mustCallSuper
-  TServiceResolvables<void> providePauseListeners(void _) {
+  providePauseListeners(void _) {
     return [
       (_) {
         UNSAFE:
-        _streamSubscription.ifSome((sub) => sub.unwrap().pause()).end();
+        _streamSubscription.ifSome((sub) {
+          sub.unwrap().pause();
+        }).end();
         return SYNC_NONE;
       },
+      // Or you can do this, but its less effective:
+      //(_) => _stopStream()
     ];
   }
 
   @override
   @mustCallSuper
-  TServiceResolvables<void> provideResumeListeners(void _) {
+  provideResumeListeners(void _) {
     return [
       (_) {
         UNSAFE:
         _streamSubscription.ifSome((sub) => sub.unwrap().resume()).end();
         return SYNC_NONE;
       },
+      // Or you can do this, but its less effective:
+      //(_) => _startStream()
     ];
   }
 
   @override
   @mustCallSuper
-  TServiceResolvables<void> provideDisposeListeners(void _) {
-    return [(_) => _stopStream()];
-  }
+  provideDisposeListeners(void _) => [(_) => _stopStream()];
 
   //
   //
   //
 
-  Resolvable<Object> _startStream() {
+  Resolvable<void> _startStream() {
     return _stopStream().map((_) {
       _initDataCompleter = Some(SafeCompleter<TData>());
       final controller = StreamController<Result<TData>>.broadcast();
       _streamController = Some(controller);
-
       _streamSubscription = Some(
         provideInputStream().listen(
           pushToStream,
@@ -109,7 +108,7 @@ abstract class StreamService<TData extends Object, TParams extends Object>
       _streamSubscription = const None();
       if (prevSubscription.isSome()) {
         sequencer.addSafe((prev) {
-          assert(prev.isErr(), prev.err().unwrap());
+          assert(!prev.isErr(), prev.err().unwrap());
           return Async(() async {
             final _ = await prevSubscription.unwrap().cancel();
             if (prev.isErr()) {
@@ -123,7 +122,7 @@ abstract class StreamService<TData extends Object, TParams extends Object>
       _streamController = const None();
       if (prevController.isSome() && !prevController.unwrap().isClosed) {
         sequencer.addSafe((prev) {
-          assert(prev.isErr(), prev.err().unwrap());
+          assert(!prev.isErr(), prev.err().unwrap());
           return Async(() async {
             await prevController.unwrap().close();
             if (prev.isErr()) {
@@ -148,7 +147,7 @@ abstract class StreamService<TData extends Object, TParams extends Object>
   }) {
     UNSAFE:
     return sequencer.addSafe((prev1) {
-      assert(state.didDispose());
+      assert(!state.didDispose());
       if (state.didDispose()) {
         return Sync.value(prev1);
       }
@@ -182,6 +181,10 @@ abstract class StreamService<TData extends Object, TParams extends Object>
   //
 
   Stream<Result<TData>> provideInputStream();
+
+  //
+  //
+  //
 
   @mustCallSuper
   TServiceResolvables<Result<TData>> provideOnPushToStreamListeners();
