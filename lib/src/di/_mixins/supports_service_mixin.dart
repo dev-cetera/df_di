@@ -15,7 +15,7 @@ import '/_common.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 base mixin SupportsServiceMixin on DIBase {
-  Resolvable<void> registerAndInitService<TService extends Service>(
+  Resolvable<Unit> registerAndInitService<TService extends Service>(
     TService service, {
     TOnRegisterCallback<TService>? onRegister,
     TOnUnregisterCallback<TService>? onUnregister,
@@ -37,6 +37,6 @@ base mixin SupportsServiceMixin on DIBase {
       },
       groupEntity: groupEntity,
       enableUntilExactlyK: enableUntilExactlyK,
-    );
+    ).toUnit();
   }
 }

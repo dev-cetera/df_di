@@ -47,14 +47,7 @@ base class DIBase {
     UNSAFE:
     return childrenContainer.map(
       (e) => e.registry.unsortedDependencies.map(
-        (e) => e
-            .transf<Lazy<DI>>()
-            .value
-            .unwrapSync()
-            .unwrap()
-            .singleton
-            .unwrapSync()
-            .unwrap(),
+        (e) => e.transf<Lazy<DI>>().value.unwrapSync().unwrap().singleton.unwrapSync().unwrap(),
       ),
     );
   }
@@ -76,9 +69,7 @@ base class DIBase {
     final metadata = DependencyMetadata(
       index: Some(_indexIncrementer++),
       groupEntity: g,
-      onUnregister: onUnregister != null
-          ? Some((e) => onUnregister(e.transf()))
-          : const None(),
+      onUnregister: onUnregister != null ? Some((e) => onUnregister(e.transf())) : const None(),
     );
     final a = Resolvable(
       () => consec(value, (e) => consec(onRegister?.call(e), (_) => e)),
@@ -146,9 +137,7 @@ base class DIBase {
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
     UNSAFE:
-    final g = dependency.metadata.isSome()
-        ? dependency.metadata.unwrap().groupEntity
-        : focusGroup;
+    final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
     if (checkExisting) {
       final option = getDependency<T>(groupEntity: g, traverse: false);
       if (option.isSome()) {
@@ -481,7 +470,7 @@ base class DIBase {
 
   /// Completes once all [Async] dependencies associated with [groupEntity]
   /// complete or any group if [groupEntity] is `null`.
-  Resolvable<void> resolveAll({Entity? groupEntity = const DefaultEntity()}) {
+  Resolvable<Unit> resolveAll({Entity? groupEntity = const DefaultEntity()}) {
     UNSAFE:
     return Resolvable(() {
       var resolvables = registry.unsortedDependencies;

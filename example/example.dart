@@ -51,7 +51,7 @@ class UserService {
   //
 
   /// Cleans up resources used by the service.
-  Async<void> dispose() {
+  Async<Unit> dispose() {
     return Async(() async {
       if (_isDisposed) {
         throw Err('UserService has already been disposed!');
@@ -76,19 +76,17 @@ Future<void> main() async {
     // This simulates a part of your application that initializes and provides
     // the service, for example, after a user logs in.
     Future.delayed(const Duration(seconds: 2), () {
-      DI.global
-          .register<UserService>(
-            UserService(123),
-            // Handle what happens when we unregister the dependency.
-            onUnregister: (result) {
-              if (result.isOk()) {
-                final userService = result.unwrap();
-                return Future<void>.value(userService.dispose().unwrap());
-              }
-              return null;
-            },
-          )
-          .end;
+      DI.global.register<UserService>(
+        UserService(123),
+        // Handle what happens when we unregister the dependency.
+        onUnregister: (result) {
+          if (result.isOk()) {
+            final userService = result.unwrap();
+            return Future<void>.value(userService.dispose().asVoid().unwrap());
+          }
+          return null;
+        },
+      ).end;
     });
 
     // Await the service and use it.
@@ -126,6 +124,7 @@ Future<void> main() async {
     // Let's see what happens if we get try and dispose the service again!
     userService.dispose().unwrap().catchError((Object e) {
       print(e);
+      return Unit();
     });
   }
 }

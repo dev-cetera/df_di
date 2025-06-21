@@ -16,8 +16,7 @@ import '/_common.dart';
 
 /// A mixin that provides methods for working with constructors of dependencies,
 /// using `Type` for type resolution.
-base mixin SupportsConstructorsMixinT
-    on SupportsConstructorsMixinK, SupportsMixinT {
+base mixin SupportsConstructorsMixinT on SupportsConstructorsMixinK, SupportsMixinT {
   /// Unregisters a lazily loaded dependency.
   @pragma('vm:prefer-inline')
   Resolvable<Option> unregisterLazyT(
@@ -98,7 +97,7 @@ base mixin SupportsConstructorsMixinT
 
   /// Resets the singleton instance of a lazily loaded dependency.
   @pragma('vm:prefer-inline')
-  Resolvable<void> resetLazySingletonT<T extends Object>(
+  Resolvable<Unit> resetLazySingletonT<T extends Object>(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
   }) {

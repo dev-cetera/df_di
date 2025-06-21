@@ -14,21 +14,18 @@ import '/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-abstract class StreamService<TData extends Object, TParams extends Object>
-    extends Service {
+abstract class StreamService<TData extends Object> extends Service {
   //
   //
   //
 
   Option<SafeCompleter<TData>> _initDataCompleter = const None();
-  Option<Resolvable<TData>> get initialData =>
-      _initDataCompleter.map((e) => e.resolvable());
+  Option<Resolvable<TData>> get initialData => _initDataCompleter.map((e) => e.resolvable());
 
   Option<StreamSubscription<Result<TData>>> _streamSubscription = const None();
 
   Option<StreamController<Result<TData>>> _streamController = const None();
-  Option<Stream<Result<TData>>> get stream =>
-      _streamController.map((c) => c.stream);
+  Option<Stream<Result<TData>>> get stream => _streamController.map((c) => c.stream);
 
   //
   //
@@ -53,7 +50,7 @@ abstract class StreamService<TData extends Object, TParams extends Object>
         _streamSubscription.ifSome((sub) {
           sub.unwrap().pause();
         }).end();
-        return SYNC_NONE;
+        return Sync.value(Ok(Unit()));
       },
       // Or you can do this, but its less effective:
       //(_) => _stopStream()
@@ -67,7 +64,7 @@ abstract class StreamService<TData extends Object, TParams extends Object>
       (_) {
         UNSAFE:
         _streamSubscription.ifSome((sub) => sub.unwrap().resume()).end();
-        return SYNC_NONE;
+        return Sync.value(Ok(Unit()));
       },
       // Or you can do this, but its less effective:
       //(_) => _startStream()
@@ -82,7 +79,7 @@ abstract class StreamService<TData extends Object, TParams extends Object>
   //
   //
 
-  Resolvable<void> _startStream() {
+  Resolvable<Unit> _startStream() {
     return _stopStream().map((_) {
       _initDataCompleter = Some(SafeCompleter<TData>());
       final controller = StreamController<Result<TData>>.broadcast();
@@ -95,7 +92,7 @@ abstract class StreamService<TData extends Object, TParams extends Object>
           cancelOnError: false,
         ),
       );
-      return const None();
+      return Unit();
     });
   }
 
@@ -103,7 +100,7 @@ abstract class StreamService<TData extends Object, TParams extends Object>
   //
   //
 
-  Resolvable<void> _stopStream() {
+  Resolvable<Unit> _stopStream() {
     UNSAFE:
     {
       final prevSubscription = _streamSubscription;
@@ -135,7 +132,7 @@ abstract class StreamService<TData extends Object, TParams extends Object>
         }).end();
       }
       _initDataCompleter = const None();
-      return sequencer.last;
+      return sequencer.last.toUnit();
     }
   }
 

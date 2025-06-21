@@ -19,9 +19,9 @@ abstract class Service {
 
   /// A static hook for the DI system to properly dispose of the service upon
   /// unregistering.
-  static Resolvable<void> unregister(Result<Service> serviceResult) {
+  static Resolvable<Unit> unregister(Result<Service> serviceResult) {
     if (serviceResult.isErr()) {
-      return const Sync.unsafe(Ok(None()));
+      return Sync.unsafe(Ok(Unit()));
     }
     UNSAFE:
     return serviceResult.unwrap().dispose();
@@ -43,7 +43,7 @@ abstract class Service {
   //
 
   @nonVirtual
-  Resolvable<void> init({bool eagerError = true}) {
+  Resolvable<Unit> init({bool eagerError = true}) {
     return sequencer.addSafe((prev) {
       assert(!state.didDispose());
       if (state.didDispose()) {
@@ -63,18 +63,18 @@ abstract class Service {
           _didEverInitAndSuccessfully = true;
         },
       );
-    });
+    }).toUnit();
   }
 
   @mustCallSuper
-  TServiceResolvables<void> provideInitListeners(void _);
+  TServiceResolvables<Unit> provideInitListeners(void _);
 
   //
   //
   //
 
   @nonVirtual
-  Resolvable<void> pause({bool eagerError = false}) {
+  Resolvable<Unit> pause({bool eagerError = false}) {
     return sequencer.addSafe((prev) {
       assert(!state.didDispose());
       if (state.didDispose()) {
@@ -91,18 +91,18 @@ abstract class Service {
         successState: ServiceState.PAUSE_SUCCESS,
         errorState: ServiceState.PAUSE_ERROR,
       );
-    });
+    }).toUnit();
   }
 
   @mustCallSuper
-  TServiceResolvables<void> providePauseListeners(void _);
+  TServiceResolvables<Unit> providePauseListeners(void _);
 
   //
   //
   //
 
   @nonVirtual
-  Resolvable<void> resume({bool eagerError = false}) {
+  Resolvable<Unit> resume({bool eagerError = false}) {
     return sequencer.addSafe((prev) {
       assert(!state.didDispose());
       if (state.didDispose()) {
@@ -119,18 +119,18 @@ abstract class Service {
         successState: ServiceState.RESUME_SUCCESS,
         errorState: ServiceState.RESUME_ERROR,
       );
-    });
+    }).toUnit();
   }
 
   @mustCallSuper
-  TServiceResolvables<void> provideResumeListeners(void _);
+  TServiceResolvables<Unit> provideResumeListeners(void _);
 
   //
   //
   //
 
   @nonVirtual
-  Resolvable<void> dispose({bool eagerError = false}) {
+  Resolvable<Unit> dispose({bool eagerError = false}) {
     return sequencer.addSafe((prev) {
       assert(!state.didDispose());
       if (state.didDispose()) {
@@ -143,18 +143,18 @@ abstract class Service {
         successState: ServiceState.DISPOSE_SUCCESS,
         errorState: ServiceState.DISPOSE_ERROR,
       );
-    });
+    }).toUnit();
   }
 
   @mustCallSuper
-  TServiceResolvables<void> provideDisposeListeners(void _);
+  TServiceResolvables<Unit> provideDisposeListeners(void _);
 
   //
   //
   //
 
   Resolvable<Option> _updateState({
-    required TServiceResolvables<void> Function(void _) providerFunction,
+    required TServiceResolvables<Unit> Function(void _) providerFunction,
     required bool eagerError,
     required ServiceState attemptState,
     required ServiceState successState,
@@ -174,7 +174,7 @@ abstract class Service {
               }
             default:
           }
-          return listener(null).map((e) => prev2).flatten();
+          return listener(Unit()).map((e) => prev2).flatten();
         }).end();
       }
       return Sync.value(prev1);
@@ -191,8 +191,7 @@ abstract class Service {
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-typedef TServiceResolvables<TParams> =
-    List<Resolvable<void> Function(TParams data)>;
+typedef TServiceResolvables<TParams> = List<Resolvable<Unit> Function(TParams data)>;
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -226,23 +225,23 @@ enum ServiceState {
   //
 
   bool didRun() => [
-    ServiceState.RUN_ATTEMPT,
-    ServiceState.RUN_SUCCESS,
-    ServiceState.RUN_ERROR,
-  ].contains(this);
+        ServiceState.RUN_ATTEMPT,
+        ServiceState.RUN_SUCCESS,
+        ServiceState.RUN_ERROR,
+      ].contains(this);
   bool didPause() => [
-    ServiceState.PAUSE_ATTEMPT,
-    ServiceState.PAUSE_SUCCESS,
-    ServiceState.PAUSE_ERROR,
-  ].contains(this);
+        ServiceState.PAUSE_ATTEMPT,
+        ServiceState.PAUSE_SUCCESS,
+        ServiceState.PAUSE_ERROR,
+      ].contains(this);
   bool didResume() => [
-    ServiceState.RESUME_ATTEMPT,
-    ServiceState.RESUME_SUCCESS,
-    ServiceState.RESUME_ERROR,
-  ].contains(this);
+        ServiceState.RESUME_ATTEMPT,
+        ServiceState.RESUME_SUCCESS,
+        ServiceState.RESUME_ERROR,
+      ].contains(this);
   bool didDispose() => [
-    ServiceState.DISPOSE_ATTEMPT,
-    ServiceState.DISPOSE_SUCCESS,
-    ServiceState.DISPOSE_ERROR,
-  ].contains(this);
+        ServiceState.DISPOSE_ATTEMPT,
+        ServiceState.DISPOSE_SUCCESS,
+        ServiceState.DISPOSE_ERROR,
+      ].contains(this);
 }

@@ -15,7 +15,7 @@ import '/_common.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 abstract class PollingStreamService<TData extends Object>
-    extends StreamService<TData, None> {
+    extends StreamService<TData> {
   //
   //
   //

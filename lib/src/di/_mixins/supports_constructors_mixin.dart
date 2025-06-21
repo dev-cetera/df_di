@@ -125,7 +125,7 @@ base mixin SupportsConstructorsMixin on DIBase {
   }
 
   /// Resets the singleton instance of a lazily loaded dependency.
-  Resolvable<void> resetLazySingleton<T extends Object>({
+  Resolvable<Unit> resetLazySingleton<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
   }) {
     final temp = getLazy<T>(groupEntity: groupEntity);
@@ -133,10 +133,10 @@ base mixin SupportsConstructorsMixin on DIBase {
       UNSAFE:
       return temp.unwrap().map((e) {
         e.resetSingleton();
-        return const None();
+        return Unit();
       });
     }
-    return const Sync.unsafe(Ok(None()));
+    return Sync.unsafe(Ok(Unit()));
   }
 
   /// Retrieves the lazily loaded singleton dependency.
@@ -206,10 +206,10 @@ base mixin SupportsConstructorsMixin on DIBase {
   /// Waits until a dependency of type `TSuper` or its subtype `TSub` is
   /// registered. `TSuper` should typically be the most general type expected.
   @pragma('vm:prefer-inline')
-  Resolvable<TSub> untilLazySingleton<
-    TSuper extends Object,
-    TSub extends TSuper
-  >({Entity groupEntity = const DefaultEntity(), bool traverse = true}) {
+  Resolvable<TSub> untilLazySingleton<TSuper extends Object, TSub extends TSuper>({
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
     return untilLazy<TSuper, TSub>(
       groupEntity: groupEntity,
       traverse: traverse,
