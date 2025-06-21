@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.14.0]
+
+- Released @ 6/2025 (UTC)
+- Replace voids for Unit()
+
 ## [0.13.0]
 
 - Released @ 6/2025 (UTC)
