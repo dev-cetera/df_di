@@ -262,7 +262,7 @@ base mixin SupportsMixinK on DIBase {
         break;
       }
     }
-    return const Sync.unsafe(Ok(None()));
+    return syncNone();
   }
 
   /// Removes a dependency from the registry.
