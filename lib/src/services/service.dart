@@ -14,7 +14,7 @@ import '/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-abstract class Service<TParams extends Object> {
+abstract class Service {
   Service();
 
   /// A static hook for the DI system to properly dispose of the service upon
@@ -35,8 +35,6 @@ abstract class Service<TParams extends Object> {
   @protected
   final sequencer = SafeSequencer();
 
-  Option<TParams> params = const None();
-
   var _didEverInitAndSuccessfully = false;
   bool get didEverInitAndSuccessfully => _didEverInitAndSuccessfully;
 
@@ -46,10 +44,8 @@ abstract class Service<TParams extends Object> {
 
   @nonVirtual
   Resolvable<void> init({
-    Option<TParams> params = const None(),
     bool eagerError = true,
   }) {
-    this.params = params;
     return sequencer.addSafe((prev) {
       assert(!state.didDispose());
       if (state.didDispose()) {

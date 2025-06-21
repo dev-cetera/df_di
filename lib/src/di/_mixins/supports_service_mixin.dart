@@ -15,12 +15,8 @@ import '/_common.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 base mixin SupportsServiceMixin on DIBase {
-  Resolvable<void> registerAndInitService<
-    TParams extends Object,
-    TService extends Service<TParams>
-  >(
+  Resolvable<void> registerAndInitService<TService extends Service>(
     TService service, {
-    required TParams params,
     TOnRegisterCallback<TService>? onRegister,
     TOnUnregisterCallback<TService>? onUnregister,
     Entity groupEntity = const DefaultEntity(),
@@ -30,9 +26,7 @@ base mixin SupportsServiceMixin on DIBase {
     return register<TService>(
       service,
       onRegister: (service) {
-        final paramsOpt = Some(params);
-        service.params = paramsOpt;
-        return service.init(params: paramsOpt).unwrap();
+        return service.init().unwrap();
       },
       onUnregister: (serviceOpt) {
         final service = serviceOpt.unwrap();
