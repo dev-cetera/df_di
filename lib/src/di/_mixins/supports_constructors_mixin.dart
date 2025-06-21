@@ -136,7 +136,7 @@ base mixin SupportsConstructorsMixin on DIBase {
         return Unit();
       });
     }
-    return Sync.unsafe(Ok(Unit()));
+    return syncUnit();
   }
 
   /// Retrieves the lazily loaded singleton dependency.

@@ -116,7 +116,7 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
         return Unit();
       });
     }
-    return Sync.unsafe(Ok(Unit()));
+    return syncUnit();
   }
 
   /// Retrieves the lazily loaded singleton dependency.
