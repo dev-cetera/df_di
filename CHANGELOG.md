@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.13.0]
+
+- Released @ 6/2025 (UTC)
+- Remove params for Service as its not really useful
+
 ## [0.12.11]
 
 - Released @ 6/2025 (UTC)

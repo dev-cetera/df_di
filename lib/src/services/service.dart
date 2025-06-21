@@ -43,9 +43,7 @@ abstract class Service {
   //
 
   @nonVirtual
-  Resolvable<void> init({
-    bool eagerError = true,
-  }) {
+  Resolvable<void> init({bool eagerError = true}) {
     return sequencer.addSafe((prev) {
       assert(!state.didDispose());
       if (state.didDispose()) {
