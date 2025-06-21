@@ -4,6 +4,7 @@
 
 - Released @ 6/2025 (UTC)
 - Replace voids for Unit()
+- Update dependencies
 
 ## [0.13.0]
 
