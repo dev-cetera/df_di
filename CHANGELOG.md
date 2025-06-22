@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.14.4]
+
+- Released @ 6/2025 (UTC)
+- Fix potential sequncer conflict issue
+
 ## [0.14.3]
 
 - Released @ 6/2025 (UTC)
