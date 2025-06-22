@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.14.3]
+
+- Released @ 6/2025 (UTC)
+- Make restartStream and stopStream in StreamService public
+
 ## [0.14.2]
 
 - Released @ 6/2025 (UTC)
