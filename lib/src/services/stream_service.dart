@@ -14,8 +14,7 @@ import '/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-abstract class StreamService<TData extends Object>
-    with ServiceMixin, StreamServiceMixin<TData> {
+abstract class StreamService<TData extends Object> with ServiceMixin, StreamServiceMixin<TData> {
   StreamService();
 }
 
@@ -27,14 +26,12 @@ mixin StreamServiceMixin<TData extends Object> on ServiceMixin {
   //
 
   Option<SafeCompleter<TData>> _initDataCompleter = const None();
-  Option<Resolvable<TData>> get initialData =>
-      _initDataCompleter.map((e) => e.resolvable());
+  Option<Resolvable<TData>> get initialData => _initDataCompleter.map((e) => e.resolvable());
 
   Option<StreamSubscription<Result<TData>>> _streamSubscription = const None();
 
   Option<StreamController<Result<TData>>> _streamController = const None();
-  Option<Stream<Result<TData>>> get stream =>
-      _streamController.map((c) => c.stream);
+  Option<Stream<Result<TData>>> get stream => _streamController.map((c) => c.stream);
 
   //
   //
@@ -42,7 +39,7 @@ mixin StreamServiceMixin<TData extends Object> on ServiceMixin {
 
   @override
   @mustCallSuper
-  provideInitListeners(void _) => [(_) => _startStream()];
+  provideInitListeners(void _) => [(_) => restartStream()];
 
   @override
   @mustCallSuper
@@ -55,8 +52,6 @@ mixin StreamServiceMixin<TData extends Object> on ServiceMixin {
         }).end();
         return Sync.value(Ok(Unit()));
       },
-      // Or you can do this, but its less effective:
-      //(_) => _stopStream()
     ];
   }
 
@@ -69,21 +64,27 @@ mixin StreamServiceMixin<TData extends Object> on ServiceMixin {
         _streamSubscription.ifSome((sub) => sub.unwrap().resume()).end();
         return Sync.value(Ok(Unit()));
       },
-      // Or you can do this, but its less effective:
-      //(_) => _startStream()
     ];
   }
 
   @override
   @mustCallSuper
-  provideDisposeListeners(void _) => [(_) => _stopStream()];
+  provideDisposeListeners(void _) => [(_) => stopStream()];
 
   //
   //
   //
 
-  Resolvable<Unit> _startStream() {
-    return _stopStream().map((_) {
+  Resolvable<Unit> restartStream() {
+    return stopStream().map((_) => _startStream()).flatten();
+  }
+
+  //
+  //
+  //
+
+  Sync<Unit> _startStream() {
+    return Sync(() {
       _initDataCompleter = Some(SafeCompleter<TData>());
       final controller = StreamController<Result<TData>>.broadcast();
       _streamController = Some(controller);
@@ -103,7 +104,8 @@ mixin StreamServiceMixin<TData extends Object> on ServiceMixin {
   //
   //
 
-  Resolvable<Unit> _stopStream() {
+  @protected
+  Resolvable<Unit> stopStream() {
     UNSAFE:
     {
       final prevSubscription = _streamSubscription;
