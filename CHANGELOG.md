@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.14.2]
+
+- Released @ 6/2025 (UTC)
+- Made services more flexible
+
 ## [0.14.1]
 
 - Released @ 6/2025 (UTC)
