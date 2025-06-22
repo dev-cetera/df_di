@@ -14,8 +14,7 @@ import '/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-abstract class StreamService<TData extends Object>
-    with ServiceMixin, StreamServiceMixin<TData> {
+abstract class StreamService<TData extends Object> with ServiceMixin, StreamServiceMixin<TData> {
   StreamService();
 }
 
@@ -27,14 +26,12 @@ mixin StreamServiceMixin<TData extends Object> on ServiceMixin {
   //
 
   Option<SafeCompleter<TData>> _initDataCompleter = const None();
-  Option<Resolvable<TData>> get initialData =>
-      _initDataCompleter.map((e) => e.resolvable());
+  Option<Resolvable<TData>> get initialData => _initDataCompleter.map((e) => e.resolvable());
 
   Option<StreamSubscription<Result<TData>>> _streamSubscription = const None();
 
   Option<StreamController<Result<TData>>> _streamController = const None();
-  Option<Stream<Result<TData>>> get stream =>
-      _streamController.map((c) => c.stream);
+  Option<Stream<Result<TData>>> get stream => _streamController.map((c) => c.stream);
 
   //
   //
@@ -111,6 +108,7 @@ mixin StreamServiceMixin<TData extends Object> on ServiceMixin {
   Resolvable<Unit> stopStream() {
     UNSAFE:
     {
+      final sequencer = SafeSequencer();
       final prevSubscription = _streamSubscription;
       _streamSubscription = const None();
       if (prevSubscription.isSome()) {
@@ -153,34 +151,37 @@ mixin StreamServiceMixin<TData extends Object> on ServiceMixin {
     bool eagerError = false,
   }) {
     UNSAFE:
-    return sequencer.addSafe((prev1) {
-      assert(!state.didDispose());
-      if (state.didDispose()) {
-        return Sync.value(prev1);
-      }
-      sequencer.addSafe((_) {
-        return Resolvable(() {
-          if (_streamController.isSome()) {
-            _streamController.unwrap().add(data);
-          }
-          return _initDataCompleter.map(
-            (e) => e.resolve(Sync.value(data)).value,
-          );
-        });
-      }).end();
-      provideOnPushToStreamListeners().map((listener) {
-        sequencer.addSafe((prev2) {
-          if (prev2.isErr()) {
-            assert(prev2.isErr(), prev2.err().unwrap());
-            if (eagerError) {
-              return Sync.value(prev2);
+    {
+      final sequencer = SafeSequencer();
+      return sequencer.addSafe((prev1) {
+        assert(!state.didDispose());
+        if (state.didDispose()) {
+          return Sync.value(prev1);
+        }
+        sequencer.addSafe((_) {
+          return Resolvable(() {
+            if (_streamController.isSome()) {
+              _streamController.unwrap().add(data);
             }
-          }
-          return listener(data).map((e) => prev2).flatten2();
+            return _initDataCompleter.map(
+              (e) => e.resolve(Sync.value(data)).value,
+            );
+          });
         }).end();
+        provideOnPushToStreamListeners().map((listener) {
+          sequencer.addSafe((prev2) {
+            if (prev2.isErr()) {
+              assert(prev2.isErr(), prev2.err().unwrap());
+              if (eagerError) {
+                return Sync.value(prev2);
+              }
+            }
+            return listener(data).map((e) => prev2).flatten2();
+          }).end();
+        });
+        return Sync.value(prev1);
       });
-      return Sync.value(prev1);
-    });
+    }
   }
 
   //

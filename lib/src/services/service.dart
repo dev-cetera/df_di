@@ -36,8 +36,7 @@ mixin ServiceMixin {
   /// The current state of the service.
   ServiceState get state => _state;
 
-  @protected
-  final sequencer = SafeSequencer();
+  final _sequencer = SafeSequencer();
 
   var _didEverInitAndSuccessfully = false;
   bool get didEverInitAndSuccessfully => _didEverInitAndSuccessfully;
@@ -48,7 +47,7 @@ mixin ServiceMixin {
 
   @nonVirtual
   Resolvable<Unit> init({bool eagerError = true}) {
-    return sequencer.addSafe((prev) {
+    return _sequencer.addSafe((prev) {
       assert(!state.didDispose());
       if (state.didDispose()) {
         return Sync.value(prev);
@@ -79,7 +78,7 @@ mixin ServiceMixin {
 
   @nonVirtual
   Resolvable<Unit> pause({bool eagerError = false}) {
-    return sequencer.addSafe((prev) {
+    return _sequencer.addSafe((prev) {
       assert(!state.didDispose());
       if (state.didDispose()) {
         return Sync.value(prev);
@@ -107,7 +106,7 @@ mixin ServiceMixin {
 
   @nonVirtual
   Resolvable<Unit> resume({bool eagerError = false}) {
-    return sequencer.addSafe((prev) {
+    return _sequencer.addSafe((prev) {
       assert(!state.didDispose());
       if (state.didDispose()) {
         return Sync.value(prev);
@@ -135,7 +134,7 @@ mixin ServiceMixin {
 
   @nonVirtual
   Resolvable<Unit> dispose({bool eagerError = false}) {
-    return sequencer.addSafe((prev) {
+    return _sequencer.addSafe((prev) {
       assert(!state.didDispose());
       if (state.didDispose()) {
         return Sync.value(prev);
@@ -165,10 +164,10 @@ mixin ServiceMixin {
     required ServiceState errorState,
     void Function()? onSuccessMustNotThrow,
   }) {
-    sequencer.addSafe((prev1) {
+    _sequencer.addSafe((prev1) {
       _state = attemptState;
       for (final listener in providerFunction(null)) {
-        sequencer.addSafe((prev2) {
+        _sequencer.addSafe((prev2) {
           switch (prev2) {
             case Err(error: final error):
               assert(false, error);
@@ -183,7 +182,7 @@ mixin ServiceMixin {
       }
       return Sync.value(prev1);
     }).end();
-    return sequencer.addSafe((prev3) {
+    return _sequencer.addSafe((prev3) {
       if (_state == attemptState) {
         _state = successState;
         onSuccessMustNotThrow?.call();
@@ -195,8 +194,7 @@ mixin ServiceMixin {
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-typedef TServiceResolvables<TParams> =
-    List<Resolvable<Unit> Function(TParams data)>;
+typedef TServiceResolvables<TParams> = List<Resolvable<Unit> Function(TParams data)>;
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -230,23 +228,23 @@ enum ServiceState {
   //
 
   bool didRun() => [
-    ServiceState.RUN_ATTEMPT,
-    ServiceState.RUN_SUCCESS,
-    ServiceState.RUN_ERROR,
-  ].contains(this);
+        ServiceState.RUN_ATTEMPT,
+        ServiceState.RUN_SUCCESS,
+        ServiceState.RUN_ERROR,
+      ].contains(this);
   bool didPause() => [
-    ServiceState.PAUSE_ATTEMPT,
-    ServiceState.PAUSE_SUCCESS,
-    ServiceState.PAUSE_ERROR,
-  ].contains(this);
+        ServiceState.PAUSE_ATTEMPT,
+        ServiceState.PAUSE_SUCCESS,
+        ServiceState.PAUSE_ERROR,
+      ].contains(this);
   bool didResume() => [
-    ServiceState.RESUME_ATTEMPT,
-    ServiceState.RESUME_SUCCESS,
-    ServiceState.RESUME_ERROR,
-  ].contains(this);
+        ServiceState.RESUME_ATTEMPT,
+        ServiceState.RESUME_SUCCESS,
+        ServiceState.RESUME_ERROR,
+      ].contains(this);
   bool didDispose() => [
-    ServiceState.DISPOSE_ATTEMPT,
-    ServiceState.DISPOSE_SUCCESS,
-    ServiceState.DISPOSE_ERROR,
-  ].contains(this);
+        ServiceState.DISPOSE_ATTEMPT,
+        ServiceState.DISPOSE_SUCCESS,
+        ServiceState.DISPOSE_ERROR,
+      ].contains(this);
 }
