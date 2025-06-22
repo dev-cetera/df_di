@@ -16,7 +16,7 @@ repository: https://github.com/robmllze/df_di
 funding:
   - https://www.buymeacoffee.com/dev_cetera
 description: A pragmatic dependency injection (DI) system, coupled with service classes for seamless state management in Dart.
-version: 0.14.1
+version: 0.14.2
 topics:
   - get-it
   - dependency-injection
@@ -37,7 +37,7 @@ dependencies:
   df_type: ^0.12.7
   df_log: ^0.3.18
   collection: ^1.19.1
-  meta: 1.16.0
+  meta: ^1.16.0
   equatable: ^2.0.7
 
 ## -----------------------------------------------------------------------------

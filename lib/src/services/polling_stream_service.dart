@@ -15,27 +15,24 @@ import '/_common.dart';
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 abstract class PollingStreamService<TData extends Object>
-    extends StreamService<TData> {
-  //
-  //
-  //
-
+    with ServiceMixin, StreamServiceMixin<TData>, PollingStreamServiceMixin<TData> {
   PollingStreamService();
+}
 
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+mixin PollingStreamServiceMixin<TData extends Object> on StreamServiceMixin<TData> {
   //
   //
   //
 
   @override
-  provideInputStream() =>
-      _pollerStream<TData>(onPoll, providePollingInterval());
+  provideInputStream() => _pollerStream<TData>(onPoll, providePollingInterval());
 
   Resolvable<TData> onPoll();
 
   Duration providePollingInterval();
 }
-
-// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 Stream<Result<T>> _pollerStream<T extends Object>(
   Resolvable<T> Function() callback,
