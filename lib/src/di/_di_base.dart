@@ -47,14 +47,11 @@ base class DIBase {
     UNSAFE:
     return childrenContainer.map(
       (e) => e.registry.unsortedDependencies.map(
-        (e) => e
-            .transf<Lazy<DI>>()
-            .value
-            .unwrapSync()
-            .unwrap()
-            .singleton
-            .unwrapSync()
-            .unwrap(),
+        (e) {
+          final value = e.transf<Lazy<DI>>().value;
+          final resolvable = value.then((e) => e.singleton).flatten();
+          return resolvable.sync().unwrap().unwrap();
+        },
       ),
     );
   }
@@ -76,9 +73,7 @@ base class DIBase {
     final metadata = DependencyMetadata(
       index: Some(_indexIncrementer++),
       groupEntity: g,
-      onUnregister: onUnregister != null
-          ? Some((e) => onUnregister(e.transf()))
-          : const None(),
+      onUnregister: onUnregister != null ? Some((e) => onUnregister(e.transf())) : const None(),
     );
     final a = Resolvable(
       () => consec(value, (e) => consec(onRegister?.call(e), (_) => e)),
@@ -90,7 +85,7 @@ base class DIBase {
     UNSAFE:
     {
       if (b.isErr()) {
-        return Sync.value(b.err().unwrap().transfErr<T>());
+        return Sync.err(b.err().unwrap().transfErr<T>());
       }
       if (value is! ReservedSafeCompleter<T>) {
         // Used for until.
@@ -118,7 +113,7 @@ base class DIBase {
       final completers = di.registry.state[g]?.values
           .map((e) => e.value)
           .where((e) => e.isSync())
-          .map((e) => e.unwrapSync().value)
+          .map((e) => e.sync().unwrap().value)
           .where((e) => e.isOk())
           .map((e) => e.unwrap())
           // Get all completers regardless of type.
@@ -146,9 +141,7 @@ base class DIBase {
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
     UNSAFE:
-    final g = dependency.metadata.isSome()
-        ? dependency.metadata.unwrap().groupEntity
-        : focusGroup;
+    final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
     if (checkExisting) {
       final option = getDependency<T>(groupEntity: g, traverse: false);
       if (option.isSome()) {
@@ -197,7 +190,7 @@ base class DIBase {
         break;
       }
     }
-    return Sync.unsafe(Ok(None<T>()));
+    return Sync.okValue(None<T>());
   }
 
   /// Removes a dependency from the internal registry.
@@ -248,7 +241,7 @@ base class DIBase {
     return get<T>(groupEntity: groupEntity, traverse: traverse).map(
       (e) => e.isSync()
           ? e.sync().unwrap()
-          : Sync.value(Err('Called getSync() for an async dependency.')),
+          : Sync.err(Err('Called getSync() for an async dependency.')),
     );
   }
 
@@ -368,7 +361,7 @@ base class DIBase {
     {
       final result = option.unwrap();
       if (result.isErr()) {
-        return Some(Sync.value(result.err().unwrap().transfErr()));
+        return Some(Sync.err(result.err().unwrap().transfErr()));
       }
       final dependency = result.unwrap();
       final value = dependency.value;
@@ -382,7 +375,7 @@ base class DIBase {
             registry.removeDependency<T>(groupEntity: g).unwrap();
             registerDependency<T>(
               dependency: Dependency<T>(
-                Sync.value(Ok(value)),
+                Sync.okValue(value),
                 metadata: option.unwrap().unwrap().metadata,
               ),
               checkExisting: false,

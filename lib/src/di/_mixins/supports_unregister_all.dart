@@ -25,27 +25,25 @@ base mixin SupportsUnregisterAll on DIBase {
     bool Function(Dependency)? condition,
   }) {
     final results = List.of(registry.reversedDependencies);
-    final seq = SafeSequencer();
+    final seq = TaskSequencer();
     for (final dependency in results) {
       if (onBeforeUnregister != null) {
-        seq.addSafe((_) {
+        seq.then((_) {
           return Resolvable(
-            () =>
-                consec(onBeforeUnregister(Ok(dependency)), (_) => const None()),
+            () => consec(onBeforeUnregister(Ok(dependency)), (_) => const None()),
           );
         }).end();
       }
 
-      seq.addSafe((_) {
+      seq.then((_) {
         if (condition != null && !condition(dependency)) {
-          return null;
+          return syncNone();
         }
         registry
             .removeDependencyK(
               dependency.typeEntity,
-              groupEntity: dependency.metadata
-                  .map((e) => e.groupEntity)
-                  .unwrapOr(const DefaultEntity()),
+              groupEntity:
+                  dependency.metadata.map((e) => e.groupEntity).unwrapOr(const DefaultEntity()),
             )
             .end();
         final metadataOption = dependency.metadata;
@@ -62,17 +60,16 @@ base mixin SupportsUnregisterAll on DIBase {
             }).flatten();
           }
         }
-        return null;
+        return syncNone();
       }).end();
       if (onAfterUnregister != null) {
-        seq.addSafe((_) {
+        seq.then((_) {
           return Resolvable(
-            () =>
-                consec(onAfterUnregister(Ok(dependency)), (_) => const None()),
+            () => consec(onAfterUnregister(Ok(dependency)), (_) => const None()),
           );
         }).end();
       }
     }
-    return seq.last.toUnit();
+    return seq.completion.toUnit();
   }
 }

@@ -25,7 +25,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     }
     UNSAFE:
     return childrenContainer.unwrap().registerLazy<DI>(
-      () => Sync.value(Ok(DI()..parents.add(this as DI))),
+      () => Sync.okValue(DI()..parents.add(this as DI)),
       groupEntity: groupEntity,
     );
   }

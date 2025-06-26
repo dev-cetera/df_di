@@ -111,7 +111,7 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
     );
     if (temp.isSome()) {
       UNSAFE:
-      return temp.unwrap().map((e) {
+      return temp.unwrap().then((e) {
         (e as Lazy).resetSingleton();
         return Unit();
       });
@@ -194,7 +194,7 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
       typeEntity,
       groupEntity: groupEntity,
       traverse: traverse,
-    ).map((e) => e.singleton).flatten();
+    ).then((e) => e.singleton).flatten();
   }
 
   /// Retrieves the factory dependency.
@@ -271,6 +271,6 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
       typeEntity,
       groupEntity: groupEntity,
       traverse: traverse,
-    ).map((e) => e.factory).flatten();
+    ).then((e) => e.factory).flatten();
   }
 }

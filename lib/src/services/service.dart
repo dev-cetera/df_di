@@ -36,7 +36,7 @@ mixin ServiceMixin {
   /// The current state of the service.
   ServiceState get state => _state;
 
-  final _sequencer = SafeSequencer();
+  final _sequencer = TaskSequencer();
 
   var _didEverInitAndSuccessfully = false;
   bool get didEverInitAndSuccessfully => _didEverInitAndSuccessfully;
@@ -47,14 +47,14 @@ mixin ServiceMixin {
 
   @nonVirtual
   Resolvable<Unit> init({bool eagerError = true}) {
-    return _sequencer.addSafe((prev) {
+    return _sequencer.then((prev) {
       assert(!state.didDispose());
       if (state.didDispose()) {
-        return Sync.value(prev);
+        return Sync.result(prev);
       }
       assert(state == ServiceState.NOT_INITIALIZED);
       if (state != ServiceState.NOT_INITIALIZED) {
-        return Sync.value(prev);
+        return Sync.result(prev);
       }
       return _updateState(
         providerFunction: provideInitListeners,
@@ -78,14 +78,14 @@ mixin ServiceMixin {
 
   @nonVirtual
   Resolvable<Unit> pause({bool eagerError = false}) {
-    return _sequencer.addSafe((prev) {
+    return _sequencer.then((prev) {
       assert(!state.didDispose());
       if (state.didDispose()) {
-        return Sync.value(prev);
+        return Sync.result(prev);
       }
       assert(!state.didPause());
       if (state.didPause()) {
-        return Sync.value(prev);
+        return Sync.result(prev);
       }
       return _updateState(
         providerFunction: providePauseListeners,
@@ -106,14 +106,14 @@ mixin ServiceMixin {
 
   @nonVirtual
   Resolvable<Unit> resume({bool eagerError = false}) {
-    return _sequencer.addSafe((prev) {
+    return _sequencer.then((prev) {
       assert(!state.didDispose());
       if (state.didDispose()) {
-        return Sync.value(prev);
+        return Sync.result(prev);
       }
       assert(!state.didResume());
       if (state.didResume()) {
-        return Sync.value(prev);
+        return Sync.result(prev);
       }
       return _updateState(
         providerFunction: provideResumeListeners,
@@ -134,10 +134,10 @@ mixin ServiceMixin {
 
   @nonVirtual
   Resolvable<Unit> dispose({bool eagerError = false}) {
-    return _sequencer.addSafe((prev) {
+    return _sequencer.then((prev) {
       assert(!state.didDispose());
       if (state.didDispose()) {
-        return Sync.value(prev);
+        return Sync.result(prev);
       }
       return _updateState(
         providerFunction: provideDisposeListeners,
@@ -164,30 +164,30 @@ mixin ServiceMixin {
     required ServiceState errorState,
     void Function()? onSuccessMustNotThrow,
   }) {
-    _sequencer.addSafe((prev1) {
+    _sequencer.then((prev1) {
       _state = attemptState;
       for (final listener in providerFunction(null)) {
-        _sequencer.addSafe((prev2) {
+        _sequencer.then((prev2) {
           switch (prev2) {
             case Err(error: final error):
               assert(false, error);
               _state = errorState;
               if (eagerError) {
-                return Sync.value(prev2);
+                return Sync.result(prev2);
               }
             default:
           }
-          return listener(Unit()).map((e) => prev2).flatten();
+          return listener(Unit()).then((e) => prev2).flatten();
         }).end();
       }
-      return Sync.value(prev1);
+      return Sync.result(prev1);
     }).end();
-    return _sequencer.addSafe((prev3) {
+    return _sequencer.then((prev3) {
       if (_state == attemptState) {
         _state = successState;
         onSuccessMustNotThrow?.call();
       }
-      return Sync.value(prev3);
+      return Sync.result(prev3);
     });
   }
 }

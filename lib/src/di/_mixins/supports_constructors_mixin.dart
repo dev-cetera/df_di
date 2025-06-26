@@ -131,7 +131,7 @@ base mixin SupportsConstructorsMixin on DIBase {
     final temp = getLazy<T>(groupEntity: groupEntity);
     if (temp.isSome()) {
       UNSAFE:
-      return temp.unwrap().map((e) {
+      return temp.unwrap().then((e) {
         e.resetSingleton();
         return Unit();
       });
@@ -213,7 +213,7 @@ base mixin SupportsConstructorsMixin on DIBase {
     return untilLazy<TSuper, TSub>(
       groupEntity: groupEntity,
       traverse: traverse,
-    ).map((e) => e.singleton).flatten();
+    ).then((e) => e.singleton).flatten();
   }
 
   /// Retrieves the factory dependency.
@@ -290,6 +290,6 @@ base mixin SupportsConstructorsMixin on DIBase {
     return untilLazy<TSuper, TSub>(
       groupEntity: groupEntity,
       traverse: traverse,
-    ).map((e) => e.factory).flatten();
+    ).then((e) => e.factory).flatten();
   }
 }

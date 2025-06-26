@@ -14,8 +14,7 @@ import '/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-abstract class StreamService<TData extends Object>
-    with ServiceMixin, StreamServiceMixin<TData> {
+abstract class StreamService<TData extends Object> with ServiceMixin, StreamServiceMixin<TData> {
   StreamService();
 }
 
@@ -27,14 +26,12 @@ mixin StreamServiceMixin<TData extends Object> on ServiceMixin {
   //
 
   Option<SafeCompleter<TData>> _initDataCompleter = const None();
-  Option<Resolvable<TData>> get initialData =>
-      _initDataCompleter.map((e) => e.resolvable());
+  Option<Resolvable<TData>> get initialData => _initDataCompleter.map((e) => e.resolvable());
 
   Option<StreamSubscription<Result<TData>>> _streamSubscription = const None();
 
   Option<StreamController<Result<TData>>> _streamController = const None();
-  Option<Stream<Result<TData>>> get stream =>
-      _streamController.map((c) => c.stream);
+  Option<Stream<Result<TData>>> get stream => _streamController.map((c) => c.stream);
 
   //
   //
@@ -50,10 +47,10 @@ mixin StreamServiceMixin<TData extends Object> on ServiceMixin {
     return [
       (_) {
         UNSAFE:
-        _streamSubscription.ifSome((sub) {
-          sub.unwrap().pause();
+        _streamSubscription.ifSome((self, some) {
+          some.unwrap().pause();
         }).end();
-        return Sync.value(Ok(Unit()));
+        return Sync.okValue(Unit());
       },
     ];
   }
@@ -64,8 +61,8 @@ mixin StreamServiceMixin<TData extends Object> on ServiceMixin {
     return [
       (_) {
         UNSAFE:
-        _streamSubscription.ifSome((sub) => sub.unwrap().resume()).end();
-        return Sync.value(Ok(Unit()));
+        _streamSubscription.ifSome((self, some) => some.unwrap().resume()).end();
+        return Sync.okValue(Unit());
       },
     ];
   }
@@ -79,7 +76,7 @@ mixin StreamServiceMixin<TData extends Object> on ServiceMixin {
   //
 
   Resolvable<Unit> restartStream() {
-    return stopStream().map((_) => _startStream()).flatten();
+    return stopStream().then((_) => _startStream()).flatten();
   }
 
   //
@@ -111,11 +108,11 @@ mixin StreamServiceMixin<TData extends Object> on ServiceMixin {
   Resolvable<Unit> stopStream() {
     UNSAFE:
     {
-      final sequencer = SafeSequencer();
+      final seq = TaskSequencer();
       final prevSubscription = _streamSubscription;
       _streamSubscription = const None();
       if (prevSubscription.isSome()) {
-        sequencer.addSafe((prev) {
+        seq.then((prev) {
           assert(!prev.isErr(), prev.err().unwrap());
           return Async(() async {
             final _ = await prevSubscription.unwrap().cancel();
@@ -129,7 +126,7 @@ mixin StreamServiceMixin<TData extends Object> on ServiceMixin {
       final prevController = _streamController;
       _streamController = const None();
       if (prevController.isSome() && !prevController.unwrap().isClosed) {
-        sequencer.addSafe((prev) {
+        seq.then((prev) {
           assert(!prev.isErr(), prev.err().unwrap());
           return Async(() async {
             await prevController.unwrap().close();
@@ -141,7 +138,7 @@ mixin StreamServiceMixin<TData extends Object> on ServiceMixin {
         }).end();
       }
       _initDataCompleter = const None();
-      return sequencer.last.toUnit();
+      return seq.completion.toUnit();
     }
   }
 
@@ -155,34 +152,34 @@ mixin StreamServiceMixin<TData extends Object> on ServiceMixin {
   }) {
     UNSAFE:
     {
-      final sequencer = SafeSequencer();
-      return sequencer.addSafe((prev1) {
+      final seq = TaskSequencer();
+      return seq.then((prev1) {
         assert(!state.didDispose());
         if (state.didDispose()) {
-          return Sync.value(prev1);
+          return Sync.result(prev1);
         }
-        sequencer.addSafe((_) {
+        seq.then((_) {
           return Resolvable(() {
             if (_streamController.isSome()) {
               _streamController.unwrap().add(data);
             }
             return _initDataCompleter.map(
-              (e) => e.resolve(Sync.value(data)).value,
+              (e) => e.resolve(Sync.result(data)).value,
             );
           });
         }).end();
         provideOnPushToStreamListeners().map((listener) {
-          sequencer.addSafe((prev2) {
+          seq.then((prev2) {
             if (prev2.isErr()) {
               assert(prev2.isErr(), prev2.err().unwrap());
               if (eagerError) {
-                return Sync.value(prev2);
+                return Sync.result(prev2);
               }
             }
-            return listener(data).map((e) => prev2).flatten2();
+            return listener(data).then((e) => prev2).flatten2();
           }).end();
         });
-        return Sync.value(prev1);
+        return Sync.result(prev1);
       });
     }
   }

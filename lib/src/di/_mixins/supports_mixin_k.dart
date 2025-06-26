@@ -50,7 +50,11 @@ base mixin SupportsMixinK on DIBase {
     ).map(
       (e) => e.isSync()
           ? e.sync().unwrap()
-          : Sync.value(Err('Called getSyncK() an async dependency.')),
+          : Sync.err(
+              Err(
+                'Called getSyncK() an async dependency.',
+              ),
+            ),
     );
   }
 
@@ -151,7 +155,7 @@ base mixin SupportsMixinK on DIBase {
     {
       final result = option.unwrap();
       if (result.isErr()) {
-        return Some(Sync.value(result.err().unwrap().transfErr()));
+        return Some(Sync.err(result.err().unwrap().transfErr()));
       }
       final value = result.unwrap().value;
       if (value.isSync()) {
@@ -163,12 +167,12 @@ base mixin SupportsMixinK on DIBase {
             final value = e.unwrap();
             registry.removeDependencyK(typeEntity, groupEntity: g).end();
             final metadata = option.unwrap().unwrap().metadata.map(
-              (e) => e.copyWith(
-                preemptivetypeEntity: TypeEntity(Sync, [typeEntity]),
-              ),
-            );
+                  (e) => e.copyWith(
+                    preemptivetypeEntity: TypeEntity(Sync, [typeEntity]),
+                  ),
+                );
             registerDependencyK(
-              dependency: Dependency(Sync.value(Ok(value)), metadata: metadata),
+              dependency: Dependency(Sync.okValue(value), metadata: metadata),
               checkExisting: false,
             ).end();
             return value;
@@ -184,9 +188,7 @@ base mixin SupportsMixinK on DIBase {
     bool checkExisting = false,
   }) {
     UNSAFE:
-    final g = dependency.metadata.isSome()
-        ? dependency.metadata.unwrap().groupEntity
-        : focusGroup;
+    final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
     if (checkExisting) {
       final option = getDependencyK(
         dependency.typeEntity,
