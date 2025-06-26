@@ -30,7 +30,8 @@ base mixin SupportsUnregisterAll on DIBase {
       if (onBeforeUnregister != null) {
         seq.then((_) {
           return Resolvable(
-            () => consec(onBeforeUnregister(Ok(dependency)), (_) => const None()),
+            () =>
+                consec(onBeforeUnregister(Ok(dependency)), (_) => const None()),
           );
         }).end();
       }
@@ -42,8 +43,9 @@ base mixin SupportsUnregisterAll on DIBase {
         registry
             .removeDependencyK(
               dependency.typeEntity,
-              groupEntity:
-                  dependency.metadata.map((e) => e.groupEntity).unwrapOr(const DefaultEntity()),
+              groupEntity: dependency.metadata
+                  .map((e) => e.groupEntity)
+                  .unwrapOr(const DefaultEntity()),
             )
             .end();
         final metadataOption = dependency.metadata;
@@ -65,7 +67,8 @@ base mixin SupportsUnregisterAll on DIBase {
       if (onAfterUnregister != null) {
         seq.then((_) {
           return Resolvable(
-            () => consec(onAfterUnregister(Ok(dependency)), (_) => const None()),
+            () =>
+                consec(onAfterUnregister(Ok(dependency)), (_) => const None()),
           );
         }).end();
       }
