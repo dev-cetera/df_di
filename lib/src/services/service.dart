@@ -70,7 +70,7 @@ mixin ServiceMixin {
   }
 
   @mustCallSuper
-  TServiceResolvables<Unit> provideInitListeners_;
+  TServiceResolvables<Unit> provideInitListeners(void _);
 
   //
   //
@@ -98,7 +98,7 @@ mixin ServiceMixin {
   }
 
   @mustCallSuper
-  TServiceResolvables<Unit> providePauseListeners_;
+  TServiceResolvables<Unit> providePauseListeners(void _);
 
   //
   //
@@ -126,7 +126,7 @@ mixin ServiceMixin {
   }
 
   @mustCallSuper
-  TServiceResolvables<Unit> provideResumeListeners_;
+  TServiceResolvables<Unit> provideResumeListeners(void _);
 
   //
   //
@@ -150,14 +150,14 @@ mixin ServiceMixin {
   }
 
   @mustCallSuper
-  TServiceResolvables<Unit> provideDisposeListeners_;
+  TServiceResolvables<Unit> provideDisposeListeners(void _);
 
   //
   //
   //
 
   Resolvable<Option> _updateState({
-    required TServiceResolvables<Unit> Function_ providerFunction,
+    required TServiceResolvables<Unit> Function(void) providerFunction,
     required bool eagerError,
     required ServiceState attemptState,
     required ServiceState successState,
