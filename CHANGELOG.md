@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.15.3]
+
+- Released @ 7/2025 (UTC)
+- Some refactoring
+
 ## [0.15.2]
 
 - Released @ 7/2025 (UTC)
