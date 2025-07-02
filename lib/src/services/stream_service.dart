@@ -42,11 +42,11 @@ mixin StreamServiceMixin<TData extends Object> on ServiceMixin {
 
   @override
   @mustCallSuper
-  provideInitListeners(void _) => [(_) => restartStream()];
+  TServiceResolvables<Unit> provideInitListeners(void _) => [(_) => restartStream()];
 
   @override
   @mustCallSuper
-  providePauseListeners(void _) {
+  TServiceResolvables<Unit> providePauseListeners(void _) {
     return [
       (_) {
         UNSAFE:
@@ -60,7 +60,7 @@ mixin StreamServiceMixin<TData extends Object> on ServiceMixin {
 
   @override
   @mustCallSuper
-  provideResumeListeners(void _) {
+  TServiceResolvables<Unit> provideResumeListeners(void _) {
     return [
       (_) {
         UNSAFE:
@@ -74,7 +74,7 @@ mixin StreamServiceMixin<TData extends Object> on ServiceMixin {
 
   @override
   @mustCallSuper
-  provideDisposeListeners(void _) => [(_) => stopStream()];
+  TServiceResolvables<Unit> provideDisposeListeners(void _) => [(_) => stopStream()];
 
   //
   //
