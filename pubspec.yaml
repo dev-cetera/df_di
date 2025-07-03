@@ -18,7 +18,7 @@ funding:
 - https://www.patreon.com/c/RobertMollentze
 - https://github.com/sponsors/robmllze
 description: A pragmatic dependency injection (DI) system, coupled with service classes for seamless state management in Dart.
-version: 0.15.5
+version: 0.15.6
 topics:
   - get-it
   - dependency-injection
