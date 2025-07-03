@@ -307,7 +307,6 @@ base class DIBase {
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
     final option = get<T>(groupEntity: groupEntity, traverse: traverse);
-    // TODO: THIS IS CLEEEEEEAN switches BUT WE NEED TO DO IT FOR THE REST OF THE CODEBASE!!!
     switch (option) {
       case Some(value: final resolvable):
         switch (resolvable) {
