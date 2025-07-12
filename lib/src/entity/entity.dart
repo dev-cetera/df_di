@@ -1,9 +1,10 @@
 //.title
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //
-// Dart/Flutter (DF) Packages by dev-cetera.com & contributors. The use of this
-// source code is governed by an MIT-style license described in the LICENSE
-// file located in this project's root directory.
+// Copyright © dev-cetera.com & contributors.
+//
+// The use of this source code is governed by an MIT-style license described in
+// the LICENSE file located in this project's root directory.
 //
 // See: https://opensource.org/license/mit
 //
@@ -52,8 +53,7 @@ class Entity {
   /// df_di package and [UniqueEntity]. They should not be used directly in
   /// your code.
   @protected
-  const Entity.reserved(this.id)
-    : assert(id < 0, 'Entity id must be negative!');
+  const Entity.reserved(this.id) : assert(id < 0, 'Entity id must be negative!');
 
   /// Creates a new instance of [Entity] from the specified [object]. This
   /// effectively uses [objId] to convert the [object] to an [int] and then

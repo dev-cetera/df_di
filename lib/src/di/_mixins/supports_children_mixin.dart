@@ -1,9 +1,10 @@
 //.title
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //
-// Dart/Flutter (DF) Packages by dev-cetera.com & contributors. The use of this
-// source code is governed by an MIT-style license described in the LICENSE
-// file located in this project's root directory.
+// Copyright © dev-cetera.com & contributors.
+//
+// The use of this source code is governed by an MIT-style license described in
+// the LICENSE file located in this project's root directory.
 //
 // See: https://opensource.org/license/mit
 //
@@ -25,9 +26,9 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     }
     UNSAFE:
     return childrenContainer.unwrap().registerLazy<DI>(
-      () => Sync.okValue(DI()..parents.add(this as DI)),
-      groupEntity: groupEntity,
-    );
+          () => Sync.okValue(DI()..parents.add(this as DI)),
+          groupEntity: groupEntity,
+        );
   }
 
   Option<DI> getChildOrNone({Entity groupEntity = const DefaultEntity()}) {
@@ -53,8 +54,8 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     UNSAFE:
     {
       final option = childrenContainer.unwrap().getLazySingleton<DI>(
-        groupEntity: g,
-      );
+            groupEntity: g,
+          );
       if (option.isNone()) {
         return const None();
       }
@@ -75,9 +76,9 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     UNSAFE:
     {
       final option = childrenContainer.unwrap().getLazySingletonT<DI>(
-        DI,
-        groupEntity: g,
-      );
+            DI,
+            groupEntity: g,
+          );
       if (option.isNone()) {
         return const None();
       }
@@ -98,12 +99,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
       return Err('No child container registered.');
     }
     UNSAFE:
-    return childrenContainer
-        .unwrap()
-        .unregister<DI>(groupEntity: g)
-        .sync()
-        .unwrap()
-        .value;
+    return childrenContainer.unwrap().unregister<DI>(groupEntity: g).sync().unwrap().value;
   }
 
   Result<Option<DI>> unregisterChildT(

@@ -1,9 +1,10 @@
 //.title
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //
-// Dart/Flutter (DF) Packages by dev-cetera.com & contributors. The use of this
-// source code is governed by an MIT-style license described in the LICENSE
-// file located in this project's root directory.
+// Copyright © dev-cetera.com & contributors.
+//
+// The use of this source code is governed by an MIT-style license described in
+// the LICENSE file located in this project's root directory.
 //
 // See: https://opensource.org/license/mit
 //
@@ -48,9 +49,8 @@ base mixin SupportsMixinK on DIBase {
       groupEntity: groupEntity,
       traverse: traverse,
     ).map(
-      (e) => e.isSync()
-          ? e.sync().unwrap()
-          : Sync.err(Err('Called getSyncK() an async dependency.')),
+      (e) =>
+          e.isSync() ? e.sync().unwrap() : Sync.err(Err('Called getSyncK() an async dependency.')),
     );
   }
 
@@ -163,10 +163,10 @@ base mixin SupportsMixinK on DIBase {
             final value = e.unwrap();
             registry.removeDependencyK(typeEntity, groupEntity: g).end();
             final metadata = option.unwrap().unwrap().metadata.map(
-              (e) => e.copyWith(
-                preemptivetypeEntity: TypeEntity(Sync, [typeEntity]),
-              ),
-            );
+                  (e) => e.copyWith(
+                    preemptivetypeEntity: TypeEntity(Sync, [typeEntity]),
+                  ),
+                );
             registerDependencyK(
               dependency: Dependency(Sync.okValue(value), metadata: metadata),
               checkExisting: false,
@@ -184,9 +184,7 @@ base mixin SupportsMixinK on DIBase {
     bool checkExisting = false,
   }) {
     UNSAFE:
-    final g = dependency.metadata.isSome()
-        ? dependency.metadata.unwrap().groupEntity
-        : focusGroup;
+    final g = dependency.metadata.isSome() ? dependency.metadata.unwrap().groupEntity : focusGroup;
     if (checkExisting) {
       final option = getDependencyK(
         dependency.typeEntity,

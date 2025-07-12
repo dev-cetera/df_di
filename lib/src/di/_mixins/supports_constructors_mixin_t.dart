@@ -1,9 +1,10 @@
 //.title
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //
-// Dart/Flutter (DF) Packages by dev-cetera.com & contributors. The use of this
-// source code is governed by an MIT-style license described in the LICENSE
-// file located in this project's root directory.
+// Copyright © dev-cetera.com & contributors.
+//
+// The use of this source code is governed by an MIT-style license described in
+// the LICENSE file located in this project's root directory.
 //
 // See: https://opensource.org/license/mit
 //
@@ -16,8 +17,7 @@ import '/_common.dart';
 
 /// A mixin that provides methods for working with constructors of dependencies,
 /// using `Type` for type resolution.
-base mixin SupportsConstructorsMixinT
-    on SupportsConstructorsMixinK, SupportsMixinT {
+base mixin SupportsConstructorsMixinT on SupportsConstructorsMixinK, SupportsMixinT {
   /// Unregisters a lazily loaded dependency.
   @pragma('vm:prefer-inline')
   Resolvable<Option> unregisterLazyT(

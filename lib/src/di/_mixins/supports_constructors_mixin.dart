@@ -1,9 +1,10 @@
 //.title
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //
-// Dart/Flutter (DF) Packages by dev-cetera.com & contributors. The use of this
-// source code is governed by an MIT-style license described in the LICENSE
-// file located in this project's root directory.
+// Copyright © dev-cetera.com & contributors.
+//
+// The use of this source code is governed by an MIT-style license described in
+// the LICENSE file located in this project's root directory.
 //
 // See: https://opensource.org/license/mit
 //
@@ -206,10 +207,8 @@ base mixin SupportsConstructorsMixin on DIBase {
   /// Waits until a dependency of type `TSuper` or its subtype `TSub` is
   /// registered. `TSuper` should typically be the most general type expected.
   @pragma('vm:prefer-inline')
-  Resolvable<TSub> untilLazySingleton<
-    TSuper extends Object,
-    TSub extends TSuper
-  >({Entity groupEntity = const DefaultEntity(), bool traverse = true}) {
+  Resolvable<TSub> untilLazySingleton<TSuper extends Object, TSub extends TSuper>(
+      {Entity groupEntity = const DefaultEntity(), bool traverse = true}) {
     return untilLazy<TSuper, TSub>(
       groupEntity: groupEntity,
       traverse: traverse,
