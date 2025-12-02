@@ -17,7 +17,8 @@ import '/_common.dart';
 
 /// A mixin that provides methods for working with constructors of dependencies,
 /// using `Type` for type resolution.
-base mixin SupportsConstructorsMixinT on SupportsConstructorsMixinK, SupportsMixinT {
+base mixin SupportsConstructorsMixinT
+    on SupportsConstructorsMixinK, SupportsMixinT {
   /// Unregisters a lazily loaded dependency.
   @pragma('vm:prefer-inline')
   Resolvable<Option> unregisterLazyT(

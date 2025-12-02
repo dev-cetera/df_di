@@ -53,7 +53,8 @@ class Entity {
   /// df_di package and [UniqueEntity]. They should not be used directly in
   /// your code.
   @protected
-  const Entity.reserved(this.id) : assert(id < 0, 'Entity id must be negative!');
+  const Entity.reserved(this.id)
+    : assert(id < 0, 'Entity id must be negative!');
 
   /// Creates a new instance of [Entity] from the specified [object]. This
   /// effectively uses [objId] to convert the [object] to an [int] and then

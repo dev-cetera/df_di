@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.15.7]
+
+- Released @ 12/2025 (UTC)
+- Comment out two problematic asserts
+
 ## [0.15.6]
 
 - Released @ 7/2025 (UTC)
