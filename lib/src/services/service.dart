@@ -84,7 +84,7 @@ mixin ServiceMixin {
       if (state.didDispose()) {
         return Sync.result(prev);
       }
-      assert(!state.didPause());
+      //assert(!state.didPause());
       if (state.didPause()) {
         return Sync.result(prev);
       }
@@ -112,7 +112,7 @@ mixin ServiceMixin {
       if (state.didDispose()) {
         return Sync.result(prev);
       }
-      assert(!state.didResume());
+      //assert(!state.didResume());
       if (state.didResume()) {
         return Sync.result(prev);
       }
