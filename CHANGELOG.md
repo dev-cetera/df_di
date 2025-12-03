@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.15.8]
+
+- Released @ 12/2025 (UTC)
+- Formatting updates
+
 ## [0.15.7]
 
 - Released @ 12/2025 (UTC)
