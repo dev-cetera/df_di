@@ -14,16 +14,15 @@
 export 'dart:async';
 
 export 'package:collection/collection.dart';
-export 'package:meta/meta.dart';
-
+export 'package:df_log/df_log.dart';
 export 'package:df_safer_dart/df_safer_dart.dart';
 export 'package:df_type/df_type.dart';
-export 'package:df_log/df_log.dart';
+export 'package:meta/meta.dart';
 
 export '/src/_src.g.dart';
 
-export '/src/di/_di_registry.dart';
 // ignore: invalid_export_of_internal_element
 export '/src/di/_dependency.dart';
 export '/src/di/_di_base.dart';
+export '/src/di/_di_registry.dart';
 export '/src/di/_mixins/_mixins.g.dart';

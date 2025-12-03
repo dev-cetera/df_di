@@ -11,6 +11,8 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
+import 'dart:async' show unawaited;
+
 import 'package:df_di/df_di.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
@@ -77,20 +79,18 @@ Future<void> main() async {
     // This simulates a part of your application that initializes and provides
     // the service, for example, after a user logs in.
     Future.delayed(const Duration(seconds: 2), () {
-      DI.global
-          .register<UserService>(
-            UserService(123),
-            // Handle what happens when we unregister the dependency.
-            onUnregister: (result) {
-              if (result.isOk()) {
-                final userService = result.unwrap();
-                // ignore: void_checks
-                return Future.value(userService.dispose().unwrap());
-              }
-              return null;
-            },
-          )
-          .end;
+      DI.global.register<UserService>(
+        UserService(123),
+        // Handle what happens when we unregister the dependency.
+        onUnregister: (result) {
+          if (result.isOk()) {
+            final userService = result.unwrap();
+            // ignore: void_checks
+            return Future.value(userService.dispose().unwrap());
+          }
+          return null;
+        },
+      ).end;
     });
 
     // Await the service and use it.
@@ -126,9 +126,11 @@ Future<void> main() async {
     }
 
     // Let's see what happens if we get try and dispose the service again!
-    userService.dispose().unwrap().catchError((Object e) {
-      print(e);
-      return Unit();
-    });
+    unawaited(
+      userService.dispose().unwrap().catchError((Object e) {
+        print(e);
+        return Unit();
+      }),
+    );
   }
 }
