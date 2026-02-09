@@ -51,7 +51,7 @@ base mixin SupportsMixinK on DIBase {
     ).map(
       (e) => e.isSync()
           ? e.sync().unwrap()
-          : Sync.err(Err('Called getSyncK() an async dependency.')),
+          : Sync.err(Err('Called getSyncK() for an async dependency.')),
     );
   }
 

@@ -298,7 +298,7 @@ final class DIRegistry {
   }
 
   @pragma('vm:prefer-inline')
-  void removDependencyWhere(
+  void removeDependencyWhere(
     bool Function(Entity entity, Dependency dependency) test, {
     Entity groupEntity = const DefaultEntity(),
   }) {

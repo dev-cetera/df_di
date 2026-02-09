@@ -26,7 +26,7 @@ final class Dependency<T extends Object> {
     UNSAFE:
     if (metadata.isSome()) {
       final a = metadata.unwrap();
-      if (a._initialType.isSome()) {
+      if (a._initialType.isNone()) {
         a._initialType = Some(_value.runtimeType);
       }
     }

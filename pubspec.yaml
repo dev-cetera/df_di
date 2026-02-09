@@ -13,13 +13,15 @@
 
 name: df_di
 homepage: https://dev-cetera.com/
-repository: https://github.com/robmllze/df_di
 funding:
-- https://www.patreon.com/c/t0mb3rr
-- https://github.com/sponsors/t0mb3rr
+- https://www.buymeacoffee.com/dev_cetera
+- https://www.patreon.com/c/robelator
+- https://github.com/sponsors/robelator
+- https://www.patreon.com/c/robelator
+- https://github.com/sponsors/robelator
 - https://www.buymeacoffee.com/dev_cetera
 description: A pragmatic dependency injection (DI) system, coupled with service classes for seamless state management in Dart.
-version: 0.15.8
+version: 0.15.9
 topics:
   - get-it
   - dependency-injection
