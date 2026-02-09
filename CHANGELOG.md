@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.15.9]
+
+- Released @ 2/2026 (UTC)
+- Bugfixes
+
 ## [0.15.8]
 
 - Released @ 12/2025 (UTC)
