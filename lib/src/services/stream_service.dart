@@ -152,9 +152,12 @@ mixin StreamServiceMixin<TData extends Object> on ServiceMixin {
       final prevCompleter = _initDataCompleter;
       _initDataCompleter = const None();
       if (prevCompleter.isSome() && !prevCompleter.unwrap().isCompleted) {
-        prevCompleter.unwrap().resolve(
-          Sync.err(Err('Stream stopped before initial data was received.')),
-        ).end();
+        prevCompleter
+            .unwrap()
+            .resolve(
+              Sync.err(Err('Stream stopped before initial data was received.')),
+            )
+            .end();
       }
       return seq.completion.toUnit();
     }

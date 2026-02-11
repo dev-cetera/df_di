@@ -172,7 +172,9 @@ Future<void> main() async {
   print('Token from DI.user: $token');
 
   // Check registration
-  print('Is String registered in DI.session? ${DI.session.isRegistered<String>()}');
+  print(
+    'Is String registered in DI.session? ${DI.session.isRegistered<String>()}',
+  );
   print('Is String registered in DI.user? ${DI.user.isRegistered<String>()}');
 
   // Clean up
