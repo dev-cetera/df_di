@@ -177,3 +177,67 @@ You can also remove all dependencies all at once, i.e. when you log the user out
 // This will unregister all dependencies in the reverse order by which they were registered.
 DI.session.unregisterAll();
 ```
+
+## Step 9: Service Lifecycle Management
+
+`df_di` includes base service classes with well-defined lifecycle states (init, pause, resume, dispose). These integrate seamlessly with the DI system.
+
+| Class | Purpose |
+|-------|---------|
+| `Service` | Base service with init/pause/resume/dispose lifecycle |
+| `StreamService<TData>` | Service that manages a data stream |
+| `PollingStreamService<TData>` | StreamService that polls at regular intervals |
+
+```dart
+import 'package:df_di/df_di.dart';
+
+/// A simple counter service with lifecycle management.
+final class CounterService extends Service {
+  int _count = 0;
+  int get count => _count;
+
+  void increment() => _count++;
+
+  @override
+  TServiceResolvables<Unit> provideInitListeners(void _) => [
+    (_) {
+      _count = 0;
+      print('CounterService initialized');
+      return syncUnit();
+    },
+  ];
+
+  @override
+  TServiceResolvables<Unit> providePauseListeners(void _) => [];
+
+  @override
+  TServiceResolvables<Unit> provideResumeListeners(void _) => [];
+
+  @override
+  TServiceResolvables<Unit> provideDisposeListeners(void _) => [
+    (_) {
+      print('CounterService disposed with count: $_count');
+      return syncUnit();
+    },
+  ];
+}
+
+// Register with DI and use lifecycle callbacks
+DI.global.register<CounterService>(
+  CounterService(),
+  onRegister: (service) => service.init(),
+  onUnregister: ServiceMixin.unregister, // Calls dispose() automatically
+);
+
+// Access the service
+final counter = DI.global<CounterService>();
+counter.increment();
+```
+
+For Flutter apps that need to respond to app lifecycle events (pause when backgrounded, resume when foregrounded), use the `ObservedService` variants from [df_flutter_services](https://pub.dev/packages/df_flutter_services).
+
+## Related Packages
+
+- [df_flutter_services](https://pub.dev/packages/df_flutter_services) - Flutter-specific service classes with app lifecycle integration
+- [df_pod](https://pub.dev/packages/df_pod) - Reactive state containers
+- [df_safer_dart](https://pub.dev/packages/df_safer_dart) - Option, Result, Resolvable types

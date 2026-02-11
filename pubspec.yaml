@@ -21,7 +21,7 @@ funding:
 - https://github.com/sponsors/robelator
 - https://www.buymeacoffee.com/dev_cetera
 description: A pragmatic dependency injection (DI) system, coupled with service classes for seamless state management in Dart.
-version: 0.15.9
+version: 0.15.10
 topics:
   - get-it
   - dependency-injection

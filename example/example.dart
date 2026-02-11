@@ -1,45 +1,18 @@
-//.title
-// ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-//
-// Copyright © dev-cetera.com & contributors.
-//
-// The use of this source code is governed by an MIT-style license described in
-// the LICENSE file located in this project's root directory.
-//
-// See: https://opensource.org/license/mit
-//
-// ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-//.title~
-
-import 'dart:async' show unawaited;
+// This example demonstrates dependency injection with df_di.
+// ignore_for_file: avoid_print
 
 import 'package:df_di/df_di.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-/// A simple service to manage user data.
+/// Example 1: A simple service class to demonstrate DI registration.
 class UserService {
-  //
-  //
-  //
-
   final int id;
   bool _isDisposed = false;
 
-  //
-  //
-  //
-
   UserService(this.id);
 
-  //
-  //
-  //
-
-  /// Gets the user data for the user identified by [id].
   Async<Map<String, dynamic>> getUserData() {
-    // Any errors thrown witin Async will be passed to the Async instance
-    // returned.
     return Async(() async {
       if (_isDisposed) {
         throw Err('UserService has already been disposed!');
@@ -49,17 +22,13 @@ class UserService {
     });
   }
 
-  //
-  //
-  //
-
-  /// Cleans up resources used by the service.
   Async<Unit> dispose() {
     return Async(() async {
       if (_isDisposed) {
         throw Err('UserService has already been disposed!');
       }
       _isDisposed = true;
+      print('UserService disposed');
       return Unit();
     });
   }
@@ -67,22 +36,77 @@ class UserService {
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
+/// Example 2: A Service with lifecycle management.
+final class CounterService extends Service {
+  int _count = 0;
+
+  int get count => _count;
+
+  void increment() {
+    _count++;
+    print('Count incremented to: $_count');
+  }
+
+  @override
+  TServiceResolvables<Unit> provideInitListeners(void _) {
+    return [
+      (_) {
+        _count = 0;
+        print('CounterService initialized');
+        return syncUnit();
+      },
+    ];
+  }
+
+  @override
+  TServiceResolvables<Unit> providePauseListeners(void _) {
+    return [
+      (_) {
+        print('CounterService paused');
+        return syncUnit();
+      },
+    ];
+  }
+
+  @override
+  TServiceResolvables<Unit> provideResumeListeners(void _) {
+    return [
+      (_) {
+        print('CounterService resumed');
+        return syncUnit();
+      },
+    ];
+  }
+
+  @override
+  TServiceResolvables<Unit> provideDisposeListeners(void _) {
+    return [
+      (_) {
+        print('CounterService disposed with final count: $_count');
+        return syncUnit();
+      },
+    ];
+  }
+}
+
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
 Future<void> main() async {
+  print('=== df_di Example ===\n');
+
+  // --- Part 1: Basic DI with UserService ---
+  print('--- Part 1: Basic DI Registration ---');
+
   UNSAFE:
   {
-    // Create some future to a resource that may not yet exist in DI.global that
-    // we can await later.
+    // Create a future that waits for UserService to be registered
     final userServiceFuture = DI.global.untilSuper<UserService>().unwrap();
 
-    // Register the service after a delay.
-
-    // This simulates a part of your application that initializes and provides
-    // the service, for example, after a user logs in.
-    Future.delayed(const Duration(seconds: 2), () {
+    // Register the service after a delay (simulating async initialization)
+    Future.delayed(const Duration(seconds: 1), () {
       DI.global
           .register<UserService>(
             UserService(123),
-            // Handle what happens when we unregister the dependency.
             onUnregister: (result) {
               if (result.isOk()) {
                 final userService = result.unwrap();
@@ -93,46 +117,66 @@ Future<void> main() async {
             },
           )
           .end;
+      print('UserService registered');
     });
 
-    // Await the service and use it.
-
-    // Execution will pause here until the `Future.delayed` block above registers
-    // the service, which in turn completes the `userServiceFuture`.
+    // Wait for the service to be registered
     final userService = await userServiceFuture;
 
+    // Use the service
     final userDataResult = await userService.getUserData().value;
     if (userDataResult.isOk()) {
-      final userData = userDataResult.unwrap();
-      print(userData);
-    } else {
-      print('Error: ${userDataResult.err()}');
+      print('User data: ${userDataResult.unwrap()}');
     }
 
-    // Unregister the service to trigger cleanup.
-
-    // This is useful when a user logs out or a feature is no longer needed.
-    // Calling `unregister` will trigger the `onUnregister` callback we defined.
+    // Unregister the service (triggers dispose via onUnregister)
     final _ = await DI.global.unregister<UserService>().value;
-
-    final isRegistered = DI.global.isRegistered<UserService>();
-    print('Is UserService still registered? $isRegistered');
-
-    // Let's see what happens if we get try and a dependency that is no longer
-    // egistered.
-    final userDataOpt = DI.global.get<UserService>();
-    if (userDataOpt.isSome()) {
-      print('This should never print!');
-    } else {
-      print('No UserService is registeted here! This is expected!');
-    }
-
-    // Let's see what happens if we get try and dispose the service again!
-    unawaited(
-      userService.dispose().unwrap().catchError((Object e) {
-        print(e);
-        return Unit();
-      }),
-    );
+    print('UserService unregistered\n');
   }
+
+  // --- Part 2: Service Lifecycle with CounterService ---
+  print('--- Part 2: Service Lifecycle ---');
+
+  // Register CounterService with lifecycle callbacks
+  DI.global.register<CounterService>(
+    CounterService(),
+    onRegister: (service) => service.init(),
+    onUnregister: ServiceMixin.unregister,
+  );
+
+  // Wait for initialization to complete
+  final counterService = await DI.global.untilSuper<CounterService>().unwrap();
+
+  // Use the service
+  counterService.increment();
+  counterService.increment();
+  counterService.increment();
+  print('Current count: ${counterService.count}');
+
+  // Demonstrate pause/resume
+  await counterService.pause().value;
+  await counterService.resume().value;
+
+  // Unregister (triggers dispose via ServiceMixin.unregister)
+  await DI.global.unregister<CounterService>().value;
+  print('CounterService unregistered\n');
+
+  // --- Part 3: Hierarchical Containers ---
+  print('--- Part 3: Hierarchical Containers ---');
+
+  // Register in session container
+  DI.session.register<String>('session_token_123');
+
+  // Access from user container (child of session)
+  final token = DI.user<String>();
+  print('Token from DI.user: $token');
+
+  // Check registration
+  print('Is String registered in DI.session? ${DI.session.isRegistered<String>()}');
+  print('Is String registered in DI.user? ${DI.user.isRegistered<String>()}');
+
+  // Clean up
+  DI.session.unregister<String>();
+
+  print('\n=== Example Complete ===');
 }

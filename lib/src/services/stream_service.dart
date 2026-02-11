@@ -147,7 +147,15 @@ mixin StreamServiceMixin<TData extends Object> on ServiceMixin {
           });
         }).end();
       }
+      // Complete the initialData completer with an error before clearing it.
+      // This ensures any code awaiting initialData won't hang forever.
+      final prevCompleter = _initDataCompleter;
       _initDataCompleter = const None();
+      if (prevCompleter.isSome() && !prevCompleter.unwrap().isCompleted) {
+        prevCompleter.unwrap().resolve(
+          Sync.err(Err('Stream stopped before initial data was received.')),
+        ).end();
+      }
       return seq.completion.toUnit();
     }
   }
