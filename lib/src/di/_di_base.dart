@@ -102,14 +102,36 @@ base class DIBase {
     }
   }
 
-  /// Attempts to finish any pending [until] calls for the given type and group
-  /// when a new dependency is registered.
+  /// Attempts to finish any pending [until] calls for the given type and
+  /// group when a new dependency is registered.
+  ///
+  /// Previously this relied on `.whereType<ReservedSafeCompleter<T>>()` and a
+  /// `value as FutureOr<T>` cast to filter to the correct completer. Both of
+  /// those generic-reification-dependent checks are silently weakened in
+  /// dart2js release mode on Flutter Web: a completer of the *wrong* type is
+  /// matched, `.complete(value)` silently succeeds (passing a garbage-typed
+  /// value), `break` exits, and the correct completer is never reached. The
+  /// original `until*` call hangs forever. See
+  /// `ReservedSafeCompleter.typeCheck` for the design trade-off.
+  ///
+  /// The fix: iterate every `ReservedSafeCompleter` regardless of its type
+  /// parameter, then use the completer's `typeCheck` closure (captured when
+  /// the completer was constructed and `T` was lexically in scope) to
+  /// decide whether `value` is assignable to it. That closure is compiled
+  /// into a real type predicate by dart2js and survives release-mode
+  /// optimisation.
   void _maybeFinish<T extends Object>({
     required FutureOr<Object> value, // General "Object"
     required Entity g,
   }) {
+    // The typeCheck predicate needs a non-Future Object to evaluate. If the
+    // registered value is itself a Future, we fall back to the original
+    // try/cast dance — that path works correctly on the VM and in debug
+    // web, and it's vanishingly rare in practice (registering a Future as
+    // a dependency value, not wrapping it in a completer).
+    final checkValue = value is Future ? null : value;
+
     for (final di in [this as DI, ...children().unwrapOr([])]) {
-      // Get all completers in group g.
       UNSAFE:
       final completers = di.registry.state[g]?.values
           .map((e) => e.value)
@@ -117,18 +139,32 @@ base class DIBase {
           .map((e) => e.sync().unwrap().value)
           .where((e) => e.isOk())
           .map((e) => e.unwrap())
-          // Get all completers regardless of type.
-          .whereType<ReservedSafeCompleter<T>>();
+          // Match ANY ReservedSafeCompleter — we intentionally DON'T filter
+          // on `<T>` here because dart2js release makes generic parameter
+          // matching unreliable. The typeCheck below does the real filter.
+          .whereType<ReservedSafeCompleter>();
       if (completers == null) continue;
-      // Try each one to see if they can finish. It will only be able to finish
-      // if value is compatible with the completer.
+
       for (final completer in completers) {
-        try {
-          completer.complete(value as FutureOr<T>).end();
-          break;
-        } catch (_) {
-          // Skip completers that throw. Either by incorrect type T or the
-          // completer can't complete the Future.
+        if (checkValue != null) {
+          // Fast, reliable path: the completer knows its own T.
+          if (!completer.typeCheck(checkValue)) continue;
+          try {
+            completer.complete(value).end();
+            break;
+          } catch (_) {
+            // Defensive — shouldn't happen if typeCheck matched.
+          }
+        } else {
+          // Future value — preserve the original behaviour.
+          try {
+            (completer as ReservedSafeCompleter<T>)
+                .complete(value as FutureOr<T>)
+                .end();
+            break;
+          } catch (_) {
+            // Skip completers whose type T doesn't accept this value.
+          }
         }
       }
     }

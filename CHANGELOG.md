@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.15.11]
+
+- Released @ 4/2026 (UTC)
+- **Fix**: `until` / `untilSuper` silently never resolved in dart2js release mode on Flutter Web. The `_maybeFinish` hot path used `.whereType<ReservedSafeCompleter<T>>()` and `value as FutureOr<T>` to filter completers by type — both of those generic-parameter-dependent checks are weakened by dart2js release, and the first-iterated completer of the wrong type was being "completed" with a garbage value, short-circuiting the iteration before the correct completer was reached. Fixed by capturing the type check as a closure at `ReservedSafeCompleter` construction time (where `T` is still lexically in scope) and using that closure in `_maybeFinish` instead of the unreliable generic filters.
+
 ## [0.15.10]
 
 - Released @ 2/2026 (UTC)
