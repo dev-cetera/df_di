@@ -11,8 +11,6 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-// ignore_for_file: invalid_use_of_visible_for_testing_member
-
 import '/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
@@ -91,6 +89,9 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     }
   }
 
+  /// Children are registered as `Lazy<DI>`, so unregister must remove the
+  /// lazy key — `unregister<DI>` would not match under the strict-keying
+  /// contract.
   Result<Option<DI>> unregisterChild({
     Entity groupEntity = const DefaultEntity(),
   }) {
@@ -99,12 +100,24 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
       return Err('No child container registered.');
     }
     UNSAFE:
-    return childrenContainer
-        .unwrap()
-        .unregister<DI>(groupEntity: g)
-        .sync()
-        .unwrap()
-        .value;
+    {
+      final result = childrenContainer
+          .unwrap()
+          .unregister<Lazy<DI>>(groupEntity: g)
+          .sync()
+          .unwrap()
+          .value;
+      if (result.isErr()) {
+        return result.err().unwrap().transfErr<Option<DI>>();
+      }
+      final option = result.unwrap();
+      if (option.isNone()) {
+        return const Ok(None());
+      }
+      final lazy = option.unwrap();
+      final di = lazy.singleton.sync().unwrap().unwrap();
+      return Ok(Some(di));
+    }
   }
 
   Result<Option<DI>> unregisterChildT(
@@ -116,16 +129,29 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
       return Err('No child container registered.');
     }
     UNSAFE:
-    return childrenContainer
-        .unwrap()
-        .unregisterT(type, groupEntity: g)
-        .sync()
-        .unwrap()
-        .value
-        .map((e) => e.transf<DI>())
-        .flatten();
+    {
+      final result = childrenContainer
+          .unwrap()
+          .unregisterK(TypeEntity(Lazy, [type]), groupEntity: g)
+          .sync()
+          .unwrap()
+          .value;
+      if (result.isErr()) {
+        return result.err().unwrap().transfErr<Option<DI>>();
+      }
+      final option = result.unwrap();
+      if (option.isNone()) {
+        return const Ok(None());
+      }
+      final lazy = option.unwrap() as Lazy<DI>;
+      final di = lazy.singleton.sync().unwrap().unwrap();
+      return Ok(Some(di));
+    }
   }
 
+  /// Children are registered as `Lazy<DI>` (see [registerChild]), so probe
+  /// for that exact key — `isRegistered<DI>` would not match under the
+  /// strict-keying contract.
   bool isChildRegistered<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
   }) {
@@ -134,7 +160,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
       return false;
     }
     UNSAFE:
-    return childrenContainer.unwrap().isRegistered<DI>(groupEntity: g);
+    return childrenContainer.unwrap().isRegistered<Lazy<DI>>(groupEntity: g);
   }
 
   bool isChildRegisteredT<T extends Object>({
@@ -145,7 +171,10 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
       return false;
     }
     UNSAFE:
-    return childrenContainer.unwrap().isRegisteredT(DI, groupEntity: g);
+    return childrenContainer.unwrap().isRegisteredK(
+      TypeEntity(Lazy, [DI]),
+      groupEntity: g,
+    );
   }
 
   DI child({Entity groupEntity = const DefaultEntity()}) {

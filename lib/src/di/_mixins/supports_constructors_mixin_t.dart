@@ -213,7 +213,7 @@ base mixin SupportsConstructorsMixinT
   /// typically be the most general type expected.
   @pragma('vm:prefer-inline')
   Resolvable<T> untilFactoryExactlyT<T extends Object>(
-    T type, {
+    Type type, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {

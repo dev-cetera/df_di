@@ -28,6 +28,12 @@ final class DIRegistry {
   /// map.
   final TRegistryState _state = {};
 
+  /// Reverse index: `typeEntity → set of groupEntities` that contain a
+  /// dependency keyed by that type. Maintained in tandem with [_state] so
+  /// cross-group lookups by type are O(K) in the number of matching groups,
+  /// not O(N) in the total number of dependencies.
+  final Map<Entity, Set<Entity>> _typeIndex = {};
+
   /// A callback invoked whenever the [state] is updated.
   final Option<TOnChangeRegistry> onChange;
 
@@ -38,7 +44,6 @@ final class DIRegistry {
   ).map((k, v) => MapEntry(k, Map.unmodifiable(v)));
 
   /// Returns an iterable of all dependencies in the registry, unsorted.
-  @protected
   @pragma('vm:prefer-inline')
   Iterable<Dependency> get unsortedDependencies =>
       _state.entries.expand((e) => e.value.values);
@@ -87,8 +92,26 @@ final class DIRegistry {
   @pragma('vm:prefer-inline')
   List<Entity> get groupEntities => List.unmodifiable(_state.keys);
 
+  /// Returns the group entities that contain a dependency keyed by
+  /// [typeEntity]. Backed by the reverse type-index, so this is O(K) in the
+  /// number of matching groups regardless of the total dependency count.
+  ///
+  /// The returned iterable is a live, unmodifiable view of the underlying
+  /// set; callers that need a stable snapshot must copy it (e.g. `.toList()`).
+  @pragma('vm:prefer-inline')
+  Iterable<Entity> groupsWithTypeK(Entity typeEntity) {
+    final groups = _typeIndex[typeEntity];
+    if (groups == null) return const Iterable<Entity>.empty();
+    return UnmodifiableSetView(groups);
+  }
+
+  /// Returns the group entities that contain a dependency keyed under the
+  /// type-entity for [type]. See [groupsWithTypeK].
+  @pragma('vm:prefer-inline')
+  Iterable<Entity> groupsWithTypeT(Type type) =>
+      groupsWithTypeK(TypeEntity(type));
+
   /// Updates the [state] by setting or updating [dependency].
-  @protected
   void setDependency(Dependency dependency) {
     UNSAFE:
     UNSAFE:
@@ -101,6 +124,7 @@ final class DIRegistry {
 
       if (currentDep.isNone() || currentDep.unwrap() != dependency) {
         (_state[groupEntity] ??= {})[typeEntity] = dependency;
+        (_typeIndex[typeEntity] ??= <Entity>{}).add(groupEntity);
         onChange.ifSome((self, some) => some.unwrap()()).end();
       }
     }
@@ -178,7 +202,6 @@ final class DIRegistry {
 
   /// Returns any dependency with the exact [type] under the specified
   /// [groupEntity]. Unlike [getDependency], this will not include subtypes.
-  @protected
   @pragma('vm:prefer-inline')
   Option<Dependency> getDependencyT(
     Type type, {
@@ -189,7 +212,6 @@ final class DIRegistry {
 
   /// Returns any dependency with the exact [typeEntity] under the specified
   /// [groupEntity]. Unlike [getDependency], this will not include subtypes.
-  @protected
   @pragma('vm:prefer-inline')
   Option<Dependency> getDependencyK(
     Entity typeEntity, {
@@ -206,7 +228,6 @@ final class DIRegistry {
 
   /// Removes the first dependency of type [T] (or its subtypes) found under the specified [groupEntity].
   /// If the group becomes empty after removal, the group itself is removed.
-  @protected
   @pragma('vm:prefer-inline')
   Option<Dependency> removeDependencyT(
     Type type, {
@@ -215,36 +236,55 @@ final class DIRegistry {
     return removeDependencyK(TypeEntity(type), groupEntity: groupEntity);
   }
 
-  /// Removes the first dependency of type [T] (or its subtypes) found under the specified [groupEntity].
+  /// Removes the dependency keyed under exact type [T] in [groupEntity], using
+  /// the same key construction as [setDependency] (`Sync<T>` / `Async<T>`).
   /// If the group becomes empty after removal, the group itself is removed.
+  ///
+  /// This is strict by design: a `Lazy<T>` registration is keyed under
+  /// `Sync<Lazy<T>>` and is NOT matched here — callers wanting to remove a
+  /// lazy must call `removeDependency<Lazy<T>>()` (or `unregisterLazy<T>()`
+  /// at the [DIBase] layer). Keeping the key space identical on insert and
+  /// remove avoids the silent "register-a-lazy-and-fail-to-find-it" trap.
+  @pragma('vm:prefer-inline')
   Option<Dependency<T>> removeDependency<T extends Object>({
+    Entity groupEntity = const DefaultEntity(),
+  }) {
+    return removeDependencyK(
+      TypeEntity(T),
+      groupEntity: groupEntity,
+    ).map((e) => e.transf<T>());
+  }
+
+  /// Removes the dependency stored under [exactTypeEntity] (the raw registry
+  /// key — i.e. `dependency.typeEntity`, NOT the inner T).
+  /// If the group becomes empty after removal, the group itself is removed.
+  ///
+  /// Use this when you already hold a `Dependency` and just need to evict its
+  /// exact slot (e.g. [SupportsUnregisterAll]). For lookups keyed by an inner
+  /// type entity (e.g. `Foo` rather than `Sync<Foo>`), use [removeDependencyK].
+  Option<Dependency> removeDependencyExact(
+    Entity exactTypeEntity, {
     Entity groupEntity = const DefaultEntity(),
   }) {
     final group = _state[groupEntity];
     if (group == null) {
       return const None();
     }
-    final key = group.entries
-        .firstWhereOrNull((e) => e.value.value is Resolvable<T>)
-        ?.key;
-    if (key == null) {
+    final removed = Option.from(group.remove(exactTypeEntity));
+    if (removed.isNone()) {
       return const None();
     }
-    final dependency = group.remove(key);
-    if (dependency == null) {
-      return const None();
-    }
+    _detachFromTypeIndex(exactTypeEntity, groupEntity);
     if (group.isEmpty) {
       removeGroup(groupEntity: groupEntity);
     }
     UNSAFE:
     onChange.ifSome((self, some) => some.unwrap()()).end();
-    return Some(dependency.transf());
+    return removed;
   }
 
   /// Removes the dependency with the exact [typeEntity] under the specified [groupEntity].
   /// If the group becomes empty after removal, the group itself is removed.
-  @protected
   Option<Dependency> removeDependencyK(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
@@ -253,14 +293,21 @@ final class DIRegistry {
     if (group == null) {
       return const None();
     }
-    Option<Dependency<Object>> removed;
-    removed = Option.from(group.remove(TypeEntity(Sync, [typeEntity])));
-    if (removed.isNone()) {
-      removed = Option.from(group.remove(TypeEntity(Async, [typeEntity])));
-    }
-    if (removed.isNone()) {
+    final syncKey = TypeEntity(Sync, [typeEntity]);
+    final asyncKey = TypeEntity(Async, [typeEntity]);
+    final (Option<Dependency> removed, Option<Entity> removedKey) =
+        switch (Option<Dependency>.from(group.remove(syncKey))) {
+          final Some<Dependency> s => (s, Some(syncKey)),
+          None() => switch (Option<Dependency>.from(group.remove(asyncKey))) {
+            final Some<Dependency> s => (s, Some(asyncKey)),
+            None() => (const None(), const None()),
+          },
+        };
+    if (removedKey case None()) {
       return const None();
     }
+    UNSAFE:
+    _detachFromTypeIndex(removedKey.unwrap(), groupEntity);
     if (group.isEmpty) {
       removeGroup(groupEntity: groupEntity);
     }
@@ -271,7 +318,6 @@ final class DIRegistry {
 
   /// Updates the [state] by setting or replacing the [group] under the
   /// specified [groupEntity].
-  @protected
   void setGroup(
     TDependencyGroup<Object> group, {
     Entity groupEntity = const DefaultEntity(),
@@ -282,7 +328,15 @@ final class DIRegistry {
       group,
     );
     if (!equals) {
+      if (currentGroup != null) {
+        for (final typeEntity in currentGroup.keys) {
+          _detachFromTypeIndex(typeEntity, groupEntity);
+        }
+      }
       _state[groupEntity] = group;
+      for (final typeEntity in group.keys) {
+        (_typeIndex[typeEntity] ??= <Entity>{}).add(groupEntity);
+      }
       UNSAFE:
       onChange.ifSome((self, some) => some.unwrap()()).end();
     }
@@ -302,15 +356,24 @@ final class DIRegistry {
     bool Function(Entity entity, Dependency dependency) test, {
     Entity groupEntity = const DefaultEntity(),
   }) {
-    _state[groupEntity]?.removeWhere(test);
+    final group = _state[groupEntity];
+    if (group == null) return;
+    group.removeWhere((typeEntity, dependency) {
+      final drop = test(typeEntity, dependency);
+      if (drop) _detachFromTypeIndex(typeEntity, groupEntity);
+      return drop;
+    });
   }
 
   /// Removes the [TDependencyGroup] with the specified [groupEntity] from the
   /// [state].
-  @protected
-  @pragma('vm:prefer-inline')
   void removeGroup({Entity groupEntity = const DefaultEntity()}) {
-    _state.remove(groupEntity);
+    final group = _state.remove(groupEntity);
+    if (group != null) {
+      for (final typeEntity in group.keys) {
+        _detachFromTypeIndex(typeEntity, groupEntity);
+      }
+    }
     UNSAFE:
     onChange.ifSome((self, some) => some.unwrap()()).end();
   }
@@ -320,8 +383,20 @@ final class DIRegistry {
   @pragma('vm:prefer-inline')
   void clear() {
     _state.clear();
+    _typeIndex.clear();
     UNSAFE:
     onChange.ifSome((self, some) => some.unwrap()()).end();
+  }
+
+  /// Drops [groupEntity] from the bucket for [typeEntity] in [_typeIndex],
+  /// pruning the empty bucket. Must be called whenever a dependency leaves
+  /// the registry so the reverse index never goes stale.
+  @pragma('vm:prefer-inline')
+  void _detachFromTypeIndex(Entity typeEntity, Entity groupEntity) {
+    final bucket = _typeIndex[typeEntity];
+    if (bucket == null) return;
+    bucket.remove(groupEntity);
+    if (bucket.isEmpty) _typeIndex.remove(typeEntity);
   }
 }
 

@@ -22,8 +22,8 @@ base mixin SupportsConstructorsMixin on DIBase {
   @pragma('vm:prefer-inline')
   Resolvable<Lazy<T>> registerLazy<T extends Object>(
     LazyConstructor<T> constructor, {
-    TOnRegisterCallback<Lazy<T>>? onRegister,
-    TOnUnregisterCallback<Lazy<T>>? onUnregister,
+    Option<TOnRegisterCallback<Lazy<T>>> onRegister = const None(),
+    Option<TOnUnregisterCallback<Lazy<T>>> onUnregister = const None(),
     Entity groupEntity = const DefaultEntity(),
   }) {
     return register<Lazy<T>>(
@@ -38,12 +38,11 @@ base mixin SupportsConstructorsMixin on DIBase {
   @pragma('vm:prefer-inline')
   Resolvable<Lazy<T>> registerConstructor<T extends Object>(
     FutureOr<T> Function() constructor, {
-    TOnRegisterCallback<Lazy<T>>? onRegister,
-    TOnUnregisterCallback<Lazy<T>>? onUnregister,
+    Option<TOnRegisterCallback<Lazy<T>>> onRegister = const None(),
+    Option<TOnUnregisterCallback<Lazy<T>>> onUnregister = const None(),
     Entity groupEntity = const DefaultEntity(),
   }) {
     return registerLazy<T>(
-      // ignore: must_be_anonymous
       () => Resolvable(constructor),
       onRegister: onRegister,
       onUnregister: onUnregister,

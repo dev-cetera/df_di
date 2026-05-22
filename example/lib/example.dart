@@ -1,16 +1,21 @@
 // This example demonstrates dependency injection with df_di.
-// ignore_for_file: avoid_print
+
+import 'dart:io' show stdout;
 
 import 'package:df_di/df_di.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
+void _say(Object? message) => stdout.writeln(message);
+
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
 /// Example 1: A simple service class to demonstrate DI registration.
 class UserService {
+  UserService(this.id);
+
   final int id;
   bool _isDisposed = false;
-
-  UserService(this.id);
 
   Async<Map<String, dynamic>> getUserData() {
     return Async(() async {
@@ -28,7 +33,7 @@ class UserService {
         throw Err('UserService has already been disposed!');
       }
       _isDisposed = true;
-      print('UserService disposed');
+      _say('UserService disposed');
       return Unit();
     });
   }
@@ -44,7 +49,7 @@ final class CounterService extends Service {
 
   void increment() {
     _count++;
-    print('Count incremented to: $_count');
+    _say('Count incremented to: $_count');
   }
 
   @override
@@ -52,7 +57,7 @@ final class CounterService extends Service {
     return [
       (_) {
         _count = 0;
-        print('CounterService initialized');
+        _say('CounterService initialized');
         return syncUnit();
       },
     ];
@@ -62,7 +67,7 @@ final class CounterService extends Service {
   TServiceResolvables<Unit> providePauseListeners(void _) {
     return [
       (_) {
-        print('CounterService paused');
+        _say('CounterService paused');
         return syncUnit();
       },
     ];
@@ -72,7 +77,7 @@ final class CounterService extends Service {
   TServiceResolvables<Unit> provideResumeListeners(void _) {
     return [
       (_) {
-        print('CounterService resumed');
+        _say('CounterService resumed');
         return syncUnit();
       },
     ];
@@ -82,7 +87,7 @@ final class CounterService extends Service {
   TServiceResolvables<Unit> provideDisposeListeners(void _) {
     return [
       (_) {
-        print('CounterService disposed with final count: $_count');
+        _say('CounterService disposed with final count: $_count');
         return syncUnit();
       },
     ];
@@ -92,93 +97,82 @@ final class CounterService extends Service {
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 Future<void> main() async {
-  print('=== df_di Example ===\n');
+  _say('=== df_di Example ===\n');
 
   // --- Part 1: Basic DI with UserService ---
-  print('--- Part 1: Basic DI Registration ---');
+  _say('--- Part 1: Basic DI Registration ---');
 
+  // Create a future that waits for UserService to be registered.
   UNSAFE:
-  {
-    // Create a future that waits for UserService to be registered
-    final userServiceFuture = DI.global.untilSuper<UserService>().unwrap();
+  final userServiceFuture = DI.global.untilSuper<UserService>().unwrap();
 
-    // Register the service after a delay (simulating async initialization)
-    Future.delayed(const Duration(seconds: 1), () {
-      DI.global
-          .register<UserService>(
-            UserService(123),
-            onUnregister: (result) {
-              if (result.isOk()) {
-                final userService = result.unwrap();
-                // ignore: void_checks
-                return Future.value(userService.dispose().unwrap());
-              }
-              return null;
-            },
-          )
-          .end;
-      print('UserService registered');
-    });
+  // Register the service after a delay (simulating async initialization).
+  Future<void>.delayed(const Duration(seconds: 1), () {
+    DI.global
+        .register<UserService>(
+          UserService(123),
+          onUnregister: Some((result) async {
+            if (result.isOk()) {
+              UNSAFE:
+              (await result.unwrap().dispose().value).end();
+            }
+          }),
+        )
+        .end();
+    _say('UserService registered');
+  });
 
-    // Wait for the service to be registered
-    final userService = await userServiceFuture;
+  final userService = await userServiceFuture;
 
-    // Use the service
-    final userDataResult = await userService.getUserData().value;
-    if (userDataResult.isOk()) {
-      print('User data: ${userDataResult.unwrap()}');
-    }
-
-    // Unregister the service (triggers dispose via onUnregister)
-    final _ = await DI.global.unregister<UserService>().value;
-    print('UserService unregistered\n');
+  final userDataResult = await userService.getUserData().value;
+  if (userDataResult.isOk()) {
+    UNSAFE:
+    _say('User data: ${userDataResult.unwrap()}');
   }
 
+  (await DI.global.unregister<UserService>().value).end();
+  _say('UserService unregistered\n');
+
   // --- Part 2: Service Lifecycle with CounterService ---
-  print('--- Part 2: Service Lifecycle ---');
+  _say('--- Part 2: Service Lifecycle ---');
 
-  // Register CounterService with lifecycle callbacks
-  DI.global.register<CounterService>(
-    CounterService(),
-    onRegister: (service) => service.init(),
-    onUnregister: ServiceMixin.unregister,
-  );
+  DI.global
+      .register<CounterService>(
+        CounterService(),
+        onRegister: Some((service) => service.init()),
+        onUnregister: const Some(ServiceMixin.unregister),
+      )
+      .end();
 
-  // Wait for initialization to complete
+  UNSAFE:
   final counterService = await DI.global.untilSuper<CounterService>().unwrap();
 
-  // Use the service
   counterService.increment();
   counterService.increment();
   counterService.increment();
-  print('Current count: ${counterService.count}');
+  _say('Current count: ${counterService.count}');
 
-  // Demonstrate pause/resume
-  await counterService.pause().value;
-  await counterService.resume().value;
+  (await counterService.pause().value).end();
+  (await counterService.resume().value).end();
 
-  // Unregister (triggers dispose via ServiceMixin.unregister)
-  await DI.global.unregister<CounterService>().value;
-  print('CounterService unregistered\n');
+  (await DI.global.unregister<CounterService>().value).end();
+  _say('CounterService unregistered\n');
 
   // --- Part 3: Hierarchical Containers ---
-  print('--- Part 3: Hierarchical Containers ---');
+  _say('--- Part 3: Hierarchical Containers ---');
 
-  // Register in session container
-  DI.session.register<String>('session_token_123');
+  DI.session.register<String>('session_token_123').end();
 
-  // Access from user container (child of session)
+  // Access from user container (child of session).
   final token = DI.user<String>();
-  print('Token from DI.user: $token');
+  _say('Token from DI.user: $token');
 
-  // Check registration
-  print(
+  _say(
     'Is String registered in DI.session? ${DI.session.isRegistered<String>()}',
   );
-  print('Is String registered in DI.user? ${DI.user.isRegistered<String>()}');
+  _say('Is String registered in DI.user? ${DI.user.isRegistered<String>()}');
 
-  // Clean up
-  DI.session.unregister<String>();
+  DI.session.unregister<String>().end();
 
-  print('\n=== Example Complete ===');
+  _say('\n=== Example Complete ===');
 }

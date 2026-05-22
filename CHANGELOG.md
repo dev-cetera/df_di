@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.16.0]
+
+- Released @ 5/2026 (UTC)
+- Bump cross-package dependencies: `df_safer_dart ^0.18.0`, `df_type ^0.15.0`, `df_log ^0.5.0`, `df_debouncer ^0.5.0`, dev `df_safer_dart_lints ^0.4.0`.
+- No public API breakage; coordinated major bump with the rest of the state-management stack.
+
 ## [0.15.11]
 
 - Released @ 4/2026 (UTC)

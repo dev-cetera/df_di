@@ -65,14 +65,16 @@ void main() {
         final authWait = di.untilSuper<AuthService>();
 
         final auth = AuthService('token-123');
-        di.register<AuthService>(auth);
+        di.register<AuthService>(auth).end();
 
         // Auth waiter should resolve to the registered auth instance.
+        UNSAFE:
         final resolvedAuth = await authWait.unwrap();
         expect(resolvedAuth, same(auth));
 
         // User waiter should still be pending, not resolved with the auth
         // instance. Use a short timeout to assert it does NOT resolve yet.
+        UNSAFE:
         final userFuture = Future<Object>.value(userWait.unwrap());
         final raced = await Future.any<Object>([
           userFuture,
@@ -83,7 +85,8 @@ void main() {
         // And registering the user service now resolves the user waiter
         // with the correct value.
         final user = UserService(42);
-        di.register<UserService>(user);
+        di.register<UserService>(user).end();
+        UNSAFE:
         final resolvedUser = await userWait.unwrap();
         expect(resolvedUser, same(user));
       },
@@ -97,9 +100,11 @@ void main() {
         final wait2 = di.untilSuper<UserService>();
 
         final user = UserService(7);
-        di.register<UserService>(user);
+        di.register<UserService>(user).end();
 
+        UNSAFE:
         expect(await wait1.unwrap(), same(user));
+        UNSAFE:
         expect(await wait2.unwrap(), same(user));
       },
     );
@@ -114,8 +119,9 @@ void main() {
         // Dependencies must be registered under their declared T — here the
         // caller registers under Cat (subtype). untilSuper<Animal> should
         // complete if the registered value is assignable to Animal.
-        di.register<Cat>(cat);
+        di.register<Cat>(cat).end();
 
+        UNSAFE:
         final resolved = await animalWait.unwrap();
         expect(resolved, same(cat));
         expect(resolved.name(), equals('Cat'));
@@ -132,12 +138,15 @@ void main() {
         final animalWait = di.untilSuper<Animal>();
 
         // Register out-of-order to stress the matching logic.
-        di.register<AuthService>(AuthService('t'));
-        di.register<Cat>(Cat());
-        di.register<UserService>(UserService(1));
+        di.register<AuthService>(AuthService('t')).end();
+        di.register<Cat>(Cat()).end();
+        di.register<UserService>(UserService(1)).end();
 
+        UNSAFE:
         final a = await authWait.unwrap();
+        UNSAFE:
         final an = await animalWait.unwrap();
+        UNSAFE:
         final u = await userWait.unwrap();
 
         expect(a, isA<AuthService>());

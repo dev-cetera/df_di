@@ -11,8 +11,6 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-// ignore_for_file: invalid_use_of_visible_for_testing_member, invalid_use_of_protected_member
-
 import '/_common.dart';
 import '../../_reserved_safe_completer.dart';
 
@@ -164,10 +162,10 @@ base mixin SupportsMixinK on DIBase {
             final value = e.unwrap();
             registry.removeDependencyK(typeEntity, groupEntity: g).end();
             final metadata = option.unwrap().unwrap().metadata.map(
-              (e) => e.copyWith(
-                preemptivetypeEntity: TypeEntity(Sync, [typeEntity]),
-              ),
-            );
+                  (e) => e.copyWith(
+                    preemptivetypeEntity: TypeEntity(Sync, [typeEntity]),
+                  ),
+                );
             registerDependencyK(
               dependency: Dependency(Sync.okValue(value), metadata: metadata),
               checkExisting: false,
@@ -226,6 +224,11 @@ base mixin SupportsMixinK on DIBase {
   }
 
   /// Unregisters a dependency.
+  ///
+  /// Honors the same contract as [DIBase.unregister]: `traverse: false`
+  /// limits to this container, `removeAll: true` walks every matching
+  /// registration, and `triggerOnUnregisterCallbacks: true` fires the
+  /// `onUnregister` of **every** removed dependency.
   Resolvable<Option> unregisterK(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
@@ -234,67 +237,87 @@ base mixin SupportsMixinK on DIBase {
     bool triggerOnUnregisterCallbacks = true,
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
-    for (final di in [this as DI, ...parents]) {
+    final removed = <Dependency>[];
+
+    final containers = traverse ? [this as DI, ...parents] : [this as DI];
+    for (final di in containers) {
       final dependencyOption = di.removeDependencyK(typeEntity, groupEntity: g);
       if (dependencyOption.isNone()) {
+        if (!removeAll) break;
         continue;
       }
       UNSAFE:
-      if (triggerOnUnregisterCallbacks) {
-        final dependency = dependencyOption.unwrap();
-        final metadataOption = dependency.metadata;
-        if (metadataOption.isSome()) {
-          final metadata = metadataOption.unwrap();
-          final onUnregisterOption = metadata.onUnregister;
-          if (onUnregisterOption.isSome()) {
-            final onUnregister = onUnregisterOption.unwrap();
-            return dependency.value.map((e) {
-              return Resolvable(() {
-                return consec(
-                  onUnregister(Ok(e)),
-                  (_) => Some(e).transf().unwrap(),
-                );
-              });
-            }).flatten();
-          }
-        }
-      }
-      if (!removeAll) {
-        break;
-      }
+      removed.add(dependencyOption.unwrap());
+      // Clean up matching completers on this container
+      cleanupCompleters(typeEntity, groupEntity: g);
+      if (!removeAll) break;
     }
-    return syncNone();
+
+    if (removed.isEmpty) return syncNone();
+
+    UNSAFE:
+    {
+      final firstValue = removed.first.value;
+      return Resolvable<Option>(() {
+        return consec<Object, Option>(firstValue.unwrap(), (first) {
+          if (!triggerOnUnregisterCallbacks) return Some(first);
+          FutureOr<Option> chain = Some(first);
+          for (final dep in removed) {
+            final metaOpt = dep.metadata;
+            if (metaOpt.isNone()) continue;
+            final cbOpt = metaOpt.unwrap().onUnregister;
+            if (cbOpt.isNone()) continue;
+            final cb = cbOpt.unwrap();
+            final depValue = dep.value;
+            chain = consec(chain, (acc) {
+              return consec(depValue.unwrap(), (resolvedDepValue) {
+                FutureOr<void> cbResult;
+                try {
+                  cbResult = cb(Ok(resolvedDepValue));
+                } catch (e) {
+                  Log.err(
+                    'onUnregister for ${dep.runtimeType} threw '
+                    'synchronously: $e',
+                  );
+                  return acc;
+                }
+                return consec<void, Option>(cbResult, (_) => acc);
+              });
+            });
+          }
+          return chain;
+        });
+      });
+    }
   }
 
-  /// Removes a dependency from the registry.
+  /// Removes the dependency keyed under exact [typeEntity] from the registry.
+  /// Strict: a `Lazy<...>` variant is NOT matched here — callers wanting that
+  /// must pass `TypeEntity(Lazy, [typeEntity])` explicitly. Mirrors the
+  /// keying contract of `setDependency`.
   @pragma('vm:prefer-inline')
   Option<Dependency> removeDependencyK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
-    var result = registry.removeDependencyK(typeEntity, groupEntity: g);
-    if (result.isNone()) {
-      result = registry.removeDependencyK(
-        TypeEntity(Lazy, [typeEntity]),
-        groupEntity: g,
-      );
+    final result = registry.removeDependencyK(typeEntity, groupEntity: g);
+    if (result.isSome()) {
+      cleanupCompleters(typeEntity, groupEntity: g);
     }
     return result;
   }
 
-  /// Checks if a dependency is registered.
+  /// Returns whether a dependency keyed under exact [typeEntity] is
+  /// registered. Strict: a `Lazy<...>` variant is NOT matched — pass
+  /// `TypeEntity(Lazy, [typeEntity])` explicitly to check for that.
   bool isRegisteredK(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
-    if (registry.containsDependencyK(typeEntity, groupEntity: g) ||
-        registry.containsDependencyK(
-          TypeEntity(Lazy, [typeEntity]),
-          groupEntity: g,
-        )) {
+    if (registry.containsDependencyK(typeEntity, groupEntity: g)) {
       return true;
     }
     if (traverse) {
@@ -317,18 +340,25 @@ base mixin SupportsMixinK on DIBase {
   /// **Note:** Requires `enableUntilExactlyK: true` during registration.
   /// If `typeEntity` doesn't match an existing or future registration exactly,
   /// this will not resolve.
+  ///
+  /// The completer captures a registration epoch at creation. If the
+  /// dependency is unregistered between the time this caller starts waiting
+  /// and the time its continuation runs, the epoch advances and the
+  /// continuation re-waits for the next registration rather than returning a
+  /// stale value (or `unwrap`-ping a now-missing dependency).
   Resolvable<T> untilExactlyK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
-    final test = getK(typeEntity, groupEntity: g);
+    final test = getK<T>(typeEntity, groupEntity: g, traverse: traverse);
     UNSAFE:
     {
       if (test.isSome()) {
-        return test.unwrap().map((e) => e as T);
+        return test.unwrap();
       }
+      final myEpoch = _epochForK(g, typeEntity);
       var completer = completersK[g]?.firstWhereOrNull(
         (e) => e.typeEntity == typeEntity,
       );
@@ -336,7 +366,7 @@ base mixin SupportsMixinK on DIBase {
         completer = ReservedSafeCompleter(typeEntity);
         (completersK[g] ??= []).add(completer);
       }
-      return completer.resolvable().map((_) {
+      return completer.resolvable().then((_) {
         final temp = completersK[g] ?? [];
         for (var n = 0; n < temp.length; n++) {
           final e = temp[n];
@@ -345,7 +375,14 @@ base mixin SupportsMixinK on DIBase {
             break;
           }
         }
-        return getK<T>(typeEntity, groupEntity: g).unwrap();
+        if (_epochForK(g, typeEntity) != myEpoch) {
+          return untilExactlyK<T>(
+            typeEntity,
+            groupEntity: g,
+            traverse: traverse,
+          );
+        }
+        return getK<T>(typeEntity, groupEntity: g, traverse: traverse).unwrap();
       }).flatten();
     }
   }
@@ -353,15 +390,41 @@ base mixin SupportsMixinK on DIBase {
   /// Stores completers for [untilExactlyK].
   final completersK = <Entity, List<ReservedSafeCompleter>>{};
 
+  /// Tracks a per-(group, typeEntity) registration epoch. Bumped whenever a
+  /// matching dependency is unregistered, used by [untilExactlyK] to detect
+  /// stale completions across unregister/re-register cycles.
+  final _epochsK = <Entity, Map<Entity, int>>{};
+
+  int _epochForK(Entity groupEntity, Entity typeEntity) {
+    return _epochsK[groupEntity]?[typeEntity] ?? 0;
+  }
+
+  /// Removes matching completers for [typeEntity] in [groupEntity] and bumps
+  /// the registration epoch so any in-flight continuations re-wait instead of
+  /// resolving against the now-gone registration.
+  void cleanupCompleters(Entity typeEntity, {required Entity groupEntity}) {
+    completersK[groupEntity]?.removeWhere((e) => e.typeEntity == typeEntity);
+    final group = _epochsK[groupEntity] ??= {};
+    group[typeEntity] = (group[typeEntity] ?? 0) + 1;
+  }
+
   /// Attempts to finish any pending [untilExactlyK] calls for the given
   /// type and group.
+  ///
+  /// Matching is by `typeEntity` ONLY. An earlier version also OR-ed in
+  /// `e is ReservedSafeCompleter<T>`, but under dart2js release that check
+  /// can falsely match a completer of any type (generic-parameter erasure
+  /// makes `is Foo<T>` collapse to `is Foo<dynamic>`), and as the first arm
+  /// of the OR it would short-circuit `firstWhereOrNull` to the wrong
+  /// completer. `typeEntity` is the canonical, minification-safe identifier
+  /// — it's an integer hash of a string, not a reified generic.
   void maybeFinishK<T extends Object>({required Entity g}) {
     assert(T != Object, 'T must be specified and cannot be Object.');
     final typeEntity = TypeEntity(T);
     for (final di in [this as DI, ...children().unwrapOr([])]) {
-      final test = di.completersK[g]?.firstWhereOrNull((e) {
-        return e is ReservedSafeCompleter<T> || e.typeEntity == typeEntity;
-      });
+      final test = di.completersK[g]?.firstWhereOrNull(
+        (e) => e.typeEntity == typeEntity,
+      );
       if (test != null) {
         test.complete(const None()).end();
         break;

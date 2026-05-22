@@ -11,8 +11,6 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-// ignore_for_file: prefer_single_quotes
-
 import 'entity.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
@@ -24,6 +22,41 @@ import 'entity.dart';
 ///
 /// If no `subTypes` are provided, the method returns the `baseType` as-is
 /// (after trimming spaces).
+///
+/// ## Identity model (by design)
+///
+/// `TypeEntity` inherits [Entity]'s integer-id identity model. Specifically:
+///
+/// * The [Entity.id] of a `TypeEntity` is `typeString.hashCode`. Two
+///   `TypeEntity` instances with the same type-string are the same entity.
+/// * Equality is by [Entity.id] alone — `_typeString` is *not* compared in
+///   `==`. This is consistent with [Entity]'s contract and is what allows
+///   `TypeEntity(MyService)` to be used as a const-friendly registry key.
+///
+/// **Caveats this contract imposes on callers:**
+///
+/// * **String-hash collisions.** Dart's `String.hashCode` is 32-bit. Two
+///   distinct type-strings *can* collide on `hashCode`. For a single-app DI
+///   registry with tens-to-low-hundreds of types, the collision probability
+///   is negligible; for a registry meant to scale to thousands of distinct
+///   types, this contract is not appropriate.
+///
+/// * **`Type.toString()` mangling under release.** When `baseType` is a
+///   reified `Type`, this factory keys on `Type.toString()`. That string is
+///   **not stable under `dart2js --minify`** (the default for
+///   `flutter build web --release`) or under `dart compile wasm` —
+///   distinct types can map to the same mangled name. Two compiler-mangled
+///   names colliding means the corresponding registry slots merge silently.
+///
+///   Mitigations:
+///   - Verify with a `dart2js --minify` / `wasm` CI build that the actual
+///     registered types of your app do not collide post-minification.
+///     The `example/wasm_test/` harness covers `until*`; extend it to cover
+///     your app's specific type set.
+///   - Or supply an explicit caller-controlled `Entity` via
+///     `DependencyMetadata.preemptivetypeEntity` (constructed from a stable
+///     string token under your control) so the registry key does not depend
+///     on compiler output.
 ///
 /// ### Examples:
 /// ```dart
@@ -88,7 +121,7 @@ final class TypeEntity extends Entity {
         finalTypeString = '$initialCleanBaseTypeString<$subTypeStrings>';
       } else {
         final objectPlaceholder = _getTypeString(Object);
-        final objectNullablePlaceholder = "$objectPlaceholder?";
+        final objectNullablePlaceholder = '$objectPlaceholder?';
         final dynamicPlaceholder = _getTypeString(dynamic);
 
         var subTypeIndex = 0;

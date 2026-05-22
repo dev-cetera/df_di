@@ -21,7 +21,6 @@ export 'package:meta/meta.dart';
 
 export '/src/_src.g.dart';
 
-// ignore: invalid_export_of_internal_element
 export '/src/di/_dependency.dart';
 export '/src/di/_di_base.dart';
 export '/src/di/_di_registry.dart';

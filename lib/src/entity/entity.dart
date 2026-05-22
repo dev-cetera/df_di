@@ -20,6 +20,28 @@ import 'reserved_entities.dart';
 /// An entity is a uniquely identifiable object that serves as a container or
 /// identifier for components in a Dependency Injection (DI) or
 /// Entity-Component-System (ECS) framework.
+///
+/// ## Identity model (by design)
+///
+/// `Entity` is an **integer-identifier value type**, same model as Flutter's
+/// `Key`. Two `Entity` instances with the same [id] are the same entity:
+///
+/// * [hashCode] is [id] by definition.
+/// * `==` compares by [id] (and so, for [Entity] values, by [hashCode]).
+/// * `Entity == nonEntity` returns true when `entity.id == objId(other)`.
+///   This is intentional — an [Entity] is interchangeable with any object
+///   that produces the same [objId]. It makes the [Entity.obj] factory and
+///   `Map<Entity, ...>` lookups symmetric.
+///
+/// **Caveats this contract imposes on callers:**
+///
+/// * Anything that produces the same [id] *is* the same entity to this
+///   package. For [TypeEntity] in particular, [id] is the type-string's
+///   `hashCode` — see [TypeEntity] for the collision caveat and the
+///   `--minify` caveat.
+/// * Do not mix raw `int` / `String` keys with `Entity` keys in the same
+///   `Map`/`Set`. The package itself never does this — `DIRegistry._state`
+///   is `Map<Entity, ...>` end-to-end.
 class Entity {
   /// Creates an integer [id] from the specified [object]. If the object
   /// is already an [int], it is returned as is. Otherwise, the object is

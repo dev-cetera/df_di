@@ -18,24 +18,24 @@ import '/_common.dart';
 base mixin SupportsServiceMixin on DIBase {
   Resolvable<Unit> registerAndInitService<TService extends ServiceMixin>(
     TService service, {
-    TOnRegisterCallback<TService>? onRegister,
-    TOnUnregisterCallback<TService>? onUnregister,
+    Option<TOnRegisterCallback<TService>> onRegister = const None(),
+    Option<TOnUnregisterCallback<TService>> onUnregister = const None(),
     Entity groupEntity = const DefaultEntity(),
     bool enableUntilExactlyK = false,
   }) {
     UNSAFE:
     return register<TService>(
       service,
-      onRegister: (service) {
+      onRegister: Some((service) {
         return service.init().unwrap();
-      },
-      onUnregister: (serviceOpt) {
+      }),
+      onUnregister: Some((serviceOpt) {
         final service = serviceOpt.unwrap();
         return consec(service.dispose().value, (disposeResult) {
           disposeResult.unwrap();
           return consec(onUnregister, (_) => service);
         });
-      },
+      }),
       groupEntity: groupEntity,
       enableUntilExactlyK: enableUntilExactlyK,
     ).toUnit();

@@ -15,6 +15,8 @@ import '/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
+/// Convenience base class for [PollingStreamServiceMixin]. Use this if you
+/// don't need to extend another class.
 abstract class PollingStreamService<TData extends Object>
     with
         ServiceMixin,
@@ -25,6 +27,10 @@ abstract class PollingStreamService<TData extends Object>
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
+/// Drives a [StreamServiceMixin]'s input stream by invoking [onPoll] on a
+/// fixed [providePollingInterval]. The underlying timer is automatically
+/// stopped on `pause` / `dispose` and restarted on `resume` via the
+/// subscription's `onPause` / `onResume` callbacks.
 mixin PollingStreamServiceMixin<TData extends Object>
     on StreamServiceMixin<TData> {
   //
@@ -35,11 +41,19 @@ mixin PollingStreamServiceMixin<TData extends Object>
   TResultStream<TData> provideInputStream() =>
       _pollerStream<TData>(onPoll, providePollingInterval());
 
+  /// Subclasses implement the actual polling call (fetch / read / refresh).
+  /// Invoked once on subscription and then every [providePollingInterval].
   Resolvable<TData> onPoll();
 
+  /// Subclasses return the interval between consecutive [onPoll] invocations.
+  /// The first poll fires immediately on subscription; subsequent polls fire
+  /// every `providePollingInterval()` thereafter.
   Duration providePollingInterval();
 }
 
+/// Builds a single-subscription stream backed by a periodic timer. The timer
+/// is driven by the controller's `onListen` / `onPause` / `onResume` /
+/// `onCancel` callbacks so it pauses with the consumer and stops on cancel.
 Stream<Result<T>> _pollerStream<T extends Object>(
   Resolvable<T> Function() callback,
   Duration interval,

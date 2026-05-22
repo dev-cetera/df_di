@@ -11,6 +11,8 @@
 
 // Tests for DI container basics: register, retrieve, isRegistered, unregister.
 
+import 'dart:async';
+
 import 'package:df_di/df_di.dart';
 import 'package:test/test.dart';
 
@@ -47,6 +49,7 @@ void main() {
 
       final result = di.getSyncOrNone<DatabaseService>();
       expect(result.isSome(), isTrue);
+      UNSAFE:
       expect(result.unwrap().connectionString, 'sqlite://test.db');
     });
 
@@ -82,6 +85,7 @@ void main() {
 
       // The first registered value should still be in place.
       final result = di.getSyncOrNone<DatabaseService>();
+      UNSAFE:
       expect(result.unwrap().connectionString, 'first');
     });
 
@@ -101,14 +105,16 @@ void main() {
       ).end();
       expect(di.isRegistered<DatabaseService>(), isTrue);
 
-      await di.unregister<DatabaseService>().unwrap();
+      UNSAFE:
+      (await di.unregister<DatabaseService>().unwrap()).end();
       expect(di.isRegistered<DatabaseService>(), isFalse);
     });
 
     test('getSyncOrNone returns None after unregister', () async {
       final di = DI();
       di.register<CacheService>(CacheService(50)).end();
-      await di.unregister<CacheService>().unwrap();
+      UNSAFE:
+      (await di.unregister<CacheService>().unwrap()).end();
 
       final result = di.getSyncOrNone<CacheService>();
       expect(result.isNone(), isTrue);
@@ -122,6 +128,7 @@ void main() {
         DatabaseService('immediate'),
       ).end();
 
+      UNSAFE:
       final service = await di.untilSuper<DatabaseService>().unwrap();
       expect(service.connectionString, 'immediate');
     });
@@ -130,12 +137,15 @@ void main() {
       final di = DI();
 
       // Start waiting before registration.
+      UNSAFE:
       final future = di.untilSuper<CacheService>().unwrap();
 
       // Register after a microtask delay.
-      Future.microtask(() {
-        di.register<CacheService>(CacheService(200)).end();
-      });
+      unawaited(
+        Future.microtask(() {
+          di.register<CacheService>(CacheService(200)).end();
+        }),
+      );
 
       final service = await future;
       expect(service.maxItems, 200);
@@ -144,11 +154,14 @@ void main() {
     test('resolves subtype via untilSuper for supertype', () async {
       final di = DI();
 
+      UNSAFE:
       final future = di.untilSuper<Logger>().unwrap();
 
-      Future.microtask(() {
-        di.register<Logger>(ConsoleLogger()).end();
-      });
+      unawaited(
+        Future.microtask(() {
+          di.register<Logger>(ConsoleLogger()).end();
+        }),
+      );
 
       final logger = await future;
       expect(logger, isA<ConsoleLogger>());

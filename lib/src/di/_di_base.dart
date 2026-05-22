@@ -11,8 +11,6 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-// ignore_for_file: invalid_use_of_visible_for_testing_member, invalid_use_of_protected_member
-
 import '/_common.dart';
 import '../_reserved_safe_completer.dart';
 
@@ -25,33 +23,54 @@ base class DIBase {
   //
 
   /// Internal registry that stores dependencies.
-  @protected
   final registry = DIRegistry();
 
   /// Parent containers.
-  @protected
   final parents = <DI>{};
 
   /// A key that identifies the current group in focus for dependency management.
   Entity focusGroup = const DefaultEntity();
 
-  @protected
   int _indexIncrementer = 0;
 
   /// Container for child DI instances.
-  @protected
   Option<DI> childrenContainer = const None();
 
   /// Retrieves an iterable of child [DI] instances.
-  @protected
+  ///
+  /// Only returns **already-materialised** children. A `Lazy<DI>` whose
+  /// `singleton` has never been read is skipped — otherwise iterating
+  /// `children()` (called from `_maybeFinish` on every `register`) would
+  /// force-construct every registered child container on every parent
+  /// registration, defeating laziness and running child constructors at
+  /// the wrong time.
   Option<Iterable<DI>> children() {
     UNSAFE:
     return childrenContainer.map(
       (e) => e.registry.unsortedDependencies.map((e) {
-        final value = e.transf<Lazy<DI>>().value;
-        final resolvable = value.then((e) => e.singleton).flatten();
-        return resolvable.sync().unwrap().unwrap();
-      }),
+        try {
+          final value = e.transf<Lazy<DI>>().value;
+          if (value.isAsync()) return null;
+          final lazyResult = value.sync().unwrap().value;
+          if (lazyResult.isErr()) return null;
+          final lazy = lazyResult.unwrap();
+          // Skip lazies that haven't been materialised yet.
+          // `currentInstance` is @protected because Lazy expects subclass-only
+          // access for mutation; we only read it (no force-construct) to honor
+          // the C7 contract that registering at a parent must not materialise
+          // unrelated children. No public probe API exists.
+          // ignore: invalid_use_of_protected_member
+          if (lazy.currentInstance.isNone()) return null;
+          // ignore: invalid_use_of_protected_member
+          final resolvable = lazy.currentInstance.unwrap();
+          if (resolvable.isAsync()) return null;
+          final result = resolvable.sync().unwrap().value;
+          if (result.isErr()) return null;
+          return result.unwrap();
+        } catch (_) {
+          return null;
+        }
+      }).nonNulls,
     );
   }
 
@@ -62,8 +81,8 @@ base class DIBase {
   /// Registers a dependency with the container.
   Resolvable<T> register<T extends Object>(
     FutureOr<T> value, {
-    TOnRegisterCallback<T>? onRegister,
-    TOnUnregisterCallback<T>? onUnregister,
+    Option<TOnRegisterCallback<T>> onRegister = const None(),
+    Option<TOnUnregisterCallback<T>> onUnregister = const None(),
     Entity groupEntity = const DefaultEntity(),
     bool enableUntilExactlyK = false,
   }) {
@@ -72,12 +91,30 @@ base class DIBase {
     final metadata = DependencyMetadata(
       index: Some(_indexIncrementer++),
       groupEntity: g,
-      onUnregister: onUnregister != null
-          ? Some((e) => onUnregister(e.transf()))
-          : const None(),
+      onUnregister: onUnregister.map((cb) => (e) => cb(e.transf())),
     );
+    // Wrap the onRegister invocation so that a synchronous throw is
+    // captured into the Resolvable instead of escaping out of `register()`.
+    // Without this, a sync-throwing onRegister blows the call stack
+    // mid-`register` and the caller has no Resolvable-shaped handle to the
+    // failure — unacceptable for medical-grade code where every callback
+    // site must be uniformly catchable.
     final a = Resolvable(
-      () => consec(value, (e) => consec(onRegister?.call(e), (_) => e)),
+      () => consec(value, (e) {
+        FutureOr<void> regResult;
+        try {
+          regResult = switch (onRegister) {
+            Some(value: final cb) => cb(e),
+            None() => null,
+          };
+        } catch (err, st) {
+          // Convert sync throw into an async error so the surrounding
+          // Resolvable/consec chain routes it through the standard error
+          // path.
+          regResult = Future<void>.error(err, st);
+        }
+        return consec(regResult, (_) => e);
+      }),
     );
     final b = registerDependency<T>(
       dependency: Dependency(a, metadata: Some(metadata)),
@@ -129,6 +166,12 @@ base class DIBase {
     // try/cast dance — that path works correctly on the VM and in debug
     // web, and it's vanishingly rare in practice (registering a Future as
     // a dependency value, not wrapping it in a completer).
+    //
+    // NOTE: under dart2js release, this Future-fallback path can mis-match
+    // due to generic erasure of `T`. Callers who register a Future-valued
+    // dependency and rely on `until*` on Web release should wrap the value
+    // in a non-Future container (or use a completer) until this fallback
+    // is replaced with a deferred-resolution scheme.
     final checkValue = value is Future ? null : value;
 
     for (final di in [this as DI, ...children().unwrapOr([])]) {
@@ -149,21 +192,21 @@ base class DIBase {
         if (checkValue != null) {
           // Fast, reliable path: the completer knows its own T.
           if (!completer.typeCheck(checkValue)) continue;
-          try {
+          if (!completer.isCompleted) {
             completer.complete(value).end();
             break;
-          } catch (_) {
-            // Defensive — shouldn't happen if typeCheck matched.
           }
         } else {
-          // Future value — preserve the original behaviour.
+          // Future value — preserve the original behaviour. See note above.
           try {
             (completer as ReservedSafeCompleter<T>)
                 .complete(value as FutureOr<T>)
                 .end();
             break;
-          } catch (_) {
+          } on TypeError {
             // Skip completers whose type T doesn't accept this value.
+          } on StateError {
+            // Skip already-completed completers.
           }
         }
       }
@@ -171,7 +214,6 @@ base class DIBase {
   }
 
   /// Registers a [Dependency] object directly into the registry.
-  @protected
   Result<Dependency<T>> registerDependency<T extends Object>({
     required Dependency<T> dependency,
     bool checkExisting = false,
@@ -192,6 +234,21 @@ base class DIBase {
   }
 
   /// Unregisters a dependency.
+  ///
+  /// Honors the documented contract:
+  ///
+  /// * If `traverse` is `false`, parents are not walked. Only this container
+  ///   is touched.
+  /// * If `removeAll` is `true` (the default), the dependency is removed from
+  ///   this container *and* every parent that has a matching registration.
+  ///   When `false`, only the first matching registration (this-first,
+  ///   parent-walk thereafter) is removed.
+  /// * If `triggerOnUnregisterCallbacks` is `true`, **every** removed
+  ///   dependency's `onUnregister` callback fires (sequentially, in
+  ///   container-walk order). Returns once all callbacks have completed.
+  ///
+  /// The returned `Option<T>` is the value of the first removed dependency
+  /// (or `None` if nothing was removed).
   Resolvable<Option<T>> unregister<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
@@ -200,64 +257,106 @@ base class DIBase {
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
     final g = groupEntity.preferOverDefault(focusGroup);
-    for (final di in [this as DI, ...parents]) {
+    final removed = <Dependency>[];
+
+    final containers = traverse ? [this as DI, ...parents] : [this as DI];
+    for (final di in containers) {
       final dependencyOption = di.removeDependency<T>(groupEntity: g);
       if (dependencyOption.isNone()) {
+        if (!removeAll) break;
         continue;
       }
       UNSAFE:
-      if (triggerOnUnregisterCallbacks) {
-        final dependency = dependencyOption.unwrap();
-        final metadataOption = dependency.metadata;
-        if (metadataOption.isSome()) {
-          final metadata = metadataOption.unwrap();
-          final onUnregisterOption = metadata.onUnregister;
-          if (onUnregisterOption.isSome()) {
-            final onUnregister = onUnregisterOption.unwrap();
-            return dependency.value.map((e) {
-              return Resolvable(() {
-                return consec(
-                  onUnregister(Ok(e)),
-                  (_) => Some(e).transf<T>().unwrap(),
-                );
-              });
-            }).flatten();
-          }
-        }
-      }
-      if (!removeAll) {
-        break;
-      }
+      removed.add(dependencyOption.unwrap());
+      // Clean up any pending untilExactlyK completers for this type.
+      (di as SupportsMixinK).cleanupCompleters(
+        TypeEntity(T),
+        groupEntity: g,
+      );
+      if (!removeAll) break;
     }
-    return Sync.okValue(None<T>());
+
+    if (removed.isEmpty) return Sync.okValue(None<T>());
+
+    return _runOnUnregisterChain<T>(
+      removed: removed,
+      triggerOnUnregisterCallbacks: triggerOnUnregisterCallbacks,
+    );
+  }
+
+  /// Fires `onUnregister` for every entry in [removed] (in order), then
+  /// resolves with the value of the first removed dependency. Medical-grade
+  /// callers cannot afford silently-dropped cleanup callbacks, so every
+  /// removed dep's callback runs — synchronous throws are logged and the
+  /// chain continues.
+  Resolvable<Option<T>> _runOnUnregisterChain<T extends Object>({
+    required List<Dependency> removed,
+    required bool triggerOnUnregisterCallbacks,
+  }) {
+    UNSAFE:
+    {
+      final firstValue = removed.first.transf<T>().value;
+      return Resolvable<Option<T>>(() {
+        return consec<T, Option<T>>(firstValue.unwrap(), (first) {
+          if (!triggerOnUnregisterCallbacks) return Some(first);
+          FutureOr<Option<T>> chain = Some(first);
+          for (final dep in removed) {
+            final metaOpt = dep.metadata;
+            if (metaOpt.isNone()) continue;
+            final cbOpt = metaOpt.unwrap().onUnregister;
+            if (cbOpt.isNone()) continue;
+            final cb = cbOpt.unwrap();
+            final depValue = dep.value;
+            chain = consec(chain, (acc) {
+              return consec(depValue.unwrap(), (resolvedDepValue) {
+                FutureOr<void> cbResult;
+                try {
+                  cbResult = cb(Ok(resolvedDepValue));
+                } catch (e) {
+                  Log.err(
+                    'onUnregister for ${dep.runtimeType} threw '
+                    'synchronously: $e',
+                  );
+                  return acc;
+                }
+                return consec<void, Option<T>>(cbResult, (_) => acc);
+              });
+            });
+          }
+          return chain;
+        });
+      });
+    }
   }
 
   /// Removes a dependency from the internal registry.
-  @protected
   @pragma('vm:prefer-inline')
   Option<Dependency> removeDependency<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
     final g = groupEntity.preferOverDefault(focusGroup);
-    Option<Dependency> result;
-    result = registry.removeDependency<T>(groupEntity: g);
-    if (result.isNone()) {
-      result = registry.removeDependency<Lazy<T>>(groupEntity: g);
+    final result = registry.removeDependency<T>(groupEntity: g);
+    if (result.isSome() && this is SupportsMixinK) {
+      (this as SupportsMixinK).cleanupCompleters(
+        TypeEntity(T),
+        groupEntity: g,
+      );
     }
     return result;
   }
 
-  /// Retrieves a synchronous dependency unsafely, returning the instance
-  /// directly or throwing an error if not found or async.
+  /// Returns whether a dependency keyed under exact type [T] is registered in
+  /// [groupEntity]. Strict: a `Lazy<T>` registration does NOT count here —
+  /// callers wanting that must check `isRegistered<Lazy<T>>()`. Mirrors the
+  /// keying contract of the registry's insert/remove.
   bool isRegistered<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
     final g = groupEntity.preferOverDefault(focusGroup);
-    if (registry.containsDependency<T>(groupEntity: g) ||
-        registry.containsDependency<Lazy<T>>(groupEntity: g)) {
+    if (registry.containsDependency<T>(groupEntity: g)) {
       return true;
     }
     if (traverse) {
@@ -441,7 +540,6 @@ base class DIBase {
   }
 
   /// Retrieves the underlying `Dependency` object from the registry.
-  @protected
   Option<Result<Dependency<T>>> getDependency<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
@@ -478,28 +576,32 @@ base class DIBase {
   }) {
     final typeEntity = TypeEntity(TSuper);
     final g = groupEntity.preferOverDefault(focusGroup);
-    final test = get<TSuper>(groupEntity: g);
+    final test = get<TSuper>(groupEntity: g, traverse: traverse);
     UNSAFE:
     {
       if (test.isSome()) {
         return test.unwrap().transf();
       }
-      ReservedSafeCompleter<TSuper>? completer;
-      var temp = getSyncOrNone<ReservedSafeCompleter<TSuper>>(
+      final temp = getSyncOrNone<ReservedSafeCompleter<TSuper>>(
         groupEntity: g,
         traverse: traverse,
       );
-      if (temp.isSome()) {
-        completer = temp.unwrap();
-      } else {
-        completer = ReservedSafeCompleter<TSuper>(typeEntity);
-        register(completer, groupEntity: g).end();
-      }
+      final completer = switch (temp) {
+        Some(value: final c) => c,
+        None() => () {
+          final c = ReservedSafeCompleter<TSuper>(typeEntity);
+          register(c, groupEntity: g).end();
+          return c;
+        }(),
+      };
       return completer
           .resolvable()
-          .map((_) {
-            unregister<ReservedSafeCompleter<TSuper>>(groupEntity: g).end();
-            return get<TSuper>(groupEntity: g).unwrap();
+          .then((_) {
+            unregister<ReservedSafeCompleter<TSuper>>(
+              groupEntity: g,
+              traverse: traverse,
+            ).end();
+            return get<TSuper>(groupEntity: g, traverse: traverse).unwrap();
           })
           .flatten()
           .transf();
@@ -511,18 +613,20 @@ base class DIBase {
   //
 
   /// Completes once all [Async] dependencies associated with [groupEntity]
-  /// complete or any group if [groupEntity] is `null`.
-  Resolvable<Unit> resolveAll({Entity? groupEntity = const DefaultEntity()}) {
+  /// complete, or every group when [groupEntity] is [None].
+  Resolvable<Unit> resolveAll({
+    Option<Entity> groupEntity = const Some(DefaultEntity()),
+  }) {
     UNSAFE:
     return Resolvable(() {
       var resolvables = registry.unsortedDependencies;
-      if (groupEntity != null) {
-        resolvables = resolvables.where((e) {
-          if (e.metadata.isSome()) {
-            return e.metadata.unwrap().groupEntity == groupEntity;
-          }
-          return false;
-        });
+      if (groupEntity case Some(value: final g)) {
+        resolvables = resolvables.where(
+          (e) => switch (e.metadata) {
+            Some(value: final m) => m.groupEntity == g,
+            None() => false,
+          },
+        );
       }
       final values = resolvables.map((e) => e.value);
       if (values.any((e) => e is Async)) {

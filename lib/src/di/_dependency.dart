@@ -18,7 +18,6 @@ import '/_common.dart';
 /// Represents a dependency stored within [DIRegistry]. Dependencies are wrappers
 /// around values with additional [DependencyMetadata] to manage their
 /// lifecycle.
-@internal
 final class Dependency<T extends Object> {
   final Resolvable<T> _value;
 
@@ -64,11 +63,16 @@ final class Dependency<T extends Object> {
   /// runtime type key of [_value].
   Entity get typeEntity {
     UNSAFE:
-    final preemptivetypeEntity = metadata.unwrap().preemptivetypeEntity;
-    if (preemptivetypeEntity.isDefault()) {
-      return TypeEntity(_value.runtimeType);
-    } else {
-      return preemptivetypeEntity;
+    {
+      if (metadata.isNone()) {
+        return TypeEntity(_value.runtimeType);
+      }
+      final preemptivetypeEntity = metadata.unwrap().preemptivetypeEntity;
+      if (preemptivetypeEntity.isDefault()) {
+        return TypeEntity(_value.runtimeType);
+      } else {
+        return preemptivetypeEntity;
+      }
     }
   }
 
@@ -95,6 +99,11 @@ final class Dependency<T extends Object> {
     );
   }
 
+  /// Equality is hash-based by design — consistent with [Entity] / [TypeEntity]
+  /// elsewhere in the package. Used only to skip no-op `setDependency`
+  /// overwrites in [DIRegistry] (and so to avoid spurious `onChange`
+  /// callbacks); the registry slot key is `typeEntity`, not the dep itself,
+  /// so a hash collision here cannot misroute a lookup.
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
@@ -111,7 +120,6 @@ final class Dependency<T extends Object> {
 
 /// Contains metadata for a [Dependency] to facilitate lifecycle management,
 /// track registration details, and support dependency resolution.
-@internal
 class DependencyMetadata {
   DependencyMetadata({
     this.groupEntity = const DefaultEntity(),
@@ -185,16 +193,13 @@ class DependencyMetadata {
 
 /// A typedef for a callback function to invoke when a dependency is
 /// registered.
-@internal
 typedef TOnRegisterCallback<T extends Object> =
     FutureOr<void> Function(T value);
 
 /// A typedef for a callback function to invoke when a dependency is
 /// unregistered.
-@internal
 typedef TOnUnregisterCallback<T extends Object> =
     FutureOr<void> Function(Result<T> value);
 
 /// A typedef for a function that evaluates the validity of a dependency.
-@internal
 typedef TDependencyValidator<T extends Object> = bool Function(T value);

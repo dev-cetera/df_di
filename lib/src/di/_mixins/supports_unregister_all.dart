@@ -11,8 +11,6 @@
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //.title~
 
-// ignore_for_file: invalid_use_of_visible_for_testing_member, invalid_use_of_protected_member
-
 import '/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
@@ -21,55 +19,54 @@ import '/_common.dart';
 base mixin SupportsUnregisterAll on DIBase {
   /// Unregisters all dependencies, optionally with callbacks and conditions.
   Resolvable<Unit> unregisterAll({
-    TOnUnregisterCallback<Dependency>? onBeforeUnregister,
-    TOnUnregisterCallback<Dependency>? onAfterUnregister,
-    bool Function(Dependency)? condition,
+    Option<TOnUnregisterCallback<Dependency>> onBeforeUnregister = const None(),
+    Option<TOnUnregisterCallback<Dependency>> onAfterUnregister = const None(),
+    Option<bool Function(Dependency)> condition = const None(),
   }) {
     final results = List.of(registry.reversedDependencies);
     final seq = TaskSequencer();
     for (final dependency in results) {
-      if (onBeforeUnregister != null) {
+      if (onBeforeUnregister case Some(value: final cb)) {
         seq.then((_) {
           return Resolvable(
-            () =>
-                consec(onBeforeUnregister(Ok(dependency)), (_) => const None()),
+            () => consec(cb(Ok(dependency)), (_) => const None()),
           );
         }).end();
       }
 
       seq.then((_) {
-        if (condition != null && !condition(dependency)) {
-          return syncNone();
+        if (condition case Some(value: final test)) {
+          if (!test(dependency)) {
+            return syncNone();
+          }
         }
+        // `dependency.typeEntity` is the raw registry key (e.g. `Sync<Foo>`),
+        // not the inner T. `removeDependencyK` wraps its argument again, so
+        // we must use `removeDependencyExact` here.
         registry
-            .removeDependencyK(
+            .removeDependencyExact(
               dependency.typeEntity,
               groupEntity: dependency.metadata
                   .map((e) => e.groupEntity)
                   .unwrapOr(const DefaultEntity()),
             )
             .end();
-        final metadataOption = dependency.metadata;
-        UNSAFE:
-        if (metadataOption.isSome()) {
-          final metadata = metadataOption.unwrap();
-          final onUnregisterOption = metadata.onUnregister;
-          if (onUnregisterOption.isSome()) {
-            final onUnregister = onUnregisterOption.unwrap();
-            return dependency.value.map((e) {
+        return switch (dependency.metadata) {
+          Some(value: final metadata) => switch (metadata.onUnregister) {
+            Some(value: final onUnregister) => dependency.value.then((e) {
               return Resolvable<Resolvable<Option>>(
                 () => consec(onUnregister(Ok(e)), (e) => syncNone()),
               ).flatten();
-            }).flatten();
-          }
-        }
-        return syncNone();
+            }).flatten(),
+            None() => syncNone(),
+          },
+          None() => syncNone(),
+        };
       }).end();
-      if (onAfterUnregister != null) {
+      if (onAfterUnregister case Some(value: final cb)) {
         seq.then((_) {
           return Resolvable(
-            () =>
-                consec(onAfterUnregister(Ok(dependency)), (_) => const None()),
+            () => consec(cb(Ok(dependency)), (_) => const None()),
           );
         }).end();
       }

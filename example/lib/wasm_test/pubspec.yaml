@@ -1,0 +1,21 @@
+name: df_di_wasm_test
+description: "Wasm/dart2js regression harness for df_di until/untilSuper/untilExactlyK."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.3
+
+dependencies:
+  flutter:
+    sdk: flutter
+  df_di:
+    path: ../..
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
