@@ -67,14 +67,18 @@ void main() {
     test('triggers onUnregister callbacks', () async {
       final di = DI();
       var disposeCount = 0;
-      di.register<Alpha>(
-        Alpha('a'),
-        onUnregister: Some((_) => disposeCount++),
-      ).end();
-      di.register<Beta>(
-        Beta('b'),
-        onUnregister: Some((_) => disposeCount++),
-      ).end();
+      di
+          .register<Alpha>(
+            Alpha('a'),
+            onUnregister: Some((_) => disposeCount++),
+          )
+          .end();
+      di
+          .register<Beta>(
+            Beta('b'),
+            onUnregister: Some((_) => disposeCount++),
+          )
+          .end();
 
       (await di.unregisterAll().toAsync().value).end();
       expect(disposeCount, 2);

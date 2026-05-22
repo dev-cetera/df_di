@@ -30,11 +30,11 @@ final class _ThemeAudio extends Service {
 
   @override
   TServiceResolvables<Unit> provideInitListeners(void _) => [
-    (_) {
-      log.add('audio.init');
-      return syncUnit();
-    },
-  ];
+        (_) {
+          log.add('audio.init');
+          return syncUnit();
+        },
+      ];
 
   @override
   TServiceResolvables<Unit> providePauseListeners(void _) => [];
@@ -44,11 +44,11 @@ final class _ThemeAudio extends Service {
 
   @override
   TServiceResolvables<Unit> provideDisposeListeners(void _) => [
-    (_) {
-      log.add('audio.dispose');
-      return syncUnit();
-    },
-  ];
+        (_) {
+          log.add('audio.dispose');
+          return syncUnit();
+        },
+      ];
 }
 
 final class _DarkThemePlugin extends Plugin {
@@ -128,7 +128,8 @@ void main() {
       },
     );
 
-    test('install is idempotent — second call does not re-run install', () async {
+    test('install is idempotent — second call does not re-run install',
+        () async {
       final host = DI();
       final log = <String>[];
       final plugin = _DarkThemePlugin(log);

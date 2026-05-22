@@ -38,8 +38,7 @@ void main() {
       expect(parent.isChildRegistered(groupEntity: _groupB), isFalse);
     });
 
-    test('child() is idempotent — repeated calls return the same instance',
-        () {
+    test('child() is idempotent — repeated calls return the same instance', () {
       final parent = DI();
       final c1 = parent.child(groupEntity: _groupA);
       final c2 = parent.child(groupEntity: _groupA);

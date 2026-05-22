@@ -26,7 +26,6 @@ class _B {
   const _B();
 }
 
-
 void main() {
   // ── C4: unregister(removeAll: true) must fire onUnregister for every
   //        removed dep — not just the first one.
@@ -38,14 +37,18 @@ void main() {
       child.parents.add(parent);
 
       final fired = <String>[];
-      parent.register<_A>(
-        const _A(),
-        onUnregister: Some((_) => fired.add('parent')),
-      ).end();
-      child.register<_A>(
-        const _A(),
-        onUnregister: Some((_) => fired.add('child')),
-      ).end();
+      parent
+          .register<_A>(
+            const _A(),
+            onUnregister: Some((_) => fired.add('parent')),
+          )
+          .end();
+      child
+          .register<_A>(
+            const _A(),
+            onUnregister: Some((_) => fired.add('child')),
+          )
+          .end();
 
       (await child.unregister<_A>().value).end();
       // Both must have fired exactly once.
@@ -93,8 +96,7 @@ void main() {
       expect(
         onRegisterDone,
         isTrue,
-        reason:
-            'untilSuper completed before onRegister finished — '
+        reason: 'untilSuper completed before onRegister finished — '
             'callers would observe a "ready" service whose init never ran.',
       );
       expect(result.isOk(), isTrue);
@@ -118,34 +120,36 @@ void main() {
     expect(
       result.isErr(),
       isTrue,
-      reason:
-          'untilSuper resolved with Ok even though onRegister threw — '
+      reason: 'untilSuper resolved with Ok even though onRegister threw — '
           'silently swallowed init failure.',
     );
   });
 
   // ── C9: resolveAll() must not loop indefinitely if onRegister
   //        registers another async dep.
-  test('C9: resolveAll terminates when async deps register more async deps', () async {
+  test('C9: resolveAll terminates when async deps register more async deps',
+      () async {
     final di = DI();
 
     // Register an Async<_A> whose resolution registers another async dep.
     di.register<_A>(
       Future<_A>.delayed(const Duration(milliseconds: 5), () => const _A()),
       onRegister: Some((_) {
-        di.register<_B>(
-          Future<_B>.delayed(
-            const Duration(milliseconds: 5),
-            () => const _B(),
-          ),
-        ).end();
+        di
+            .register<_B>(
+              Future<_B>.delayed(
+                const Duration(milliseconds: 5),
+                () => const _B(),
+              ),
+            )
+            .end();
       }),
     ).end();
 
     final done = di.resolveAll().toAsync().value.then<void>((_) {}).timeout(
-      const Duration(seconds: 1),
-      onTimeout: () => throw StateError('resolveAll did not terminate'),
-    );
+          const Duration(seconds: 1),
+          onTimeout: () => throw StateError('resolveAll did not terminate'),
+        );
     await done;
     // After resolveAll, both deps should be readable as Sync.
     expect(di.isRegistered<_A>(), isTrue);
@@ -153,11 +157,15 @@ void main() {
   });
 
   // ── C8: concurrent async get<T>() must not race on the registry.
-  test('C8: concurrent getAsync of the same dep produces consistent value', () async {
+  test('C8: concurrent getAsync of the same dep produces consistent value',
+      () async {
     final di = DI();
-    di.register<_A>(
-      Future<_A>.delayed(const Duration(milliseconds: 10), () => const _A()),
-    ).end();
+    di
+        .register<_A>(
+          Future<_A>.delayed(
+              const Duration(milliseconds: 10), () => const _A(),),
+        )
+        .end();
 
     // Five concurrent reads.
     final futures = List.generate(5, (_) => di.getAsyncUnsafe<_A>());
@@ -185,24 +193,20 @@ void main() {
       final materialised = <String>[];
       parent.childrenContainer = Some(DI());
       UNSAFE:
-      parent.childrenContainer
-          .unwrap()
-          .registerLazy<DI>(
-            () {
-              materialised.add('child');
-              return Sync.okValue(DI()..parents.add(parent));
-            },
-            groupEntity: UniqueEntity(),
-          )
-          .end();
+      parent.childrenContainer.unwrap().registerLazy<DI>(
+        () {
+          materialised.add('child');
+          return Sync.okValue(DI()..parents.add(parent));
+        },
+        groupEntity: UniqueEntity(),
+      ).end();
 
       // Register something at the parent; the lazy child must stay unborn.
       parent.register<_A>(const _A()).end();
       expect(
         materialised,
         isEmpty,
-        reason:
-            'Registering at the parent should not force-construct lazy '
+        reason: 'Registering at the parent should not force-construct lazy '
             'child DI containers — defeats laziness, runs side-effecting '
             'constructors at the wrong time.',
       );
@@ -210,7 +214,8 @@ void main() {
   );
 
   // ── H8: until*() with `traverse: false` must not see parent registrations.
-  test('H8: until(traverse: false) does not see parent registrations', () async {
+  test('H8: until(traverse: false) does not see parent registrations',
+      () async {
     final parent = DI();
     final child = DI();
     child.parents.add(parent);

@@ -86,9 +86,9 @@ extension PluginHostX on DI {
         .then((_) => scope.unregisterAll())
         .flatten()
         .then((_) {
-          unregisterChild(groupEntity: plugin.id).end();
-          return Unit();
-        });
+      unregisterChild(groupEntity: plugin.id).end();
+      return Unit();
+    });
   }
 
   /// Whether [plugin] is currently installed in this scope.

@@ -44,8 +44,7 @@ final class ReservedSafeCompleter<T extends Object> extends SafeCompleter<T> {
   //
   //
 
-  ReservedSafeCompleter(this.typeEntity)
-      : typeCheck = _buildTypeCheck<T>();
+  ReservedSafeCompleter(this.typeEntity) : typeCheck = _buildTypeCheck<T>();
 
   static bool Function(Object) _buildTypeCheck<T>() {
     // `v is T` is evaluated against the generic parameter T at the site

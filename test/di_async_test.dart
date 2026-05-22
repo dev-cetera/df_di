@@ -111,15 +111,13 @@ void main() {
         () async {
       final di = DI();
       Profile? disposed;
-      di
-          .register<Profile>(
-            Future<Profile>.value(Profile('bob')),
-            onUnregister: Some((result) {
-              UNSAFE:
-              if (result.isOk()) disposed = result.unwrap();
-            }),
-          )
-          .end();
+      di.register<Profile>(
+        Future<Profile>.value(Profile('bob')),
+        onUnregister: Some((result) {
+          UNSAFE:
+          if (result.isOk()) disposed = result.unwrap();
+        }),
+      ).end();
 
       // Force resolution before unregistering so onUnregister receives the
       // resolved value rather than the still-pending Future.

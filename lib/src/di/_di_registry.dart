@@ -40,8 +40,8 @@ final class DIRegistry {
   /// A snapshot describing the current state of the dependencies.
   @pragma('vm:prefer-inline')
   TRegistryState get state => TRegistryState.unmodifiable(
-    _state,
-  ).map((k, v) => MapEntry(k, Map.unmodifiable(v)));
+        _state,
+      ).map((k, v) => MapEntry(k, Map.unmodifiable(v)));
 
   /// Returns an iterable of all dependencies in the registry, unsorted.
   @pragma('vm:prefer-inline')
@@ -155,8 +155,8 @@ final class DIRegistry {
     final a = TypeEntity(Sync, [type]);
     final b = TypeEntity(Async, [type]);
     return _state[groupEntity]?.values.any(
-          (e) => e.typeEntity == a || e.typeEntity == b,
-        ) ==
+              (e) => e.typeEntity == a || e.typeEntity == b,
+            ) ==
         true;
   }
 
@@ -173,8 +173,8 @@ final class DIRegistry {
     final a = TypeEntity(Sync, [typeEntity]);
     final b = TypeEntity(Async, [typeEntity]);
     return _state[groupEntity]?.values.any(
-          (e) => e.typeEntity == a || e.typeEntity == b,
-        ) ==
+              (e) => e.typeEntity == a || e.typeEntity == b,
+            ) ==
         true;
   }
 
@@ -185,7 +185,8 @@ final class DIRegistry {
     Entity groupEntity = const DefaultEntity(),
   }) {
     return Option.from(
-      _state[groupEntity]?.values
+      _state[groupEntity]
+          ?.values
           .firstWhereOrNull((e) => e.value is Resolvable<T>)
           ?.transf<T>(),
     );
@@ -221,8 +222,8 @@ final class DIRegistry {
     final b = TypeEntity(Async, [typeEntity]);
     return Option.from(
       _state[groupEntity]?.values.firstWhereOrNull(
-        (e) => e.typeEntity == a || e.typeEntity == b,
-      ),
+            (e) => e.typeEntity == a || e.typeEntity == b,
+          ),
     );
   }
 
@@ -297,12 +298,12 @@ final class DIRegistry {
     final asyncKey = TypeEntity(Async, [typeEntity]);
     final (Option<Dependency> removed, Option<Entity> removedKey) =
         switch (Option<Dependency>.from(group.remove(syncKey))) {
-          final Some<Dependency> s => (s, Some(syncKey)),
-          None() => switch (Option<Dependency>.from(group.remove(asyncKey))) {
-            final Some<Dependency> s => (s, Some(asyncKey)),
-            None() => (const None(), const None()),
-          },
-        };
+      final Some<Dependency> s => (s, Some(syncKey)),
+      None() => switch (Option<Dependency>.from(group.remove(asyncKey))) {
+          final Some<Dependency> s => (s, Some(asyncKey)),
+          None() => (const None(), const None()),
+        },
+    };
     if (removedKey case None()) {
       return const None();
     }

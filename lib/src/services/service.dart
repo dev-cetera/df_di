@@ -286,8 +286,8 @@ mixin ServiceMixin {
 
 /// List of listeners returned by the `provideX` hooks. Each listener receives
 /// data of type [TParams] (typically `Unit`) and returns a [Resolvable<Unit>].
-typedef TServiceResolvables<TParams> =
-    List<Resolvable<Unit> Function(TParams data)>;
+typedef TServiceResolvables<TParams>
+    = List<Resolvable<Unit> Function(TParams data)>;
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -327,30 +327,30 @@ enum ServiceState {
   /// `true` if the service is in any of the RUN substates
   /// (attempt / success / error).
   bool didRun() => [
-    ServiceState.RUN_ATTEMPT,
-    ServiceState.RUN_SUCCESS,
-    ServiceState.RUN_ERROR,
-  ].contains(this);
+        ServiceState.RUN_ATTEMPT,
+        ServiceState.RUN_SUCCESS,
+        ServiceState.RUN_ERROR,
+      ].contains(this);
 
   /// `true` if the service is in any of the PAUSE substates.
   bool didPause() => [
-    ServiceState.PAUSE_ATTEMPT,
-    ServiceState.PAUSE_SUCCESS,
-    ServiceState.PAUSE_ERROR,
-  ].contains(this);
+        ServiceState.PAUSE_ATTEMPT,
+        ServiceState.PAUSE_SUCCESS,
+        ServiceState.PAUSE_ERROR,
+      ].contains(this);
 
   /// `true` if the service is in any of the RESUME substates.
   bool didResume() => [
-    ServiceState.RESUME_ATTEMPT,
-    ServiceState.RESUME_SUCCESS,
-    ServiceState.RESUME_ERROR,
-  ].contains(this);
+        ServiceState.RESUME_ATTEMPT,
+        ServiceState.RESUME_SUCCESS,
+        ServiceState.RESUME_ERROR,
+      ].contains(this);
 
   /// `true` if the service is in any of the DISPOSE substates. Once `true`,
   /// the service is terminal — no further lifecycle transitions are allowed.
   bool didDispose() => [
-    ServiceState.DISPOSE_ATTEMPT,
-    ServiceState.DISPOSE_SUCCESS,
-    ServiceState.DISPOSE_ERROR,
-  ].contains(this);
+        ServiceState.DISPOSE_ATTEMPT,
+        ServiceState.DISPOSE_SUCCESS,
+        ServiceState.DISPOSE_ERROR,
+      ].contains(this);
 }

@@ -589,10 +589,10 @@ base class DIBase {
       final completer = switch (temp) {
         Some(value: final c) => c,
         None() => () {
-          final c = ReservedSafeCompleter<TSuper>(typeEntity);
-          register(c, groupEntity: g).end();
-          return c;
-        }(),
+            final c = ReservedSafeCompleter<TSuper>(typeEntity);
+            register(c, groupEntity: g).end();
+            return c;
+          }(),
       };
       return completer
           .resolvable()

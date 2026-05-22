@@ -43,9 +43,11 @@ void main() {
   group('DI register and retrieve', () {
     test('register and retrieve a sync value', () {
       final di = DI();
-      di.register<DatabaseService>(
-        DatabaseService('sqlite://test.db'),
-      ).end();
+      di
+          .register<DatabaseService>(
+            DatabaseService('sqlite://test.db'),
+          )
+          .end();
 
       final result = di.getSyncOrNone<DatabaseService>();
       expect(result.isSome(), isTrue);
@@ -61,9 +63,11 @@ void main() {
 
     test('isRegistered returns true after registration', () {
       final di = DI();
-      di.register<DatabaseService>(
-        DatabaseService('postgres://localhost'),
-      ).end();
+      di
+          .register<DatabaseService>(
+            DatabaseService('postgres://localhost'),
+          )
+          .end();
       expect(di.isRegistered<DatabaseService>(), isTrue);
     });
 
@@ -74,14 +78,18 @@ void main() {
 
     test('duplicate registration does not overwrite the first', () {
       final di = DI();
-      di.register<DatabaseService>(
-        DatabaseService('first'),
-      ).end();
+      di
+          .register<DatabaseService>(
+            DatabaseService('first'),
+          )
+          .end();
 
       // Second registration of the same type — the original should survive.
-      di.register<DatabaseService>(
-        DatabaseService('second'),
-      ).end();
+      di
+          .register<DatabaseService>(
+            DatabaseService('second'),
+          )
+          .end();
 
       // The first registered value should still be in place.
       final result = di.getSyncOrNone<DatabaseService>();
@@ -100,9 +108,11 @@ void main() {
   group('DI unregister', () {
     test('unregister removes the dependency', () async {
       final di = DI();
-      di.register<DatabaseService>(
-        DatabaseService('to-be-removed'),
-      ).end();
+      di
+          .register<DatabaseService>(
+            DatabaseService('to-be-removed'),
+          )
+          .end();
       expect(di.isRegistered<DatabaseService>(), isTrue);
 
       UNSAFE:
@@ -124,9 +134,11 @@ void main() {
   group('DI untilSuper — already registered', () {
     test('resolves immediately when already registered', () async {
       final di = DI();
-      di.register<DatabaseService>(
-        DatabaseService('immediate'),
-      ).end();
+      di
+          .register<DatabaseService>(
+            DatabaseService('immediate'),
+          )
+          .end();
 
       UNSAFE:
       final service = await di.untilSuper<DatabaseService>().unwrap();
@@ -173,9 +185,11 @@ void main() {
       final diA = DI();
       final diB = DI();
 
-      diA.register<DatabaseService>(
-        DatabaseService('dbA'),
-      ).end();
+      diA
+          .register<DatabaseService>(
+            DatabaseService('dbA'),
+          )
+          .end();
 
       expect(diA.isRegistered<DatabaseService>(), isTrue);
       expect(diB.isRegistered<DatabaseService>(), isFalse);

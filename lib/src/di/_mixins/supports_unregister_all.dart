@@ -53,13 +53,13 @@ base mixin SupportsUnregisterAll on DIBase {
             .end();
         return switch (dependency.metadata) {
           Some(value: final metadata) => switch (metadata.onUnregister) {
-            Some(value: final onUnregister) => dependency.value.then((e) {
-              return Resolvable<Resolvable<Option>>(
-                () => consec(onUnregister(Ok(e)), (e) => syncNone()),
-              ).flatten();
-            }).flatten(),
-            None() => syncNone(),
-          },
+              Some(value: final onUnregister) => dependency.value.then((e) {
+                  return Resolvable<Resolvable<Option>>(
+                    () => consec(onUnregister(Ok(e)), (e) => syncNone()),
+                  ).flatten();
+                }).flatten(),
+              None() => syncNone(),
+            },
           None() => syncNone(),
         };
       }).end();

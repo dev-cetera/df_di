@@ -193,13 +193,13 @@ class DependencyMetadata {
 
 /// A typedef for a callback function to invoke when a dependency is
 /// registered.
-typedef TOnRegisterCallback<T extends Object> =
-    FutureOr<void> Function(T value);
+typedef TOnRegisterCallback<T extends Object> = FutureOr<void> Function(
+    T value,);
 
 /// A typedef for a callback function to invoke when a dependency is
 /// unregistered.
-typedef TOnUnregisterCallback<T extends Object> =
-    FutureOr<void> Function(Result<T> value);
+typedef TOnUnregisterCallback<T extends Object> = FutureOr<void> Function(
+    Result<T> value,);
 
 /// A typedef for a function that evaluates the validity of a dependency.
 typedef TDependencyValidator<T extends Object> = bool Function(T value);

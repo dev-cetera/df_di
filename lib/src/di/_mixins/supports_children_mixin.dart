@@ -24,9 +24,9 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     }
     UNSAFE:
     return childrenContainer.unwrap().registerLazy<DI>(
-      () => Sync.okValue(DI()..parents.add(this as DI)),
-      groupEntity: groupEntity,
-    );
+          () => Sync.okValue(DI()..parents.add(this as DI)),
+          groupEntity: groupEntity,
+        );
   }
 
   Option<DI> getChildOrNone({Entity groupEntity = const DefaultEntity()}) {
@@ -52,8 +52,8 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     UNSAFE:
     {
       final option = childrenContainer.unwrap().getLazySingleton<DI>(
-        groupEntity: g,
-      );
+            groupEntity: g,
+          );
       if (option.isNone()) {
         return const None();
       }
@@ -74,9 +74,9 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     UNSAFE:
     {
       final option = childrenContainer.unwrap().getLazySingletonT<DI>(
-        DI,
-        groupEntity: g,
-      );
+            DI,
+            groupEntity: g,
+          );
       if (option.isNone()) {
         return const None();
       }
@@ -172,9 +172,9 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     }
     UNSAFE:
     return childrenContainer.unwrap().isRegisteredK(
-      TypeEntity(Lazy, [DI]),
-      groupEntity: g,
-    );
+          TypeEntity(Lazy, [DI]),
+          groupEntity: g,
+        );
   }
 
   DI child({Entity groupEntity = const DefaultEntity()}) {

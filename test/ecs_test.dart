@@ -53,7 +53,7 @@ void main() {
   group('ECS basic CRUD', () {
     test('spawn / insert / get / has / remove / despawn', () {
       final world = World();
-      final e = world.spawn(Some([const Position(0, 0), const PlayerTag()]));
+      final e = world.spawn(const Some([Position(0, 0), PlayerTag()]));
       expect(e.has<Position>(), isTrue);
       expect(e.has<Velocity>(), isFalse);
       expect(e.require<Position>().x, 0);
@@ -84,7 +84,7 @@ void main() {
 
     test('removing the last real component re-attaches the alive-tag', () {
       final world = World();
-      final e = world.spawn(Some([const Position(0, 0)]));
+      final e = world.spawn(const Some([Position(0, 0)]));
       e.remove<Position>().end();
       // Entity is still alive (no real components, but anchored by alive-tag).
       expect(e.alive, isTrue);
@@ -106,10 +106,10 @@ void main() {
     test('withComponent returns only matching alive entities', () {
       final world = World();
       final movers = [
-        world.spawn(Some([const Position(0, 0), const Velocity(1, 0)])),
-        world.spawn(Some([const Position(5, 5), const Velocity(0, 1)])),
+        world.spawn(const Some([Position(0, 0), Velocity(1, 0)])),
+        world.spawn(const Some([Position(5, 5), Velocity(0, 1)])),
       ];
-      world.spawn(Some([const Position(9, 9)]));
+      world.spawn(const Some([Position(9, 9)]));
       expect(world.withComponent<Velocity>().toSet(), movers.toSet());
       expect(world.withComponent<Position>().length, 3);
       world.dispose();
@@ -117,9 +117,9 @@ void main() {
 
     test('query2 / each2 only yield entities with both types', () {
       final world = World();
-      final both = world.spawn(Some([const Position(0, 0), const Velocity(1, 0)]));
-      world.spawn(Some([const Position(1, 1)]));
-      world.spawn(Some([const Velocity(2, 2)]));
+      final both = world.spawn(const Some([Position(0, 0), Velocity(1, 0)]));
+      world.spawn(const Some([Position(1, 1)]));
+      world.spawn(const Some([Velocity(2, 2)]));
       expect(world.query2<Position, Velocity>().single, both);
       final pairs = world.each2<Position, Velocity>().toList();
       expect(pairs.length, 1);
@@ -131,8 +131,8 @@ void main() {
 
     test('reverse index pruned on remove / despawn', () {
       final world = World();
-      final a = world.spawn(Some([const Position(0, 0)]));
-      final b = world.spawn(Some([const Position(1, 1)]));
+      final a = world.spawn(const Some([Position(0, 0)]));
+      final b = world.spawn(const Some([Position(1, 1)]));
       expect(world.withComponent<Position>().length, 2);
       a.remove<Position>().end();
       expect(world.withComponent<Position>().toList(), [b]);
@@ -150,8 +150,8 @@ void main() {
         world.spawn(Some([Position(i.toDouble(), 0)]));
       }
       final movers = [
-        world.spawn(Some([const Position(0, 0), const Velocity(1, 0)])),
-        world.spawn(Some([const Position(5, 5), const Velocity(2, 0)])),
+        world.spawn(const Some([Position(0, 0), Velocity(1, 0)])),
+        world.spawn(const Some([Position(5, 5), Velocity(2, 0)])),
       ];
       expect(
         world.queryTypes([Position, Velocity]).toSet(),
@@ -180,7 +180,8 @@ void main() {
     test('despawn while iterating each2 does not throw', () {
       final world = World();
       for (var i = 0; i < 10; i++) {
-        world.spawn(Some([Position(i.toDouble(), 0), Velocity(i.toDouble(), 0)]));
+        world.spawn(
+            Some([Position(i.toDouble(), 0), Velocity(i.toDouble(), 0)]),);
       }
       final seen = <WorldEntity>[];
       for (final (e, _, __) in world.each2<Position, Velocity>()) {
@@ -212,7 +213,7 @@ void main() {
   group('mutate slot stability', () {
     test('mutate preserves the slot key under T, not next.runtimeType', () {
       final world = World();
-      final e = world.spawn(Some([const Position(0, 0)]));
+      final e = world.spawn(const Some([Position(0, 0)]));
       final result = e.mutate<Position>(
         (p) => SpecialPosition(p.x + 1, p.y + 1),
       );
@@ -278,7 +279,9 @@ void main() {
       var disposed = 0;
       final s = FunctionSystem(
         (w, _) => ran++,
-        dispose: Some((_) { disposed++; }),
+        dispose: Some((_) {
+          disposed++;
+        }),
       );
       world.addSystem(s);
       world.update(Duration.zero);
@@ -305,7 +308,9 @@ void main() {
       world.addSystem(
         FunctionSystem(
           (w, _) => ran++,
-          dispose: Some((_) { disposed++; }),
+          dispose: Some((_) {
+            disposed++;
+          }),
         ),
       );
       world.dispose();
@@ -367,7 +372,7 @@ void main() {
   group('DIRegistry coupling', () {
     test('World.registry sees components as DI dependencies', () {
       final world = World();
-      final e = world.spawn(Some([const Position(1, 2)]));
+      final e = world.spawn(const Some([Position(1, 2)]));
       // The component is a real DI dependency keyed by TypeEntity(Position).
       final group = world.registry.getGroup(groupEntity: e);
       expect(group.containsKey(TypeEntity(Position)), isTrue);
@@ -376,9 +381,9 @@ void main() {
 
     test('registry.groupsWithTypeT mirrors withComponent', () {
       final world = World();
-      world.spawn(Some([const Position(1, 2)]));
-      world.spawn(Some([const Position(3, 4)]));
-      world.spawn(Some([const Velocity(0, 0)]));
+      world.spawn(const Some([Position(1, 2)]));
+      world.spawn(const Some([Position(3, 4)]));
+      world.spawn(const Some([Velocity(0, 0)]));
       expect(world.registry.groupsWithTypeT(Position).length, 2);
       expect(world.registry.groupsWithTypeT(Velocity).length, 1);
       world.dispose();
@@ -386,7 +391,7 @@ void main() {
 
     test('registry.clear via World.dispose empties everything', () {
       final world = World()..insertResource(const Counter(1));
-      world.spawn(Some([const Position(0, 0)]));
+      world.spawn(const Some([Position(0, 0)]));
       world.dispose();
       expect(world.registry.groupEntities, isEmpty);
       expect(world.registry.groupsWithTypeT(Position), isEmpty);

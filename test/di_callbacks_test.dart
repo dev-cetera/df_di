@@ -63,15 +63,13 @@ void main() {
     test('fires when unregistered, with Ok(value)', () async {
       final di = DI();
       Disposable? seen;
-      di
-          .register<Disposable>(
-            Disposable('bye'),
-            onUnregister: Some((result) {
-              UNSAFE:
-              if (result.isOk()) seen = result.unwrap();
-            }),
-          )
-          .end();
+      di.register<Disposable>(
+        Disposable('bye'),
+        onUnregister: Some((result) {
+          UNSAFE:
+          if (result.isOk()) seen = result.unwrap();
+        }),
+      ).end();
 
       UNSAFE:
       (await di.unregister<Disposable>().unwrap()).end();
@@ -79,7 +77,8 @@ void main() {
       expect(seen!.tag, 'bye');
     });
 
-    test('triggerOnUnregisterCallbacks:false suppresses the callback', () async {
+    test('triggerOnUnregisterCallbacks:false suppresses the callback',
+        () async {
       final di = DI();
       var fired = false;
       di
@@ -102,15 +101,13 @@ void main() {
     test('async onUnregister is awaited before returning', () async {
       final di = DI();
       var completed = false;
-      di
-          .register<Disposable>(
-            Disposable('a'),
-            onUnregister: Some((_) async {
-              await Future<void>.delayed(const Duration(milliseconds: 10));
-              completed = true;
-            }),
-          )
-          .end();
+      di.register<Disposable>(
+        Disposable('a'),
+        onUnregister: Some((_) async {
+          await Future<void>.delayed(const Duration(milliseconds: 10));
+          completed = true;
+        }),
+      ).end();
 
       (await di.unregister<Disposable>().toAsync().value).end();
       expect(completed, isTrue);

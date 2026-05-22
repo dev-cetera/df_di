@@ -31,7 +31,8 @@ final class Svc {
 
 void main() {
   group('untilExactlyK basics', () {
-    test('resolves immediately when typeEntity is already registered', () async {
+    test('resolves immediately when typeEntity is already registered',
+        () async {
       final di = DI();
       di.register<Svc>(Svc('present'), enableUntilExactlyK: true).end();
 
@@ -79,7 +80,9 @@ void main() {
       // freshly registered value is what we see.
       unawaited(
         Future<void>.microtask(() {
-          di.register<Svc>(Svc('post-cleanup'), enableUntilExactlyK: true).end();
+          di
+              .register<Svc>(Svc('post-cleanup'), enableUntilExactlyK: true)
+              .end();
         }),
       );
       UNSAFE:

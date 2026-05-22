@@ -108,17 +108,15 @@ Future<void> main() async {
 
   // Register the service after a delay (simulating async initialization).
   Future<void>.delayed(const Duration(seconds: 1), () {
-    DI.global
-        .register<UserService>(
-          UserService(123),
-          onUnregister: Some((result) async {
-            if (result.isOk()) {
-              UNSAFE:
-              (await result.unwrap().dispose().value).end();
-            }
-          }),
-        )
-        .end();
+    DI.global.register<UserService>(
+      UserService(123),
+      onUnregister: Some((result) async {
+        if (result.isOk()) {
+          UNSAFE:
+          (await result.unwrap().dispose().value).end();
+        }
+      }),
+    ).end();
     _say('UserService registered');
   });
 

@@ -74,8 +74,7 @@ void main() {
       (await s.dispose().value).end();
     });
 
-    test('pause stops events from reaching the broadcast controller',
-        () async {
+    test('pause stops events from reaching the broadcast controller', () async {
       final s = TestStreamService();
       (await s.init().value).end();
       (await s.pause().value).end();
@@ -107,8 +106,7 @@ void main() {
   });
 
   group('StreamServiceMixin: emission ordering', () {
-    test('pushToStream listeners observe emissions in arrival order',
-        () async {
+    test('pushToStream listeners observe emissions in arrival order', () async {
       final s = TestStreamService();
       (await s.init().value).end();
       for (var i = 0; i < 50; i++) {
@@ -153,8 +151,7 @@ void main() {
   });
 
   group('StreamServiceMixin: error handling', () {
-    test('emitError on the input stream does not crash pushToStream',
-        () async {
+    test('emitError on the input stream does not crash pushToStream', () async {
       final s = TestStreamService();
       (await s.init().value).end();
       s.emitError('boom');

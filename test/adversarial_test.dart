@@ -70,39 +70,43 @@ class _LifecycleSpy with ServiceMixin {
 
   @override
   TServiceResolvables<Unit> provideInitListeners(void _) => [
-    (_) {
-      initCalls.add(DateTime.now());
-      if (failOnPhase == 'init') return Sync.err(Err<Unit>('init fail'));
-      return Sync.okValue(Unit());
-    },
-  ];
+        (_) {
+          initCalls.add(DateTime.now());
+          if (failOnPhase == 'init') return Sync.err(Err<Unit>('init fail'));
+          return Sync.okValue(Unit());
+        },
+      ];
 
   @override
   TServiceResolvables<Unit> providePauseListeners(void _) => [
-    (_) {
-      pauseCalls.add(DateTime.now());
-      if (failOnPhase == 'pause') return Sync.err(Err<Unit>('pause fail'));
-      return Sync.okValue(Unit());
-    },
-  ];
+        (_) {
+          pauseCalls.add(DateTime.now());
+          if (failOnPhase == 'pause') return Sync.err(Err<Unit>('pause fail'));
+          return Sync.okValue(Unit());
+        },
+      ];
 
   @override
   TServiceResolvables<Unit> provideResumeListeners(void _) => [
-    (_) {
-      resumeCalls.add(DateTime.now());
-      if (failOnPhase == 'resume') return Sync.err(Err<Unit>('resume fail'));
-      return Sync.okValue(Unit());
-    },
-  ];
+        (_) {
+          resumeCalls.add(DateTime.now());
+          if (failOnPhase == 'resume') {
+            return Sync.err(Err<Unit>('resume fail'));
+          }
+          return Sync.okValue(Unit());
+        },
+      ];
 
   @override
   TServiceResolvables<Unit> provideDisposeListeners(void _) => [
-    (_) {
-      disposeCalls.add(DateTime.now());
-      if (failOnPhase == 'dispose') return Sync.err(Err<Unit>('dispose fail'));
-      return Sync.okValue(Unit());
-    },
-  ];
+        (_) {
+          disposeCalls.add(DateTime.now());
+          if (failOnPhase == 'dispose') {
+            return Sync.err(Err<Unit>('dispose fail'));
+          }
+          return Sync.okValue(Unit());
+        },
+      ];
 }
 
 void main() {
@@ -117,9 +121,11 @@ void main() {
         di.register<_A>(_A('n=$n'), groupEntity: UniqueEntity()).end();
       }
       // Verify all are visible by type lookup.
-      final allGroups = di.registry.groupsWithTypeK(
-        TypeEntity(Sync, [TypeEntity(_A)]),
-      ).toList();
+      final allGroups = di.registry
+          .groupsWithTypeK(
+            TypeEntity(Sync, [TypeEntity(_A)]),
+          )
+          .toList();
       expect(allGroups.length, 100, reason: 'all 100 groups indexed by type');
 
       // Unregister each from its group.
@@ -144,7 +150,7 @@ void main() {
         di.register<_A>(_A()).end();
         di.register<_B>(_B()).end();
         di.register<_C>(_C()).end();
-        await di.unregisterAll().value;
+        (await di.unregisterAll().value).end();
 
         expect(
           di.registry.groupsWithTypeK(
@@ -248,8 +254,8 @@ void main() {
       // Fire two disposes at the "same time" (no awaits between them).
       final a = s.dispose().toAsync().value;
       final b = s.dispose().toAsync().value;
-      await a;
-      await b;
+      (await a).end();
+      (await b).end();
       expect(
         s.disposeCalls.length,
         1,
@@ -257,7 +263,8 @@ void main() {
       );
     });
 
-    test('pause/resume after dispose is rejected (idempotent terminal)', () async {
+    test('pause/resume after dispose is rejected (idempotent terminal)',
+        () async {
       final s = _LifecycleSpy();
       (await s.init().toAsync().value).end();
       (await s.dispose().toAsync().value).end();
@@ -299,7 +306,7 @@ void main() {
           di.unregister<_A>().end();
         }),
       ).end();
-      await di.unregister<_B>().value;
+      (await di.unregister<_B>().value).end();
       // Both must be gone now, no zombie state.
       expect(di.isRegistered<_A>(), isFalse);
       expect(di.isRegistered<_B>(), isFalse);
@@ -317,7 +324,7 @@ void main() {
           fired = true;
         }),
       ).end();
-      await di.unregister<_A>().value;
+      (await di.unregister<_A>().value).end();
       expect(fired, isTrue);
       // The fresh one is registered.
       expect(di.isRegistered<_A>(), isTrue);
@@ -334,10 +341,11 @@ void main() {
         svc.onEach.add((data) {
           if (data.isOk() && depth < 3) {
             depth++;
+            UNSAFE:
             svc.pushToStream(Ok<int>(data.unwrap() + 1)).end();
           }
         });
-        await svc.pushToStream(const Ok<int>(0)).toAsync().value;
+        (await svc.pushToStream(const Ok<int>(0)).toAsync().value).end();
         // Wait a tick for any re-entrant pushes to land.
         await Future<void>.delayed(const Duration(milliseconds: 20));
         expect(
@@ -345,7 +353,7 @@ void main() {
           3,
           reason: 're-entrant push allowed but bounded',
         );
-        await svc.dispose().toAsync().value;
+        (await svc.dispose().toAsync().value).end();
       },
     );
   });
@@ -360,7 +368,7 @@ void main() {
       );
       // The Resolvable returned by register evaluates through the chain.
       try {
-        await r.toAsync().value;
+        (await r.toAsync().value).end();
         fail('expected Err to surface');
       } on Object catch (_) {
         // expected
@@ -376,20 +384,26 @@ void main() {
       () async {
         final di = DI();
         final fired = <String>[];
-        di.register<_A>(
-          _A('1'),
-          onUnregister: Some((_) => fired.add('a1')),
-        ).end();
-        di.register<_B>(
-          _B(),
-          onUnregister: Some((_) => throw StateError('callback boom')),
-        ).end();
-        di.register<_C>(
-          _C(),
-          onUnregister: Some((_) => fired.add('c')),
-        ).end();
+        di
+            .register<_A>(
+              _A('1'),
+              onUnregister: Some((_) => fired.add('a1')),
+            )
+            .end();
+        di
+            .register<_B>(
+              _B(),
+              onUnregister: Some((_) => throw StateError('callback boom')),
+            )
+            .end();
+        di
+            .register<_C>(
+              _C(),
+              onUnregister: Some((_) => fired.add('c')),
+            )
+            .end();
         // unregisterAll must fire every callback even when one throws.
-        await di.unregisterAll().value;
+        (await di.unregisterAll().value).end();
         expect(
           fired,
           containsAll(['a1', 'c']),
@@ -401,21 +415,21 @@ void main() {
     test('Lazy constructor that throws is observable; the slot is recoverable',
         () async {
       final di = DI();
-      di
-          .registerLazy<_A>(() => Sync.err(Err<_A>('construct fail')))
-          .end();
+      di.registerLazy<_A>(() => Sync.err(Err<_A>('construct fail'))).end();
       // Reading triggers construction → errored Resolvable.
+      UNSAFE:
       final result = di.getLazySingleton<_A>().unwrap();
       try {
-        await result.toAsync().value;
+        (await result.toAsync().value).end();
         fail('expected error');
       } on Object catch (_) {
         // expected
       }
       // Now unregister the bad lazy and register a healthy one — the slot
       // must be re-usable.
-      await di.unregisterLazy<_A>().value;
+      (await di.unregisterLazy<_A>().value).end();
       di.registerLazy<_A>(() => Sync.okValue(_A('fresh'))).end();
+      UNSAFE:
       final fresh =
           (await di.getLazySingleton<_A>().unwrap().toAsync().value).unwrap();
       expect(fresh.tag, 'fresh');
@@ -423,12 +437,14 @@ void main() {
 
     test('async dep whose Future fails surfaces an error on get', () async {
       final di = DI();
-      di.register<_A>(
-        Future<_A>.delayed(
-          const Duration(milliseconds: 5),
-          () => throw StateError('async boom'),
-        ),
-      ).end();
+      di
+          .register<_A>(
+            Future<_A>.delayed(
+              const Duration(milliseconds: 5),
+              () => throw StateError('async boom'),
+            ),
+          )
+          .end();
       try {
         await di.getAsyncUnsafe<_A>();
         fail('expected error');
@@ -495,7 +511,7 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 60));
       final ticksBeforeDispose = svc.tickCount;
       expect(ticksBeforeDispose, greaterThan(0));
-      await svc.dispose().toAsync().value;
+      (await svc.dispose().toAsync().value).end();
       // After dispose, wait — no more ticks should land.
       await Future<void>.delayed(const Duration(milliseconds: 80));
       expect(
@@ -509,14 +525,14 @@ void main() {
       final svc = _CountingPoller();
       (await svc.init().toAsync().value).end();
       for (var n = 0; n < 50; n++) {
-        await svc.restartStream().toAsync().value;
+        (await svc.restartStream().toAsync().value).end();
       }
       // After 50 restarts, exactly one subscription should exist and the
       // service should still emit. We probe by waiting one tick.
       final before = svc.tickCount;
       await Future<void>.delayed(const Duration(milliseconds: 60));
       expect(svc.tickCount, greaterThan(before));
-      await svc.dispose().toAsync().value;
+      (await svc.dispose().toAsync().value).end();
     });
 
     test(
@@ -524,11 +540,11 @@ void main() {
       () async {
         final svc = _EchoStreamService();
         (await svc.init().toAsync().value).end();
-        await svc.dispose().toAsync().value;
+        (await svc.dispose().toAsync().value).end();
         var fired = false;
         svc.onEach.add((_) => fired = true);
         // Should not throw.
-        await svc.pushToStream(const Ok<int>(42)).toAsync().value;
+        (await svc.pushToStream(const Ok<int>(42)).toAsync().value).end();
         expect(fired, isFalse);
       },
     );
@@ -538,18 +554,20 @@ void main() {
       final svc = _EchoStreamService();
       (await svc.init().toAsync().value).end();
       final errors = <Object>[];
+      UNSAFE:
       svc.stream.unwrap().listen(
-        (event) {},
-        onError: (Object e, [StackTrace? _]) => errors.add(e),
-      );
+            (event) {},
+            onError: (Object e, [StackTrace? _]) => errors.add(e),
+          );
       // Push a few events including an Err — service should keep running.
-      await svc.pushToStream(const Ok<int>(1)).toAsync().value;
-      await svc.pushToStream(Err<int>('mid-event error')).toAsync().value;
-      await svc.pushToStream(const Ok<int>(3)).toAsync().value;
+      (await svc.pushToStream(const Ok<int>(1)).toAsync().value).end();
+      (await svc.pushToStream(Err<int>('mid-event error')).toAsync().value)
+          .end();
+      (await svc.pushToStream(const Ok<int>(3)).toAsync().value).end();
       // The Err goes into the broadcast as an Err Result, not as a stream
       // error — verify that the service is still in RUN_SUCCESS.
       expect(svc.state, ServiceState.RUN_SUCCESS);
-      await svc.dispose().toAsync().value;
+      (await svc.dispose().toAsync().value).end();
     });
   });
 
@@ -569,15 +587,14 @@ void main() {
           reason: 'untilSuper should register a single completer slot',
         );
         di.register<_A>(_A()).end();
-        await wait.toAsync().value;
+        (await wait.toAsync().value).end();
         // After resolution, the group should hold ONLY `_A` (1 slot),
         // not the completer too.
         final groupAfter = di.registry.state[const DefaultEntity()];
         expect(
           groupAfter?.length,
           1,
-          reason:
-              'completer slot leaked after untilSuper resolved '
+          reason: 'completer slot leaked after untilSuper resolved '
               '(group size grew instead of staying at 1)',
         );
       },
@@ -588,29 +605,25 @@ void main() {
       () async {
         final di = DI();
         // First waiter.
-        final futA = di
-            .untilExactlyK<_A>(TypeEntity(_A))
-            .toAsync()
-            .value;
+        final futA = di.untilExactlyK<_A>(TypeEntity(_A)).toAsync().value;
         di.register<_A>(_A('first'), enableUntilExactlyK: true).end();
+        UNSAFE:
         final r1 = (await futA).unwrap().tag;
         expect(r1, 'first');
 
         // Unregister and register a fresh one — the old completer must
         // NOT re-fire on the new registration.
-        await di.unregister<_A>().value;
+        (await di.unregister<_A>().value).end();
         di.register<_A>(_A('second'), enableUntilExactlyK: true).end();
         // A leaked completer would manifest as a hung second wait. So we
         // kick off a fresh wait and ensure it resolves promptly.
-        final futA2 = di
-            .untilExactlyK<_A>(TypeEntity(_A))
-            .toAsync()
-            .value;
+        final futA2 = di.untilExactlyK<_A>(TypeEntity(_A)).toAsync().value;
         final r2 = await futA2.timeout(
           const Duration(milliseconds: 200),
           onTimeout: () => Err<_A>('TIMEOUT'),
         );
         expect(r2.isOk(), isTrue, reason: 'second wait timed out');
+        UNSAFE:
         expect(r2.unwrap().tag, 'second');
       },
     );
@@ -658,8 +671,7 @@ void main() {
       expect(
         a,
         equals(b),
-        reason:
-            'TypeEntity from Type and TypeEntity from the Type-as-string '
+        reason: 'TypeEntity from Type and TypeEntity from the Type-as-string '
             'must be equal — they represent the same key.',
       );
     });
@@ -674,6 +686,7 @@ void main() {
       // get<Animal> should find any Resolvable<Animal subtype>.
       final a = di.getSyncOrNone<_Animal>();
       expect(a.isSome(), isTrue);
+      UNSAFE:
       expect(a.unwrap().name(), 'cat');
     });
 
@@ -684,7 +697,7 @@ void main() {
         di.register<_Cat>(_Cat()).end();
         // Strict-keying contract: unregister<_Animal>() walks the
         // `_Animal` slot, which doesn't exist; Cat stays registered.
-        await di.unregister<_Animal>().value;
+        (await di.unregister<_Animal>().value).end();
         expect(
           di.isRegistered<_Cat>(),
           isTrue,
@@ -696,20 +709,25 @@ void main() {
 
   // ══════════════════════════════════════════════════════════════════════════
   group('async dep resolution semantics', () {
-    test('getAsync on a Future-valued dep eventually resolves to Sync', () async {
+    test('getAsync on a Future-valued dep eventually resolves to Sync',
+        () async {
       final di = DI();
-      di.register<_A>(
-        Future<_A>.delayed(
-          const Duration(milliseconds: 5),
-          () => _A('resolved'),
-        ),
-      ).end();
+      di
+          .register<_A>(
+            Future<_A>.delayed(
+              const Duration(milliseconds: 5),
+              () => _A('resolved'),
+            ),
+          )
+          .end();
       // First read awaits the async.
       final v1 = await di.getAsyncUnsafe<_A>();
       expect(v1.tag, 'resolved');
       // Second read should be sync (after the first promotion).
       final s = di.getSyncOrNone<_A>();
-      expect(s.isSome(), isTrue, reason: 'async → sync promotion did not happen');
+      expect(s.isSome(), isTrue,
+          reason: 'async → sync promotion did not happen',);
+      UNSAFE:
       expect(s.unwrap().tag, 'resolved');
     });
 
@@ -759,7 +777,8 @@ void main() {
         // Service init will fail. `registerAndInitService` returns a
         // Resolvable; the caller has the opportunity to observe the error.
         try {
-          await di.registerAndInitService<_LifecycleSpy>(svc).toAsync().value;
+          (await di.registerAndInitService<_LifecycleSpy>(svc).toAsync().value)
+              .end();
         } on Object catch (_) {
           // expected
         }
@@ -775,7 +794,7 @@ void main() {
         );
         expect(svc.state, ServiceState.RUN_ERROR);
         // Unregister must work (and fire dispose).
-        await di.unregister<_LifecycleSpy>().value;
+        (await di.unregister<_LifecycleSpy>().value).end();
         expect(di.isRegistered<_LifecycleSpy>(), isFalse);
       },
     );
@@ -785,20 +804,20 @@ void main() {
       () async {
         final di = DI();
         final svc = _LifecycleSpy(failOnPhase: 'dispose');
-        await di.registerAndInitService<_LifecycleSpy>(svc).toAsync().value;
+        (await di.registerAndInitService<_LifecycleSpy>(svc).toAsync().value)
+            .end();
         expect(di.isRegistered<_LifecycleSpy>(), isTrue);
         // Unregister will fail dispose listener but must still evict the
         // dep — otherwise we'd have a permanently un-tear-downable service.
         try {
-          await di.unregister<_LifecycleSpy>().value;
+          (await di.unregister<_LifecycleSpy>().value).end();
         } on Object catch (_) {
           // expected: dispose error propagates
         }
         expect(
           di.isRegistered<_LifecycleSpy>(),
           isFalse,
-          reason:
-              'service must be evicted from registry even when its dispose '
+          reason: 'service must be evicted from registry even when its dispose '
               'listener errors — otherwise medical devices cannot be torn '
               'down on shutdown',
         );
@@ -821,7 +840,8 @@ void main() {
         // B's init must complete once A is visible.
         final seen = await bSawA.future.timeout(
           const Duration(seconds: 1),
-          onTimeout: () => throw StateError('B never saw A — orchestration broken'),
+          onTimeout: () =>
+              throw StateError('B never saw A — orchestration broken'),
         );
         expect(seen.tag, 'ready');
       },
@@ -838,7 +858,7 @@ void main() {
     test('unregisterAll on empty registry is a no-op', () async {
       final di = DI();
       // Must not throw.
-      await di.unregisterAll().value;
+      (await di.unregisterAll().value).end();
       expect(di.registry.groupEntities, isEmpty);
     });
 
@@ -850,16 +870,17 @@ void main() {
         di.register<_B>(_B()).end();
         final before = <Type>[];
         final after = <Type>[];
-        await di
-            .unregisterAll(
-              onBeforeUnregister: Some((r) {
-                if (r.isOk()) before.add(r.unwrap().runtimeType);
-              }),
-              onAfterUnregister: Some((r) {
-                if (r.isOk()) after.add(r.unwrap().runtimeType);
-              }),
-            )
-            .value;
+        (await di.unregisterAll(
+          onBeforeUnregister: Some((r) {
+            UNSAFE:
+            if (r.isOk()) before.add(r.unwrap().runtimeType);
+          }),
+          onAfterUnregister: Some((r) {
+            UNSAFE:
+            if (r.isOk()) after.add(r.unwrap().runtimeType);
+          }),
+        ).value)
+            .end();
         expect(before.length, 2);
         expect(after.length, 2);
       },
@@ -871,12 +892,16 @@ void main() {
       di.register<_B>(_B()).end();
       di.register<_C>(_C()).end();
       // Only evict deps whose value is _B.
-      await di
-          .unregisterAll(condition: Some((dep) {
-        final v = dep.value.sync().unwrap().value;
-        if (v.isErr()) return false;
-        return v.unwrap() is _B;
-      }),).value;
+      (await di.unregisterAll(
+        condition: Some((dep) {
+          UNSAFE:
+          final v = dep.value.sync().unwrap().value;
+          if (v.isErr()) return false;
+          UNSAFE:
+          return v.unwrap() is _B;
+        }),
+      ).value)
+          .end();
       expect(di.isRegistered<_A>(), isTrue);
       expect(di.isRegistered<_B>(), isFalse);
       expect(di.isRegistered<_C>(), isTrue);
@@ -895,11 +920,11 @@ class _ServiceWaitingFor<W extends Object> with ServiceMixin {
 
   @override
   TServiceResolvables<Unit> provideInitListeners(void _) => [
-    (_) => di.untilSuper<W>().then((w) {
-      completer.complete(w);
-      return Unit();
-    }),
-  ];
+        (_) => di.untilSuper<W>().then((w) {
+              completer.complete(w);
+              return Unit();
+            }),
+      ];
 
   @override
   TServiceResolvables<Unit> providePauseListeners(void _) => [];
@@ -938,20 +963,20 @@ class _EchoStreamService extends StreamService<int> {
 
   @override
   TServiceResolvables<Result<int>> provideOnPushToStreamListeners() => [
-    (data) {
-      for (final fn in onEach) {
-        fn(data);
-      }
-      return Sync.okValue(Unit());
-    },
-  ];
+        (data) {
+          for (final fn in onEach) {
+            fn(data);
+          }
+          return Sync.okValue(Unit());
+        },
+      ];
 
   @override
   TServiceResolvables<Unit> provideDisposeListeners(void _) => [
-    ...super.provideDisposeListeners(null),
-    (_) => Async(() async {
-      await _input.close();
-      return Unit();
-    }),
-  ];
+        ...super.provideDisposeListeners(null),
+        (_) => Async(() async {
+              await _input.close();
+              return Unit();
+            }),
+      ];
 }

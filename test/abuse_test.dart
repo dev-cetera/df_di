@@ -91,39 +91,39 @@ final class TallyService extends Service {
 
   @override
   TServiceResolvables<Unit> provideInitListeners(void _) => [
-    for (var i = 0; i < initListeners; i++)
-      (_) {
-        log.add('init.$i');
-        if (throwOnInit && i == 0) return Sync.err(Err('init bomb'));
-        return syncUnit();
-      },
-  ];
+        for (var i = 0; i < initListeners; i++)
+          (_) {
+            log.add('init.$i');
+            if (throwOnInit && i == 0) return Sync.err(Err('init bomb'));
+            return syncUnit();
+          },
+      ];
 
   @override
   TServiceResolvables<Unit> providePauseListeners(void _) => [
-    (_) {
-      log.add('pause');
-      return syncUnit();
-    },
-  ];
+        (_) {
+          log.add('pause');
+          return syncUnit();
+        },
+      ];
 
   @override
   TServiceResolvables<Unit> provideResumeListeners(void _) => [
-    (_) {
-      log.add('resume');
-      return syncUnit();
-    },
-  ];
+        (_) {
+          log.add('resume');
+          return syncUnit();
+        },
+      ];
 
   @override
   TServiceResolvables<Unit> provideDisposeListeners(void _) => [
-    for (var i = 0; i < disposeListeners; i++)
-      (_) {
-        log.add('dispose.$i');
-        if (throwOnDispose && i == 0) return Sync.err(Err('dispose bomb'));
-        return syncUnit();
-      },
-  ];
+        for (var i = 0; i < disposeListeners; i++)
+          (_) {
+            log.add('dispose.$i');
+            if (throwOnDispose && i == 0) return Sync.err(Err('dispose bomb'));
+            return syncUnit();
+          },
+      ];
 }
 
 /// A StreamService whose upstream is a controllable broadcast stream the test
@@ -138,11 +138,11 @@ final class HandStream extends StreamService<int> {
 
   @override
   TServiceResolvables<Result<int>> provideOnPushToStreamListeners() => [
-    (event) {
-      event.ifOk((_, ok) => heard.add(ok.value)).end();
-      return syncUnit();
-    },
-  ];
+        (event) {
+          event.ifOk((_, ok) => heard.add(ok.value)).end();
+          return syncUnit();
+        },
+      ];
 }
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
@@ -322,31 +322,25 @@ void main() {
     test('cascading onUnregister tears down dependents in order', () async {
       final di = DI();
       final order = <String>[];
-      di
-          .register<C>(
-            C(B(A('x'))),
-            onUnregister: Some((_) {
-              order.add('c');
-            }),
-          )
-          .end();
-      di
-          .register<B>(
-            B(A('y')),
-            onUnregister: Some((_) async {
-              await Future<void>.delayed(const Duration(milliseconds: 1));
-              order.add('b');
-            }),
-          )
-          .end();
-      di
-          .register<A>(
-            A('z'),
-            onUnregister: Some((_) {
-              order.add('a');
-            }),
-          )
-          .end();
+      di.register<C>(
+        C(B(A('x'))),
+        onUnregister: Some((_) {
+          order.add('c');
+        }),
+      ).end();
+      di.register<B>(
+        B(A('y')),
+        onUnregister: Some((_) async {
+          await Future<void>.delayed(const Duration(milliseconds: 1));
+          order.add('b');
+        }),
+      ).end();
+      di.register<A>(
+        A('z'),
+        onUnregister: Some((_) {
+          order.add('a');
+        }),
+      ).end();
 
       (await di.unregister<C>().toAsync().value).end();
       (await di.unregister<B>().toAsync().value).end();
@@ -384,22 +378,18 @@ void main() {
         () async {
       final di = DI();
       var unregBFired = false;
-      di
-          .register<B>(
-            B(A('inner')),
-            onUnregister: Some((_) {
-              unregBFired = true;
-            }),
-          )
-          .end();
-      di
-          .register<A>(
-            A('outer'),
-            onUnregister: Some((_) async {
-              (await di.unregister<B>().toAsync().value).end();
-            }),
-          )
-          .end();
+      di.register<B>(
+        B(A('inner')),
+        onUnregister: Some((_) {
+          unregBFired = true;
+        }),
+      ).end();
+      di.register<A>(
+        A('outer'),
+        onUnregister: Some((_) async {
+          (await di.unregister<B>().toAsync().value).end();
+        }),
+      ).end();
 
       (await di.unregister<A>().toAsync().value).end();
       expect(unregBFired, isTrue);
@@ -410,14 +400,12 @@ void main() {
     test('onUnregister that throws does not poison subsequent registrations',
         () async {
       final di = DI();
-      di
-          .register<A>(
-            A('x'),
-            onUnregister: Some((_) {
-              throw Exception('intentional');
-            }),
-          )
-          .end();
+      di.register<A>(
+        A('x'),
+        onUnregister: Some((_) {
+          throw Exception('intentional');
+        }),
+      ).end();
       // The unregister call itself surfaces the error path through Resolvable;
       // we don't insist on success here, only on the container's recovery.
       try {
@@ -447,10 +435,7 @@ void main() {
       for (var i = 0; i < 1000; i += 37) {
         UNSAFE:
         expect(
-          di
-              .getSyncOrNone<A>(groupEntity: TypeEntity('g$i'))
-              .unwrap()
-              .tag,
+          di.getSyncOrNone<A>(groupEntity: TypeEntity('g$i')).unwrap().tag,
           'g$i',
         );
       }
@@ -610,19 +595,12 @@ void main() {
     test('500 resetLazySingleton cycles all yield fresh instances', () async {
       final di = DI();
       var ctor = 0;
-      di
-          .registerLazy<A>(() => Sync.okValue(A('v${++ctor}')))
-          .end();
+      di.registerLazy<A>(() => Sync.okValue(A('v${++ctor}'))).end();
       A? last;
       for (var i = 0; i < 500; i++) {
         UNSAFE:
-        final a = di
-            .getLazySingleton<A>()
-            .unwrap()
-            .sync()
-            .unwrap()
-            .value
-            .unwrap();
+        final a =
+            di.getLazySingleton<A>().unwrap().sync().unwrap().value.unwrap();
         if (last != null) expect(identical(last, a), isFalse);
         last = a;
         (await di.resetLazySingleton<A>().toAsync().value).end();
@@ -633,9 +611,7 @@ void main() {
     test('1000 factory reads return 1000 distinct instances', () {
       final di = DI();
       var ctor = 0;
-      di
-          .registerConstructor<A>(() => A('f${++ctor}'))
-          .end();
+      di.registerConstructor<A>(() => A('f${++ctor}')).end();
       final seen = <A>{};
       for (var i = 0; i < 1000; i++) {
         UNSAFE:
@@ -645,7 +621,8 @@ void main() {
       expect(seen.length, 1000);
     });
 
-    test('lazy and direct registrations of the same T coexist and unregister independently',
+    test(
+        'lazy and direct registrations of the same T coexist and unregister independently',
         () async {
       final di = DI();
       di.register<A>(A('direct')).end();
@@ -696,7 +673,8 @@ void main() {
       expect(c.getSyncOrNone<A>().unwrap().tag, 'child-only');
     });
 
-    test('isRegistered with traverse:false ignores parents even from deep child',
+    test(
+        'isRegistered with traverse:false ignores parents even from deep child',
         () {
       final root = DI();
       root.register<A>(A('p')).end();
@@ -781,7 +759,8 @@ void main() {
         (await r.toAsync().value).end();
       }
       expect(s.state, ServiceState.DISPOSE_SUCCESS);
-      expect(s.log, ['init.0', 'pause', 'resume', 'pause', 'resume', 'dispose.0']);
+      expect(
+          s.log, ['init.0', 'pause', 'resume', 'pause', 'resume', 'dispose.0'],);
     });
 
     test('init→dispose→init pattern is rejected (cannot re-init after dispose)',
@@ -810,7 +789,10 @@ void main() {
           )
           .end();
       UNSAFE:
-      final retrieved = await di.untilSuper<TallyService>().toAsync().value
+      final retrieved = await di
+          .untilSuper<TallyService>()
+          .toAsync()
+          .value
           .then((r) => r.unwrap());
       expect(identical(retrieved, s), isTrue);
       expect(s.state, ServiceState.RUN_SUCCESS);
@@ -1018,22 +1000,23 @@ void main() {
 
   // ───────────────────────────────────────────────────────────────────────────
   group('abuse: unregisterAll edge cases', () {
-    test('unregisterAll with sync onUnregister callbacks fires them in reverse order',
+    test(
+        'unregisterAll with sync onUnregister callbacks fires them in reverse order',
         () async {
       final di = DI();
       final order = <String>[];
-      di
-          .register<A>(A('a'), onUnregister: Some((_) { order.add('a'); }))
-          .end();
-      di
-          .register<B>(B(A('inner')), onUnregister: Some((_) { order.add('b'); }))
-          .end();
-      di
-          .register<C>(
-            C(B(A('inner2'))),
-            onUnregister: Some((_) { order.add('c'); }),
-          )
-          .end();
+      di.register<A>(A('a'), onUnregister: Some((_) {
+        order.add('a');
+      }),).end();
+      di.register<B>(B(A('inner')), onUnregister: Some((_) {
+        order.add('b');
+      }),).end();
+      di.register<C>(
+        C(B(A('inner2'))),
+        onUnregister: Some((_) {
+          order.add('c');
+        }),
+      ).end();
 
       (await di.unregisterAll().toAsync().value).end();
       // unregisterAll iterates `reversedDependencies` (newest first).
@@ -1043,18 +1026,19 @@ void main() {
       expect(di.isRegistered<C>(), isFalse);
     });
 
-    test('unregisterAll fires every onUnregister even with many deps', () async {
+    test('unregisterAll fires every onUnregister even with many deps',
+        () async {
       final di = DI();
       const n = 50;
       var disposed = 0;
       for (var i = 0; i < n; i++) {
-        di
-            .register<Counter>(
-              Counter('c$i'),
-              groupEntity: TypeEntity('g$i'),
-              onUnregister: Some((_) { disposed++; }),
-            )
-            .end();
+        di.register<Counter>(
+          Counter('c$i'),
+          groupEntity: TypeEntity('g$i'),
+          onUnregister: Some((_) {
+            disposed++;
+          }),
+        ).end();
       }
       (await di.unregisterAll().toAsync().value).end();
       expect(disposed, n);
@@ -1085,21 +1069,15 @@ void main() {
 
       Future<void> waiterA() async {
         UNSAFE:
-        final a = await di
-            .untilSuper<A>()
-            .toAsync()
-            .value
-            .then((r) => r.unwrap());
+        final a =
+            await di.untilSuper<A>().toAsync().value.then((r) => r.unwrap());
         order.add('saw-${a.tag}');
       }
 
       Future<void> waiterB() async {
         UNSAFE:
-        final b = await di
-            .untilSuper<B>()
-            .toAsync()
-            .value
-            .then((r) => r.unwrap());
+        final b =
+            await di.untilSuper<B>().toAsync().value.then((r) => r.unwrap());
         order.add('saw-B(${b.a.tag})');
         await waiterA();
       }
@@ -1189,7 +1167,8 @@ void main() {
 
   // ───────────────────────────────────────────────────────────────────────────
   group('abuse: ultra-mixed deep tree', () {
-    test('build a hierarchy with sync, async, lazy, factory deps and tear it down',
+    test(
+        'build a hierarchy with sync, async, lazy, factory deps and tear it down',
         () async {
       final root = DI();
 
@@ -1222,9 +1201,7 @@ void main() {
 
       // Grandchild.
       final leaf = mid.child(groupEntity: TypeEntity('leaf'));
-      leaf
-          .register<Holder<int>>(Holder<int>(99))
-          .end();
+      leaf.register<Holder<int>>(Holder<int>(99)).end();
 
       // Resolve everything from the leaf.
       UNSAFE:
@@ -1258,21 +1235,11 @@ void main() {
 
       // Factory at mid yields fresh values every time.
       UNSAFE:
-      final f1 = mid
-          .getFactory<Counter>()
-          .unwrap()
-          .sync()
-          .unwrap()
-          .value
-          .unwrap();
+      final f1 =
+          mid.getFactory<Counter>().unwrap().sync().unwrap().value.unwrap();
       UNSAFE:
-      final f2 = mid
-          .getFactory<Counter>()
-          .unwrap()
-          .sync()
-          .unwrap()
-          .value
-          .unwrap();
+      final f2 =
+          mid.getFactory<Counter>().unwrap().sync().unwrap().value.unwrap();
       expect(identical(f1, f2), isFalse);
 
       // Wipe everything from root.

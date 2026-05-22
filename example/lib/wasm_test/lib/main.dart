@@ -184,11 +184,9 @@ class _HarnessState extends State<_Harness> {
       () async {
         final di = DI();
         di.register<_ServiceA>(_ServiceA('present')).end();
-        final v = await di
-            .untilSuper<_ServiceA>()
-            .toAsync()
-            .value
-            .then((r) => r.unwrap());
+        final v = await di.untilSuper<_ServiceA>().toAsync().value.then(
+          (r) => r.unwrap(),
+        );
         _expect(v.tag, 'present');
       },
     );
@@ -284,19 +282,21 @@ class _HarnessState extends State<_Harness> {
 
     // ── until<TSuper, TSub> ─────────────────────────────────────────────────
 
-    await _run('until<TSuper, TSub> resolves on subtype registration',
-        () async {
-      final di = DI();
-      final wait = di.until<_Animal, _Cat>();
-      unawaited(
-        Future<void>.delayed(
-          const Duration(milliseconds: 50),
-          () => di.register<_Cat>(_Cat()),
-        ),
-      );
-      final v = await wait.toAsync().value.then((r) => r.unwrap());
-      _expect(v.name(), 'Cat');
-    });
+    await _run(
+      'until<TSuper, TSub> resolves on subtype registration',
+      () async {
+        final di = DI();
+        final wait = di.until<_Animal, _Cat>();
+        unawaited(
+          Future<void>.delayed(
+            const Duration(milliseconds: 50),
+            () => di.register<_Cat>(_Cat()),
+          ),
+        );
+        final v = await wait.toAsync().value.then((r) => r.unwrap());
+        _expect(v.name(), 'Cat');
+      },
+    );
 
     // ── untilExactlyK / untilExactlyT ───────────────────────────────────────
 
@@ -347,9 +347,13 @@ class _HarnessState extends State<_Harness> {
             .value
             .then((r) => r.unwrap());
 
-        di.register<_ServiceA>(_ServiceA('v1'), enableUntilExactlyK: true).end();
+        di
+            .register<_ServiceA>(_ServiceA('v1'), enableUntilExactlyK: true)
+            .end();
         await di.unregister<_ServiceA>().toAsync().value;
-        di.register<_ServiceA>(_ServiceA('v2'), enableUntilExactlyK: true).end();
+        di
+            .register<_ServiceA>(_ServiceA('v2'), enableUntilExactlyK: true)
+            .end();
 
         final v = await wait;
         _expect(v.tag, 'v2');
@@ -390,39 +394,37 @@ class _HarnessState extends State<_Harness> {
       },
     );
 
-    await _run('untilLazy<Repo, Repo> resolves on registerLazy<Repo>', () async {
-      final di = DI();
-      final wait = di.untilLazy<_Repo, _Repo>();
-      di.registerLazy<_Repo>(() => Sync.okValue(_Repo('LL'))).end();
-      final lazy = await wait.toAsync().value.then((r) => r.unwrap());
-      final v = lazy.singleton.sync().unwrap().value.unwrap();
-      _expect(v.tag, 'LL');
-    });
+    await _run(
+      'untilLazy<Repo, Repo> resolves on registerLazy<Repo>',
+      () async {
+        final di = DI();
+        final wait = di.untilLazy<_Repo, _Repo>();
+        di.registerLazy<_Repo>(() => Sync.okValue(_Repo('LL'))).end();
+        final lazy = await wait.toAsync().value.then((r) => r.unwrap());
+        final v = lazy.singleton.sync().unwrap().value.unwrap();
+        _expect(v.tag, 'LL');
+      },
+    );
 
     // ── untilLazySingletonSuper / untilLazySingleton ────────────────────────
 
-    await _run(
-      'untilLazySingletonSuper materializes the singleton',
-      () async {
-        final di = DI();
-        var ctor = 0;
-        final wait = di.untilLazySingletonSuper<_Repo>();
-        unawaited(
-          Future<void>.delayed(
-            const Duration(milliseconds: 40),
-            () => di
-                .registerLazy<_Repo>(() {
-                  ctor++;
-                  return Sync.okValue(_Repo('LS'));
-                })
-                .end(),
-          ),
-        );
-        final v = await wait.toAsync().value.then((r) => r.unwrap());
-        _expect(v.tag, 'LS');
-        _expect(ctor, 1);
-      },
-    );
+    await _run('untilLazySingletonSuper materializes the singleton', () async {
+      final di = DI();
+      var ctor = 0;
+      final wait = di.untilLazySingletonSuper<_Repo>();
+      unawaited(
+        Future<void>.delayed(
+          const Duration(milliseconds: 40),
+          () => di.registerLazy<_Repo>(() {
+            ctor++;
+            return Sync.okValue(_Repo('LS'));
+          }).end(),
+        ),
+      );
+      final v = await wait.toAsync().value.then((r) => r.unwrap());
+      _expect(v.tag, 'LS');
+      _expect(ctor, 1);
+    });
 
     await _run(
       'untilLazySingleton<Repo, Repo> resolves on registerLazy<Repo>',
@@ -440,19 +442,13 @@ class _HarnessState extends State<_Harness> {
     await _run('untilFactorySuper mints fresh instances per wait', () async {
       final di = DI();
       var ctor = 0;
-      di
-          .registerConstructor<_Repo>(() => _Repo('F${++ctor}'))
-          .end();
-      final a = await di
-          .untilFactorySuper<_Repo>()
-          .toAsync()
-          .value
-          .then((r) => r.unwrap());
-      final b = await di
-          .untilFactorySuper<_Repo>()
-          .toAsync()
-          .value
-          .then((r) => r.unwrap());
+      di.registerConstructor<_Repo>(() => _Repo('F${++ctor}')).end();
+      final a = await di.untilFactorySuper<_Repo>().toAsync().value.then(
+        (r) => r.unwrap(),
+      );
+      final b = await di.untilFactorySuper<_Repo>().toAsync().value.then(
+        (r) => r.unwrap(),
+      );
       _expect(a.tag, 'F1');
       _expect(b.tag, 'F2');
       _expect(identical(a, b), false);
@@ -463,19 +459,13 @@ class _HarnessState extends State<_Harness> {
       () async {
         final di = DI();
         var ctor = 0;
-        di
-            .registerConstructor<_Repo>(() => _Repo('FF${++ctor}'))
-            .end();
-        final a = await di
-            .untilFactory<_Repo, _Repo>()
-            .toAsync()
-            .value
-            .then((r) => r.unwrap());
-        final b = await di
-            .untilFactory<_Repo, _Repo>()
-            .toAsync()
-            .value
-            .then((r) => r.unwrap());
+        di.registerConstructor<_Repo>(() => _Repo('FF${++ctor}')).end();
+        final a = await di.untilFactory<_Repo, _Repo>().toAsync().value.then(
+          (r) => r.unwrap(),
+        );
+        final b = await di.untilFactory<_Repo, _Repo>().toAsync().value.then(
+          (r) => r.unwrap(),
+        );
         _expect(a.tag, 'FF1');
         _expect(b.tag, 'FF2');
         _expect(identical(a, b), false);
@@ -601,7 +591,10 @@ class _HarnessState extends State<_Harness> {
     if (passed == total && total > 0) {
       _publishResult('__DI_WASM_TEST__:PASS:$total');
     } else {
-      final failed = _results.where((r) => !r.pass).map((r) => r.name).join('|');
+      final failed = _results
+          .where((r) => !r.pass)
+          .map((r) => r.name)
+          .join('|');
       _publishResult('__DI_WASM_TEST__:FAIL:$passed/$total:$failed');
     }
   }
@@ -619,13 +612,15 @@ class _HarnessState extends State<_Harness> {
     stopwatch.stop();
     if (!mounted) return;
     setState(() {
-      _results.add(_Outcome(
-        name: name,
-        pass: failure == null,
-        durationMs: stopwatch.elapsedMilliseconds,
-        error: failure?.toString(),
-        trace: trace?.toString(),
-      ));
+      _results.add(
+        _Outcome(
+          name: name,
+          pass: failure == null,
+          durationMs: stopwatch.elapsedMilliseconds,
+          error: failure?.toString(),
+          trace: trace?.toString(),
+        ),
+      );
     });
   }
 
@@ -644,8 +639,8 @@ class _HarnessState extends State<_Harness> {
     final statusColor = !allDone
         ? Colors.amber
         : allPass
-            ? Colors.green
-            : Colors.red;
+        ? Colors.green
+        : Colors.red;
 
     return Scaffold(
       appBar: AppBar(
@@ -710,13 +705,13 @@ class _StatusBanner extends StatelessWidget {
     final color = running
         ? Colors.amber
         : allPass
-            ? Colors.green
-            : Colors.red;
+        ? Colors.green
+        : Colors.red;
     final label = running
         ? 'Running…  $passed / $total'
         : allPass
-            ? 'PASS  ($passed / $total)'
-            : 'FAIL  ($passed / $total)';
+        ? 'PASS  ($passed / $total)'
+        : 'FAIL  ($passed / $total)';
     return Container(
       key: const ValueKey('status-banner'),
       padding: const EdgeInsets.all(16),
@@ -731,8 +726,8 @@ class _StatusBanner extends StatelessWidget {
             running
                 ? Icons.hourglass_bottom
                 : allPass
-                    ? Icons.check_circle
-                    : Icons.error,
+                ? Icons.check_circle
+                : Icons.error,
             color: color,
             size: 32,
           ),

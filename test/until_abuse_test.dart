@@ -29,11 +29,12 @@ import 'package:test/test.dart';
 /// Try to await [f] within [timeout]; if it doesn't resolve in time, return
 /// `null`. This is how we prove that an `until*` call is NOT resolving for a
 /// given scenario without hanging the suite.
-Future<T?> tryAwait<T>(Future<T> f, {Duration timeout = const Duration(milliseconds: 80)}) {
+Future<T?> tryAwait<T>(Future<T> f,
+    {Duration timeout = const Duration(milliseconds: 80),}) {
   return f.timeout(timeout, onTimeout: () => null as T).then<T?>(
-    (v) => v,
-    onError: (Object _, [StackTrace? __]) => null,
-  );
+        (v) => v,
+        onError: (Object _, [StackTrace? __]) => null,
+      );
 }
 
 // ─── Fixtures ────────────────────────────────────────────────────────────────
@@ -89,16 +90,21 @@ void main() {
       di.register<Cache>(Cache(100)).end();
       // Wait briefly, then give up.
       final r = await tryAwait(waiter);
-      expect(r, isNull,
-          reason: 'untilSuper<Repo> must not resolve from a Cache registration',);
+      expect(
+        r,
+        isNull,
+        reason: 'untilSuper<Repo> must not resolve from a Cache registration',
+      );
     });
 
     test('registering a subtype DOES resolve untilSuper<Supertype>', () async {
       final di = DI();
       final waiter = di.untilSuper<Vehicle>().toAsync().value;
-      unawaited(Future<void>.microtask(() {
-        di.register<Vehicle>(Car('M3')).end();
-      }),);
+      unawaited(
+        Future<void>.microtask(() {
+          di.register<Vehicle>(Car('M3')).end();
+        }),
+      );
       UNSAFE:
       final v = (await waiter).unwrap();
       expect(v.label(), 'car:M3');
@@ -154,16 +160,19 @@ void main() {
       final waiters = [
         for (var i = 0; i < n; i++) di.untilSuper<Repo>().toAsync().value,
       ];
-      unawaited(Future<void>.microtask(() {
-        di.register<Repo>(Repo('shared')).end();
-      }),);
+      unawaited(
+        Future<void>.microtask(() {
+          di.register<Repo>(Repo('shared')).end();
+        }),
+      );
       for (final w in waiters) {
         UNSAFE:
         expect((await w).unwrap().tag, 'shared');
       }
     });
 
-    test('after a successful resolution, a fresh untilSuper resolves to the same registered value',
+    test(
+        'after a successful resolution, a fresh untilSuper resolves to the same registered value',
         () async {
       final di = DI();
       final w1 = di.untilSuper<Repo>().toAsync().value;
@@ -241,9 +250,11 @@ void main() {
         final root = DI();
         final child = root.child(groupEntity: TypeEntity('c'));
         final waiter = child.untilSuper<Config>().toAsync().value;
-        unawaited(Future<void>.microtask(() {
-          root.register<Config>(Config('parent-late')).end();
-        }),);
+        unawaited(
+          Future<void>.microtask(() {
+            root.register<Config>(Config('parent-late')).end();
+          }),
+        );
         UNSAFE:
         expect((await waiter).unwrap().value, 'parent-late');
       },
@@ -256,9 +267,11 @@ void main() {
         () async {
       final di = DI();
       final waiter = di.until<Vehicle, Car>().toAsync().value;
-      unawaited(Future<void>.microtask(() {
-        di.register<Vehicle>(Car('A4')).end();
-      }),);
+      unawaited(
+        Future<void>.microtask(() {
+          di.register<Vehicle>(Car('A4')).end();
+        }),
+      );
       UNSAFE:
       final car = (await waiter).unwrap();
       // Type narrowed to Car — calling Car-specific API works.
@@ -285,9 +298,12 @@ void main() {
         } catch (e) {
           caught = e;
         }
-        expect(caught, isNotNull,
-            reason: 'Boat-as-Car cast must surface as a runtime error '
-                'when the Car-only API is accessed',);
+        expect(
+          caught,
+          isNotNull,
+          reason: 'Boat-as-Car cast must surface as a runtime error '
+              'when the Car-only API is accessed',
+        );
       },
     );
 
@@ -323,9 +339,7 @@ void main() {
       () async {
         final di = DI();
         final waiter = di.untilExactlyK<Repo>(TypeEntity(Repo)).toAsync().value;
-        di
-            .register<Repo>(Repo('strict'), enableUntilExactlyK: true)
-            .end();
+        di.register<Repo>(Repo('strict'), enableUntilExactlyK: true).end();
         UNSAFE:
         expect((await waiter).unwrap().tag, 'strict');
       },
@@ -374,8 +388,7 @@ void main() {
         final di = DI();
         // A user crafts a custom TypeEntity (e.g. for an ECS-style tag).
         final customEntity = TypeEntity('SpecialTag', [Repo]);
-        final waiter =
-            di.untilExactlyK<Repo>(customEntity).toAsync().value;
+        final waiter = di.untilExactlyK<Repo>(customEntity).toAsync().value;
         // A plain register<Repo> writes the slot under TypeEntity(Repo) —
         // it must NOT match a SpecialTag waiter.
         di.register<Repo>(Repo('plain'), enableUntilExactlyK: true).end();
@@ -388,20 +401,15 @@ void main() {
       'rapid register/unregister churn does not deadlock untilExactlyK',
       () async {
         final di = DI();
-        final waiter = di
-            .untilExactlyK<Repo>(TypeEntity(Repo))
-            .toAsync()
-            .value
-            .then((r) {
-              UNSAFE:
-              return r.unwrap();
-            });
+        final waiter =
+            di.untilExactlyK<Repo>(TypeEntity(Repo)).toAsync().value.then((r) {
+          UNSAFE:
+          return r.unwrap();
+        });
 
         // 20 round-trips before letting the final registration stick.
         for (var i = 0; i < 20; i++) {
-          di
-              .register<Repo>(Repo('churn$i'), enableUntilExactlyK: true)
-              .end();
+          di.register<Repo>(Repo('churn$i'), enableUntilExactlyK: true).end();
           (await di.unregister<Repo>().toAsync().value).end();
         }
         di.register<Repo>(Repo('settled'), enableUntilExactlyK: true).end();
@@ -421,9 +429,12 @@ void main() {
         final waiter = di.untilExactlyK<Repo>(TypeEntity(Repo)).toAsync().value;
         di.register<Repo>(Repo('plain')).end(); // no K flag
         final r = await tryAwait(waiter);
-        expect(r, isNull,
-            reason: 'register without K flag should leave the K-completer'
-                ' un-fired',);
+        expect(
+          r,
+          isNull,
+          reason: 'register without K flag should leave the K-completer'
+              ' un-fired',
+        );
       },
     );
   });
@@ -436,17 +447,22 @@ void main() {
       // Direct register — keyed as Repo, not Lazy<Repo>.
       di.register<Repo>(Repo('direct')).end();
       final r = await tryAwait(waiter);
-      expect(r, isNull,
-          reason: 'Lazy<Repo> waiter must not pick up a direct Repo slot',);
+      expect(
+        r,
+        isNull,
+        reason: 'Lazy<Repo> waiter must not pick up a direct Repo slot',
+      );
     });
 
     test('untilLazySuper resolves when the matching registerLazy fires',
         () async {
       final di = DI();
       final waiter = di.untilLazySuper<Repo>().toAsync().value;
-      unawaited(Future<void>.microtask(() {
-        di.registerLazy<Repo>(() => Sync.okValue(Repo('lazy-arrived'))).end();
-      }),);
+      unawaited(
+        Future<void>.microtask(() {
+          di.registerLazy<Repo>(() => Sync.okValue(Repo('lazy-arrived'))).end();
+        }),
+      );
       UNSAFE:
       final lazy = (await waiter).unwrap();
       UNSAFE:
@@ -483,9 +499,7 @@ void main() {
         // there is no safe cast from Lazy<Vehicle> to Lazy<Car>.
         final di = DI();
         final waiter = di.untilLazy<Vehicle, Car>().toAsync().value;
-        di
-            .registerLazy<Vehicle>(() => Sync.okValue(Car('Z4')))
-            .end();
+        di.registerLazy<Vehicle>(() => Sync.okValue(Car('Z4'))).end();
         Object? caught;
         try {
           final r = await waiter;
@@ -528,27 +542,22 @@ void main() {
       final di = DI();
       var ctorCalls = 0;
       final waiter = di.untilLazySingletonSuper<Repo>().toAsync().value;
-      unawaited(Future<void>.microtask(() {
-        di
-            .registerLazy<Repo>(() {
-              ctorCalls++;
-              return Sync.okValue(Repo('lazy-singleton'));
-            })
-            .end();
-      }),);
+      unawaited(
+        Future<void>.microtask(() {
+          di.registerLazy<Repo>(() {
+            ctorCalls++;
+            return Sync.okValue(Repo('lazy-singleton'));
+          }).end();
+        }),
+      );
       UNSAFE:
       expect((await waiter).unwrap().tag, 'lazy-singleton');
       // The singleton was materialized exactly once for the waiter.
       expect(ctorCalls, 1);
       // Subsequent direct reads of the singleton don't re-construct.
       UNSAFE:
-      final again = di
-          .getLazySingleton<Repo>()
-          .unwrap()
-          .sync()
-          .unwrap()
-          .value
-          .unwrap();
+      final again =
+          di.getLazySingleton<Repo>().unwrap().sync().unwrap().value.unwrap();
       expect(ctorCalls, 1);
       expect(again.tag, 'lazy-singleton');
     });
@@ -581,15 +590,15 @@ void main() {
         // First materialization — uses the immediate-resolution path because
         // Lazy<Repo> is already registered.
         UNSAFE:
-        final a = (await di.untilLazySingletonSuper<Repo>().toAsync().value)
-            .unwrap();
+        final a =
+            (await di.untilLazySingletonSuper<Repo>().toAsync().value).unwrap();
         expect(a.tag, 'iter1');
 
         (await di.resetLazySingleton<Repo>().toAsync().value).end();
 
         UNSAFE:
-        final b = (await di.untilLazySingletonSuper<Repo>().toAsync().value)
-            .unwrap();
+        final b =
+            (await di.untilLazySingletonSuper<Repo>().toAsync().value).unwrap();
         expect(b.tag, 'iter2');
         expect(identical(a, b), isFalse);
       },
@@ -601,13 +610,11 @@ void main() {
     test('every call after the wait returns a fresh instance', () async {
       final di = DI();
       var ctor = 0;
-      di
-          .registerConstructor<Repo>(() => Repo('factory${++ctor}'))
-          .end();
+      di.registerConstructor<Repo>(() => Repo('factory${++ctor}')).end();
       // Confused user: they wait once, then re-read the factory many times.
       UNSAFE:
-      final first = (await di.untilFactorySuper<Repo>().toAsync().value)
-          .unwrap();
+      final first =
+          (await di.untilFactorySuper<Repo>().toAsync().value).unwrap();
       expect(first.tag, 'factory1');
 
       // The factory must mint a new instance every time it's queried.
@@ -624,9 +631,7 @@ void main() {
     test('untilFactory<Repo, Repo> mints fresh instances per wait', () async {
       final di = DI();
       var ctor = 0;
-      di
-          .registerConstructor<Repo>(() => Repo('F${++ctor}'))
-          .end();
+      di.registerConstructor<Repo>(() => Repo('F${++ctor}')).end();
       UNSAFE:
       final a = (await di.untilFactory<Repo, Repo>().toAsync().value).unwrap();
       UNSAFE:
@@ -641,8 +646,11 @@ void main() {
       final waiter = di.untilFactorySuper<Repo>().toAsync().value;
       di.register<Repo>(Repo('plain')).end();
       final r = await tryAwait(waiter);
-      expect(r, isNull,
-          reason: 'factory waiter is keyed under Lazy<T>, not <T>',);
+      expect(
+        r,
+        isNull,
+        reason: 'factory waiter is keyed under Lazy<T>, not <T>',
+      );
     });
   });
 
@@ -788,14 +796,12 @@ void main() {
         // Start a waiter for Cache BEFORE registering Repo. Repo's onRegister
         // will register a Cache, which should fire the waiter.
         final cacheWaiter = di.untilSuper<Cache>().toAsync().value;
-        di
-            .register<Repo>(
-              Repo('parent'),
-              onRegister: Some((r) {
-                di.register<Cache>(Cache(99)).end();
-              }),
-            )
-            .end();
+        di.register<Repo>(
+          Repo('parent'),
+          onRegister: Some((r) {
+            di.register<Cache>(Cache(99)).end();
+          }),
+        ).end();
         UNSAFE:
         final c = (await cacheWaiter).unwrap();
         expect(c.size, 99);
@@ -827,8 +833,11 @@ void main() {
       final waiter = root.untilSuper<Repo>().toAsync().value;
       child.register<Repo>(Repo('child-only')).end();
       final r = await tryAwait(waiter);
-      expect(r, isNull,
-          reason: 'root does not look down into child containers',);
+      expect(
+        r,
+        isNull,
+        reason: 'root does not look down into child containers',
+      );
     });
 
     test(
@@ -915,25 +924,23 @@ void main() {
         // confused factory for singleton ends up with two distinct Repos.
         final di = DI();
         var ctor = 0;
-        di
-            .registerConstructor<Repo>(() => Repo('inst${++ctor}'))
-            .end();
+        di.registerConstructor<Repo>(() => Repo('inst${++ctor}')).end();
 
         UNSAFE:
-        final fA = (await di.untilFactorySuper<Repo>().toAsync().value)
-            .unwrap();
+        final fA =
+            (await di.untilFactorySuper<Repo>().toAsync().value).unwrap();
         UNSAFE:
-        final fB = (await di.untilFactorySuper<Repo>().toAsync().value)
-            .unwrap();
+        final fB =
+            (await di.untilFactorySuper<Repo>().toAsync().value).unwrap();
         expect(identical(fA, fB), isFalse);
 
         // What they *actually* wanted: untilLazySingletonSuper.
         UNSAFE:
-        final sA = (await di.untilLazySingletonSuper<Repo>().toAsync().value)
-            .unwrap();
+        final sA =
+            (await di.untilLazySingletonSuper<Repo>().toAsync().value).unwrap();
         UNSAFE:
-        final sB = (await di.untilLazySingletonSuper<Repo>().toAsync().value)
-            .unwrap();
+        final sB =
+            (await di.untilLazySingletonSuper<Repo>().toAsync().value).unwrap();
         expect(identical(sA, sB), isTrue);
       },
     );
@@ -970,10 +977,12 @@ void main() {
         final waiters = <(int, Resolvable<Repo>)>[];
         for (var i = 0; i < 100; i++) {
           final g = TypeEntity('grp${i % 10}');
-          waiters.add((
-            i % 10,
-            di.untilSuper<Repo>(groupEntity: g),
-          ),);
+          waiters.add(
+            (
+              i % 10,
+              di.untilSuper<Repo>(groupEntity: g),
+            ),
+          );
         }
         // Register in each group, value carries the group index.
         for (var k = 0; k < 10; k++) {
@@ -995,9 +1004,11 @@ void main() {
       final di = DI();
       for (var i = 0; i < 100; i++) {
         final waiter = di.untilSuper<Repo>().toAsync().value;
-        unawaited(Future<void>.microtask(() {
-          di.register<Repo>(Repo('cycle$i')).end();
-        }),);
+        unawaited(
+          Future<void>.microtask(() {
+            di.register<Repo>(Repo('cycle$i')).end();
+          }),
+        );
         UNSAFE:
         expect((await waiter).unwrap().tag, 'cycle$i');
         (await di.unregister<Repo>().toAsync().value).end();
@@ -1022,15 +1033,21 @@ void main() {
 
       final out = pipeline();
       // Stagger the registrations.
-      unawaited(Future<void>.delayed(const Duration(milliseconds: 5), () {
-        di.register<Config>(Config('CFG')).end();
-      }),);
-      unawaited(Future<void>.delayed(const Duration(milliseconds: 10), () {
-        di.register<Cache>(Cache(99)).end();
-      }),);
-      unawaited(Future<void>.delayed(const Duration(milliseconds: 15), () {
-        di.register<Repo>(Repo('REPO')).end();
-      }),);
+      unawaited(
+        Future<void>.delayed(const Duration(milliseconds: 5), () {
+          di.register<Config>(Config('CFG')).end();
+        }),
+      );
+      unawaited(
+        Future<void>.delayed(const Duration(milliseconds: 10), () {
+          di.register<Cache>(Cache(99)).end();
+        }),
+      );
+      unawaited(
+        Future<void>.delayed(const Duration(milliseconds: 15), () {
+          di.register<Repo>(Repo('REPO')).end();
+        }),
+      );
 
       expect(await out, 'CFG|99|REPO');
     });

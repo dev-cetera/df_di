@@ -68,8 +68,8 @@ mixin StreamServiceMixin<TData extends Object> on ServiceMixin {
   @override
   @mustCallSuper
   TServiceResolvables<Unit> provideInitListeners(void _) => [
-    (_) => restartStream(),
-  ];
+        (_) => restartStream(),
+      ];
 
   @override
   @mustCallSuper
@@ -102,8 +102,8 @@ mixin StreamServiceMixin<TData extends Object> on ServiceMixin {
   @override
   @mustCallSuper
   TServiceResolvables<Unit> provideDisposeListeners(void _) => [
-    (_) => stopStream(),
-  ];
+        (_) => stopStream(),
+      ];
 
   //
   //
