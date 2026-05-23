@@ -215,69 +215,154 @@ mixin ServiceMixin {
     required String phaseName,
     Option<void Function()> onSuccessMustNotThrow = const None(),
   }) {
-    // Run listeners inside a single sequencer task. Listeners are chained via
-    // Resolvable composition (NOT re-entrant sequencer tasks) so:
-    //   • listener execution order matches declaration order, and
-    //   • the state transition runs after every listener has actually run.
-    // Using Resolvable.then preserves the Sync-fast-path so existing
-    // consec-based onUnregister hooks keep working when listeners are sync.
-    return _sequencer.then((_) {
-      _state = attemptState;
-      Option<Object> firstError = const None();
+    // NOTE: Do NOT wrap this body in another `_sequencer.then(...)` —
+    // `init() / pause() / resume() / dispose()` already do that, so a second
+    // sequencer hop here re-enters the same sequencer while the outer task
+    // is mid-`_executeStep`. Inside that nested call `_sequencer.then` would
+    // return the OUTER `_current` (a lazy Async that's currently computing),
+    // and `combine2` would try to await it — a self-referential deadlock that
+    // only triggers when there's a previously-resolved Async in `_current`
+    // (i.e. after an awaited prior lifecycle phase). Listeners are chained
+    // via Resolvable composition instead.
+    _state = attemptState;
+    Option<Object> firstError = const None();
 
-      void recordError(Object error) {
-        if (firstError case None()) {
-          firstError = Some(error);
-          // Surface listener failures even in release (asserts stripped).
-          Log.err(
-            '$runtimeType.$phaseName: listener failed: $error',
-          );
-        }
-        // Transition state immediately so that even if the assert below
-        // throws in debug, callers (and the surrounding chain) still see the
-        // correct error state.
-        _state = errorState;
-        assert(false, error);
+    void recordError(Object error) {
+      if (firstError case None()) {
+        firstError = Some(error);
+        // Surface listener failures even in release (asserts stripped).
+        Log.err(
+          '$runtimeType.$phaseName: listener failed: $error',
+        );
       }
+      // Transition state immediately so that even if the assert below
+      // throws in debug, callers (and the surrounding chain) still see the
+      // correct error state.
+      _state = errorState;
+      assert(false, error);
+    }
 
-      Resolvable<Unit> chain = Sync.okValue(Unit());
-      for (final listener in providerFunction(null)) {
-        final l = listener;
-        chain = chain
-            .resultMap<Unit>((prev) {
-              if (prev.isErr()) {
-                UNSAFE:
-                recordError(prev.err().unwrap());
-                // eagerError: propagate Err → next `.then` is short-circuited.
-                // non-eager: swallow into Ok so the next listener still runs.
-                return eagerError ? prev : Ok(Unit());
+    Resolvable<Unit> chain = Sync.okValue(Unit());
+    for (final listener in providerFunction(null)) {
+      final l = listener;
+      chain = _chainListener(
+        prev: chain,
+        listener: l,
+        eagerError: eagerError,
+        recordError: recordError,
+      );
+    }
+
+    // Final transition: depends on the chain's resolved state.
+    return _finalizeChain(
+      chain: chain,
+      recordError: recordError,
+      firstError: () => firstError,
+      attemptState: attemptState,
+      successState: successState,
+      errorState: errorState,
+      onSuccessMustNotThrow: onSuccessMustNotThrow,
+    );
+  }
+
+  /// Chains [listener] onto [prev], handling [prev]'s Result for both
+  /// `Ok` and `Err`. `Async.resultMap` and `Async.then` re-throw on Err
+  /// without firing their callback — this helper splits the Sync and
+  /// Async paths so `recordError` fires for both cases without adding
+  /// unnecessary microtasks on the Sync fast-path.
+  Resolvable<Unit> _chainListener({
+    required Resolvable<Unit> prev,
+    required Resolvable<Unit> Function(Unit) listener,
+    required bool eagerError,
+    required void Function(Object) recordError,
+  }) {
+    if (prev is Sync<Unit>) {
+      // Sync.resultMap fires the callback for Ok AND Err. Use it to keep
+      // the fast path identical to the pre-fix behaviour. Call `.then`
+      // through `asResolvable()` so the compile-time dispatch goes to
+      // `Resolvable.then` (public) rather than `Sync.then` (protected).
+      return prev
+          .resultMap<Unit>((prevResult) {
+            if (prevResult.isErr()) {
+              UNSAFE:
+              recordError(prevResult.err().unwrap());
+              if (eagerError) {
+                return prevResult;
               }
-              return prev;
-            })
-            .then((_) => l(Unit()))
-            .flatten();
-      }
-
-      // Final transition: depends on the chain's resolved state.
-      return chain.resultMap<Option>((finalResult) {
-        if (finalResult.isErr()) {
+              return Ok(Unit());
+            }
+            return prevResult;
+          })
+          .asResolvable()
+          .then((_) => listener(Unit()))
+          .flatten();
+    }
+    // Async prev. Async.resultMap / Async.then re-throw on Err WITHOUT
+    // firing their callback, so we must unwrap the Future manually to
+    // record the Err and (in non-eager mode) continue the chain.
+    return Async<Unit>(() async {
+      final prevResult = await prev.value;
+      if (prevResult.isErr()) {
+        UNSAFE:
+        recordError(prevResult.err().unwrap());
+        if (eagerError) {
           UNSAFE:
-          recordError(finalResult.err().unwrap());
+          throw prevResult.err().unwrap();
         }
-        if (firstError case Some(value: final err)) {
-          _state = errorState;
-          // Propagate the first error so callers (and `.toUnit()` chains) can
-          // still detect failure even if they ignore `_state`.
-          return Err(err);
+      }
+      final listenerResult = await listener(Unit()).value;
+      if (listenerResult.isErr()) {
+        UNSAFE:
+        throw listenerResult.err().unwrap();
+      }
+      return Unit();
+    });
+  }
+
+  /// Final stage of `_updateState`: capture the chain's resolved Result,
+  /// run `recordError` for any uncaptured Err, and transition `_state` to
+  /// `successState` or `errorState` based on whether `firstError` was set.
+  /// Splits Sync/Async paths to avoid extra microtask delays on the
+  /// sync fast-path.
+  Resolvable<Option> _finalizeChain({
+    required Resolvable<Unit> chain,
+    required void Function(Object) recordError,
+    required Option<Object> Function() firstError,
+    required ServiceState attemptState,
+    required ServiceState successState,
+    required ServiceState errorState,
+    required Option<void Function()> onSuccessMustNotThrow,
+  }) {
+    Result<Option> applyResult(Result<Unit> finalResult) {
+      if (finalResult.isErr()) {
+        UNSAFE:
+        recordError(finalResult.err().unwrap());
+      }
+      if (firstError() case Some(value: final err)) {
+        _state = errorState;
+        return Err<Option>(err);
+      }
+      if (_state == attemptState) {
+        _state = successState;
+        if (onSuccessMustNotThrow case Some(value: final cb)) {
+          cb();
         }
-        if (_state == attemptState) {
-          _state = successState;
-          if (onSuccessMustNotThrow case Some(value: final cb)) {
-            cb();
-          }
-        }
-        return const Ok(None());
-      });
+      }
+      return const Ok<Option>(None());
+    }
+
+    if (chain is Sync<Unit>) {
+      return chain.resultMap<Option>(applyResult);
+    }
+    return Async<Option>(() async {
+      final finalResult = await chain.value;
+      final mapped = applyResult(finalResult);
+      if (mapped.isErr()) {
+        UNSAFE:
+        throw mapped.err().unwrap();
+      }
+      UNSAFE:
+      return mapped.unwrap();
     });
   }
 }

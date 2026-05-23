@@ -83,7 +83,10 @@ void _publishResult(String value) {
   marker.textContent = value;
 }
 
+// To do a proper check, run via: flutter run -d chrome --wasm --release
 void main() {
+  // Should show minified type names, not 'Map<String, Object>'.
+  debugPrint('${Map<String, Object>}');
   runApp(const _App());
 }
 

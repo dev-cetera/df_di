@@ -12,6 +12,7 @@
 //.title~
 
 import '/_common.dart';
+import '../../_callback_result.dart';
 import '../../_reserved_safe_completer.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
@@ -296,7 +297,7 @@ base mixin SupportsMixinK on DIBase {
     Dependency dep,
     Option acc,
   ) {
-    final FutureOr<void> cbResult;
+    final Object? cbResult;
     try {
       cbResult = cb(Ok(resolvedDepValue));
     } catch (e) {
@@ -305,9 +306,21 @@ base mixin SupportsMixinK on DIBase {
       );
       return Sync<Option>.okValue(acc);
     }
-    if (cbResult is Future) {
+    final FutureOr<void> awaited;
+    try {
+      awaited = awaitCallbackResult(
+        cbResult,
+        logAndSwallowSyncErr: true,
+        logContext: 'onUnregister for ${dep.runtimeType}',
+      );
+    } catch (e) {
+      Log.err('onUnregister for ${dep.runtimeType} surfaced sync error: $e');
+      return Sync<Option>.okValue(acc);
+    }
+    if (awaited is Future) {
+      final fut = awaited;
       return Async<Option>(() async {
-        await cbResult;
+        await fut;
         return acc;
       });
     }

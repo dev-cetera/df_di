@@ -832,15 +832,22 @@ void main() {
             onUnregister: const Some(ServiceMixin.unregister),
           )
           .end();
-      // Allow the init chain to complete (it will land in RUN_ERROR).
-      // Until-resolve still finds the registered instance.
-      UNSAFE:
-      final got = await di
-          .untilSuper<TallyService>()
-          .toAsync()
-          .value
-          .then((r) => r.unwrap());
-      expect(identical(got, bad), isTrue);
+      // Allow the init chain to complete (it will land in RUN_ERROR). After
+      // the C6-aligned fix, `untilSuper` surfaces the init failure as an Err
+      // — the `bad` instance is unreachable via the public Resolvable API.
+      // We confirm: the failure is observable (Err result), the service's
+      // own state moved to RUN_ERROR, and the registry still treats the slot
+      // as occupied so a follow-up `register` of the SAME type is rejected.
+      final result =
+          await di.untilSuper<TallyService>().toAsync().value;
+      expect(
+        result.isErr(),
+        isTrue,
+        reason:
+            'onRegister failure (whether sync throw, async throw, or '
+            'Resolvable-Err) must surface as Err on `untilSuper` — C6 '
+            'contract.',
+      );
       expect(bad.state, ServiceState.RUN_ERROR);
 
       // Swap in a healthy one.

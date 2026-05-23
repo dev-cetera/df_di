@@ -48,8 +48,3 @@ dart test                                # all
 dart test test/service_lifecycle_test.dart
 dart test --plain-name "untilSuper"
 ```
-
-## Recent breaking work
-
-- **0.16.0**: Coordinated major bump across the stack — constraint upgrades to `df_safer_dart ^0.18`, `df_type ^0.15`, `df_log ^0.5`, `df_debouncer ^0.5`. No public-API breakage in this package.
-- **0.15.11**: Fix for dart2js release-mode bug where `until*` waiters silently never resolved (see CHANGELOG for the full explanation).

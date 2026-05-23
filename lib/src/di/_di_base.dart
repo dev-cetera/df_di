@@ -12,6 +12,7 @@
 //.title~
 
 import '/_common.dart';
+import '../_callback_result.dart';
 import '../_reserved_safe_completer.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
@@ -132,15 +133,34 @@ base class DIBase {
   /// routes it through the standard error path. Extracted from `register()`
   /// so the FutureOr-assignment plumbing sits outside the `@mustAwaitAllFutures`
   /// Resolvable callback.
+  ///
+  /// The callback signature is `FutureOr<void> Function(T)`, but it is
+  /// ergonomic in practice to write `(s) => s.init()` where `init()` returns
+  /// a `Resolvable<Unit>`. `Resolvable` is neither a `Future` nor `void` — if
+  /// we treated such a return as sync, the `untilSuper` waiter would resolve
+  /// against a half-initialized service, defeating the C6 contract for the
+  /// ergonomic form. To close that hole we explicitly detect a `Resolvable`
+  /// return and unwrap its `.value`.
   FutureOr<void> _safeOnRegister<T extends Object>(
     Option<TOnRegisterCallback<T>> onRegister,
     T value,
   ) {
     try {
-      return switch (onRegister) {
+      // Capture the callback's return as `Object?` (NOT `FutureOr<void>`) so
+      // `awaitCallbackResult` can dispatch on the runtime type (a `void`
+      // static type would reject further use).
+      final Object? result = switch (onRegister) {
         Some(value: final cb) => cb(value),
         None() => null,
       };
+      // For onRegister, ANY failure must surface as Err on the resulting
+      // Resolvable — a half-registered service is unacceptable for
+      // medical-grade callers — so do NOT log-and-swallow sync errors here.
+      return awaitCallbackResult(
+        result,
+        logAndSwallowSyncErr: false,
+        logContext: 'onRegister<$T>',
+      );
     } catch (err, st) {
       return Future<void>.error(err, st);
     }
@@ -348,7 +368,7 @@ base class DIBase {
     Dependency dep,
     Option<T> acc,
   ) {
-    final FutureOr<void> cbResult;
+    final Object? cbResult;
     try {
       cbResult = cb(Ok(resolvedDepValue));
     } catch (e) {
@@ -357,9 +377,26 @@ base class DIBase {
       );
       return Sync<Option<T>>.okValue(acc);
     }
-    if (cbResult is Future) {
+    // For onUnregister we follow the documented contract: sync failures are
+    // logged and the chain continues; async failures propagate. The helper
+    // honours both shapes (Future / Resolvable) and the logSyncErr flag.
+    final FutureOr<void> awaited;
+    try {
+      awaited = awaitCallbackResult(
+        cbResult,
+        logAndSwallowSyncErr: true,
+        logContext: 'onUnregister for ${dep.runtimeType}',
+      );
+    } catch (e) {
+      // Sync `throw v` from the helper only fires when
+      // logAndSwallowSyncErr=false; for unregister it stays a no-op.
+      Log.err('onUnregister for ${dep.runtimeType} surfaced sync error: $e');
+      return Sync<Option<T>>.okValue(acc);
+    }
+    if (awaited is Future) {
+      final fut = awaited;
       return Async<Option<T>>(() async {
-        await cbResult;
+        await fut;
         return acc;
       });
     }

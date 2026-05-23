@@ -12,6 +12,7 @@
 //.title~
 
 import '/_common.dart';
+import '../../_callback_result.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
@@ -27,13 +28,44 @@ base mixin SupportsServiceMixin on DIBase {
     return register<TService>(
       service,
       onRegister: Some((service) {
-        return service.init().unwrap();
+        // Run the framework-level `init()` first, then chain the user-supplied
+        // onRegister (if any). Without this chain the user's hook would never
+        // observe a fully-initialised service.
+        return consec(
+          awaitCallbackResult(
+            service.init(),
+            logAndSwallowSyncErr: false,
+            logContext: 'registerAndInitService<$TService>.init',
+          ),
+          (_) {
+            return switch (onRegister) {
+              Some(value: final userCb) => awaitCallbackResult(
+                  userCb(service),
+                  logAndSwallowSyncErr: false,
+                  logContext:
+                      'registerAndInitService<$TService>.userOnRegister',
+                ),
+              None() => null,
+            };
+          },
+        );
       }),
       onUnregister: Some((serviceOpt) {
         final service = serviceOpt.unwrap();
         return consec(service.dispose().value, (disposeResult) {
           disposeResult.unwrap();
-          return consec(onUnregister, (_) => service);
+          // Invoke the user-supplied onUnregister AFTER dispose has settled
+          // — previously this slot just `consec`-ed on the Option itself,
+          // which is sync, so the user's callback was never actually called.
+          return switch (onUnregister) {
+            Some(value: final userCb) => awaitCallbackResult(
+                userCb(serviceOpt),
+                logAndSwallowSyncErr: true,
+                logContext:
+                    'registerAndInitService<$TService>.userOnUnregister',
+              ),
+            None() => null,
+          };
         });
       }),
       groupEntity: groupEntity,
