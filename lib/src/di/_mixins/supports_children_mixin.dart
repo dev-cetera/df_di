@@ -15,7 +15,14 @@ import '/_common.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
+/// Adds child-container support to [DI]. Children are themselves [DI]
+/// instances stored lazily under a `groupEntity` and parented to `this`, so
+/// lookups in a child fall through to its parent via the existing `traverse`
+/// machinery. This is what backs [DI.global] / [DI.session] / [DI.user] /
+/// etc.
 base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
+  /// Registers a fresh child [DI] container under [groupEntity]. The child
+  /// is created lazily on first access and is wired to `this` as its parent.
   Resolvable<Lazy<DI>> registerChild({
     Entity groupEntity = const DefaultEntity(),
   }) {
@@ -29,6 +36,8 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
         );
   }
 
+  /// Returns the child registered under [groupEntity], or `None` if no child
+  /// is registered or it failed to construct.
   Option<DI> getChildOrNone({Entity groupEntity = const DefaultEntity()}) {
     final option = getChild(groupEntity: groupEntity);
     if (option.isNone()) {
@@ -44,6 +53,9 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     }
   }
 
+  /// Returns the child registered under [groupEntity] wrapped in a `Result`,
+  /// or `None` if no child is registered. The `Result` carries an `Err` if
+  /// child construction failed.
   Option<Result<DI>> getChild({Entity groupEntity = const DefaultEntity()}) {
     final g = groupEntity.preferOverDefault(focusGroup);
     if (childrenContainer.isNone()) {
@@ -66,6 +78,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     }
   }
 
+  /// `Type`-keyed variant of [getChild].
   Option<Result<DI>> getChildT({Entity groupEntity = const DefaultEntity()}) {
     final g = groupEntity.preferOverDefault(focusGroup);
     if (childrenContainer.isNone()) {
@@ -120,6 +133,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     }
   }
 
+  /// `Type`-keyed variant of [unregisterChild].
   Result<Option<DI>> unregisterChildT(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
@@ -152,7 +166,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
   /// Children are registered as `Lazy<DI>` (see [registerChild]), so probe
   /// for that exact key — `isRegistered<DI>` would not match under the
   /// strict-keying contract.
-  bool isChildRegistered<T extends Object>({
+  bool isChildRegistered({
     Entity groupEntity = const DefaultEntity(),
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
@@ -163,7 +177,9 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     return childrenContainer.unwrap().isRegistered<Lazy<DI>>(groupEntity: g);
   }
 
-  bool isChildRegisteredT<T extends Object>({
+  /// `Type`-keyed variant of [isChildRegistered]. Functionally identical —
+  /// kept for naming-symmetry with the rest of the T-track API.
+  bool isChildRegisteredT({
     Entity groupEntity = const DefaultEntity(),
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
@@ -177,6 +193,10 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
         );
   }
 
+  /// Returns the child container under [groupEntity], registering one
+  /// lazily if needed. This is the convenience entry point most callers
+  /// reach for — `DI.global`, `DI.session`, `DI.user`, etc. all funnel
+  /// through here.
   DI child({Entity groupEntity = const DefaultEntity()}) {
     UNSAFE:
     {

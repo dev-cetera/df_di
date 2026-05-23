@@ -186,7 +186,7 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
   /// typically be the most general type expected.
   @protected
   @pragma('vm:prefer-inline')
-  Resolvable<T> untilLazySingletonyExactlyK<T extends Object>(
+  Resolvable<T> untilLazySingletonExactlyK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,

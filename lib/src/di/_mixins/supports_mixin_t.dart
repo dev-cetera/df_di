@@ -133,24 +133,27 @@ base mixin SupportsMixinT on SupportsMixinK {
     );
   }
 
-  /// Unregisters a dependency.
+  /// Unregisters a dependency. Mirrors [unregisterK]'s contract — see there
+  /// for `traverse`, `removeAll`, and `triggerOnUnregisterCallbacks`.
   @pragma('vm:prefer-inline')
   Resolvable<Option> unregisterT(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
     bool removeAll = true,
+    bool triggerOnUnregisterCallbacks = true,
   }) {
     return unregisterK(
       TypeEntity(type),
       groupEntity: groupEntity,
       traverse: traverse,
       removeAll: removeAll,
+      triggerOnUnregisterCallbacks: triggerOnUnregisterCallbacks,
     );
   }
 
-  /// Removes a dependency from the registry.
-  @protected
+  /// Removes a dependency from the registry. Mirrors [removeDependencyK] —
+  /// public on this track for parity with the plain and K variants.
   @pragma('vm:prefer-inline')
   Option<Dependency> removeDependencyT<T extends Object>(
     Type type, {
@@ -186,6 +189,42 @@ base mixin SupportsMixinT on SupportsMixinK {
     bool traverse = true,
   }) {
     return untilExactlyK<T>(
+      TypeEntity(type),
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
+  }
+
+  /// Alias for [untilExactlyT] that exists for naming-symmetry with the plain
+  /// `untilSuper<T>` track. The T (Type-keyed) track is exact-match by design
+  /// (a `Type` is wrapped in a `TypeEntity` and looked up by equality), so
+  /// "Super" here is purely an API-naming convenience — subtype relationships
+  /// between Dart types are NOT considered. Requires `enableUntilExactlyK:
+  /// true` at registration time.
+  @pragma('vm:prefer-inline')
+  Resolvable<T> untilSuperT<T extends Object>(
+    Type type, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return untilExactlyT<T>(
+      type,
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
+  }
+
+  /// Counterpart to `until<TSuper, TSub>` on the T (Type-keyed) track. Waits
+  /// exact-match on [type] (T is exact-only by design — see [untilSuperT])
+  /// and casts the resolved value to [TSub]. Requires `enableUntilExactlyK:
+  /// true` at registration time.
+  @pragma('vm:prefer-inline')
+  Resolvable<TSub> untilT<TSuper extends Object, TSub extends TSuper>(
+    Type type, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return untilK<TSuper, TSub>(
       TypeEntity(type),
       groupEntity: groupEntity,
       traverse: traverse,

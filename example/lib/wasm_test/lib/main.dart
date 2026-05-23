@@ -562,11 +562,11 @@ class _HarnessState extends State<_Harness> {
     );
 
     await _run(
-      'untilLazySingletonyExactlyT(Type) materializes the singleton',
+      'untilLazySingletonExactlyT(Type) materializes the singleton',
       () async {
         final di = DI();
         var ctor = 0;
-        final wait = di.untilLazySingletonyExactlyT<_Repo>(_Repo);
+        final wait = di.untilLazySingletonExactlyT<_Repo>(_Repo);
         unawaited(
           Future<void>.delayed(
             const Duration(milliseconds: 40),

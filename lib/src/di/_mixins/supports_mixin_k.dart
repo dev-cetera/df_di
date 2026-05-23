@@ -202,11 +202,18 @@ base mixin SupportsMixinK on DIBase {
   }
 
   /// Retrieves the underlying `Dependency` object.
+  ///
+  /// [visited] is for internal cycle-detection on misconfigured hierarchies
+  /// (e.g. `a.parents.add(b)` and `b.parents.add(a)`). Callers should leave
+  /// it null.
   Option<Result<Dependency<T>>> getDependencyK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
+    Set<DI>? visited,
   }) {
+    final v = visited ?? <DI>{};
+    if (!v.add(this as DI)) return const None();
     final g = groupEntity.preferOverDefault(focusGroup);
     final option = registry.getDependencyK(typeEntity, groupEntity: g);
     var temp = option.map((e) => Ok(e).transf<Dependency<T>>());
@@ -215,6 +222,7 @@ base mixin SupportsMixinK on DIBase {
         temp = (parent as SupportsMixinK).getDependencyK(
           typeEntity,
           groupEntity: g,
+          visited: v,
         );
         if (temp.isSome()) {
           break;
@@ -240,7 +248,11 @@ base mixin SupportsMixinK on DIBase {
     final g = groupEntity.preferOverDefault(focusGroup);
     final removed = <Dependency>[];
 
-    final containers = traverse ? [this as DI, ...parents] : [this as DI];
+    // Walk the FULL ancestor chain (with cycle detection), matching the
+    // depth of `isRegisteredK(traverse: true)`. See the corresponding fix
+    // in [DIBase.unregister] for the symmetry rationale.
+    final containers =
+        traverse ? _allAncestorsK() : <DI>[this as DI];
     for (final di in containers) {
       final dependencyOption = di.removeDependencyK(typeEntity, groupEntity: g);
       if (dependencyOption.isNone()) {
@@ -250,42 +262,93 @@ base mixin SupportsMixinK on DIBase {
       UNSAFE:
       removed.add(dependencyOption.unwrap());
       // Clean up matching completers on this container
-      cleanupCompleters(typeEntity, groupEntity: g);
+      (di as SupportsMixinK).cleanupCompleters(typeEntity, groupEntity: g);
       if (!removeAll) break;
     }
 
     if (removed.isEmpty) return syncNone();
 
-    final firstResolvable = removed.first.value;
-    return firstResolvable.then((first) {
-      if (!triggerOnUnregisterCallbacks) return Sync<Option>.okValue(Some(first));
-      Resolvable<Option> chain = Sync<Option>.okValue(Some(first));
-      for (final dep in removed) {
-        final metaOpt = dep.metadata;
-        if (metaOpt.isNone()) continue;
-        UNSAFE:
-        final cbOpt = metaOpt.unwrap().onUnregister;
-        if (cbOpt.isNone()) continue;
-        UNSAFE:
-        final cb = cbOpt.unwrap();
-        final depValue = dep.value;
-        chain = chain
-            .then(
-              (acc) => depValue
-                  .then(
-                    (resolvedDepValue) => _fireOnUnregisterK(
-                      cb,
-                      resolvedDepValue,
-                      dep,
-                      acc,
-                    ),
-                  )
-                  .flatten(),
-            )
-            .flatten();
+    // See `_di_base.dart::_runOnUnregisterChain` for why we can't use a plain
+    // `firstResolvable.then(...)` outer wrapper here — `.then` short-circuits
+    // on Err and would silently skip every onUnregister callback when the
+    // dep's Resolvable resolved to Err.
+    var chain = _firstResolvedToOptionK(removed.first);
+    if (!triggerOnUnregisterCallbacks) return chain;
+    for (final dep in removed) {
+      final metaOpt = dep.metadata;
+      if (metaOpt.isNone()) continue;
+      UNSAFE:
+      final cbOpt = metaOpt.unwrap().onUnregister;
+      if (cbOpt.isNone()) continue;
+      UNSAFE:
+      final cb = cbOpt.unwrap();
+      chain = _chainOnUnregisterStepK(chain, dep, cb);
+    }
+    return chain;
+  }
+
+  /// Sync/Async-aware adaptation of `_di_base::_firstResolvedToOption` for
+  /// the un-typed K chain.
+  Resolvable<Option> _firstResolvedToOptionK(Dependency dep) {
+    final resolvable = dep.value;
+    if (resolvable is Sync) {
+      UNSAFE:
+      final result = resolvable.value;
+      if (result.isErr()) {
+        return Sync<Option>.okValue(const None());
       }
-      return chain;
-    }).flatten();
+      UNSAFE:
+      return Sync<Option>.okValue(Some(result.unwrap()));
+    }
+    return Async<Option>(() async {
+      final result = await resolvable.value;
+      if (result.isErr()) return const None();
+      UNSAFE:
+      return Some(result.unwrap());
+    });
+  }
+
+  /// Sync/Async-aware adaptation of `_di_base::_chainOnUnregisterStep` for
+  /// the un-typed K chain.
+  Resolvable<Option> _chainOnUnregisterStepK(
+    Resolvable<Option> chain,
+    Dependency dep,
+    TOnUnregisterCallback<Object> cb,
+  ) {
+    if (chain is Sync<Option> && dep.value is Sync<Object>) {
+      UNSAFE:
+      final accResult = chain.value;
+      if (accResult.isErr()) {
+        return chain;
+      }
+      UNSAFE:
+      final acc = accResult.unwrap();
+      UNSAFE:
+      final depResult = (dep.value as Sync<Object>).value;
+      return _fireOnUnregisterK(cb, depResult, dep, acc);
+    }
+    return Async<Option>(() async {
+      final accResult = await chain.value;
+      if (accResult.isErr()) {
+        UNSAFE:
+        throw accResult.err().unwrap();
+      }
+      UNSAFE:
+      final acc = accResult.unwrap();
+      final depResult = await dep.value.value;
+      final fireResult = await _fireOnUnregisterK(
+        cb,
+        depResult,
+        dep,
+        acc,
+      ).value;
+      if (fireResult.isErr()) {
+        UNSAFE:
+        throw fireResult.err().unwrap();
+      }
+      UNSAFE:
+      return fireResult.unwrap();
+    });
   }
 
   /// Same pattern as `_di_base.dart`'s `_fireOnUnregister`, specialised for
@@ -293,13 +356,13 @@ base mixin SupportsMixinK on DIBase {
   /// logged and the chain continues with [acc]; async errors propagate.
   Resolvable<Option> _fireOnUnregisterK(
     TOnUnregisterCallback<Object> cb,
-    Object resolvedDepValue,
+    Result<Object> depResult,
     Dependency dep,
     Option acc,
   ) {
     final Object? cbResult;
     try {
-      cbResult = cb(Ok(resolvedDepValue));
+      cbResult = cb(depResult);
     } catch (e) {
       Log.err(
         'onUnregister for ${dep.runtimeType} threw synchronously: $e',
@@ -344,14 +407,38 @@ base mixin SupportsMixinK on DIBase {
     return result;
   }
 
+  /// BFS walk of this container + every reachable ancestor through
+  /// `.parents`, with cycle detection. Used by [unregisterK] to mirror the
+  /// depth of [isRegisteredK].
+  List<DI> _allAncestorsK() {
+    final result = <DI>[this as DI];
+    final visited = <DI>{this as DI};
+    var i = 0;
+    while (i < result.length) {
+      final di = result[i];
+      for (final parent in di.parents) {
+        if (visited.add(parent)) {
+          result.add(parent);
+        }
+      }
+      i++;
+    }
+    return result;
+  }
+
   /// Returns whether a dependency keyed under exact [typeEntity] is
   /// registered. Strict: a `Lazy<...>` variant is NOT matched — pass
   /// `TypeEntity(Lazy, [typeEntity])` explicitly to check for that.
+  ///
+  /// [visited] is for internal cycle-detection on misconfigured hierarchies.
   bool isRegisteredK(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
+    Set<DI>? visited,
   }) {
+    final v = visited ?? <DI>{};
+    if (!v.add(this as DI)) return false;
     final g = groupEntity.preferOverDefault(focusGroup);
     if (registry.containsDependencyK(typeEntity, groupEntity: g)) {
       return true;
@@ -362,6 +449,7 @@ base mixin SupportsMixinK on DIBase {
           typeEntity,
           groupEntity: g,
           traverse: true,
+          visited: v,
         )) {
           return true;
         }
@@ -395,21 +483,43 @@ base mixin SupportsMixinK on DIBase {
         return test.unwrap();
       }
       final myEpoch = _epochForK(g, typeEntity);
-      var completer = completersK[g]?.firstWhereOrNull(
-        (e) => e.typeEntity == typeEntity,
-      );
+      // Look for an existing completer in THIS container OR any ancestor
+      // (so concurrent waiters from different containers share one).
+      ReservedSafeCompleter? completer;
+      final searchScope = traverse ? _allAncestorsK() : <DI>[this as DI];
+      for (final di in searchScope) {
+        final found = (di as SupportsMixinK).completersK[g]?.firstWhereOrNull(
+          (e) => e.typeEntity == typeEntity,
+        );
+        if (found != null) {
+          completer = found;
+          break;
+        }
+      }
       if (completer == null) {
         completer = ReservedSafeCompleter(typeEntity);
         (completersK[g] ??= []).add(completer);
+        // Seed the completer into every ancestor so an ancestor's
+        // `register<...>(..., enableUntilExactlyK: true)` (which only walks
+        // its OWN `completersK`, not transitively into children) still
+        // fires this waiter. Mirrors the `until` directional-asymmetry fix.
+        if (traverse) {
+          for (final ancestor in _allAncestorsK().skip(1)) {
+            final mixinAncestor = ancestor as SupportsMixinK;
+            (mixinAncestor.completersK[g] ??= []).add(completer);
+          }
+        }
       }
       return completer.resolvable().then((_) {
-        final temp = completersK[g] ?? [];
-        for (var n = 0; n < temp.length; n++) {
-          final e = temp[n];
-          if (e.typeEntity == typeEntity) {
-            temp.removeAt(n);
-            break;
-          }
+        // Remove the completer from THIS container AND every ancestor we
+        // seeded above. Use identity-comparison so we don't accidentally
+        // drop a different waiter that happens to share the same
+        // typeEntity (e.g. a sibling waiter).
+        final cleanupScope = traverse ? _allAncestorsK() : <DI>[this as DI];
+        for (final di in cleanupScope) {
+          (di as SupportsMixinK)
+              .completersK[g]
+              ?.removeWhere((e) => identical(e, completer));
         }
         if (_epochForK(g, typeEntity) != myEpoch) {
           return untilExactlyK<T>(
@@ -421,6 +531,44 @@ base mixin SupportsMixinK on DIBase {
         return getK<T>(typeEntity, groupEntity: g, traverse: traverse).unwrap();
       }).flatten();
     }
+  }
+
+  /// Alias for [untilExactlyK] that exists for naming-symmetry with the plain
+  /// `untilSuper<T>` track. On the K (Entity-keyed) track there is no
+  /// subtype-matching — Entities are looked up by equality — so "Super" here
+  /// is purely an API-naming convenience: the registered dependency's
+  /// `typeEntity` must equal the one passed in. Still requires
+  /// `enableUntilExactlyK: true` at registration time.
+  @pragma('vm:prefer-inline')
+  Resolvable<T> untilSuperK<T extends Object>(
+    Entity typeEntity, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return untilExactlyK<T>(
+      typeEntity,
+      groupEntity: groupEntity,
+      traverse: traverse,
+    );
+  }
+
+  /// Counterpart to `until<TSuper, TSub>` on the K (Entity-keyed) track.
+  /// Waits exact-match on [typeEntity] (K is exact-only by design — see
+  /// [untilSuperK]) and casts the resolved value to [TSub]. The compile-time
+  /// `TSub extends TSuper` bound mirrors the plain API; at runtime it is a
+  /// straight downcast through `.transf<TSub>()`. Requires
+  /// `enableUntilExactlyK: true` at registration time.
+  @pragma('vm:prefer-inline')
+  Resolvable<TSub> untilK<TSuper extends Object, TSub extends TSuper>(
+    Entity typeEntity, {
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
+    return untilExactlyK<TSuper>(
+      typeEntity,
+      groupEntity: groupEntity,
+      traverse: traverse,
+    ).transf<TSub>();
   }
 
   /// Stores completers for [untilExactlyK].

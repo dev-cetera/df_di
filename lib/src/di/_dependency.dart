@@ -36,31 +36,12 @@ final class Dependency<T extends Object> {
   /// The value contained within this [Dependency].
   Resolvable<T> get value => _value;
 
-  // NOTE: Something like this can be used to optimize re-registration from
-  // Async to Sync.
-  // Async<T>? _cachedValue;
-
-  // /// Caches the result of an asynchronous operation to prevent re-execution.
-  // @protected
-  // Async<T> cacheAsyncValue() {
-  //   if (_cachedValue != null) {
-  //     return _cachedValue!;
-  //   }
-  //   _cachedValue = Async(() async {
-  //     final result = await _value.async().unwrap().value;
-  //     _value = Sync.value(result);
-  //     print(this._value);
-  //     return result.unwrap();
-  //   });
-
-  //   return _cachedValue!;
-  // }
-
   /// The metadata associated with this [Dependency].
   final Option<DependencyMetadata> metadata;
 
-  /// Returns the `preemptivetypeEntity` of [metadata] if not `null` or the
-  /// runtime type key of [_value].
+  /// The registry key for this dependency: returns
+  /// [DependencyMetadata.preemptivetypeEntity] if one was supplied, otherwise
+  /// the runtime type of the wrapped value.
   Entity get typeEntity {
     UNSAFE:
     {
@@ -133,14 +114,13 @@ class DependencyMetadata {
   /// they are assigned to different groups.
   final Entity groupEntity;
 
-  /// The type key that the dependency is associated with within its group. If
-  /// not `null`, it will override the default type key.
+  /// An explicit type key for this dependency. When not [DefaultEntity], this
+  /// overrides the runtime type of the wrapped value as the registry key.
   final Entity preemptivetypeEntity;
 
-  /// The type of [Dependency._value] at the time the [Dependency] was registered.
-  /// This type remains unchanged even if [Dependency._value] is updated through
-  /// [Dependency.passNewValue]. This property consistently reflects the original type
-  /// with which the dependency was registered.
+  /// The runtime type of the wrapped value at the moment the dependency was
+  /// first registered. Stable across [Dependency.passNewValue] swaps, so it
+  /// always reflects the original registration type.
   Option<Type> get initialType => _initialType;
   Option<Type> _initialType = const None();
 

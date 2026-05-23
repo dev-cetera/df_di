@@ -138,7 +138,7 @@ base mixin SupportsConstructorsMixinT
   /// Retrieves the lazily loaded singleton dependency unsafely, returning the
   /// instance directly or throwing an error if not found or not a singleton.
   @pragma('vm:prefer-inline')
-  FutureOr<Object> getLazySingletonUnsafeT<T extends Object>(
+  FutureOr<T> getLazySingletonUnsafeT<T extends Object>(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
@@ -153,12 +153,12 @@ base mixin SupportsConstructorsMixinT
   /// Waits until a dependency of type `TSuper` is registered. `TSuper` should
   /// typically be the most general type expected.
   @pragma('vm:prefer-inline')
-  Resolvable<T> untilLazySingletonyExactlyT<T extends Object>(
+  Resolvable<T> untilLazySingletonExactlyT<T extends Object>(
     Type type, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    return untilLazySingletonyExactlyK<T>(
+    return untilLazySingletonExactlyK<T>(
       TypeEntity(type),
       groupEntity: groupEntity,
       traverse: traverse,

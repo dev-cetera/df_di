@@ -16,7 +16,18 @@ import '../../_callback_result.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
+/// Adds first-class [ServiceMixin] handling to a [DI] container: services
+/// register, `init()` is run, and `dispose()` is cascaded automatically when
+/// the service is unregistered.
 base mixin SupportsServiceMixin on DIBase {
+  /// Registers [service] and drives its lifecycle:
+  ///
+  /// * Runs `service.init()` before the user-supplied [onRegister] fires, so
+  ///   the user hook always sees a fully-initialised service.
+  /// * On unregister, runs `service.dispose()` first, then [onUnregister].
+  ///
+  /// Pass [enableUntilExactlyK] `true` if you intend to wait on this exact
+  /// registration via `untilExactlyK` / `untilExactlyT`.
   Resolvable<Unit> registerAndInitService<TService extends ServiceMixin>(
     TService service, {
     Option<TOnRegisterCallback<TService>> onRegister = const None(),
