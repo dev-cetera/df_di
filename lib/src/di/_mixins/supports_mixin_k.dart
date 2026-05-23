@@ -255,40 +255,63 @@ base mixin SupportsMixinK on DIBase {
 
     if (removed.isEmpty) return syncNone();
 
-    UNSAFE:
-    {
-      final firstValue = removed.first.value;
-      return Resolvable<Option>(() {
-        return consec<Object, Option>(firstValue.unwrap(), (first) {
-          if (!triggerOnUnregisterCallbacks) return Some(first);
-          FutureOr<Option> chain = Some(first);
-          for (final dep in removed) {
-            final metaOpt = dep.metadata;
-            if (metaOpt.isNone()) continue;
-            final cbOpt = metaOpt.unwrap().onUnregister;
-            if (cbOpt.isNone()) continue;
-            final cb = cbOpt.unwrap();
-            final depValue = dep.value;
-            chain = consec(chain, (acc) {
-              return consec(depValue.unwrap(), (resolvedDepValue) {
-                FutureOr<void> cbResult;
-                try {
-                  cbResult = cb(Ok(resolvedDepValue));
-                } catch (e) {
-                  Log.err(
-                    'onUnregister for ${dep.runtimeType} threw '
-                    'synchronously: $e',
-                  );
-                  return acc;
-                }
-                return consec<void, Option>(cbResult, (_) => acc);
-              });
-            });
-          }
-          return chain;
-        });
+    final firstResolvable = removed.first.value;
+    return firstResolvable.then((first) {
+      if (!triggerOnUnregisterCallbacks) return Sync<Option>.okValue(Some(first));
+      Resolvable<Option> chain = Sync<Option>.okValue(Some(first));
+      for (final dep in removed) {
+        final metaOpt = dep.metadata;
+        if (metaOpt.isNone()) continue;
+        UNSAFE:
+        final cbOpt = metaOpt.unwrap().onUnregister;
+        if (cbOpt.isNone()) continue;
+        UNSAFE:
+        final cb = cbOpt.unwrap();
+        final depValue = dep.value;
+        chain = chain
+            .then(
+              (acc) => depValue
+                  .then(
+                    (resolvedDepValue) => _fireOnUnregisterK(
+                      cb,
+                      resolvedDepValue,
+                      dep,
+                      acc,
+                    ),
+                  )
+                  .flatten(),
+            )
+            .flatten();
+      }
+      return chain;
+    }).flatten();
+  }
+
+  /// Same pattern as `_di_base.dart`'s `_fireOnUnregister`, specialised for
+  /// the un-typed `Option` chain used by `unregisterK`. Sync throws are
+  /// logged and the chain continues with [acc]; async errors propagate.
+  Resolvable<Option> _fireOnUnregisterK(
+    TOnUnregisterCallback<Object> cb,
+    Object resolvedDepValue,
+    Dependency dep,
+    Option acc,
+  ) {
+    final FutureOr<void> cbResult;
+    try {
+      cbResult = cb(Ok(resolvedDepValue));
+    } catch (e) {
+      Log.err(
+        'onUnregister for ${dep.runtimeType} threw synchronously: $e',
+      );
+      return Sync<Option>.okValue(acc);
+    }
+    if (cbResult is Future) {
+      return Async<Option>(() async {
+        await cbResult;
+        return acc;
       });
     }
+    return Sync<Option>.okValue(acc);
   }
 
   /// Removes the dependency keyed under exact [typeEntity] from the registry.

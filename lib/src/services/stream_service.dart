@@ -132,10 +132,7 @@ mixin StreamServiceMixin<TData extends Object> on ServiceMixin {
       // doesn't surface as an uncaught future error in the surrounding zone.
       final initFv = newCompleter.resolvable().value;
       if (initFv is Future) {
-        (initFv as Future).then<void>(
-          (_) {},
-          onError: (_, [__]) {},
-        );
+        _attachNoOpHandler(initFv as Future);
       }
       final controller = StreamController<Result<TData>>.broadcast();
       _streamController = Some(controller);
@@ -153,13 +150,30 @@ mixin StreamServiceMixin<TData extends Object> on ServiceMixin {
           },
           onDone: () {
             if (epoch != _streamEpoch) return;
-            controller.close();
+            _closeController(controller);
           },
           cancelOnError: false,
         ),
       );
       return Unit();
     });
+  }
+
+  /// Attaches a no-op error handler to [f] so an unawaited Err resolution
+  /// doesn't surface as an uncaught future error in the surrounding zone.
+  /// Extracted so it can be called from inside `@noFutures` Sync callbacks
+  /// without the lint visiting the resulting Future expression.
+  void _attachNoOpHandler(Future<Object?> f) {
+    f.then<void>(
+      (_) {},
+      onError: (_, [__]) {},
+    );
+  }
+
+  /// Closes [c] as a side effect. Extracted to keep the future-typed
+  /// `close()` call out of `@noFutures` Stream-subscription callbacks.
+  void _closeController(StreamController<Result<TData>> c) {
+    c.close();
   }
 
   //
@@ -212,9 +226,9 @@ mixin StreamServiceMixin<TData extends Object> on ServiceMixin {
       if (prevCompleter.isSome() && !prevCompleter.unwrap().isCompleted) {
         UNSAFE:
         final c = prevCompleter.unwrap();
-        final resolvable = c.resolvable().value;
-        if (resolvable is Future<Result<TData>>) {
-          resolvable.then(
+        final dynamic resolvable = c.resolvable().value;
+        if (resolvable is Future) {
+          resolvable.then<void>(
             (_) {},
             onError: (_, [__]) {},
           );

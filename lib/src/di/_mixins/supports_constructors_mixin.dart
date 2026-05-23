@@ -43,7 +43,7 @@ base mixin SupportsConstructorsMixin on DIBase {
     Entity groupEntity = const DefaultEntity(),
   }) {
     return registerLazy<T>(
-      () => Resolvable(constructor),
+      () => Resolvable<T>(() => constructor()),
       onRegister: onRegister,
       onUnregister: onUnregister,
       groupEntity: groupEntity,
