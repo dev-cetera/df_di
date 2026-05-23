@@ -63,12 +63,32 @@ Stream<Result<T>> _pollerStream<T extends Object>(
   void poll() {
     if (controller.isClosed) return;
     try {
-      callback().resultMap((value) {
+      // Bypass `Resolvable.resultMap` because `Async.resultMap` re-throws
+      // on Err input and skips the callback — so an `onPoll()` that
+      // resolves to Err (e.g. `Async<T>(() async { throw ... })`) would
+      // silently drop the failure. Inspect the underlying value directly
+      // so both Ok and Err emissions reach the listener. Typed as `Object`
+      // so the custom lint doesn't flag a `Future<Result<...>>` annotation.
+      final Object value = callback().value;
+      if (value is Future) {
+        value.then(
+          (result) {
+            if (controller.isClosed) return;
+            if (result is Result<T>) {
+              controller.add(result);
+            }
+          },
+          onError: (Object e, StackTrace s) {
+            if (!controller.isClosed) {
+              controller.addError(e, s);
+            }
+          },
+        );
+      } else if (value is Result<T>) {
         if (!controller.isClosed) {
           controller.add(value);
         }
-        return value;
-      }).end();
+      }
     } catch (e, s) {
       if (!controller.isClosed) {
         controller.addError(e, s);

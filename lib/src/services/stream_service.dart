@@ -294,7 +294,7 @@ mixin StreamServiceMixin<TData extends Object> on ServiceMixin {
               return Sync.result(prev2);
             }
             if (prev2.isErr()) {
-              assert(prev2.isErr(), prev2.err().unwrap());
+              UNSAFE:
               Log.err(
                 '$runtimeType.pushToStream: listener chain error: '
                 '${prev2.err().unwrap()}',
