@@ -53,11 +53,10 @@ final class DIRegistry {
   List<Dependency> get reversedDependencies {
     final entries = _state.entries.expand((e) => e.value.values);
     final sortedEntries = entries.map((d) {
-      final metadata = d.metadata;
-      UNSAFE:
-      final index = metadata.isSome() && metadata.unwrap().index.isSome()
-          ? metadata.unwrap().index.unwrap()
-          : -1;
+      final index = switch (d.metadata) {
+        Some(value: DependencyMetadata(index: Some(value: final i))) => i,
+        _ => -1,
+      };
       return (index, d);
     }).toList();
     sortedEntries.sort((a, b) => b.$1.compareTo(a.$1));
@@ -113,20 +112,25 @@ final class DIRegistry {
 
   /// Updates the [state] by setting or updating [dependency].
   void setDependency(Dependency dependency) {
-    UNSAFE:
-    UNSAFE:
-    {
-      final groupEntity = dependency.metadata.isSome()
-          ? dependency.metadata.unwrap().groupEntity
-          : const DefaultEntity();
-      final typeEntity = dependency.typeEntity;
-      final currentDep = Option.from(_state[groupEntity]?[typeEntity]);
+    final groupEntity = switch (dependency.metadata) {
+      Some(value: final m) => m.groupEntity,
+      None() => const DefaultEntity(),
+    };
+    final typeEntity = dependency.typeEntity;
+    final currentDep = _state[groupEntity]?[typeEntity];
+    if (currentDep != dependency) {
+      (_state[groupEntity] ??= {})[typeEntity] = dependency;
+      (_typeIndex[typeEntity] ??= <Entity>{}).add(groupEntity);
+      _fireOnChange();
+    }
+  }
 
-      if (currentDep.isNone() || currentDep.unwrap() != dependency) {
-        (_state[groupEntity] ??= {})[typeEntity] = dependency;
-        (_typeIndex[typeEntity] ??= <Entity>{}).add(groupEntity);
-        onChange.ifSome((self, some) => some.unwrap()()).end();
-      }
+  /// Fires the `onChange` listener if one is registered. Extracted so the
+  /// many call sites stay one-liners and the `Some(value: final cb) => cb()`
+  /// shape isn't repeated.
+  void _fireOnChange() {
+    if (onChange case Some(value: final cb)) {
+      cb();
     }
   }
 
@@ -280,7 +284,7 @@ final class DIRegistry {
       removeGroup(groupEntity: groupEntity);
     }
     UNSAFE:
-    onChange.ifSome((self, some) => some.unwrap()()).end();
+    _fireOnChange();
     return removed;
   }
 
@@ -296,24 +300,20 @@ final class DIRegistry {
     }
     final syncKey = TypeEntity(Sync, [typeEntity]);
     final asyncKey = TypeEntity(Async, [typeEntity]);
-    final (Option<Dependency> removed, Option<Entity> removedKey) =
+    final (Option<Dependency> removed, Entity? removedKey) =
         switch (Option<Dependency>.from(group.remove(syncKey))) {
-      final Some<Dependency> s => (s, Some(syncKey)),
+      final Some<Dependency> s => (s, syncKey),
       None() => switch (Option<Dependency>.from(group.remove(asyncKey))) {
-          final Some<Dependency> s => (s, Some(asyncKey)),
-          None() => (const None(), const None()),
+          final Some<Dependency> s => (s, asyncKey),
+          None() => (const None(), null),
         },
     };
-    if (removedKey case None()) {
-      return const None();
-    }
-    UNSAFE:
-    _detachFromTypeIndex(removedKey.unwrap(), groupEntity);
+    if (removedKey == null) return const None();
+    _detachFromTypeIndex(removedKey, groupEntity);
     if (group.isEmpty) {
       removeGroup(groupEntity: groupEntity);
     }
-    UNSAFE:
-    onChange.ifSome((self, some) => some.unwrap()()).end();
+    _fireOnChange();
     return removed.map((e) => e.transf());
   }
 
@@ -339,7 +339,7 @@ final class DIRegistry {
         (_typeIndex[typeEntity] ??= <Entity>{}).add(groupEntity);
       }
       UNSAFE:
-      onChange.ifSome((self, some) => some.unwrap()()).end();
+      _fireOnChange();
     }
   }
 
@@ -376,7 +376,7 @@ final class DIRegistry {
       }
     }
     UNSAFE:
-    onChange.ifSome((self, some) => some.unwrap()()).end();
+    _fireOnChange();
   }
 
   /// Clears the [state], resetting the registry and effectively restoring it
@@ -386,7 +386,7 @@ final class DIRegistry {
     _state.clear();
     _typeIndex.clear();
     UNSAFE:
-    onChange.ifSome((self, some) => some.unwrap()()).end();
+    _fireOnChange();
   }
 
   /// Drops [groupEntity] from the bucket for [typeEntity] in [_typeIndex],

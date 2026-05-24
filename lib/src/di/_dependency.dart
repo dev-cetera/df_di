@@ -22,11 +22,9 @@ final class Dependency<T extends Object> {
   final Resolvable<T> _value;
 
   Dependency(this._value, {this.metadata = const None()}) {
-    UNSAFE:
-    if (metadata.isSome()) {
-      final a = metadata.unwrap();
-      if (a._initialType.isNone()) {
-        a._initialType = Some(_value.runtimeType);
+    if (metadata case Some(value: final m)) {
+      if (m._initialType case None()) {
+        m._initialType = Some(_value.runtimeType);
       }
     }
   }
@@ -42,20 +40,11 @@ final class Dependency<T extends Object> {
   /// The registry key for this dependency: returns
   /// [DependencyMetadata.preemptivetypeEntity] if one was supplied, otherwise
   /// the runtime type of the wrapped value.
-  Entity get typeEntity {
-    UNSAFE:
-    {
-      if (metadata.isNone()) {
-        return TypeEntity(_value.runtimeType);
-      }
-      final preemptivetypeEntity = metadata.unwrap().preemptivetypeEntity;
-      if (preemptivetypeEntity.isDefault()) {
-        return TypeEntity(_value.runtimeType);
-      } else {
-        return preemptivetypeEntity;
-      }
-    }
-  }
+  Entity get typeEntity => switch (metadata) {
+        Some(value: final m) when !m.preemptivetypeEntity.isDefault() =>
+          m.preemptivetypeEntity,
+        _ => TypeEntity(_value.runtimeType),
+      };
 
   /// Creates a new [Dependency] instance with a different value of type [R],
   /// while retaining the existing [metadata].
@@ -73,9 +62,11 @@ final class Dependency<T extends Object> {
     Option<Resolvable<T>> value = const None(),
     Option<DependencyMetadata> metadata = const None(),
   }) {
-    UNSAFE:
     return Dependency<T>(
-      value.isNone() ? _value : value.unwrap(),
+      switch (value) {
+        Some(value: final v) => v,
+        None() => _value,
+      },
       metadata: metadata,
     );
   }
@@ -146,9 +137,18 @@ class DependencyMetadata {
       preemptivetypeEntity: preemptivetypeEntity.isNotDefault()
           ? preemptivetypeEntity
           : this.preemptivetypeEntity,
-      index: index.isSome() ? index : this.index,
-      onUnregister: onUnregister.isSome() ? onUnregister : this.onUnregister,
-    ).._initialType = initialType.isSome() ? initialType : _initialType;
+      index: switch (index) {
+        Some() => index,
+        None() => this.index,
+      },
+      onUnregister: switch (onUnregister) {
+        Some() => onUnregister,
+        None() => this.onUnregister,
+      },
+    ).._initialType = switch (initialType) {
+      Some() => initialType,
+      None() => _initialType,
+    };
   }
 
   @override

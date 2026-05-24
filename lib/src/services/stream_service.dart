@@ -76,10 +76,9 @@ mixin StreamServiceMixin<TData extends Object> on ServiceMixin {
   TServiceResolvables<Unit> providePauseListeners(void _) {
     return [
       (_) {
-        UNSAFE:
-        _streamSubscription.ifSome((self, some) {
-          some.unwrap().pause();
-        }).end();
+        if (_streamSubscription case Some(value: final sub)) {
+          sub.pause();
+        }
         return Sync.okValue(Unit());
       },
     ];
@@ -90,10 +89,9 @@ mixin StreamServiceMixin<TData extends Object> on ServiceMixin {
   TServiceResolvables<Unit> provideResumeListeners(void _) {
     return [
       (_) {
-        UNSAFE:
-        _streamSubscription
-            .ifSome((self, some) => some.unwrap().resume())
-            .end();
+        if (_streamSubscription case Some(value: final sub)) {
+          sub.resume();
+        }
         return Sync.okValue(Unit());
       },
     ];
@@ -130,9 +128,8 @@ mixin StreamServiceMixin<TData extends Object> on ServiceMixin {
       // `initialData`, an Err resolution (either via `pushToStream` of an
       // Err data point, or via the synthetic Err raised by `stopStream`)
       // doesn't surface as an uncaught future error in the surrounding zone.
-      final initFv = newCompleter.resolvable().value;
-      if (initFv is Future) {
-        _attachNoOpHandler(initFv as Future);
+      if (newCompleter.resolvable().value case final Future<Object?> fut) {
+        _attachNoOpHandler(fut);
       }
       final controller = StreamController<Result<TData>>.broadcast();
       _streamController = Some(controller);
@@ -185,62 +182,58 @@ mixin StreamServiceMixin<TData extends Object> on ServiceMixin {
   /// Safe to call repeatedly: subsequent calls become no-ops.
   @protected
   Resolvable<Unit> stopStream() {
-    UNSAFE:
-    {
-      final seq = TaskSequencer();
-      final prevSubscription = _streamSubscription;
-      _streamSubscription = const None();
-      if (prevSubscription.isSome()) {
-        seq.then((prev) {
-          assert(!prev.isErr(), prev.err().unwrap());
-          return Async(() async {
-            final _ = await prevSubscription.unwrap().cancel();
-            if (prev.isErr()) {
-              throw prev.err().unwrap();
-            }
-            return const None();
-          });
-        }).end();
-      }
-      final prevController = _streamController;
-      _streamController = const None();
-      if (prevController.isSome() && !prevController.unwrap().isClosed) {
-        seq.then((prev) {
-          assert(!prev.isErr(), prev.err().unwrap());
-          return Async(() async {
-            await prevController.unwrap().close();
-            if (prev.isErr()) {
-              throw prev.err().unwrap();
-            }
-            return const None();
-          });
-        }).end();
-      }
-      // Complete the initialData completer with an error before clearing it.
-      // This ensures any code awaiting initialData won't hang forever.
-      // We also pre-attach a no-op error handler so that if no caller is
-      // currently awaiting initialData, Dart's uncaught-future-error reporter
-      // doesn't surface the synthetic stop error to the surrounding zone.
-      final prevCompleter = _initDataCompleter;
-      _initDataCompleter = const None();
-      if (prevCompleter.isSome() && !prevCompleter.unwrap().isCompleted) {
-        UNSAFE:
-        final c = prevCompleter.unwrap();
-        final dynamic resolvable = c.resolvable().value;
-        if (resolvable is Future) {
-          resolvable.then<void>(
-            (_) {},
-            onError: (_, [__]) {},
-          );
-        }
-        c
-            .resolve(
-              Sync.err(Err('Stream stopped before initial data was received.')),
-            )
-            .end();
-      }
-      return seq.completion.toUnit();
+    final seq = TaskSequencer();
+    final prevSubscription = _streamSubscription;
+    _streamSubscription = const None();
+    if (prevSubscription case Some(value: final sub)) {
+      seq.then((prev) {
+        assert(!prev.isErr(), () {
+          UNSAFE:
+          return prev.err().unwrap();
+        }());
+        return Async(() async {
+          final _ = await sub.cancel();
+          if (prev case Err(:final error)) throw error;
+          return const None();
+        });
+      }).end();
     }
+    final prevController = _streamController;
+    _streamController = const None();
+    if (prevController case Some(value: final ctrl) when !ctrl.isClosed) {
+      seq.then((prev) {
+        assert(!prev.isErr(), () {
+          UNSAFE:
+          return prev.err().unwrap();
+        }());
+        return Async(() async {
+          await ctrl.close();
+          if (prev case Err(:final error)) throw error;
+          return const None();
+        });
+      }).end();
+    }
+    // Complete the initialData completer with an error before clearing it.
+    // This ensures any code awaiting initialData won't hang forever.
+    // We also pre-attach a no-op error handler so that if no caller is
+    // currently awaiting initialData, Dart's uncaught-future-error reporter
+    // doesn't surface the synthetic stop error to the surrounding zone.
+    final prevCompleter = _initDataCompleter;
+    _initDataCompleter = const None();
+    if (prevCompleter case Some(value: final c) when !c.isCompleted) {
+      if (c.resolvable().value case final Future<Object?> fut) {
+        fut.then<void>(
+          (_) {},
+          onError: (_, [__]) {},
+        );
+      }
+      c
+          .resolve(
+            Sync.err(Err('Stream stopped before initial data was received.')),
+          )
+          .end();
+    }
+    return seq.completion.toUnit();
   }
 
   //
@@ -259,56 +252,45 @@ mixin StreamServiceMixin<TData extends Object> on ServiceMixin {
     Result<TData> data, {
     bool eagerError = false,
   }) {
-    UNSAFE:
-    {
-      // Capture epoch at call-time so a push initiated against a stream that
-      // has since been restarted gets dropped instead of landing in the new
-      // controller / completer.
-      final epochAtCall = _streamEpoch;
-      return _pushSequencer.then((prev1) {
-        assert(!state.didDispose());
-        if (state.didDispose()) {
-          return Sync.result(prev1);
-        }
-        if (epochAtCall != _streamEpoch) {
-          return Sync.result(prev1);
-        }
-        _pushSequencer.then((_) {
-          return Resolvable(() {
-            if (epochAtCall != _streamEpoch) return const None();
-            final controllerOpt = _streamController;
-            if (controllerOpt.isSome()) {
-              final controller = controllerOpt.unwrap();
-              if (!controller.isClosed) {
-                controller.add(data);
-              }
-            }
-            return _initDataCompleter.map(
-              (e) => e.resolve(Sync.result(data)).value,
+    // Capture epoch at call-time so a push initiated against a stream that
+    // has since been restarted gets dropped instead of landing in the new
+    // controller / completer.
+    final epochAtCall = _streamEpoch;
+    return _pushSequencer.then((prev1) {
+      assert(!state.didDispose());
+      if (state.didDispose() || epochAtCall != _streamEpoch) {
+        return Sync.result(prev1);
+      }
+      _pushSequencer.then((_) {
+        return Resolvable(() {
+          if (epochAtCall != _streamEpoch) return const None();
+          if (_streamController case Some(value: final ctrl)
+              when !ctrl.isClosed) {
+            ctrl.add(data);
+          }
+          return _initDataCompleter.map(
+            (e) => e.resolve(Sync.result(data)).value,
+          );
+        });
+      }).end();
+      for (final listener in provideOnPushToStreamListeners()) {
+        _pushSequencer.then((prev2) {
+          if (epochAtCall != _streamEpoch) {
+            return Sync.result(prev2);
+          }
+          if (prev2 case Err(:final error)) {
+            Log.err(
+              '$runtimeType.pushToStream: listener chain error: $error',
             );
-          });
-        }).end();
-        for (final listener in provideOnPushToStreamListeners()) {
-          _pushSequencer.then((prev2) {
-            if (epochAtCall != _streamEpoch) {
+            if (eagerError) {
               return Sync.result(prev2);
             }
-            if (prev2.isErr()) {
-              UNSAFE:
-              Log.err(
-                '$runtimeType.pushToStream: listener chain error: '
-                '${prev2.err().unwrap()}',
-              );
-              if (eagerError) {
-                return Sync.result(prev2);
-              }
-            }
-            return listener(data).then((e) => prev2).flatten2();
-          }).end();
-        }
-        return Sync.result(prev1);
-      });
-    }
+          }
+          return listener(data).then((e) => prev2).flatten2();
+        }).end();
+      }
+      return Sync.result(prev1);
+    });
   }
 
   //

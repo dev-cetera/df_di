@@ -106,18 +106,14 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
   }) {
-    final temp = getK<T>(
-      TypeEntity(Lazy, [typeEntity]),
-      groupEntity: groupEntity,
-    );
-    if (temp.isSome()) {
-      UNSAFE:
-      return temp.unwrap().then((e) {
-        (e as Lazy).resetSingleton();
-        return Unit();
-      });
-    }
-    return syncUnit();
+    return switch (
+        getK<T>(TypeEntity(Lazy, [typeEntity]), groupEntity: groupEntity)) {
+      Some(value: final r) => r.then((e) {
+          (e as Lazy).resetSingleton();
+          return Unit();
+        }),
+      None() => syncUnit(),
+    };
   }
 
   /// Retrieves the lazily loaded singleton dependency.
@@ -127,17 +123,14 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    final option = getLazyK<T>(
+    return switch (getLazyK<T>(
       typeEntity,
       groupEntity: groupEntity,
       traverse: traverse,
-    );
-    if (option.isNone()) {
-      return const None();
-    }
-    UNSAFE:
-    final lazy = option.unwrap().sync().unwrap().unwrap();
-    return Some(lazy.singleton);
+    )) {
+      Some(value: Sync(value: Ok(value: final lazy))) => Some(lazy.singleton),
+      _ => const None(),
+    };
   }
 
   /// Retrieves the lazily loaded singleton dependency unsafely, returning the
@@ -147,22 +140,14 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    UNSAFE:
     return getLazySyncOrNoneK<T>(
       typeEntity,
       groupEntity: groupEntity,
       traverse: traverse,
-    ).map((e) {
-      final a = e.singleton;
-      if (a.isAsync()) {
-        return None<T>();
-      }
-      final b = a.sync().unwrap().value;
-      if (b.isErr()) {
-        return None<T>();
-      }
-      return Some(b.unwrap());
-    }).flatten();
+    ).map((e) => switch (e.singleton) {
+          Sync(value: Ok(value: final v)) => Some(v),
+          _ => None<T>(),
+        },).flatten();
   }
 
   /// Retrieves the lazily loaded singleton dependency unsafely, returning the
@@ -205,17 +190,14 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    final option = getLazyK<T>(
+    return switch (getLazyK<T>(
       typeEntity,
       groupEntity: groupEntity,
       traverse: traverse,
-    );
-    if (option.isNone()) {
-      return const None();
-    }
-    UNSAFE:
-    final lazy = option.unwrap().sync().unwrap().unwrap();
-    return Some(lazy.factory);
+    )) {
+      Some(value: Sync(value: Ok(value: final lazy))) => Some(lazy.factory),
+      _ => const None(),
+    };
   }
 
   /// Retrieves the lazily loaded factory dependency unsafely, returning the
@@ -225,22 +207,14 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    UNSAFE:
     return getLazySyncOrNoneK<T>(
       typeEntity,
       groupEntity: groupEntity,
       traverse: traverse,
-    ).map((e) {
-      final a = e.singleton;
-      if (a.isAsync()) {
-        return None<T>();
-      }
-      final b = a.sync().unwrap().value;
-      if (b.isErr()) {
-        return None<T>();
-      }
-      return Some(b.unwrap());
-    }).flatten();
+    ).map((e) => switch (e.singleton) {
+          Sync(value: Ok(value: final v)) => Some(v),
+          _ => None<T>(),
+        },).flatten();
   }
 
   /// Retrieves the factory dependency, returning the instance directly or

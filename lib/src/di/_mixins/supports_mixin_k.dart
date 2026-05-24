@@ -42,15 +42,16 @@ base mixin SupportsMixinK on DIBase {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    UNSAFE:
     return getK<T>(
       typeEntity,
       groupEntity: groupEntity,
       traverse: traverse,
     ).map(
-      (e) => e.isSync()
-          ? e.sync().unwrap()
-          : Sync.err(Err('Called getSyncK() for an async dependency.')),
+      (e) => switch (e) {
+        Sync<T>() => e,
+        Async<T>() =>
+          Sync.err(Err('Called getSyncK() for an async dependency.')),
+      },
     );
   }
 
@@ -104,32 +105,22 @@ base mixin SupportsMixinK on DIBase {
   }
 
   /// Retrieves the synchronous dependency or `None` if not found or async.
+  /// Single exhaustive pattern collapses the Option × Resolvable × Result
+  /// state space — every "not found / not sync / not ok" branch falls into
+  /// the wildcard.
   Option<T> getSyncOrNoneK<T extends Object>(
     Entity typeEntity, {
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
   }) {
-    final option = getK<T>(
+    return switch (getK<T>(
       typeEntity,
       groupEntity: groupEntity,
       traverse: traverse,
-    );
-    if (option.isNone()) {
-      return const None();
-    }
-    UNSAFE:
-    {
-      final resolvable = option.unwrap();
-      if (resolvable.isAsync()) {
-        return const None();
-      }
-      final result = resolvable.sync().unwrap().value;
-      if (result.isErr()) {
-        return const None();
-      }
-      final value = result.transf<T>().unwrap();
-      return Some(value);
-    }
+    )) {
+      Some(value: Sync(value: Ok(value: final v))) => Some(v),
+      _ => const None(),
+    };
   }
 
   /// Retrieves the dependency.
@@ -144,38 +135,37 @@ base mixin SupportsMixinK on DIBase {
       groupEntity: g,
       traverse: traverse,
     );
-    if (option.isNone()) {
-      return const None();
-    }
-    UNSAFE:
-    {
-      final result = option.unwrap();
-      if (result.isErr()) {
-        return Some(Sync.err(result.err().unwrap().transfErr()));
-      }
-      final value = result.unwrap().value;
-      if (value.isSync()) {
-        return Some(value);
-      }
-      return Some(
-        Async(
-          () => value.async().unwrap().value.then((e) {
-            final value = e.unwrap();
-            registry.removeDependencyK(typeEntity, groupEntity: g).end();
-            final metadata = option.unwrap().unwrap().metadata.map(
-                  (e) => e.copyWith(
-                    preemptivetypeEntity: TypeEntity(Sync, [typeEntity]),
-                  ),
-                );
-            registerDependencyK(
-              dependency: Dependency(Sync.okValue(value), metadata: metadata),
-              checkExisting: false,
-            ).end();
-            return value;
-          }),
+    // Same pattern as `_di_base.dart::get` — collapse the
+    // Option<Result<Dependency<T>>> structurally; each branch is exhaustive.
+    return switch (option) {
+      None() => const None(),
+      Some(value: Err(:final error, :final stackTrace)) => Some(
+          Sync<T>.err(Err<T>(error, stackTrace: stackTrace)),
         ),
-      );
-    }
+      Some(value: Ok(value: final dep)) => switch (dep.value) {
+          Sync<T>() => Some(dep.value),
+          Async<T>(value: final fut) => Some(
+              Async<T>(
+                () => fut.then((e) {
+                  UNSAFE:
+                  final value = e.unwrap();
+                  registry.removeDependencyK(typeEntity, groupEntity: g).end();
+                  final metadata = dep.metadata.map(
+                    (m) => m.copyWith(
+                      preemptivetypeEntity: TypeEntity(Sync, [typeEntity]),
+                    ),
+                  );
+                  registerDependencyK(
+                    dependency:
+                        Dependency(Sync.okValue(value), metadata: metadata),
+                    checkExisting: false,
+                  ).end();
+                  return value;
+                }),
+              ),
+            ),
+        },
+    };
   }
 
   /// Retrieves the underlying `Dependency` object.
@@ -183,18 +173,20 @@ base mixin SupportsMixinK on DIBase {
     required Dependency<T> dependency,
     bool checkExisting = false,
   }) {
-    UNSAFE:
-    final g = dependency.metadata.isSome()
-        ? dependency.metadata.unwrap().groupEntity
-        : focusGroup;
+    final g = switch (dependency.metadata) {
+      Some(value: final m) => m.groupEntity,
+      None() => focusGroup,
+    };
     if (checkExisting) {
-      final option = getDependencyK(
+      switch (getDependencyK(
         dependency.typeEntity,
         groupEntity: g,
         traverse: false,
-      );
-      if (option.isSome()) {
-        return Err('Dependency already registered.');
+      )) {
+        case Some():
+          return Err('Dependency already registered.');
+        case None():
+          break;
       }
     }
     registry.setDependency(dependency);
@@ -217,14 +209,14 @@ base mixin SupportsMixinK on DIBase {
     final g = groupEntity.preferOverDefault(focusGroup);
     final option = registry.getDependencyK(typeEntity, groupEntity: g);
     var temp = option.map((e) => Ok(e).transf<Dependency<T>>());
-    if (option.isNone() && traverse) {
+    if (option case None() when traverse) {
       for (final parent in parents) {
         temp = (parent as SupportsMixinK).getDependencyK(
           typeEntity,
           groupEntity: g,
           visited: v,
         );
-        if (temp.isSome()) {
+        if (temp case Some()) {
           break;
         }
       }
@@ -253,17 +245,16 @@ base mixin SupportsMixinK on DIBase {
     // in [DIBase.unregister] for the symmetry rationale.
     final containers =
         traverse ? _allAncestorsK() : <DI>[this as DI];
+    walk:
     for (final di in containers) {
-      final dependencyOption = di.removeDependencyK(typeEntity, groupEntity: g);
-      if (dependencyOption.isNone()) {
-        if (!removeAll) break;
-        continue;
+      switch (di.removeDependencyK(typeEntity, groupEntity: g)) {
+        case Some(value: final dep):
+          removed.add(dep);
+          (di as SupportsMixinK).cleanupCompleters(typeEntity, groupEntity: g);
+          if (!removeAll) break walk;
+        case None():
+          if (!removeAll) break walk;
       }
-      UNSAFE:
-      removed.add(dependencyOption.unwrap());
-      // Clean up matching completers on this container
-      (di as SupportsMixinK).cleanupCompleters(typeEntity, groupEntity: g);
-      if (!removeAll) break;
     }
 
     if (removed.isEmpty) return syncNone();
@@ -275,37 +266,31 @@ base mixin SupportsMixinK on DIBase {
     var chain = _firstResolvedToOptionK(removed.first);
     if (!triggerOnUnregisterCallbacks) return chain;
     for (final dep in removed) {
-      final metaOpt = dep.metadata;
-      if (metaOpt.isNone()) continue;
-      UNSAFE:
-      final cbOpt = metaOpt.unwrap().onUnregister;
-      if (cbOpt.isNone()) continue;
-      UNSAFE:
-      final cb = cbOpt.unwrap();
-      chain = _chainOnUnregisterStepK(chain, dep, cb);
+      // Pattern-match the two-layer Option<Option<cb>> at once; either layer
+      // missing means "skip this dep" without a single .unwrap().
+      if (dep.metadata case Some(value: final meta)) {
+        if (meta.onUnregister case Some(value: final cb)) {
+          chain = _chainOnUnregisterStepK(chain, dep, cb);
+        }
+      }
     }
     return chain;
   }
 
   /// Sync/Async-aware adaptation of `_di_base::_firstResolvedToOption` for
-  /// the un-typed K chain.
+  /// the un-typed K chain. Exhaustive matching on the sealed Resolvable ×
+  /// Result product.
   Resolvable<Option> _firstResolvedToOptionK(Dependency dep) {
-    final resolvable = dep.value;
-    if (resolvable is Sync) {
-      UNSAFE:
-      final result = resolvable.value;
-      if (result.isErr()) {
-        return Sync<Option>.okValue(const None());
-      }
-      UNSAFE:
-      return Sync<Option>.okValue(Some(result.unwrap()));
-    }
-    return Async<Option>(() async {
-      final result = await resolvable.value;
-      if (result.isErr()) return const None();
-      UNSAFE:
-      return Some(result.unwrap());
-    });
+    return switch (dep.value) {
+      Sync(value: Ok(value: final v)) => Sync<Option>.okValue(Some(v)),
+      Sync() => Sync<Option>.okValue(const None()),
+      Async(value: final fut) => Async<Option>(() async {
+          return switch (await fut) {
+            Ok(value: final v) => Some(v),
+            Err() => const None(),
+          };
+        }),
+    };
   }
 
   /// Sync/Async-aware adaptation of `_di_base::_chainOnUnregisterStep` for
@@ -315,39 +300,26 @@ base mixin SupportsMixinK on DIBase {
     Dependency dep,
     TOnUnregisterCallback<Object> cb,
   ) {
-    if (chain is Sync<Option> && dep.value is Sync<Object>) {
-      UNSAFE:
-      final accResult = chain.value;
-      if (accResult.isErr()) {
-        return chain;
+    if (chain case Sync<Option>(value: final accResult)) {
+      if (dep.value case Sync<Object>(value: final depResult)) {
+        return switch (accResult) {
+          Err() => chain,
+          Ok(value: final acc) =>
+            _fireOnUnregisterK(cb, depResult, dep, acc),
+        };
       }
-      UNSAFE:
-      final acc = accResult.unwrap();
-      UNSAFE:
-      final depResult = (dep.value as Sync<Object>).value;
-      return _fireOnUnregisterK(cb, depResult, dep, acc);
     }
     return Async<Option>(() async {
-      final accResult = await chain.value;
-      if (accResult.isErr()) {
-        UNSAFE:
-        throw accResult.err().unwrap();
-      }
-      UNSAFE:
-      final acc = accResult.unwrap();
+      final acc = switch (await chain.value) {
+        Err<Option> err => throw err,
+        Ok<Option>(value: final v) => v,
+      };
       final depResult = await dep.value.value;
-      final fireResult = await _fireOnUnregisterK(
-        cb,
-        depResult,
-        dep,
-        acc,
-      ).value;
-      if (fireResult.isErr()) {
-        UNSAFE:
-        throw fireResult.err().unwrap();
-      }
-      UNSAFE:
-      return fireResult.unwrap();
+      return switch (
+          await _fireOnUnregisterK(cb, depResult, dep, acc).value) {
+        Err<Option> err => throw err,
+        Ok<Option>(value: final v) => v,
+      };
     });
   }
 
@@ -380,8 +352,7 @@ base mixin SupportsMixinK on DIBase {
       Log.err('onUnregister for ${dep.runtimeType} surfaced sync error: $e');
       return Sync<Option>.okValue(acc);
     }
-    if (awaited is Future) {
-      final fut = awaited;
+    if (awaited case final Future<void> fut) {
       return Async<Option>(() async {
         await fut;
         return acc;
@@ -401,7 +372,7 @@ base mixin SupportsMixinK on DIBase {
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
     final result = registry.removeDependencyK(typeEntity, groupEntity: g);
-    if (result.isSome()) {
+    if (result case Some()) {
       cleanupCompleters(typeEntity, groupEntity: g);
     }
     return result;
@@ -476,12 +447,12 @@ base mixin SupportsMixinK on DIBase {
     bool traverse = true,
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
-    final test = getK<T>(typeEntity, groupEntity: g, traverse: traverse);
+    if (getK<T>(typeEntity, groupEntity: g, traverse: traverse)
+        case Some(value: final r)) {
+      return r;
+    }
     UNSAFE:
     {
-      if (test.isSome()) {
-        return test.unwrap();
-      }
       final myEpoch = _epochForK(g, typeEntity);
       // Look for an existing completer in THIS container OR any ancestor
       // (so concurrent waiters from different containers share one).

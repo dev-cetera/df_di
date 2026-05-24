@@ -32,11 +32,10 @@ mixin ServiceMixin {
   /// A static hook for the DI system to properly dispose of the service upon
   /// unregistering.
   static Resolvable<Unit> unregister(Result<ServiceMixin> serviceResult) {
-    if (serviceResult.isErr()) {
-      return syncUnit();
-    }
-    UNSAFE:
-    return serviceResult.unwrap().dispose();
+    return switch (serviceResult) {
+      Ok(value: final service) => service.dispose(),
+      Err() => syncUnit(),
+    };
   }
 
   ServiceState _state = ServiceState.NOT_INITIALIZED;
@@ -276,23 +275,21 @@ mixin ServiceMixin {
     required bool eagerError,
     required void Function(Object) recordError,
   }) {
-    if (prev is Sync<Unit>) {
+    if (prev case Sync<Unit>()) {
       // Sync.resultMap fires the callback for Ok AND Err. Use it to keep
       // the fast path identical to the pre-fix behaviour. Call `.then`
       // through `asResolvable()` so the compile-time dispatch goes to
       // `Resolvable.then` (public) rather than `Sync.then` (protected).
       return prev
-          .resultMap<Unit>((prevResult) {
-            if (prevResult.isErr()) {
-              UNSAFE:
-              recordError(prevResult.err().unwrap());
-              if (eagerError) {
-                return prevResult;
-              }
-              return Ok(Unit());
-            }
-            return prevResult;
-          })
+          .resultMap<Unit>(
+            (prevResult) => switch (prevResult) {
+              Err<Unit>(:final error) => () {
+                  recordError(error);
+                  return eagerError ? prevResult : Ok(Unit());
+                }(),
+              Ok() => prevResult,
+            },
+          )
           .asResolvable()
           .then((_) => listener(Unit()))
           .flatten();
@@ -301,21 +298,19 @@ mixin ServiceMixin {
     // firing their callback, so we must unwrap the Future manually to
     // record the Err and (in non-eager mode) continue the chain.
     return Async<Unit>(() async {
-      final prevResult = await prev.value;
-      if (prevResult.isErr()) {
-        UNSAFE:
-        recordError(prevResult.err().unwrap());
-        if (eagerError) {
-          UNSAFE:
-          throw prevResult.err().unwrap();
-        }
+      switch (await prev.value) {
+        case Err<Unit>(:final error):
+          recordError(error);
+          if (eagerError) throw error;
+        case Ok():
+          break;
       }
-      final listenerResult = await listener(Unit()).value;
-      if (listenerResult.isErr()) {
-        UNSAFE:
-        throw listenerResult.err().unwrap();
+      switch (await listener(Unit()).value) {
+        case Err<Unit>(:final error):
+          throw error;
+        case Ok():
+          return Unit();
       }
-      return Unit();
     });
   }
 
@@ -334,9 +329,8 @@ mixin ServiceMixin {
     required Option<void Function()> onSuccessMustNotThrow,
   }) {
     Result<Option> applyResult(Result<Unit> finalResult) {
-      if (finalResult.isErr()) {
-        UNSAFE:
-        recordError(finalResult.err().unwrap());
+      if (finalResult case Err<Unit>(:final error)) {
+        recordError(error);
       }
       if (firstError() case Some(value: final err)) {
         _state = errorState;
@@ -351,18 +345,15 @@ mixin ServiceMixin {
       return const Ok<Option>(None());
     }
 
-    if (chain is Sync<Unit>) {
+    if (chain case Sync<Unit>()) {
       return chain.resultMap<Option>(applyResult);
     }
     return Async<Option>(() async {
       final finalResult = await chain.value;
-      final mapped = applyResult(finalResult);
-      if (mapped.isErr()) {
-        UNSAFE:
-        throw mapped.err().unwrap();
-      }
-      UNSAFE:
-      return mapped.unwrap();
+      return switch (applyResult(finalResult)) {
+        Err<Option>(:final error) => throw error,
+        Ok<Option>(value: final v) => v,
+      };
     });
   }
 }

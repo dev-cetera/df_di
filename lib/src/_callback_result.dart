@@ -49,31 +49,36 @@ FutureOr<void> awaitCallbackResult(
   if (raw is Future) {
     return raw;
   }
-  if (raw is Resolvable) {
-    final Object v = raw.value;
-    if (v is Future) {
-      // Async Resolvable: await and propagate Err.
-      final Future<Object?> fut = v;
+  // Pattern matching on the sealed `Resolvable` family lets the compiler verify
+  // we've handled both Sync and Async, and the destructuring lets us reach the
+  // inner `Result` without any `.unwrap()` calls that could trip on a future
+  // change to the underlying types.
+  switch (raw) {
+    case Async(value: final fut):
+      // Async Resolvable: await and propagate Err on the resolved Result.
       return Future<void>.sync(() async {
-        final r = await fut;
-        if (r is Err) {
-          // Surface as Future.error so the caller's chain captures it.
-          throw r;
+        switch (await fut) {
+          case Err<Object> err:
+            throw err;
+          case Ok():
+            return;
         }
       });
-    }
-    if (v is Result && v.isErr()) {
-      if (logAndSwallowSyncErr) {
-        UNSAFE:
-        Log.err(
-          '${logContext ?? 'callback'} returned Sync.err: '
-          '${v.err().unwrap().error}',
-        );
-        return null;
+    case Sync(value: final result):
+      switch (result) {
+        case Err<Object> err:
+          if (logAndSwallowSyncErr) {
+            Log.err(
+              '${logContext ?? 'callback'} returned Sync.err: ${err.error}',
+            );
+            return null;
+          }
+          // Sync Err: throw so the caller's outer try/catch wraps as Future.error.
+          throw err;
+        case Ok():
+          return null;
       }
-      // Sync Err: throw so the caller's outer try/catch wraps as Future.error.
-      throw v;
-    }
+    default:
+      return null;
   }
-  return null;
 }

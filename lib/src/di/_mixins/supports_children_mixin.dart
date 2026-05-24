@@ -26,31 +26,27 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
   Resolvable<Lazy<DI>> registerChild({
     Entity groupEntity = const DefaultEntity(),
   }) {
-    if (childrenContainer.isNone()) {
-      childrenContainer = Some(DI());
-    }
-    UNSAFE:
-    return childrenContainer.unwrap().registerLazy<DI>(
-          () => Sync.okValue(DI()..parents.add(this as DI)),
-          groupEntity: groupEntity,
-        );
+    final container = switch (childrenContainer) {
+      Some(value: final c) => c,
+      None() => () {
+          final c = DI();
+          childrenContainer = Some(c);
+          return c;
+        }(),
+    };
+    return container.registerLazy<DI>(
+      () => Sync.okValue(DI()..parents.add(this as DI)),
+      groupEntity: groupEntity,
+    );
   }
 
   /// Returns the child registered under [groupEntity], or `None` if no child
   /// is registered or it failed to construct.
   Option<DI> getChildOrNone({Entity groupEntity = const DefaultEntity()}) {
-    final option = getChild(groupEntity: groupEntity);
-    if (option.isNone()) {
-      return const None();
-    }
-    UNSAFE:
-    {
-      final result = option.unwrap();
-      if (result.isErr()) {
-        return const None();
-      }
-      return Some(result.unwrap());
-    }
+    return switch (getChild(groupEntity: groupEntity)) {
+      Some(value: Ok(value: final di)) => Some(di),
+      _ => const None(),
+    };
   }
 
   /// Returns the child registered under [groupEntity] wrapped in a `Result`,
@@ -58,48 +54,32 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
   /// child construction failed.
   Option<Result<DI>> getChild({Entity groupEntity = const DefaultEntity()}) {
     final g = groupEntity.preferOverDefault(focusGroup);
-    if (childrenContainer.isNone()) {
-      return const None();
+    if (childrenContainer case Some(value: final container)) {
+      // Collapse Option<Resolvable<DI>> → Option<Result<DI>>. Sync-Ok and
+      // Sync-Err are direct; Async returns Err (caller can re-await
+      // explicitly if they need the future shape).
+      return switch (container.getLazySingleton<DI>(groupEntity: g)) {
+        None() => const None(),
+        Some(value: Sync(value: final result)) => Some(result),
+        Some(value: Async()) =>
+          Some(Err('getChild: lazy singleton resolved async, not supported.')),
+      };
     }
-    UNSAFE:
-    {
-      final option = childrenContainer.unwrap().getLazySingleton<DI>(
-            groupEntity: g,
-          );
-      if (option.isNone()) {
-        return const None();
-      }
-      final result = option.unwrap().sync();
-      if (result.isErr()) {
-        return Some(result.err().unwrap().transfErr());
-      }
-      final value = result.unwrap().value;
-      return Some(value);
-    }
+    return const None();
   }
 
   /// `Type`-keyed variant of [getChild].
   Option<Result<DI>> getChildT({Entity groupEntity = const DefaultEntity()}) {
     final g = groupEntity.preferOverDefault(focusGroup);
-    if (childrenContainer.isNone()) {
-      return const None();
+    if (childrenContainer case Some(value: final container)) {
+      return switch (container.getLazySingletonT<DI>(DI, groupEntity: g)) {
+        None() => const None(),
+        Some(value: Sync(value: final result)) => Some(result.transf<DI>()),
+        Some(value: Async()) =>
+          Some(Err('getChildT: lazy singleton resolved async, not supported.')),
+      };
     }
-    UNSAFE:
-    {
-      final option = childrenContainer.unwrap().getLazySingletonT<DI>(
-            DI,
-            groupEntity: g,
-          );
-      if (option.isNone()) {
-        return const None();
-      }
-      final result = option.unwrap().sync();
-      if (result.isErr()) {
-        return Some(result.err().unwrap().transfErr());
-      }
-      final value = result.unwrap().value.transf<DI>();
-      return Some(value);
-    }
+    return const None();
   }
 
   /// Children are registered as `Lazy<DI>`, so unregister must remove the
@@ -109,28 +89,24 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     Entity groupEntity = const DefaultEntity(),
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
-    if (childrenContainer.isNone()) {
-      return Err('No child container registered.');
-    }
-    UNSAFE:
-    {
-      final result = childrenContainer
-          .unwrap()
-          .unregister<Lazy<DI>>(groupEntity: g)
-          .sync()
-          .unwrap()
-          .value;
-      if (result.isErr()) {
-        return result.err().unwrap().transfErr<Option<DI>>();
-      }
-      final option = result.unwrap();
-      if (option.isNone()) {
-        return const Ok(None());
-      }
-      final lazy = option.unwrap();
-      final di = lazy.singleton.sync().unwrap().unwrap();
-      return Ok(Some(di));
-    }
+    final container = switch (childrenContainer) {
+      Some(value: final c) => c,
+      None() => null,
+    };
+    if (container == null) return Err('No child container registered.');
+    // The `.sync()` returns Ok only if the resolvable resolved synchronously.
+    // Children are registered as Sync lazies so this is the expected path —
+    // any other shape is a programming error and falls through to the wild
+    // card with a descriptive Err.
+    return switch (container.unregister<Lazy<DI>>(groupEntity: g)) {
+      Sync(value: Ok(value: Some(value: final lazy))) =>
+        _ok(_eagerLazyDI(lazy)),
+      Sync(value: Ok(value: None())) => const Ok(None()),
+      Sync(value: Err(:final error, :final stackTrace)) =>
+        Err<Option<DI>>(error, stackTrace: stackTrace),
+      Async() =>
+        Err('unregisterChild: unregister resolved async, not supported.'),
+    };
   }
 
   /// `Type`-keyed variant of [unregisterChild].
@@ -139,28 +115,33 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     Entity groupEntity = const DefaultEntity(),
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
-    if (childrenContainer.isNone()) {
-      return Err('No child container registered.');
-    }
+    final container = switch (childrenContainer) {
+      Some(value: final c) => c,
+      None() => null,
+    };
+    if (container == null) return Err('No child container registered.');
+    return switch (
+        container.unregisterK(TypeEntity(Lazy, [type]), groupEntity: g)) {
+      Sync(value: Ok(value: Some(value: final raw))) =>
+        _ok(_eagerLazyDI(raw as Lazy<DI>)),
+      Sync(value: Ok(value: None())) => const Ok(None()),
+      Sync(value: Err(:final error, :final stackTrace)) =>
+        Err<Option<DI>>(error, stackTrace: stackTrace),
+      Async() =>
+        Err('unregisterChildT: unregister resolved async, not supported.'),
+    };
+  }
+
+  /// Wraps [v] in `Ok(Some(v))`. Tiny helper that keeps the giant switch
+  /// arms above readable.
+  Ok<Option<DI>> _ok(DI v) => Ok(Some(v));
+
+  /// Eagerly forces a `Lazy<DI>` to its synchronous singleton. Used at child
+  /// unregister so the caller gets the DI instance back. If construction was
+  /// async this is a logic bug — children must be sync-constructible.
+  DI _eagerLazyDI(Lazy<DI> lazy) {
     UNSAFE:
-    {
-      final result = childrenContainer
-          .unwrap()
-          .unregisterK(TypeEntity(Lazy, [type]), groupEntity: g)
-          .sync()
-          .unwrap()
-          .value;
-      if (result.isErr()) {
-        return result.err().unwrap().transfErr<Option<DI>>();
-      }
-      final option = result.unwrap();
-      if (option.isNone()) {
-        return const Ok(None());
-      }
-      final lazy = option.unwrap() as Lazy<DI>;
-      final di = lazy.singleton.sync().unwrap().unwrap();
-      return Ok(Some(di));
-    }
+    return lazy.singleton.sync().unwrap().unwrap();
   }
 
   /// Children are registered as `Lazy<DI>` (see [registerChild]), so probe
@@ -170,11 +151,10 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     Entity groupEntity = const DefaultEntity(),
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
-    if (childrenContainer.isNone()) {
-      return false;
-    }
-    UNSAFE:
-    return childrenContainer.unwrap().isRegistered<Lazy<DI>>(groupEntity: g);
+    return switch (childrenContainer) {
+      Some(value: final c) => c.isRegistered<Lazy<DI>>(groupEntity: g),
+      None() => false,
+    };
   }
 
   /// `Type`-keyed variant of [isChildRegistered]. Functionally identical —
@@ -183,14 +163,11 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     Entity groupEntity = const DefaultEntity(),
   }) {
     final g = groupEntity.preferOverDefault(focusGroup);
-    if (childrenContainer.isNone()) {
-      return false;
-    }
-    UNSAFE:
-    return childrenContainer.unwrap().isRegisteredK(
-          TypeEntity(Lazy, [DI]),
-          groupEntity: g,
-        );
+    return switch (childrenContainer) {
+      Some(value: final c) =>
+        c.isRegisteredK(TypeEntity(Lazy, [DI]), groupEntity: g),
+      None() => false,
+    };
   }
 
   /// Returns the child container under [groupEntity], registering one
@@ -198,13 +175,16 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
   /// reach for — `DI.global`, `DI.session`, `DI.user`, etc. all funnel
   /// through here.
   DI child({Entity groupEntity = const DefaultEntity()}) {
-    UNSAFE:
-    {
-      if (isChildRegistered(groupEntity: groupEntity)) {
-        return getChild(groupEntity: groupEntity).unwrap().unwrap();
-      }
+    if (!isChildRegistered(groupEntity: groupEntity)) {
       registerChild(groupEntity: groupEntity).end();
-      return getChild(groupEntity: groupEntity).unwrap().unwrap();
     }
+    return switch (getChild(groupEntity: groupEntity)) {
+      Some(value: Ok(value: final di)) => di,
+      Some(value: Err(:final error)) =>
+        throw StateError('child(): construction failed: $error'),
+      None() => throw StateError(
+          'child(): registerChild succeeded but getChild returned None.',
+        ),
+    };
   }
 }

@@ -118,7 +118,7 @@ base mixin SupportsUnregisterAll on DIBase {
     Resolvable<Option> prev,
     Resolvable<Option> Function() step,
   ) {
-    if (prev is Sync<Option>) {
+    if (prev case Sync<Option>()) {
       // Sync prev: run step now regardless of prev's Result. Wrap `step` in
       // an anonymous Sync constructor body (the `@mustBeAnonymous` lint
       // forbids passing the captured ref directly).
@@ -131,12 +131,12 @@ base mixin SupportsUnregisterAll on DIBase {
       } catch (_) {
         // Non-eager: a previous step's failure does NOT stop this one.
       }
-      final next = step();
-      final r = await next.value;
       // Surface step's own failure (the LAST step's result determines the
       // chain's terminal Resolvable; throwing here makes it an Err).
-      UNSAFE:
-      return r.unwrap();
+      return switch (await step().value) {
+        Err<Option>(:final error) => throw error,
+        Ok<Option>(value: final v) => v,
+      };
     });
   }
 }
