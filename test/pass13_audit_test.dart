@@ -26,13 +26,15 @@ void main() {
       () {
         final w = World();
         var ticks = 0;
-        w.addSystem(FunctionSystem((world, _) {
-          ticks++;
-          if (ticks < 5) {
-            // Re-enter update. If unguarded → infinite recursion.
-            world.update(Duration.zero);
-          }
-        }),);
+        w.addSystem(
+          FunctionSystem((world, _) {
+            ticks++;
+            if (ticks < 5) {
+              // Re-enter update. If unguarded → infinite recursion.
+              world.update(Duration.zero);
+            }
+          }),
+        );
         var didReturn = false;
         try {
           w.update(Duration.zero);
@@ -43,8 +45,7 @@ void main() {
         expect(
           didReturn,
           isTrue,
-          reason:
-              'World.update from inside a system must terminate — either '
+          reason: 'World.update from inside a system must terminate — either '
               'by detecting re-entry and skipping, or by treating it as a '
               'normal nested update sequence',
         );

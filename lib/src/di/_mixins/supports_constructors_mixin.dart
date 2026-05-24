@@ -157,10 +157,14 @@ base mixin SupportsConstructorsMixin on DIBase {
     return getLazySyncOrNone<T>(
       groupEntity: groupEntity,
       traverse: traverse,
-    ).map((e) => switch (e.singleton) {
-          Sync(value: Ok(value: final v)) => Some(v),
-          _ => None<T>(),
-        },).flatten();
+    )
+        .map(
+          (e) => switch (e.singleton) {
+            Sync(value: Ok(value: final v)) => Some(v),
+            _ => None<T>(),
+          },
+        )
+        .flatten();
   }
 
   /// Retrieves the lazily loaded singleton dependency unsafely, returning the
@@ -194,8 +198,10 @@ base mixin SupportsConstructorsMixin on DIBase {
   /// registered. `TSuper` should typically be the most general type expected.
   @pragma('vm:prefer-inline')
   Resolvable<TSub>
-      untilLazySingleton<TSuper extends Object, TSub extends TSuper>(
-          {Entity groupEntity = const DefaultEntity(), bool traverse = true,}) {
+      untilLazySingleton<TSuper extends Object, TSub extends TSuper>({
+    Entity groupEntity = const DefaultEntity(),
+    bool traverse = true,
+  }) {
     return untilLazy<TSuper, TSub>(
       groupEntity: groupEntity,
       traverse: traverse,
@@ -222,10 +228,14 @@ base mixin SupportsConstructorsMixin on DIBase {
     return getLazySyncOrNone<T>(
       groupEntity: groupEntity,
       traverse: traverse,
-    ).map((e) => switch (e.factory) {
-          Sync(value: Ok(value: final v)) => Some(v),
-          _ => None<T>(),
-        },).flatten();
+    )
+        .map(
+          (e) => switch (e.factory) {
+            Sync(value: Ok(value: final v)) => Some(v),
+            _ => None<T>(),
+          },
+        )
+        .flatten();
   }
 
   /// Retrieves the factory dependency unsafely, returning the instance directly

@@ -760,7 +760,9 @@ void main() {
       }
       expect(s.state, ServiceState.DISPOSE_SUCCESS);
       expect(
-          s.log, ['init.0', 'pause', 'resume', 'pause', 'resume', 'dispose.0'],);
+        s.log,
+        ['init.0', 'pause', 'resume', 'pause', 'resume', 'dispose.0'],
+      );
     });
 
     test('init→dispose→init pattern is rejected (cannot re-init after dispose)',
@@ -838,13 +840,11 @@ void main() {
       // We confirm: the failure is observable (Err result), the service's
       // own state moved to RUN_ERROR, and the registry still treats the slot
       // as occupied so a follow-up `register` of the SAME type is rejected.
-      final result =
-          await di.untilSuper<TallyService>().toAsync().value;
+      final result = await di.untilSuper<TallyService>().toAsync().value;
       expect(
         result.isErr(),
         isTrue,
-        reason:
-            'onRegister failure (whether sync throw, async throw, or '
+        reason: 'onRegister failure (whether sync throw, async throw, or '
             'Resolvable-Err) must surface as Err on `untilSuper` — C6 '
             'contract.',
       );
@@ -1012,12 +1012,18 @@ void main() {
         () async {
       final di = DI();
       final order = <String>[];
-      di.register<A>(A('a'), onUnregister: Some((_) {
-        order.add('a');
-      }),).end();
-      di.register<B>(B(A('inner')), onUnregister: Some((_) {
-        order.add('b');
-      }),).end();
+      di.register<A>(
+        A('a'),
+        onUnregister: Some((_) {
+          order.add('a');
+        }),
+      ).end();
+      di.register<B>(
+        B(A('inner')),
+        onUnregister: Some((_) {
+          order.add('b');
+        }),
+      ).end();
       di.register<C>(
         C(B(A('inner2'))),
         onUnregister: Some((_) {

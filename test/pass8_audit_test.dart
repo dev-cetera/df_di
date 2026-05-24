@@ -68,8 +68,7 @@ void main() {
         expect(
           r.sync().unwrap().value.isErr(),
           isTrue,
-          reason:
-              'subtype-aware existence check: Dog is also an Animal, '
+          reason: 'subtype-aware existence check: Dog is also an Animal, '
               'so the Animal slot is logically taken',
         );
       },
@@ -86,15 +85,13 @@ void main() {
       'fresh T registered',
       () async {
         final di = DI();
-        di
-            .register<_A>(
-              const _A('first'),
-              onUnregister: Some((_) {
-                // Re-register a different value during teardown.
-                di.register<_A>(const _A('fresh')).end();
-              }),
-            )
-            .end();
+        di.register<_A>(
+          const _A('first'),
+          onUnregister: Some((_) {
+            // Re-register a different value during teardown.
+            di.register<_A>(const _A('fresh')).end();
+          }),
+        ).end();
         (await di.unregister<_A>().toAsync().value).end();
         // After unregister-with-re-register, the fresh one is in the slot.
         UNSAFE:

@@ -265,8 +265,7 @@ base class DIBase {
       final completers = groupSlots
           .map(
             (e) => switch (e.value) {
-              Sync(value: Ok(value: final v))
-                  when v is ReservedSafeCompleter =>
+              Sync(value: Ok(value: final v)) when v is ReservedSafeCompleter =>
                 v,
               _ => null,
             },
@@ -352,8 +351,7 @@ base class DIBase {
     // `unregister` only touched `this` and direct parents, so a grandparent
     // registration that `isRegistered` could see would survive a deep
     // unregister — a real reliability hole on three-level hierarchies.
-    final containers =
-        traverse ? _allAncestors() : <DI>[this as DI];
+    final containers = traverse ? _allAncestors() : <DI>[this as DI];
     walk:
     for (final di in containers) {
       switch (di.removeDependency<T>(groupEntity: g)) {
@@ -467,8 +465,7 @@ base class DIBase {
       if (dep.value case Sync<Object>(value: final depResult)) {
         return switch (accResult) {
           Err() => chain,
-          Ok(value: final acc) =>
-            _fireOnUnregister<T>(cb, depResult, dep, acc),
+          Ok(value: final acc) => _fireOnUnregister<T>(cb, depResult, dep, acc),
         };
       }
     }
@@ -479,7 +476,8 @@ base class DIBase {
         Ok<Option<T>>(value: final v) => v,
       };
       final depResult = await dep.value.value;
-      return switch (await _fireOnUnregister<T>(cb, depResult, dep, acc).value) {
+      return switch (
+          await _fireOnUnregister<T>(cb, depResult, dep, acc).value) {
         Err<Option<T>> err => throw err,
         Ok<Option<T>>(value: final v) => v,
       };
@@ -875,15 +873,18 @@ base class DIBase {
       // re-entrant register/unregister fired from `wait`'s callback (which
       // recursively calls `resolveAll`) cannot trigger
       // `ConcurrentModificationError` while we're still iterating.
-      var resolvables =
-          registry.unsortedDependencies.toList(growable: false).cast<Dependency>();
+      var resolvables = registry.unsortedDependencies
+          .toList(growable: false)
+          .cast<Dependency>();
       if (groupEntity case Some(value: final g)) {
-        resolvables = resolvables.where(
-          (e) => switch (e.metadata) {
-            Some(value: final m) => m.groupEntity == g,
-            None() => false,
-          },
-        ).toList(growable: false);
+        resolvables = resolvables
+            .where(
+              (e) => switch (e.metadata) {
+                Some(value: final m) => m.groupEntity == g,
+                None() => false,
+              },
+            )
+            .toList(growable: false);
       }
       final values = resolvables.map((e) => e.value);
       if (values.any((e) => e is Async)) {

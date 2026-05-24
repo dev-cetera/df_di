@@ -163,7 +163,9 @@ void main() {
     di
         .register<_A>(
           Future<_A>.delayed(
-              const Duration(milliseconds: 10), () => const _A(),),
+            const Duration(milliseconds: 10),
+            () => const _A(),
+          ),
         )
         .end();
 

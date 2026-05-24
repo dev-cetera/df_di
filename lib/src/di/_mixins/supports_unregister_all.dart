@@ -41,8 +41,7 @@ base mixin SupportsUnregisterAll on DIBase {
               awaitCallbackResult(
                 cb(Ok(dependency)),
                 logAndSwallowSyncErr: true,
-                logContext:
-                    'unregisterAll.onBeforeUnregister for '
+                logContext: 'unregisterAll.onBeforeUnregister for '
                     '${dependency.runtimeType}',
               ),
               (_) => const None(),
@@ -74,8 +73,7 @@ base mixin SupportsUnregisterAll on DIBase {
                       awaitCallbackResult(
                         onUnregister(Ok(e)),
                         logAndSwallowSyncErr: true,
-                        logContext:
-                            'unregisterAll dep onUnregister for '
+                        logContext: 'unregisterAll dep onUnregister for '
                             '${dependency.runtimeType}',
                       ),
                       (_) => syncNone(),
@@ -96,8 +94,7 @@ base mixin SupportsUnregisterAll on DIBase {
               awaitCallbackResult(
                 cb(Ok(dependency)),
                 logAndSwallowSyncErr: true,
-                logContext:
-                    'unregisterAll.onAfterUnregister for '
+                logContext: 'unregisterAll.onAfterUnregister for '
                     '${dependency.runtimeType}',
               ),
               (_) => const None(),

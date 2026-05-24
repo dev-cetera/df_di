@@ -32,10 +32,7 @@ void main() {
         final child = DI();
         child.parents.add(parent);
         // Start a waiter from child BEFORE parent registers.
-        final waiter = child
-            .untilExactlyK<_A>(TypeEntity(_A))
-            .toAsync()
-            .value;
+        final waiter = child.untilExactlyK<_A>(TypeEntity(_A)).toAsync().value;
         parent
             .register<_A>(
               const _A('from-parent'),
@@ -49,8 +46,7 @@ void main() {
         expect(
           result.isOk(),
           isTrue,
-          reason:
-              'child.untilExactlyK must resolve when an ancestor registers '
+          reason: 'child.untilExactlyK must resolve when an ancestor registers '
               'with enableUntilExactlyK — otherwise the `completersK` map '
               'has the same directional asymmetry as the until-completer '
               'walk.',
@@ -72,25 +68,22 @@ void main() {
       () async {
         final di = DI();
         Object? receivedResult;
-        di
-            .register<_A>(
-              Future<_A>.delayed(
-                const Duration(milliseconds: 5),
-                () => throw StateError('registration value failed'),
-              ),
-              onUnregister: Some((r) {
-                receivedResult = r;
-              }),
-            )
-            .end();
+        di.register<_A>(
+          Future<_A>.delayed(
+            const Duration(milliseconds: 5),
+            () => throw StateError('registration value failed'),
+          ),
+          onUnregister: Some((r) {
+            receivedResult = r;
+          }),
+        ).end();
         // Wait for the Future to settle as Err.
         await Future<void>.delayed(const Duration(milliseconds: 30));
         (await di.unregister<_A>().toAsync().value).end();
         expect(
           receivedResult,
           isNotNull,
-          reason:
-              'onUnregister must fire even for a dep whose Resolvable '
+          reason: 'onUnregister must fire even for a dep whose Resolvable '
               'resolved to Err — callers register the hook precisely to '
               'clean up failed registrations.',
         );

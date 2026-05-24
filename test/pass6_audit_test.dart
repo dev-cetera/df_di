@@ -79,9 +79,7 @@ void main() {
         final di = DI();
         final old = DI();
         di.childrenContainer = Some(old);
-        old
-            .registerLazy<_A>(() => Sync.okValue(const _A('from-old')))
-            .end();
+        old.registerLazy<_A>(() => Sync.okValue(const _A('from-old'))).end();
         // Reassign — the old container is now orphaned.
         final fresh = DI();
         di.childrenContainer = Some(fresh);
@@ -122,9 +120,7 @@ void main() {
       'after unregisterLazy<T>, getLazy<T> returns None',
       () async {
         final di = DI();
-        di
-            .registerLazy<_A>(() => Sync.okValue(const _A('once')))
-            .end();
+        di.registerLazy<_A>(() => Sync.okValue(const _A('once'))).end();
         expect(di.isRegistered<Lazy<_A>>(), isTrue);
         (await di.unregisterLazy<_A>().toAsync().value).end();
         expect(di.isRegistered<Lazy<_A>>(), isFalse);
@@ -141,12 +137,8 @@ void main() {
     test('two distinct types in the same group are independently retrievable',
         () {
       final di = DI();
-      di
-          .register<_A>(const _A('a'), groupEntity: const DefaultEntity())
-          .end();
-      di
-          .register<_B>(const _B(), groupEntity: const DefaultEntity())
-          .end();
+      di.register<_A>(const _A('a'), groupEntity: const DefaultEntity()).end();
+      di.register<_B>(const _B(), groupEntity: const DefaultEntity()).end();
       UNSAFE:
       expect(di.getSyncUnsafe<_A>().tag, 'a');
       expect(di.isRegistered<_B>(), isTrue);

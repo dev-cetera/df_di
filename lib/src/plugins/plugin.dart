@@ -92,6 +92,5 @@ extension PluginHostX on DI {
   }
 
   /// Whether [plugin] is currently installed in this scope.
-  bool hasPlugin(Plugin plugin) =>
-      isChildRegistered(groupEntity: plugin.id);
+  bool hasPlugin(Plugin plugin) => isChildRegistered(groupEntity: plugin.id);
 }

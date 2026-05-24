@@ -181,7 +181,8 @@ void main() {
       final world = World();
       for (var i = 0; i < 10; i++) {
         world.spawn(
-            Some([Position(i.toDouble(), 0), Velocity(i.toDouble(), 0)]),);
+          Some([Position(i.toDouble(), 0), Velocity(i.toDouble(), 0)]),
+        );
       }
       final seen = <WorldEntity>[];
       for (final (e, _, __) in world.each2<Position, Velocity>()) {

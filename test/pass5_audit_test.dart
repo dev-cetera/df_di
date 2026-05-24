@@ -47,8 +47,7 @@ void main() {
         expect(
           didReturn,
           isTrue,
-          reason:
-              'isRegistered on a cyclic parent graph must terminate — '
+          reason: 'isRegistered on a cyclic parent graph must terminate — '
               'currently it stack-overflows because there is no visited-set '
               'guard.',
         );
@@ -118,8 +117,7 @@ void main() {
           TypeEntity(_A),
           groupEntity: const DefaultEntity(),
         );
-        final remaining =
-            di.completersK[const DefaultEntity()] ?? [];
+        final remaining = di.completersK[const DefaultEntity()] ?? [];
         expect(remaining, isEmpty);
       },
     );

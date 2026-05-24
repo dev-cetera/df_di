@@ -78,10 +78,12 @@ void main() {
       () async {
         final di = DI();
         di
-            .registerLazy<_A>(() => Async<_A>(() async {
-                  await Future<void>.delayed(const Duration(milliseconds: 5));
-                  throw StateError('async constructor failed');
-                }),)
+            .registerLazy<_A>(
+              () => Async<_A>(() async {
+                await Future<void>.delayed(const Duration(milliseconds: 5));
+                throw StateError('async constructor failed');
+              }),
+            )
             .end();
         UNSAFE:
         final lazy = di.getLazy<_A>().unwrap().sync().unwrap().unwrap();
@@ -266,7 +268,8 @@ void main() {
           isFalse,
         );
         expect(
-          di.registry.groupsWithTypeK(TypeEntity(Sync, [TypeEntity(_ErringSvc)])),
+          di.registry
+              .groupsWithTypeK(TypeEntity(Sync, [TypeEntity(_ErringSvc)])),
           isEmpty,
         );
       },
@@ -287,11 +290,7 @@ void main() {
         child.parents.add(parent);
         parent.register<_A>(const _A('parent')).end();
         child.register<_A>(const _A('child')).end();
-        (await child
-                .unregister<_A>(removeAll: false)
-                .toAsync()
-                .value)
-            .end();
+        (await child.unregister<_A>(removeAll: false).toAsync().value).end();
         // Parent still has it; child no longer registered locally — but
         // via traversal, child reaches parent's registration.
         expect(parent.isRegistered<_A>(), isTrue);
@@ -309,11 +308,7 @@ void main() {
         child.parents.add(parent);
         parent.register<_A>(const _A('parent')).end();
         child.register<_A>(const _A('child')).end();
-        (await child
-                .unregister<_A>()
-                .toAsync()
-                .value)
-            .end();
+        (await child.unregister<_A>().toAsync().value).end();
         expect(parent.isRegistered<_A>(), isFalse);
         expect(child.isRegistered<_A>(traverse: false), isFalse);
       },

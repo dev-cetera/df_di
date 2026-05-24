@@ -121,13 +121,15 @@ void main() {
         w.onEvent<_SpawnedEvent>((_) => baseHits++);
         w.onEvent<_DespawnedEvent>((_) => derivedHits++);
         w.sendEvent(const _DespawnedEvent(42));
-        expect(derivedHits, equals(1),
-            reason: 'Derived listener must fire on derived event',);
+        expect(
+          derivedHits,
+          equals(1),
+          reason: 'Derived listener must fire on derived event',
+        );
         expect(
           baseHits,
           equals(1),
-          reason:
-              'Base listener must also fire on derived event — Liskov '
+          reason: 'Base listener must also fire on derived event — Liskov '
               'substitution applies to ECS events.',
         );
         w.dispose();
@@ -143,8 +145,7 @@ void main() {
         expect(
           base.length,
           equals(1),
-          reason:
-              'readEvents<Base> must include events sent as Derived for '
+          reason: 'readEvents<Base> must include events sent as Derived for '
               'consistent subtype semantics with onEvent.',
         );
         expect(base.first.id, equals(7));
@@ -173,8 +174,7 @@ void main() {
         expect(
           svc.didDispose,
           isTrue,
-          reason:
-              'A ServiceMixin Resource removed from the world must have '
+          reason: 'A ServiceMixin Resource removed from the world must have '
               "its dispose() called, otherwise it'll leak its subscription "
               'and polling timers.',
         );
@@ -235,8 +235,7 @@ void main() {
         expect(
           event1Seen,
           greaterThanOrEqualTo(1),
-          reason:
-              'An event sent by a system before a re-entrant update should '
+          reason: 'An event sent by a system before a re-entrant update should '
               'remain visible to later systems in the outer tick.',
         );
         expect(event2Seen, equals(0));

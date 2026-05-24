@@ -725,8 +725,11 @@ void main() {
       expect(v1.tag, 'resolved');
       // Second read should be sync (after the first promotion).
       final s = di.getSyncOrNone<_A>();
-      expect(s.isSome(), isTrue,
-          reason: 'async → sync promotion did not happen',);
+      expect(
+        s.isSome(),
+        isTrue,
+        reason: 'async → sync promotion did not happen',
+      );
       UNSAFE:
       expect(s.unwrap().tag, 'resolved');
     });

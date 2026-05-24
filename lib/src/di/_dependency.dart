@@ -146,9 +146,9 @@ class DependencyMetadata {
         None() => this.onUnregister,
       },
     ).._initialType = switch (initialType) {
-      Some() => initialType,
-      None() => _initialType,
-    };
+        Some() => initialType,
+        None() => _initialType,
+      };
   }
 
   @override
@@ -174,12 +174,14 @@ class DependencyMetadata {
 /// A typedef for a callback function to invoke when a dependency is
 /// registered.
 typedef TOnRegisterCallback<T extends Object> = FutureOr<void> Function(
-    T value,);
+  T value,
+);
 
 /// A typedef for a callback function to invoke when a dependency is
 /// unregistered.
 typedef TOnUnregisterCallback<T extends Object> = FutureOr<void> Function(
-    Result<T> value,);
+  Result<T> value,
+);
 
 /// A typedef for a function that evaluates the validity of a dependency.
 typedef TDependencyValidator<T extends Object> = bool Function(T value);

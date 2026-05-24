@@ -53,8 +53,7 @@ void main() {
         expect(
           result.isOk(),
           isTrue,
-          reason:
-              'child.untilSuper must resolve when an ANCESTOR registers — '
+          reason: 'child.untilSuper must resolve when an ANCESTOR registers — '
               'otherwise the package has a directional asymmetry: '
               'getDependency walks parents transitively but _maybeFinish '
               'only walks materialised childrenContainer children.',

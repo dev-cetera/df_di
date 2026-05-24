@@ -206,14 +206,18 @@ void main() {
       final w = World();
       var addedRan = 0;
       var addedSeen = false;
-      w.addSystem(FunctionSystem((world, _) {
-        if (!addedSeen) {
-          addedSeen = true;
-          world.addSystem(FunctionSystem((_, __) {
-            addedRan++;
-          }),);
-        }
-      }),);
+      w.addSystem(
+        FunctionSystem((world, _) {
+          if (!addedSeen) {
+            addedSeen = true;
+            world.addSystem(
+              FunctionSystem((_, __) {
+                addedRan++;
+              }),
+            );
+          }
+        }),
+      );
       w.update(Duration.zero);
       expect(addedRan, 0, reason: 'newly-added system runs on the NEXT tick');
       w.update(Duration.zero);
@@ -386,11 +390,13 @@ void main() {
       () {
         final w = World();
         for (var i = 0; i < 5000; i++) {
-          w.spawn(Some([
-            _Position(i, i),
-            const _Velocity(1, 1),
-            const _Health(100),
-          ]),);
+          w.spawn(
+            Some([
+              _Position(i, i),
+              const _Velocity(1, 1),
+              const _Health(100),
+            ]),
+          );
         }
         expect(w.entityCount, 5000);
         expect(w.each2<_Position, _Velocity>().length, 5000);

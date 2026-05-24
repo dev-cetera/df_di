@@ -143,14 +143,12 @@ void main() {
       () {
     test('sync throw → logged, chain continues with Ok', () async {
       final di = DI();
-      di
-          .register<_A>(
-            const _A(),
-            onUnregister: Some((_) {
-              throw StateError('sync throw');
-            }),
-          )
-          .end();
+      di.register<_A>(
+        const _A(),
+        onUnregister: Some((_) {
+          throw StateError('sync throw');
+        }),
+      ).end();
       // unregister should NOT throw; the sync error is logged and swallowed.
       final r = await di.unregister<_A>().toAsync().value;
       expect(r.isOk(), isTrue);
@@ -181,15 +179,13 @@ void main() {
       'async throw → propagates as Err',
       () async {
         final di = DI();
-        di
-            .register<_A>(
-              const _A(),
-              onUnregister: Some((_) async {
-                await Future<void>.delayed(const Duration(milliseconds: 5));
-                throw StateError('async throw');
-              }),
-            )
-            .end();
+        di.register<_A>(
+          const _A(),
+          onUnregister: Some((_) async {
+            await Future<void>.delayed(const Duration(milliseconds: 5));
+            throw StateError('async throw');
+          }),
+        ).end();
         final r = await di.unregister<_A>().toAsync().value;
         expect(r.isErr(), isTrue);
       },
@@ -238,8 +234,7 @@ void main() {
         expect(
           userCallbackRan,
           isTrue,
-          reason:
-              'registerAndInitService must invoke the user-supplied '
+          reason: 'registerAndInitService must invoke the user-supplied '
               'onUnregister — currently it is passed to consec without '
               'being called.',
         );
@@ -287,13 +282,15 @@ void main() {
         var beforeFinished = false;
         (await di
                 .unregisterAll(
-                  onBeforeUnregister: Some((_) => Async<Unit>(() async {
-                        await Future<void>.delayed(
-                          const Duration(milliseconds: 10),
-                        );
-                        beforeFinished = true;
-                        return Unit();
-                      }),),
+                  onBeforeUnregister: Some(
+                    (_) => Async<Unit>(() async {
+                      await Future<void>.delayed(
+                        const Duration(milliseconds: 10),
+                      );
+                      beforeFinished = true;
+                      return Unit();
+                    }),
+                  ),
                 )
                 .toAsync()
                 .value)
@@ -316,13 +313,15 @@ void main() {
         var afterFinished = false;
         (await di
                 .unregisterAll(
-                  onAfterUnregister: Some((_) => Async<Unit>(() async {
-                        await Future<void>.delayed(
-                          const Duration(milliseconds: 10),
-                        );
-                        afterFinished = true;
-                        return Unit();
-                      }),),
+                  onAfterUnregister: Some(
+                    (_) => Async<Unit>(() async {
+                      await Future<void>.delayed(
+                        const Duration(milliseconds: 10),
+                      );
+                      afterFinished = true;
+                      return Unit();
+                    }),
+                  ),
                 )
                 .toAsync()
                 .value)
@@ -344,21 +343,22 @@ void main() {
         di
             .register<_A>(
               const _A(),
-              onUnregister: Some((_) => Async<Unit>(() async {
-                    await Future<void>.delayed(
-                      const Duration(milliseconds: 10),
-                    );
-                    unregisterFinished = true;
-                    return Unit();
-                  }),),
+              onUnregister: Some(
+                (_) => Async<Unit>(() async {
+                  await Future<void>.delayed(
+                    const Duration(milliseconds: 10),
+                  );
+                  unregisterFinished = true;
+                  return Unit();
+                }),
+              ),
             )
             .end();
         (await di.unregisterAll().toAsync().value).end();
         expect(
           unregisterFinished,
           isTrue,
-          reason:
-              "unregisterAll must await the dep's own onUnregister "
+          reason: "unregisterAll must await the dep's own onUnregister "
               'Resolvable return',
         );
       },

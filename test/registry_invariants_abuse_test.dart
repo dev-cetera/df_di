@@ -133,8 +133,7 @@ void main() {
       );
     });
 
-    test('overwriting the same slot 1000 times keeps _typeIndex size at 1',
-        () {
+    test('overwriting the same slot 1000 times keeps _typeIndex size at 1', () {
       final di = DI();
       final g = const DefaultEntity();
       di.register<_A>(const _A(), groupEntity: g).end();
@@ -307,12 +306,14 @@ void main() {
       '100 concurrent getAsync of the same async dep all see the value',
       () async {
         final di = DI();
-        di.register<_A>(
-          Future<_A>.delayed(
-            const Duration(milliseconds: 5),
-            () => const _A('resolved'),
-          ),
-        ).end();
+        di
+            .register<_A>(
+              Future<_A>.delayed(
+                const Duration(milliseconds: 5),
+                () => const _A('resolved'),
+              ),
+            )
+            .end();
         final futures = List.generate(100, (_) => di.getAsyncUnsafe<_A>());
         final results = await Future.wait(futures);
         expect(results.length, 100);
@@ -331,15 +332,16 @@ void main() {
       'mid-flight does not crash the other awaiters',
       () async {
         final di = DI();
-        di.register<_A>(
-          Future<_A>.delayed(
-            const Duration(milliseconds: 20),
-            () => const _A('resolved'),
-          ),
-        ).end();
+        di
+            .register<_A>(
+              Future<_A>.delayed(
+                const Duration(milliseconds: 20),
+                () => const _A('resolved'),
+              ),
+            )
+            .end();
         // Start 5 awaiters via getAsyncUnsafe (returns a Future<_A>).
-        final futures =
-            List.generate(5, (_) => di.getAsyncUnsafe<_A>());
+        final futures = List.generate(5, (_) => di.getAsyncUnsafe<_A>());
         // Unregister mid-flight — only the in-flight Async closures should
         // be affected. Other callers should still get values via the
         // captured future handle (they had already awaited their copy).

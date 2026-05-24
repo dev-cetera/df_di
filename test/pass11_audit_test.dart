@@ -32,22 +32,18 @@ void main() {
         final child = DI();
         child.parents.add(parent);
         final fired = <String>[];
-        parent
-            .register<_A>(
-              const _A(),
-              onUnregister: Some((_) {
-                fired.add('parent');
-              }),
-            )
-            .end();
-        child
-            .register<_A>(
-              const _A(),
-              onUnregister: Some((_) {
-                fired.add('child');
-              }),
-            )
-            .end();
+        parent.register<_A>(
+          const _A(),
+          onUnregister: Some((_) {
+            fired.add('parent');
+          }),
+        ).end();
+        child.register<_A>(
+          const _A(),
+          onUnregister: Some((_) {
+            fired.add('child');
+          }),
+        ).end();
         (await child.unregister<_A>().toAsync().value).end();
         expect(fired, unorderedEquals(['parent', 'child']));
       },
@@ -64,14 +60,12 @@ void main() {
       () async {
         final di = DI();
         Object? received;
-        di
-            .register<_A>(
-              const _A(),
-              onUnregister: Some((r) {
-                received = r;
-              }),
-            )
-            .end();
+        di.register<_A>(
+          const _A(),
+          onUnregister: Some((r) {
+            received = r;
+          }),
+        ).end();
         (await di.unregister<_A>().toAsync().value).end();
         expect(received, isA<Ok<Object>>());
       },

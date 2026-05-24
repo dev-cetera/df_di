@@ -82,7 +82,9 @@ void main() {
     test('preferOverDefault yields the fallback when receiver is default', () {
       final fallback = TypeEntity('b');
       expect(
-          const DefaultEntity().preferOverDefault(fallback), equals(fallback),);
+        const DefaultEntity().preferOverDefault(fallback),
+        equals(fallback),
+      );
     });
   });
 

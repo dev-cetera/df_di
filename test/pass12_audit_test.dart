@@ -34,8 +34,7 @@ void main() {
         expect(
           s.observedErrors,
           isNotEmpty,
-          reason:
-              'onPoll Async-Err must be observable downstream — otherwise '
+          reason: 'onPoll Async-Err must be observable downstream — otherwise '
               'polling failures are silently dropped.',
         );
         (await s.dispose().toAsync().value).end();

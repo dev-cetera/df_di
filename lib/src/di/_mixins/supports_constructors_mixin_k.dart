@@ -144,10 +144,14 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
       typeEntity,
       groupEntity: groupEntity,
       traverse: traverse,
-    ).map((e) => switch (e.singleton) {
-          Sync(value: Ok(value: final v)) => Some(v),
-          _ => None<T>(),
-        },).flatten();
+    )
+        .map(
+          (e) => switch (e.singleton) {
+            Sync(value: Ok(value: final v)) => Some(v),
+            _ => None<T>(),
+          },
+        )
+        .flatten();
   }
 
   /// Retrieves the lazily loaded singleton dependency unsafely, returning the
@@ -211,10 +215,14 @@ base mixin SupportsConstructorsMixinK on SupportsMixinK {
       typeEntity,
       groupEntity: groupEntity,
       traverse: traverse,
-    ).map((e) => switch (e.singleton) {
-          Sync(value: Ok(value: final v)) => Some(v),
-          _ => None<T>(),
-        },).flatten();
+    )
+        .map(
+          (e) => switch (e.singleton) {
+            Sync(value: Ok(value: final v)) => Some(v),
+            _ => None<T>(),
+          },
+        )
+        .flatten();
   }
 
   /// Retrieves the factory dependency, returning the instance directly or

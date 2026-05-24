@@ -252,8 +252,7 @@ base mixin SupportsMixinK on DIBase {
     // Walk the FULL ancestor chain (with cycle detection), matching the
     // depth of `isRegisteredK(traverse: true)`. See the corresponding fix
     // in [DIBase.unregister] for the symmetry rationale.
-    final containers =
-        traverse ? _allAncestorsK() : <DI>[this as DI];
+    final containers = traverse ? _allAncestorsK() : <DI>[this as DI];
     walk:
     for (final di in containers) {
       switch (di.removeDependencyK(typeEntity, groupEntity: g)) {
@@ -313,8 +312,7 @@ base mixin SupportsMixinK on DIBase {
       if (dep.value case Sync<Object>(value: final depResult)) {
         return switch (accResult) {
           Err() => chain,
-          Ok(value: final acc) =>
-            _fireOnUnregisterK(cb, depResult, dep, acc),
+          Ok(value: final acc) => _fireOnUnregisterK(cb, depResult, dep, acc),
         };
       }
     }
@@ -324,8 +322,7 @@ base mixin SupportsMixinK on DIBase {
         Ok<Option>(value: final v) => v,
       };
       final depResult = await dep.value.value;
-      return switch (
-          await _fireOnUnregisterK(cb, depResult, dep, acc).value) {
+      return switch (await _fireOnUnregisterK(cb, depResult, dep, acc).value) {
         Err<Option> err => throw err,
         Ok<Option>(value: final v) => v,
       };
@@ -467,8 +464,8 @@ base mixin SupportsMixinK on DIBase {
     final searchScope = traverse ? _allAncestorsK() : <DI>[this as DI];
     for (final di in searchScope) {
       final found = (di as SupportsMixinK).completersK[g]?.firstWhereOrNull(
-        (e) => e.typeEntity == typeEntity,
-      );
+            (e) => e.typeEntity == typeEntity,
+          );
       if (found != null) {
         completer = found;
         break;

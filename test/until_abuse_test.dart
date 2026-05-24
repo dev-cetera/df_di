@@ -29,8 +29,10 @@ import 'package:test/test.dart';
 /// Try to await [f] within [timeout]; if it doesn't resolve in time, return
 /// `null`. This is how we prove that an `until*` call is NOT resolving for a
 /// given scenario without hanging the suite.
-Future<T?> tryAwait<T>(Future<T> f,
-    {Duration timeout = const Duration(milliseconds: 80),}) {
+Future<T?> tryAwait<T>(
+  Future<T> f, {
+  Duration timeout = const Duration(milliseconds: 80),
+}) {
   return f.timeout(timeout, onTimeout: () => null as T).then<T?>(
         (v) => v,
         onError: (Object _, [StackTrace? __]) => null,

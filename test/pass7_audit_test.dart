@@ -53,8 +53,7 @@ void main() {
         expect(
           child.isRegistered<_A>(),
           isFalse,
-          reason:
-              'unregister(traverse: true, removeAll: true) must drop the '
+          reason: 'unregister(traverse: true, removeAll: true) must drop the '
               'dep from every ancestor isRegistered would have seen — '
               'otherwise the two are inconsistent.',
         );
@@ -104,8 +103,7 @@ void main() {
         expect(
           child.isRegisteredK(TypeEntity(_A)),
           isFalse,
-          reason:
-              'unregisterK(traverse: true) must walk every ancestor '
+          reason: 'unregisterK(traverse: true) must walk every ancestor '
               'isRegisteredK would have seen.',
         );
       },

@@ -41,14 +41,12 @@ void main() {
       () async {
         final di = DI();
         final c = _Counter();
-        di
-            .register<_A>(
-              const _A('first'),
-              onRegister: Some((_) {
-                c.onRegisterCalls++;
-              }),
-            )
-            .end();
+        di.register<_A>(
+          const _A('first'),
+          onRegister: Some((_) {
+            c.onRegisterCalls++;
+          }),
+        ).end();
         expect(c.onRegisterCalls, 1);
         // Second registration of the SAME type — should fail.
         final second = await di
@@ -68,8 +66,7 @@ void main() {
         expect(
           c.onRegisterCalls,
           1,
-          reason:
-              'second registration was rejected — its onRegister must NOT '
+          reason: 'second registration was rejected — its onRegister must NOT '
               'have fired (no zombie init).',
         );
       },
@@ -90,11 +87,7 @@ void main() {
         di.register<_A>(const _A('first')).end();
         (await di.unregister<_A>().toAsync().value).end();
         // Now ask for it — there's nothing registered.
-        final fut = di
-            .untilSuper<_A>()
-            .toAsync()
-            .value
-            .timeout(
+        final fut = di.untilSuper<_A>().toAsync().value.timeout(
               const Duration(milliseconds: 100),
               onTimeout: () => Err<_A>('timed out (expected)'),
             );
@@ -135,13 +128,11 @@ void main() {
             )
             .end();
         // Reading the singleton surfaces the Err.
-        final result = di
-            .getLazySingletonSyncOrNone<_A>();
+        final result = di.getLazySingletonSyncOrNone<_A>();
         expect(
           result.isNone(),
           isTrue,
-          reason:
-              'a Lazy<T> whose constructor errors should NOT pretend to '
+          reason: 'a Lazy<T> whose constructor errors should NOT pretend to '
               'have produced a value',
         );
         // Unregister and re-register with a working constructor.
@@ -150,8 +141,7 @@ void main() {
             .registerLazy<_A>(() => Sync<_A>.okValue(const _A('recovered')))
             .end();
         UNSAFE:
-        final ok =
-            di.getLazySingletonSyncOrNone<_A>().unwrap();
+        final ok = di.getLazySingletonSyncOrNone<_A>().unwrap();
         expect(ok.tag, 'recovered');
       },
     );
@@ -168,7 +158,9 @@ void main() {
         final p1 = DI();
         final p2 = DI();
         final child = DI();
-        child.parents..add(p1)..add(p2);
+        child.parents
+          ..add(p1)
+          ..add(p2);
         p1.register<_A>(const _A('from-p1')).end();
         p2.register<_A>(const _A('from-p2')).end();
         UNSAFE:
@@ -187,7 +179,9 @@ void main() {
         final p1 = DI();
         final p2 = DI();
         final child = DI();
-        child.parents..add(p1)..add(p2);
+        child.parents
+          ..add(p1)
+          ..add(p2);
         p2.register<_A>(const _A('from-p2')).end();
         UNSAFE:
         final got = child.getSyncUnsafe<_A>();
@@ -210,9 +204,9 @@ void main() {
         svc = _SelfDisposingSpy(onSelfDispose: () => svc.dispose().end());
         (await svc.init().toAsync().value).end();
         (await svc.dispose().toAsync().value.timeout(
-              const Duration(seconds: 2),
-              onTimeout: () => Err<Unit>('deadlock'),
-            ))
+                  const Duration(seconds: 2),
+                  onTimeout: () => Err<Unit>('deadlock'),
+                ))
             .end();
         expect(svc.disposeCalls, 1);
         expect(svc.state, ServiceState.DISPOSE_SUCCESS);
@@ -228,12 +222,10 @@ void main() {
     test('after resetSingleton, the next access mints a new instance', () {
       final di = DI();
       final c = _Counter();
-      di
-          .registerLazy<_A>(() {
-            c.constructorCalls++;
-            return Sync<_A>.okValue(_A('v${c.constructorCalls}'));
-          })
-          .end();
+      di.registerLazy<_A>(() {
+        c.constructorCalls++;
+        return Sync<_A>.okValue(_A('v${c.constructorCalls}'));
+      }).end();
       UNSAFE:
       final first = di.getLazySingletonSyncOrNone<_A>().unwrap();
       expect(first.tag, 'v1');
@@ -287,11 +279,7 @@ void main() {
         // From parent's perspective, child is NOT in parent.children
         // unless wired via childrenContainer; we set up the typical
         // parent → child relation via `.parents.add(parent)` only.
-        final timed = await parent
-            .untilSuper<_A>()
-            .toAsync()
-            .value
-            .timeout(
+        final timed = await parent.untilSuper<_A>().toAsync().value.timeout(
               const Duration(milliseconds: 50),
               onTimeout: () => Err<_A>('timed out'),
             );
@@ -301,17 +289,12 @@ void main() {
         expect(
           timed.isErr(),
           isTrue,
-          reason:
-              'parent.untilSuper must not fire on child registrations '
+          reason: 'parent.untilSuper must not fire on child registrations '
               'unless child is registered into parent.childrenContainer',
         );
         // The child can see its own registration via untilSuper.
         UNSAFE:
-        final got = await child
-            .untilSuper<_A>()
-            .toAsync()
-            .value
-            .timeout(
+        final got = await child.untilSuper<_A>().toAsync().value.timeout(
               const Duration(milliseconds: 50),
               onTimeout: () =>
                   Err<_A>('child untilSuper unexpectedly timed out'),
@@ -335,10 +318,7 @@ void main() {
         await Future.wait([
           for (var n = 0; n < 100; n++)
             () async {
-              final r = await di
-                  .register<_A>(_A('n=$n'))
-                  .toAsync()
-                  .value;
+              final r = await di.register<_A>(_A('n=$n')).toAsync().value;
               if (r.isOk()) {
                 okCount++;
               } else {

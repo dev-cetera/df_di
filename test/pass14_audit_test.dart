@@ -70,13 +70,15 @@ void main() {
 
         final initRunsBefore = svc.initRuns;
         final result = await svc.init().toAsync().value;
-        expect(svc.initRuns, equals(initRunsBefore),
-            reason: 'init listeners must NOT re-run after dispose',);
+        expect(
+          svc.initRuns,
+          equals(initRunsBefore),
+          reason: 'init listeners must NOT re-run after dispose',
+        );
         expect(
           result.isErr(),
           isTrue,
-          reason:
-              'init() after dispose() must resolve to Err so callers can '
+          reason: 'init() after dispose() must resolve to Err so callers can '
               'distinguish "init succeeded" from "init was skipped because '
               'service is already disposed".',
         );
@@ -99,12 +101,14 @@ void main() {
         expect(
           result.isErr(),
           isTrue,
-          reason:
-              'pause() before init() is a contract violation — must Err so '
+          reason: 'pause() before init() is a contract violation — must Err so '
               'lifecycle bugs surface instead of silently transitioning.',
         );
-        expect(svc.state, equals(ServiceState.NOT_INITIALIZED),
-            reason: 'state must remain NOT_INITIALIZED on invalid pause',);
+        expect(
+          svc.state,
+          equals(ServiceState.NOT_INITIALIZED),
+          reason: 'state must remain NOT_INITIALIZED on invalid pause',
+        );
       },
     );
 
@@ -172,8 +176,7 @@ void main() {
         expect(
           orphanCount,
           equals(0),
-          reason:
-              'After untilSuper resolves, no ReservedSafeCompleter should '
+          reason: 'After untilSuper resolves, no ReservedSafeCompleter should '
               'remain registered in any container in the hierarchy.',
         );
       },
@@ -229,8 +232,7 @@ void main() {
         expect(
           orphanCount,
           equals(0),
-          reason:
-              'Sibling waiters resolving independently must not orphan '
+          reason: 'Sibling waiters resolving independently must not orphan '
               "each other's completers.",
         );
       },
