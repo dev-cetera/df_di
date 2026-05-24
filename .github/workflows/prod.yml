@@ -89,13 +89,20 @@ jobs:
         run: dart pub get
 
       - name: Verify formatter
-        # `smoke_test/` is a sub-project with its own pubspec and depends on
-        # `flutter_lints`. The CI only runs `dart pub get` in this package's
-        # root, so the formatter cannot resolve the smoke_test package config
-        # and falls back to a different language version than the one its
-        # pubspec pins — producing a spurious "1 changed" exit. Scope the
-        # format check to df_di's own source.
-        run: dart format --output=none --set-exit-if-changed lib test
+        # Scope to this package's own primary source. Avoids walking into
+        # sub-projects (example/, smoke_test/) that carry their own pubspec
+        # but aren't `pub get`-ed in CI — formatting them with no package
+        # config triggers a language-version fallback and spurious diffs.
+        run: |
+          DIRS=""
+          for d in lib test bin; do
+            [ -d "$d" ] && DIRS="$DIRS $d"
+          done
+          if [ -z "$DIRS" ]; then
+            echo "No primary source directories to format."
+            exit 0
+          fi
+          dart format --output=none --set-exit-if-changed $DIRS
 
       - name: Static analysis
         run: dart analyze --fatal-infos
