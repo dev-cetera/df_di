@@ -59,24 +59,37 @@ mixin ServiceMixin {
   /// [ServiceState.RUN_SUCCESS] by running every listener from
   /// [provideInitListeners] sequentially.
   ///
-  /// Idempotent: a second call (or any call after [dispose]) returns without
-  /// re-running listeners. If [eagerError] is `true` (default for init), the
-  /// chain short-circuits on the first listener error; otherwise the chain
-  /// continues but the final state is still [ServiceState.RUN_ERROR].
+  /// Contract:
+  ///
+  /// * Calling [init] after [dispose] (any DISPOSE_* state) resolves to **Err**
+  ///   without re-running listeners. The service is terminal and cannot be
+  ///   re-initialized — callers must construct a fresh instance.
+  /// * Calling [init] a second time while the service is still RUN_*/PAUSE_*/
+  ///   RESUME_* resolves to **Err** without re-running listeners (idempotent —
+  ///   listeners run exactly once per service lifetime).
+  /// * On the first valid call: listeners run; the service transitions to
+  ///   [ServiceState.RUN_ATTEMPT] during execution and then [RUN_SUCCESS] /
+  ///   [RUN_ERROR] depending on outcome. If [eagerError] is `true` (default),
+  ///   the chain short-circuits on the first listener error.
+  ///
+  /// Returning **Err** on invalid transitions (instead of silent Ok in release
+  /// or AssertionError in debug) is a mission-critical reliability choice:
+  /// callers checking the awaited Result can detect "init was skipped because
+  /// the service is in the wrong state" without relying on asserts being on.
   @nonVirtual
   Resolvable<Unit> init({bool eagerError = true}) {
     return _sequencer.then((prev) {
-      // Idempotency: in release (asserts stripped) we still must not re-run
-      // init listeners if the service has already moved past NOT_INITIALIZED,
-      // otherwise streams get double-subscribed, observers double-registered,
-      // etc.
-      assert(!state.didDispose());
       if (state.didDispose()) {
-        return Sync.result(prev);
+        return Sync<Option>.err(
+          Err('init: cannot be called after dispose; '
+              'state is $state.'),
+        );
       }
-      assert(state == ServiceState.NOT_INITIALIZED);
       if (state != ServiceState.NOT_INITIALIZED) {
-        return Sync.result(prev);
+        return Sync<Option>.err(
+          Err('init: already initialized; state is $state. '
+              'init() runs listeners exactly once per service lifetime.'),
+        );
       }
       return _updateState(
         providerFunction: provideInitListeners,
@@ -103,19 +116,36 @@ mixin ServiceMixin {
   //
 
   /// Transitions the service into [ServiceState.PAUSE_SUCCESS] by running
-  /// listeners from [providePauseListeners]. No-op if the service is already
-  /// paused or disposed. With [eagerError] `false` (default), all listeners
-  /// run even if earlier ones error.
+  /// listeners from [providePauseListeners].
+  ///
+  /// Contract:
+  ///
+  /// * Calling [pause] before [init] (state is [NOT_INITIALIZED]) resolves to
+  ///   **Err**. Pausing an uninitialized service is a lifecycle bug; without
+  ///   this guard a caller could reach [PAUSE_SUCCESS] without ever running
+  ///   init listeners.
+  /// * Calling [pause] after [dispose] resolves to **Err** — disposed is
+  ///   terminal.
+  /// * Calling [pause] while already paused is a **no-op Ok** (idempotent).
+  /// * Otherwise: listeners run; state transitions to [PAUSE_ATTEMPT] then
+  ///   [PAUSE_SUCCESS] / [PAUSE_ERROR]. With [eagerError] `false` (default),
+  ///   all listeners run even if earlier ones error.
   @nonVirtual
   Resolvable<Unit> pause({bool eagerError = false}) {
     return _sequencer.then((prev) {
-      assert(!state.didDispose());
       if (state.didDispose()) {
-        return Sync.result(prev);
+        return Sync<Option>.err(
+          Err('pause: cannot be called after dispose; state is $state.'),
+        );
       }
-      //assert(!state.didPause());
+      if (state == ServiceState.NOT_INITIALIZED) {
+        return Sync<Option>.err(
+          Err('pause: service has not been initialized. '
+              'Call init() first.'),
+        );
+      }
       if (state.didPause()) {
-        return Sync.result(prev);
+        return Sync<Option>.okValue(const None());
       }
       return _updateState(
         providerFunction: providePauseListeners,
@@ -139,18 +169,31 @@ mixin ServiceMixin {
   //
 
   /// Transitions the service into [ServiceState.RESUME_SUCCESS] by running
-  /// listeners from [provideResumeListeners]. No-op if the service is already
-  /// in a resumed state or disposed.
+  /// listeners from [provideResumeListeners].
+  ///
+  /// Contract mirrors [pause]:
+  ///
+  /// * [NOT_INITIALIZED] → **Err** (call [init] first).
+  /// * [didDispose] → **Err** (terminal state).
+  /// * Already in a resumed state → **no-op Ok** (idempotent).
+  /// * Otherwise: listeners run; transitions to [RESUME_ATTEMPT] then
+  ///   [RESUME_SUCCESS] / [RESUME_ERROR].
   @nonVirtual
   Resolvable<Unit> resume({bool eagerError = false}) {
     return _sequencer.then((prev) {
-      assert(!state.didDispose());
       if (state.didDispose()) {
-        return Sync.result(prev);
+        return Sync<Option>.err(
+          Err('resume: cannot be called after dispose; state is $state.'),
+        );
       }
-      //assert(!state.didResume());
+      if (state == ServiceState.NOT_INITIALIZED) {
+        return Sync<Option>.err(
+          Err('resume: service has not been initialized. '
+              'Call init() first.'),
+        );
+      }
       if (state.didResume()) {
-        return Sync.result(prev);
+        return Sync<Option>.okValue(const None());
       }
       return _updateState(
         providerFunction: provideResumeListeners,
@@ -174,14 +217,19 @@ mixin ServiceMixin {
   //
 
   /// Drives the service into [ServiceState.DISPOSE_SUCCESS] by running
-  /// listeners from [provideDisposeListeners]. Idempotent: a second call is
-  /// a no-op. Once disposed, [init]/[pause]/[resume] are all rejected.
+  /// listeners from [provideDisposeListeners].
+  ///
+  /// Contract:
+  ///
+  /// * Calling [dispose] a second time is a **no-op Ok** (idempotent).
+  /// * Otherwise: listeners run; state transitions to [DISPOSE_ATTEMPT] then
+  ///   [DISPOSE_SUCCESS] / [DISPOSE_ERROR].
+  /// * Once disposed, [init]/[pause]/[resume] all resolve to Err (terminal).
   @nonVirtual
   Resolvable<Unit> dispose({bool eagerError = false}) {
     return _sequencer.then((prev) {
-      assert(!state.didDispose());
       if (state.didDispose()) {
-        return Sync.result(prev);
+        return Sync<Option>.okValue(const None());
       }
       return _updateState(
         providerFunction: provideDisposeListeners,

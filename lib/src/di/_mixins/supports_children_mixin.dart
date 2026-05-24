@@ -94,18 +94,23 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
       None() => null,
     };
     if (container == null) return Err('No child container registered.');
-    // The `.sync()` returns Ok only if the resolvable resolved synchronously.
-    // Children are registered as Sync lazies so this is the expected path —
-    // any other shape is a programming error and falls through to the wild
-    // card with a descriptive Err.
+    // Children are registered as Sync lazies (see [registerChild]), so the
+    // unregister Resolvable should always be Sync. If it isn't, that's a
+    // contract violation — throw to make it visible. The previous
+    // implementation panicked here via `.sync().unwrap()`; we preserve that
+    // semantics so callers like `plugin.dart::uninstallPlugin` that use
+    // `.end()` on the Result still get a visible crash rather than a
+    // silently-dropped Err.
     return switch (container.unregister<Lazy<DI>>(groupEntity: g)) {
       Sync(value: Ok(value: Some(value: final lazy))) =>
         _ok(_eagerLazyDI(lazy)),
       Sync(value: Ok(value: None())) => const Ok(None()),
       Sync(value: Err(:final error, :final stackTrace)) =>
         Err<Option<DI>>(error, stackTrace: stackTrace),
-      Async() =>
-        Err('unregisterChild: unregister resolved async, not supported.'),
+      Async() => throw StateError(
+          'unregisterChild: child unregister resolved Async, but children '
+          'must be Sync. This is a programming-error contract violation.',
+        ),
     };
   }
 
@@ -127,8 +132,10 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
       Sync(value: Ok(value: None())) => const Ok(None()),
       Sync(value: Err(:final error, :final stackTrace)) =>
         Err<Option<DI>>(error, stackTrace: stackTrace),
-      Async() =>
-        Err('unregisterChildT: unregister resolved async, not supported.'),
+      Async() => throw StateError(
+          'unregisterChildT: child unregister resolved Async, but children '
+          'must be Sync. This is a programming-error contract violation.',
+        ),
     };
   }
 

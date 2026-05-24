@@ -51,7 +51,7 @@ import 'entity.dart';
 ///   Mitigations:
 ///   - Verify with a `dart2js --minify` / `wasm` CI build that the actual
 ///     registered types of your app do not collide post-minification.
-///     The `example/wasm_test/` harness covers `until*`; extend it to cover
+///     The `smoke_test/wasm_test/` harness covers `until*`; extend it to cover
 ///     your app's specific type set.
 ///   - Or supply an explicit caller-controlled `Entity` via
 ///     `DependencyMetadata.preemptivetypeEntity` (constructed from a stable

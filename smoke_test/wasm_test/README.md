@@ -25,7 +25,7 @@ verified end-to-end.
 ## Run
 
 ```bash
-cd packages/df_di/example/wasm_test
+cd packages/df_di/smoke_test/wasm_test
 
 # Debug (VM-like generics)
 flutter run -d chrome
