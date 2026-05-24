@@ -9,6 +9,8 @@
 
 ---
 
+<!-- BEGIN _README_CONTENT -->
+
 `df_di` is a lightweight, powerful "dependency injection" package for Dart and Flutter that makes your app modular, testable, and easy to maintain. It stops the confusion of finding and tracking services, like APIs or databases. With `df_di`, you store these services in "containers" that make them easy to access whenever you need them.
 
 Why choose `df_di`? It’s inspired by [get_it](https://pub.dev/packages/get_it) but adds better type safety via monads provided by [df_safer_dart](https://pub.dev/packages/df_safer_dart), more robust async support, better debuggability and a very powerful `until` function that waits for dependencies to be ready, and much more. Whether you’re building a small Flutter app or a large-scale project, `df_di` keeps your code clean and your dependencies accessible.
@@ -383,6 +385,8 @@ The exhaustive `switch` rules out the "I forgot to handle Err" class of bugs at 
 | [df_flutter_services](https://pub.dev/packages/df_flutter_services) | Flutter glue | `ObservedService`, `ObservedDataStreamService`, `HandleServiceLifecycleStateMixin` — bridges `df_di` services to `WidgetsBindingObserver` and exposes `pData: Pod<Option<Result<T>>>` so streams flow into widgets via `PodBuilder`. |
 
 See [`doc/state_management_approach.md`](doc/state_management_approach.md) for the cross-package architecture and the recommended `G` (global-access) façade pattern.
+
+<!-- END _README_CONTENT -->
 
 ---
 
