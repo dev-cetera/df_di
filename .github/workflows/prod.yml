@@ -89,7 +89,13 @@ jobs:
         run: dart pub get
 
       - name: Verify formatter
-        run: dart format --output=none --set-exit-if-changed .
+        # `smoke_test/` is a sub-project with its own pubspec and depends on
+        # `flutter_lints`. The CI only runs `dart pub get` in this package's
+        # root, so the formatter cannot resolve the smoke_test package config
+        # and falls back to a different language version than the one its
+        # pubspec pins — producing a spurious "1 changed" exit. Scope the
+        # format check to df_di's own source.
+        run: dart format --output=none --set-exit-if-changed lib test
 
       - name: Static analysis
         run: dart analyze --fatal-infos
