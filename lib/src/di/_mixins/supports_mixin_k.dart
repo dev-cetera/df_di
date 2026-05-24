@@ -147,8 +147,17 @@ base mixin SupportsMixinK on DIBase {
           Async<T>(value: final fut) => Some(
               Async<T>(
                 () => fut.then((e) {
-                  UNSAFE:
-                  final value = e.unwrap();
+                  // Pattern-match instead of `.unwrap()`. Throwing here is
+                  // the *intentional* channel for Err propagation: the
+                  // surrounding `Async()` constructor catches the throw and
+                  // converts it into Err on its own `.value` channel. This
+                  // is the df_safer_dart convention for "propagate error
+                  // through the Async pipeline".
+                  final value = switch (e) {
+                    Ok(value: final v) => v,
+                    Err(:final error, :final stackTrace) =>
+                      throw Err<T>(error, stackTrace: stackTrace),
+                  };
                   registry.removeDependencyK(typeEntity, groupEntity: g).end();
                   final metadata = dep.metadata.map(
                     (m) => m.copyWith(
@@ -451,57 +460,64 @@ base mixin SupportsMixinK on DIBase {
         case Some(value: final r)) {
       return r;
     }
-    UNSAFE:
-    {
-      final myEpoch = _epochForK(g, typeEntity);
-      // Look for an existing completer in THIS container OR any ancestor
-      // (so concurrent waiters from different containers share one).
-      ReservedSafeCompleter? completer;
-      final searchScope = traverse ? _allAncestorsK() : <DI>[this as DI];
-      for (final di in searchScope) {
-        final found = (di as SupportsMixinK).completersK[g]?.firstWhereOrNull(
-          (e) => e.typeEntity == typeEntity,
-        );
-        if (found != null) {
-          completer = found;
-          break;
-        }
+    final myEpoch = _epochForK(g, typeEntity);
+    // Look for an existing completer in THIS container OR any ancestor
+    // (so concurrent waiters from different containers share one).
+    ReservedSafeCompleter? completer;
+    final searchScope = traverse ? _allAncestorsK() : <DI>[this as DI];
+    for (final di in searchScope) {
+      final found = (di as SupportsMixinK).completersK[g]?.firstWhereOrNull(
+        (e) => e.typeEntity == typeEntity,
+      );
+      if (found != null) {
+        completer = found;
+        break;
       }
-      if (completer == null) {
-        completer = ReservedSafeCompleter(typeEntity);
-        (completersK[g] ??= []).add(completer);
-        // Seed the completer into every ancestor so an ancestor's
-        // `register<...>(..., enableUntilExactlyK: true)` (which only walks
-        // its OWN `completersK`, not transitively into children) still
-        // fires this waiter. Mirrors the `until` directional-asymmetry fix.
-        if (traverse) {
-          for (final ancestor in _allAncestorsK().skip(1)) {
-            final mixinAncestor = ancestor as SupportsMixinK;
-            (mixinAncestor.completersK[g] ??= []).add(completer);
-          }
-        }
-      }
-      return completer.resolvable().then((_) {
-        // Remove the completer from THIS container AND every ancestor we
-        // seeded above. Use identity-comparison so we don't accidentally
-        // drop a different waiter that happens to share the same
-        // typeEntity (e.g. a sibling waiter).
-        final cleanupScope = traverse ? _allAncestorsK() : <DI>[this as DI];
-        for (final di in cleanupScope) {
-          (di as SupportsMixinK)
-              .completersK[g]
-              ?.removeWhere((e) => identical(e, completer));
-        }
-        if (_epochForK(g, typeEntity) != myEpoch) {
-          return untilExactlyK<T>(
-            typeEntity,
-            groupEntity: g,
-            traverse: traverse,
-          );
-        }
-        return getK<T>(typeEntity, groupEntity: g, traverse: traverse).unwrap();
-      }).flatten();
     }
+    if (completer == null) {
+      completer = ReservedSafeCompleter(typeEntity);
+      (completersK[g] ??= []).add(completer);
+      // Seed the completer into every ancestor so an ancestor's
+      // `register<...>(..., enableUntilExactlyK: true)` (which only walks
+      // its OWN `completersK`, not transitively into children) still
+      // fires this waiter. Mirrors the `until` directional-asymmetry fix.
+      if (traverse) {
+        for (final ancestor in _allAncestorsK().skip(1)) {
+          final mixinAncestor = ancestor as SupportsMixinK;
+          (mixinAncestor.completersK[g] ??= []).add(completer);
+        }
+      }
+    }
+    return completer.resolvable().then((_) {
+      // Remove the completer from THIS container AND every ancestor we
+      // seeded above. Use identity-comparison so we don't accidentally
+      // drop a different waiter that happens to share the same
+      // typeEntity (e.g. a sibling waiter).
+      final cleanupScope = traverse ? _allAncestorsK() : <DI>[this as DI];
+      for (final di in cleanupScope) {
+        (di as SupportsMixinK)
+            .completersK[g]
+            ?.removeWhere((e) => identical(e, completer));
+      }
+      if (_epochForK(g, typeEntity) != myEpoch) {
+        return untilExactlyK<T>(
+          typeEntity,
+          groupEntity: g,
+          traverse: traverse,
+        );
+      }
+      // Completer resolved → matching register must have happened. If a
+      // concurrent unregister wiped the slot between completion and now,
+      // surface an Err Resolvable rather than throwing — callers chained off
+      // the outer `.flatten()` then see a normal Err on their pipeline.
+      return switch (getK<T>(typeEntity, groupEntity: g, traverse: traverse)) {
+        Some(value: final r) => r,
+        None() => Sync<T>.err(
+            Err('untilExactlyK<$T>: completer resolved but post-resolution '
+                'lookup returned None (raced with unregister).'),
+          ),
+      };
+    }).flatten();
   }
 
   /// Alias for [untilExactlyK] that exists for naming-symmetry with the plain

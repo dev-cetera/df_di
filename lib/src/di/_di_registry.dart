@@ -281,9 +281,8 @@ final class DIRegistry {
     }
     _detachFromTypeIndex(exactTypeEntity, groupEntity);
     if (group.isEmpty) {
-      removeGroup(groupEntity: groupEntity);
+      _state.remove(groupEntity);
     }
-    UNSAFE:
     _fireOnChange();
     return removed;
   }
@@ -311,7 +310,7 @@ final class DIRegistry {
     if (removedKey == null) return const None();
     _detachFromTypeIndex(removedKey, groupEntity);
     if (group.isEmpty) {
-      removeGroup(groupEntity: groupEntity);
+      _state.remove(groupEntity);
     }
     _fireOnChange();
     return removed.map((e) => e.transf());
@@ -338,7 +337,6 @@ final class DIRegistry {
       for (final typeEntity in group.keys) {
         (_typeIndex[typeEntity] ??= <Entity>{}).add(groupEntity);
       }
-      UNSAFE:
       _fireOnChange();
     }
   }
@@ -359,11 +357,20 @@ final class DIRegistry {
   }) {
     final group = _state[groupEntity];
     if (group == null) return;
+    final initialSize = group.length;
     group.removeWhere((typeEntity, dependency) {
       final drop = test(typeEntity, dependency);
       if (drop) _detachFromTypeIndex(typeEntity, groupEntity);
       return drop;
     });
+    if (group.length == initialSize) return; // Nothing removed.
+    // Match the invariant established by removeDependencyExact /
+    // removeDependencyK: prune the group when it empties so `groupEntities`
+    // doesn't expose ghost keys, and notify listeners.
+    if (group.isEmpty) {
+      _state.remove(groupEntity);
+    }
+    _fireOnChange();
   }
 
   /// Removes the [TDependencyGroup] with the specified [groupEntity] from the
@@ -375,7 +382,6 @@ final class DIRegistry {
         _detachFromTypeIndex(typeEntity, groupEntity);
       }
     }
-    UNSAFE:
     _fireOnChange();
   }
 
@@ -385,7 +391,6 @@ final class DIRegistry {
   void clear() {
     _state.clear();
     _typeIndex.clear();
-    UNSAFE:
     _fireOnChange();
   }
 

@@ -35,7 +35,6 @@ base mixin SupportsServiceMixin on DIBase {
     Entity groupEntity = const DefaultEntity(),
     bool enableUntilExactlyK = false,
   }) {
-    UNSAFE:
     return register<TService>(
       service,
       onRegister: Some((service) {
@@ -61,26 +60,56 @@ base mixin SupportsServiceMixin on DIBase {
           },
         );
       }),
-      onUnregister: Some((serviceOpt) {
-        final service = serviceOpt.unwrap();
-        return consec(service.dispose().value, (disposeResult) {
-          disposeResult.unwrap();
-          // Invoke the user-supplied onUnregister AFTER dispose has settled
-          // — previously this slot just `consec`-ed on the Option itself,
-          // which is sync, so the user's callback was never actually called.
-          return switch (onUnregister) {
-            Some(value: final userCb) => awaitCallbackResult(
-                userCb(serviceOpt),
-                logAndSwallowSyncErr: true,
-                logContext:
-                    'registerAndInitService<$TService>.userOnUnregister',
-              ),
-            None() => null,
-          };
-        });
+      onUnregister: Some((serviceResult) {
+        // Pattern-match the Result so an Err-resolved service doesn't crash
+        // the unregister chain. Err path: skip dispose, but still fire the
+        // user's onUnregister with the original Err so they can observe
+        // the failed cleanup target.
+        return switch (serviceResult) {
+          Err() => _fireUserOnUnregister<TService>(
+              onUnregister,
+              serviceResult,
+            ),
+          Ok(value: final service) => consec(
+              service.dispose().value,
+              (disposeResult) {
+                if (disposeResult case Err(:final error)) {
+                  // dispose() failure is logged-and-swallowed here so the
+                  // user's cleanup hook still gets a chance to run. The
+                  // underlying error is preserved in the log via
+                  // `service.dart::recordError`.
+                  Log.err(
+                    'registerAndInitService<$TService>.dispose: $error',
+                  );
+                }
+                return _fireUserOnUnregister<TService>(
+                  onUnregister,
+                  serviceResult,
+                );
+              },
+            ),
+        };
       }),
       groupEntity: groupEntity,
       enableUntilExactlyK: enableUntilExactlyK,
     ).toUnit();
+  }
+
+  /// Invokes the user-supplied [onUnregister] callback if present, passing
+  /// the original [serviceResult] so the user observes Ok/Err symmetrically.
+  /// Errors thrown by the user's callback are logged and swallowed (cleanup
+  /// is best-effort).
+  FutureOr<void> _fireUserOnUnregister<TService extends ServiceMixin>(
+    Option<TOnUnregisterCallback<TService>> onUnregister,
+    Result<TService> serviceResult,
+  ) {
+    return switch (onUnregister) {
+      Some(value: final userCb) => awaitCallbackResult(
+          userCb(serviceResult),
+          logAndSwallowSyncErr: true,
+          logContext: 'registerAndInitService<$TService>.userOnUnregister',
+        ),
+      None() => null,
+    };
   }
 }

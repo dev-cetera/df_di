@@ -79,12 +79,24 @@ mixin ServiceMixin {
   @nonVirtual
   Resolvable<Unit> init({bool eagerError = true}) {
     return _sequencer.then((prev) {
+      // Debug-only diagnostic: surface contract violations early so dev
+      // builds catch them before they manifest as silent Errs in prod.
+      assert(
+        !state.didDispose(),
+        '$runtimeType.init: cannot be called after dispose; state is $state. '
+        'Services are terminal after dispose — construct a fresh instance.',
+      );
       if (state.didDispose()) {
         return Sync<Option>.err(
           Err('init: cannot be called after dispose; '
               'state is $state.'),
         );
       }
+      assert(
+        state == ServiceState.NOT_INITIALIZED,
+        '$runtimeType.init: already initialized; state is $state. '
+        'init() runs listeners exactly once per service lifetime.',
+      );
       if (state != ServiceState.NOT_INITIALIZED) {
         return Sync<Option>.err(
           Err('init: already initialized; state is $state. '
@@ -133,11 +145,20 @@ mixin ServiceMixin {
   @nonVirtual
   Resolvable<Unit> pause({bool eagerError = false}) {
     return _sequencer.then((prev) {
+      assert(
+        !state.didDispose(),
+        '$runtimeType.pause: cannot be called after dispose; state is $state.',
+      );
       if (state.didDispose()) {
         return Sync<Option>.err(
           Err('pause: cannot be called after dispose; state is $state.'),
         );
       }
+      assert(
+        state != ServiceState.NOT_INITIALIZED,
+        '$runtimeType.pause: service has not been initialized. '
+        'Call init() first.',
+      );
       if (state == ServiceState.NOT_INITIALIZED) {
         return Sync<Option>.err(
           Err('pause: service has not been initialized. '
@@ -181,11 +202,20 @@ mixin ServiceMixin {
   @nonVirtual
   Resolvable<Unit> resume({bool eagerError = false}) {
     return _sequencer.then((prev) {
+      assert(
+        !state.didDispose(),
+        '$runtimeType.resume: cannot be called after dispose; state is $state.',
+      );
       if (state.didDispose()) {
         return Sync<Option>.err(
           Err('resume: cannot be called after dispose; state is $state.'),
         );
       }
+      assert(
+        state != ServiceState.NOT_INITIALIZED,
+        '$runtimeType.resume: service has not been initialized. '
+        'Call init() first.',
+      );
       if (state == ServiceState.NOT_INITIALIZED) {
         return Sync<Option>.err(
           Err('resume: service has not been initialized. '

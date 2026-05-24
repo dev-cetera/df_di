@@ -187,10 +187,7 @@ mixin StreamServiceMixin<TData extends Object> on ServiceMixin {
     _streamSubscription = const None();
     if (prevSubscription case Some(value: final sub)) {
       seq.then((prev) {
-        assert(!prev.isErr(), () {
-          UNSAFE:
-          return prev.err().unwrap();
-        }());
+        assert(!prev.isErr(), 'stopStream: unexpected Err in seq chain: $prev');
         return Async(() async {
           final _ = await sub.cancel();
           if (prev case Err(:final error)) throw error;
@@ -202,10 +199,7 @@ mixin StreamServiceMixin<TData extends Object> on ServiceMixin {
     _streamController = const None();
     if (prevController case Some(value: final ctrl) when !ctrl.isClosed) {
       seq.then((prev) {
-        assert(!prev.isErr(), () {
-          UNSAFE:
-          return prev.err().unwrap();
-        }());
+        assert(!prev.isErr(), 'stopStream: unexpected Err in seq chain: $prev');
         return Async(() async {
           await ctrl.close();
           if (prev case Err(:final error)) throw error;

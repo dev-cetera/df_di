@@ -202,8 +202,8 @@ void main() {
 
         parent.register<_A>(const _A()).end();
 
-        await f1;
-        await f2;
+        (await f1).end();
+        (await f2).end();
 
         // After both resolve, neither child nor parent should still hold a
         // ReservedSafeCompleter for _A.

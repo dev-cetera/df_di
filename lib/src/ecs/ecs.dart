@@ -104,8 +104,21 @@ class World {
   final List<System> _systems = [];
   bool _ranStartup = false;
 
-  final Map<Type, List<void Function(Object event)>> _eventListeners = {};
-  final Map<Type, List<Object>> _eventBuffers = {};
+  /// Flat per-tick event buffer. Events are stored in send order; readers
+  /// filter via `is E`. This avoids the subtype-blind keying that occurred
+  /// when buffers were `Map<Type, List<Object>>` indexed by runtime type
+  /// (a `Derived` event would not be visible to a `readEvents<Base>` reader).
+  final List<Event> _eventBuffer = [];
+
+  /// Flat listener list. Each wrapper closes over its registered `E` and
+  /// performs the `is E` check at dispatch time, so subscribing for a base
+  /// type correctly receives events sent as derived types.
+  final List<void Function(Event event)> _eventListeners = [];
+
+  /// Re-entrant [update] depth. Drives event-buffer clearing — only the
+  /// outermost update clears, so events sent before a re-entrant update
+  /// remain visible to outer-tick systems running afterward.
+  int _updateDepth = 0;
 
   int _nextEntityId = 0;
   Duration _elapsed = Duration.zero;
@@ -129,6 +142,10 @@ class World {
   WorldEntity spawn([
     Option<Iterable<Component>> components = const None(),
   ]) {
+    assert(
+      !_disposed,
+      'World.spawn: cannot be called after dispose. Construct a fresh World.',
+    );
     final entity = WorldEntity._(_nextEntityId++, this);
     final cs = switch (components) {
       Some(value: final c) when c.isNotEmpty => c,
@@ -149,8 +166,12 @@ class World {
 
   /// Removes [entity] and all of its components. Returns `true` if the entity
   /// was alive.
+  ///
+  /// Any component value that mixes [ServiceMixin] has its `dispose()` fired
+  /// (fire-and-forget) so attached subscriptions / timers don't leak.
   bool despawn(WorldEntity entity) {
     if (!_isAlive(entity)) return false;
+    _cascadeDisposeGroup(entity);
     registry.removeGroup(groupEntity: entity);
     return true;
   }
@@ -159,7 +180,34 @@ class World {
   /// event subscriptions.
   void clearEntities() {
     for (final entity in entities.toList()) {
+      _cascadeDisposeGroup(entity);
       registry.removeGroup(groupEntity: entity);
+    }
+  }
+
+  /// Fires `dispose()` (fire-and-forget) on every [ServiceMixin]-bearing
+  /// value inside the registry group keyed by [groupEntity]. Used by
+  /// [despawn], [clearEntities], [removeResource], and [dispose] so that
+  /// removing the dep from ECS also tears down its lifecycle resources.
+  /// Errors during dispose are swallowed — the cascade is best-effort.
+  void _cascadeDisposeGroup(Entity groupEntity) {
+    final group = registry.getGroup(groupEntity: groupEntity);
+    for (final dep in group.values.toList(growable: false)) {
+      _disposeIfServiceMixin(dep);
+    }
+  }
+
+  /// Fires `dispose()` on [dep]'s value if it mixes [ServiceMixin].
+  void _disposeIfServiceMixin(Dependency dep) {
+    try {
+      if (dep.value case Sync(value: Ok(value: final v))) {
+        if (v is ServiceMixin) {
+          v.dispose().end();
+        }
+      }
+    } catch (_) {
+      // Cascade is best-effort: never let a dispose failure prevent the
+      // surrounding removal/clear/dispose from completing.
     }
   }
 
@@ -207,10 +255,12 @@ class World {
   Option<T> _readComponent<T extends Component>(WorldEntity entity) {
     final dep = registry.getGroup(groupEntity: entity)[TypeEntity(T)];
     if (dep == null) return const None();
-    UNSAFE:
-    final value = dep.value.unwrap();
-    if (value is! T) return const None();
-    return Some(value);
+    // Pattern-match Resolvable × Result instead of `.unwrap()` so an Err or
+    // Async slot returns None rather than throwing.
+    return switch (dep.value) {
+      Sync(value: Ok(value: final T v)) => Some(v),
+      _ => const None(),
+    };
   }
 
   Option<T> _eraseComponent<T extends Component>(WorldEntity entity) {
@@ -218,10 +268,16 @@ class World {
       TypeEntity(T),
       groupEntity: entity,
     );
-    if (removed.isNone()) return const None();
-    UNSAFE:
-    final value = removed.unwrap().value.unwrap();
-    if (value is! T) return const None();
+    // Same shape as `_readComponent` — collapse Option × Resolvable × Result
+    // structurally and let the wildcard catch any non-Sync-Ok-T branch.
+    final value = switch (removed) {
+      Some(value: final dep) => switch (dep.value) {
+          Sync(value: Ok(value: final T v)) => v,
+          _ => null,
+        },
+      None() => null,
+    };
+    if (value == null) return const None();
     // If we just removed the last real component, re-attach the alive-tag so
     // the entity still appears in [entities] until despawned.
     if (registry.getGroup(groupEntity: entity).isEmpty) {
@@ -251,22 +307,24 @@ class World {
     WorldEntity entity,
     T Function(T current) update,
   ) {
-    final current = _readComponent<T>(entity);
-    if (current.isNone()) return const None();
-    UNSAFE:
-    final next = update(current.unwrap());
-    registry.setDependency(
-      Dependency(
-        Sync.okValue(next),
-        metadata: Some(
-          DependencyMetadata(
-            groupEntity: entity,
-            preemptivetypeEntity: TypeEntity(T),
-          ),
-        ),
-      ),
-    );
-    return Some(next);
+    return switch (_readComponent<T>(entity)) {
+      Some(value: final current) => () {
+          final next = update(current);
+          registry.setDependency(
+            Dependency(
+              Sync.okValue(next),
+              metadata: Some(
+                DependencyMetadata(
+                  groupEntity: entity,
+                  preemptivetypeEntity: TypeEntity(T),
+                ),
+              ),
+            ),
+          );
+          return Some(next);
+        }(),
+      None() => const None(),
+    };
   }
 
   /// Removes the component of type [T] from [entity].
@@ -333,10 +391,8 @@ class World {
   /// by Bevy's `Query<&T>`.
   Iterable<(WorldEntity, T1)> each1<T1 extends Component>() sync* {
     for (final entity in withComponent<T1>()) {
-      final c = _readComponent<T1>(entity);
-      if (c.isSome()) {
-        UNSAFE:
-        yield (entity, c.unwrap());
+      if (_readComponent<T1>(entity) case Some(value: final v)) {
+        yield (entity, v);
       }
     }
   }
@@ -345,11 +401,10 @@ class World {
   Iterable<(WorldEntity, T1, T2)>
       each2<T1 extends Component, T2 extends Component>() sync* {
     for (final entity in query2<T1, T2>()) {
-      final c1 = _readComponent<T1>(entity);
-      final c2 = _readComponent<T2>(entity);
-      if (c1.isSome() && c2.isSome()) {
-        UNSAFE:
-        yield (entity, c1.unwrap(), c2.unwrap());
+      if (_readComponent<T1>(entity) case Some(value: final v1)) {
+        if (_readComponent<T2>(entity) case Some(value: final v2)) {
+          yield (entity, v1, v2);
+        }
       }
     }
   }
@@ -358,12 +413,12 @@ class World {
   Iterable<(WorldEntity, T1, T2, T3)> each3<T1 extends Component,
       T2 extends Component, T3 extends Component>() sync* {
     for (final entity in query3<T1, T2, T3>()) {
-      final c1 = _readComponent<T1>(entity);
-      final c2 = _readComponent<T2>(entity);
-      final c3 = _readComponent<T3>(entity);
-      if (c1.isSome() && c2.isSome() && c3.isSome()) {
-        UNSAFE:
-        yield (entity, c1.unwrap(), c2.unwrap(), c3.unwrap());
+      if (_readComponent<T1>(entity) case Some(value: final v1)) {
+        if (_readComponent<T2>(entity) case Some(value: final v2)) {
+          if (_readComponent<T3>(entity) case Some(value: final v3)) {
+            yield (entity, v1, v2, v3);
+          }
+        }
       }
     }
   }
@@ -371,6 +426,11 @@ class World {
   /// Inserts or replaces the global resource of type [T]. Bevy's
   /// `app.insert_resource(...)`.
   void insertResource<T extends Resource>(T resource) {
+    assert(
+      !_disposed,
+      'World.insertResource: cannot be called after dispose. '
+      'Construct a fresh World.',
+    );
     registry.setDependency(
       Dependency(
         Sync.okValue(resource),
@@ -388,40 +448,53 @@ class World {
   Option<T> getResource<T extends Resource>() {
     final dep = registry.getGroup(groupEntity: _resourceGroup)[TypeEntity(T)];
     if (dep == null) return const None();
-    UNSAFE:
-    final value = dep.value.unwrap();
-    if (value is! T) return const None();
-    return Some(value);
+    return switch (dep.value) {
+      Sync(value: Ok(value: final T v)) => Some(v),
+      _ => const None(),
+    };
   }
 
   /// Returns the resource of type [T] or throws if not registered.
   T requireResource<T extends Resource>() {
-    final option = getResource<T>();
-    if (option.isNone()) {
-      throw StateError(
-        'Resource of type $T not registered. Call insertResource<$T>() first.',
-      );
-    }
-    UNSAFE:
-    return option.unwrap();
+    return switch (getResource<T>()) {
+      Some(value: final v) => v,
+      None() => throw StateError(
+          'Resource of type $T not registered. Call insertResource<$T>() first.',
+        ),
+    };
   }
 
   /// Removes and returns the resource of type [T].
+  ///
+  /// If the resource mixes [ServiceMixin], its `dispose()` is fired
+  /// (fire-and-forget) so subscriptions / timers it owns don't leak.
   Option<T> removeResource<T extends Resource>() {
     final removed = registry.removeDependencyExact(
       TypeEntity(T),
       groupEntity: _resourceGroup,
     );
-    if (removed.isNone()) return const None();
-    UNSAFE:
-    final value = removed.unwrap().value.unwrap();
-    if (value is! T) return const None();
+    final value = switch (removed) {
+      Some(value: final dep) => switch (dep.value) {
+          Sync(value: Ok(value: final T v)) => v,
+          _ => null,
+        },
+      None() => null,
+    };
+    if (value == null) return const None();
+    if (value is ServiceMixin) {
+      (value as ServiceMixin).dispose().end();
+    }
     return Some(value);
   }
 
   /// Adds [system] to the schedule. Runs every [update] in registration order.
   /// Returns `this` for chaining.
   World addSystem(System system) {
+    assert(
+      !_disposed,
+      'World.addSystem: cannot be called after dispose. '
+      'Construct a fresh World.',
+    );
     _systems.add(system);
     system.init(this);
     return this;
@@ -430,6 +503,16 @@ class World {
   /// Adds [system] to the startup schedule. Runs once, before the first
   /// regular [update]. Returns `this` for chaining.
   World addStartupSystem(System system) {
+    assert(
+      !_disposed,
+      'World.addStartupSystem: cannot be called after dispose. '
+      'Construct a fresh World.',
+    );
+    assert(
+      !_ranStartup,
+      'World.addStartupSystem: startup systems must be registered BEFORE the '
+      'first update. Adding one after `_ranStartup` means it will never run.',
+    );
     _startupSystems.add(system);
     system.init(this);
     return this;
@@ -445,6 +528,11 @@ class World {
   /// Installs [plugin], letting it register systems, resources, and event
   /// subscriptions. Returns `this` for chaining. Bevy's `app.add_plugin(...)`.
   World addPlugin(EcsPlugin plugin) {
+    assert(
+      !_disposed,
+      'World.addPlugin: cannot be called after dispose. Construct a fresh '
+      'World.',
+    );
     plugin.build(this);
     return this;
   }
@@ -455,55 +543,76 @@ class World {
   ///
   /// System lists are snapshotted before iteration so a running system can
   /// safely add or remove systems; the change takes effect on the next tick.
+  ///
+  /// Re-entrant updates (a system calling `world.update` recursively) share
+  /// the outer tick's event buffer; only the outermost return drains it,
+  /// so events sent before a re-entrant update remain visible to subsequent
+  /// outer-tick systems.
   void update(Duration dt) {
     if (_disposed) return;
-    if (!_ranStartup) {
-      _ranStartup = true;
-      for (final system in List.of(_startupSystems)) {
-        system.update(this, Duration.zero);
+    _updateDepth++;
+    try {
+      if (!_ranStartup) {
+        _ranStartup = true;
+        for (final system in List.of(_startupSystems)) {
+          system.update(this, Duration.zero);
+        }
+      }
+      _elapsed += dt;
+      for (final system in List.of(_systems)) {
+        system.update(this, dt);
+      }
+    } finally {
+      _updateDepth--;
+      if (_updateDepth == 0) {
+        _eventBuffer.clear();
       }
     }
-    _elapsed += dt;
-    for (final system in List.of(_systems)) {
-      system.update(this, dt);
-    }
-    _eventBuffers.clear();
   }
 
-  /// Synchronously dispatches [event] to every listener registered for its
-  /// exact runtime type, then buffers it for [readEvents] until the next tick
+  /// Synchronously dispatches [event] to every listener whose registered
+  /// type [E] is a supertype of `event` (subtype propagation — `Liskov` for
+  /// events), then buffers it for [readEvents] until the next outer tick
   /// ends. A snapshot of the listener list is taken so subscribing or
   /// unsubscribing inside a handler does not affect the current dispatch.
   void sendEvent<E extends Event>(E event) {
-    final type = event.runtimeType;
-    (_eventBuffers[type] ??= <Object>[]).add(event);
-    final listeners = _eventListeners[type];
-    if (listeners == null || listeners.isEmpty) return;
-    for (final listener in List.of(listeners)) {
+    assert(
+      !_disposed,
+      'World.sendEvent: cannot be called after dispose. Listeners and '
+      'buffers are cleared on dispose — the event would be dropped silently.',
+    );
+    _eventBuffer.add(event);
+    for (final listener in List.of(_eventListeners)) {
       listener(event);
     }
   }
 
-  /// Returns the events of type [E] sent so far this tick. Cleared at the
-  /// end of every [update].
-  Iterable<E> readEvents<E extends Event>() {
-    final buffer = _eventBuffers[E];
-    if (buffer == null || buffer.isEmpty) return const Iterable.empty();
-    return buffer.cast<E>();
+  /// Returns the events of type [E] sent so far this (outer) tick. Filters
+  /// the flat buffer by `is E`, so derived events are visible via base-typed
+  /// readers and vice-versa is correctly excluded.
+  Iterable<E> readEvents<E extends Event>() sync* {
+    for (final e in _eventBuffer) {
+      if (e is E) yield e;
+    }
   }
 
-  /// Subscribes to events of type [E]. Returns a closure that removes the
-  /// subscription when called.
+  /// Subscribes to events of type [E]. The returned closure removes the
+  /// subscription when called. Subtype propagation: a derived event sent
+  /// via [sendEvent] is delivered to base-typed listeners as well.
   void Function() onEvent<E extends Event>(void Function(E event) listener) {
-    final listeners = _eventListeners.putIfAbsent(E, () => []);
-    void wrapper(Object event) => listener(event as E);
-    listeners.add(wrapper);
-    return () => listeners.remove(wrapper);
+    void wrapper(Event event) {
+      // Closure captures E reified; the `is E` check is correct at runtime.
+      if (event is E) listener(event);
+    }
+
+    _eventListeners.add(wrapper);
+    return () => _eventListeners.remove(wrapper);
   }
 
   /// Tears the world down: disposes every system (startup and regular),
-  /// clears the registry, drops event subscriptions, and marks the world so
-  /// further [update] calls are no-ops.
+  /// cascades `dispose()` to every component / resource that mixes
+  /// [ServiceMixin], clears the registry, drops event subscriptions, and
+  /// marks the world so further [update] calls are no-ops.
   void dispose() {
     if (_disposed) return;
     _disposed = true;
@@ -513,11 +622,20 @@ class World {
     for (final system in List.of(_startupSystems)) {
       system.dispose(this);
     }
+    // Walk every group's deps and fire ServiceMixin.dispose() on each
+    // service-bearing value before clearing the registry — without this,
+    // services attached as components or resources would leak their
+    // subscriptions / timers past the world's lifetime.
+    for (final group in registry.state.values.toList(growable: false)) {
+      for (final dep in group.values.toList(growable: false)) {
+        _disposeIfServiceMixin(dep);
+      }
+    }
     _systems.clear();
     _startupSystems.clear();
     registry.clear();
     _eventListeners.clear();
-    _eventBuffers.clear();
+    _eventBuffer.clear();
   }
 }
 
@@ -556,12 +674,12 @@ final class WorldEntity extends Entity {
 
   /// Reads the component of type [T], throwing if absent.
   T require<T extends Component>() {
-    final option = world._readComponent<T>(this);
-    if (option.isNone()) {
-      throw StateError('Entity $id has no component of type $T.');
-    }
-    UNSAFE:
-    return option.unwrap();
+    return switch (world._readComponent<T>(this)) {
+      Some(value: final v) => v,
+      None() => throw StateError(
+          'Entity $id has no component of type $T.',
+        ),
+    };
   }
 
   /// Whether this entity has a component of type [T].

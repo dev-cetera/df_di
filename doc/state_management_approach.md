@@ -282,6 +282,17 @@ final class MyService extends Service {  // or `with ServiceMixin` on an existin
 
 Lifecycle states (`ServiceState`): `NOT_INITIALIZED` → `RUN_ATTEMPT` → `RUN_SUCCESS` / `RUN_ERROR`; `PAUSE_*`; `RESUME_*`; `DISPOSE_*`. The transitions are sequenced through a `TaskSequencer`, so two concurrent `init()` calls won't double-run listeners. `didEverInitAndSuccessfully` stays `true` after a later error or dispose, useful for "did this service ever come up?" guards.
 
+**Invalid lifecycle transitions return `Err`, not silent `Ok`** (since the pass-14 audit):
+
+| Transition | Result |
+| --- | --- |
+| `init()` after `dispose()` | `Err` — disposed is terminal. |
+| `init()` after another `init()` | `Err` — services run init listeners exactly once per lifetime. |
+| `pause()` / `resume()` before `init()` | `Err` — would otherwise skip into PAUSE_SUCCESS without ever running init listeners. |
+| `pause()` while paused / `resume()` while running / `dispose()` after dispose | `Ok(None)` — idempotent no-op. |
+
+Debug-mode `assert(...)` calls surface contract violations early; in release the `Err` return is still observable. Mission-critical callers should pattern-match the awaited Result rather than rely on debug asserts.
+
 ### 4.4 `StreamServiceMixin` — managed broadcast streams
 
 ```dart
@@ -549,8 +560,13 @@ Renames and behaviour changes that older code may still reference:
 - **`SafeCompleter.isCompleted`** now flips `true` the instant a resolve is accepted, not when the future settles. Code that relied on `!isCompleted` to detect "in-flight" must check a different signal.
 - **`Outcome.end()` now returns `void`** (was `FutureOr<void>`, with `Async.end()` returning `Future<void>`). `Async.end()` detaches its cleanup via `unawaited(...)`. Code that `await`ed `.end()` should switch to `await x.value` if it really needed the value.
 - **`Ok.map<R>` / `Ok.flatMap<R>` / `Ok.mapOk`** return `Result<R>` (was `Ok<R>`). A throwing callback becomes an `Err` instead of escaping. Annotate callsites as `Result<R>` instead of `Ok<R>`.
+- **`df_di` lifecycle methods now return `Err` on invalid transitions** (init-after-dispose, pause-before-init, etc.) rather than silently returning Ok in release. Code that relied on the old silent-success behavior must pattern-match the awaited `Result`.
+- **`df_di::ECS sendEvent` propagates by subtype.** A `sendEvent<Derived>` now reaches `onEvent<Base>` listeners and is visible to `readEvents<Base>()`. Previously the buffer was keyed by `runtimeType` and subtype reads returned empty.
+- **`df_di::ECS` cascades `ServiceMixin.dispose()`** on `removeResource` / `despawn` / `clearEntities` / `World.dispose`. Resources/components that mix `ServiceMixin` no longer leak their subscriptions / timers when the ECS removes them.
+- **`df_di::ECS::World.update` is re-entrant-safe.** A system that calls `world.update` recursively shares the outer tick's event buffer; events sent before the re-entry remain visible to subsequent outer-tick systems (previously cleared mid-tick).
+- **`df_di::unregisterChild` / `unregisterChildT`** now return `Result<Option<DI>>` carrying an Err when the child's Lazy resolved Async (was a panic-throw). Asserts surface the contract violation in debug.
 
-For the audit that produced the current majors and what changed inside `df_safer_dart`, see `packages/df_safer_dart/CLAUDE.md` (hardening sweep).
+For the broader audit that brought `df_di` to its current reliability baseline (485 tests, 0 lint issues, 14 audit passes that explicitly removed `.unwrap()` chains in favor of pattern matching), see this package's `CLAUDE.md`. For changes inside `df_safer_dart`, see `packages/df_safer_dart/CLAUDE.md` (hardening sweep).
 
 ---
 

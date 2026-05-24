@@ -94,20 +94,25 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
       None() => null,
     };
     if (container == null) return Err('No child container registered.');
-    // Children are registered as Sync lazies (see [registerChild]), so the
-    // unregister Resolvable should always be Sync. If it isn't, that's a
-    // contract violation — throw to make it visible. The previous
-    // implementation panicked here via `.sync().unwrap()`; we preserve that
-    // semantics so callers like `plugin.dart::uninstallPlugin` that use
-    // `.end()` on the Result still get a visible crash rather than a
-    // silently-dropped Err.
-    return switch (container.unregister<Lazy<DI>>(groupEntity: g)) {
+    // Children are registered as Sync lazies (see [registerChild]). Any
+    // other shape (Async unregister / Async lazy singleton) is a contract
+    // violation surfaced as Err on the returned Result so the error
+    // propagates through the standard Result pipeline rather than throwing.
+    // Debug-only `assert` highlights the misuse early during development.
+    // unregister IS side-effectful — call it once and reuse.
+    final unregistered = container.unregister<Lazy<DI>>(groupEntity: g);
+    assert(
+      unregistered is Sync,
+      'unregisterChild: child unregister resolved Async. Children must be '
+      'registered as Sync lazies — see SupportsChildrenMixin.registerChild.',
+    );
+    return switch (unregistered) {
       Sync(value: Ok(value: Some(value: final lazy))) =>
-        _ok(_eagerLazyDI(lazy)),
+        _eagerLazyDI(lazy).map((di) => Some(di)),
       Sync(value: Ok(value: None())) => const Ok(None()),
       Sync(value: Err(:final error, :final stackTrace)) =>
         Err<Option<DI>>(error, stackTrace: stackTrace),
-      Async() => throw StateError(
+      Async() => Err<Option<DI>>(
           'unregisterChild: child unregister resolved Async, but children '
           'must be Sync. This is a programming-error contract violation.',
         ),
@@ -125,30 +130,39 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
       None() => null,
     };
     if (container == null) return Err('No child container registered.');
-    return switch (
-        container.unregisterK(TypeEntity(Lazy, [type]), groupEntity: g)) {
+    final unregistered =
+        container.unregisterK(TypeEntity(Lazy, [type]), groupEntity: g);
+    assert(
+      unregistered is Sync,
+      'unregisterChildT: child unregister resolved Async. Children must be '
+      'registered as Sync lazies — see SupportsChildrenMixin.registerChild.',
+    );
+    return switch (unregistered) {
       Sync(value: Ok(value: Some(value: final raw))) =>
-        _ok(_eagerLazyDI(raw as Lazy<DI>)),
+        _eagerLazyDI(raw as Lazy<DI>).map((di) => Some(di)),
       Sync(value: Ok(value: None())) => const Ok(None()),
       Sync(value: Err(:final error, :final stackTrace)) =>
         Err<Option<DI>>(error, stackTrace: stackTrace),
-      Async() => throw StateError(
+      Async() => Err<Option<DI>>(
           'unregisterChildT: child unregister resolved Async, but children '
           'must be Sync. This is a programming-error contract violation.',
         ),
     };
   }
 
-  /// Wraps [v] in `Ok(Some(v))`. Tiny helper that keeps the giant switch
-  /// arms above readable.
-  Ok<Option<DI>> _ok(DI v) => Ok(Some(v));
-
-  /// Eagerly forces a `Lazy<DI>` to its synchronous singleton. Used at child
-  /// unregister so the caller gets the DI instance back. If construction was
-  /// async this is a logic bug — children must be sync-constructible.
-  DI _eagerLazyDI(Lazy<DI> lazy) {
-    UNSAFE:
-    return lazy.singleton.sync().unwrap().unwrap();
+  /// Forces a `Lazy<DI>` to its synchronous singleton, returning the DI
+  /// instance as a `Result`. Children are registered as Sync lazies (see
+  /// [registerChild]); an Async resolution or construction failure is
+  /// surfaced as Err so the surrounding `unregisterChild` can propagate it
+  /// through the Result pipeline instead of throwing.
+  Result<DI> _eagerLazyDI(Lazy<DI> lazy) {
+    return switch (lazy.singleton) {
+      Sync<DI>(value: final r) => r,
+      Async<DI>() => Err<DI>(
+          'Lazy<DI> resolved Async, but children must be sync-constructible. '
+          'This is a programming-error contract violation.',
+        ),
+    };
   }
 
   /// Children are registered as `Lazy<DI>` (see [registerChild]), so probe

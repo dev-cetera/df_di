@@ -48,9 +48,18 @@ base class DIBase {
   /// force-construct every registered child container on every parent
   /// registration, defeating laziness and running child constructors at
   /// the wrong time.
+  ///
+  /// The result is **snapshotted** via `.toList()` so callers can safely
+  /// iterate even if a re-entrant register/unregister mutates the underlying
+  /// registry mid-walk. Without the snapshot, `_maybeFinish` (which iterates
+  /// `children()` on every register) would throw `ConcurrentModificationError`
+  /// if any onRegister callback registered another dep on the same container.
   Option<Iterable<DI>> children() {
     return childrenContainer.map(
-      (e) => e.registry.unsortedDependencies.map(_childFromDep).nonNulls,
+      (e) => e.registry.unsortedDependencies
+          .toList(growable: false)
+          .map(_childFromDep)
+          .nonNulls,
     );
   }
 
@@ -94,6 +103,11 @@ base class DIBase {
     bool enableUntilExactlyK = false,
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
+    assert(
+      value is! Future || T != FutureOr,
+      'register<$T>: registering a Future where T is FutureOr is ambiguous. '
+      'Use Resolvable<T> or unwrap the Future before registering.',
+    );
     final g = groupEntity.preferOverDefault(focusGroup);
 
     // Existence check FIRST. If a slot for [T] already exists in this
@@ -149,8 +163,19 @@ base class DIBase {
         (this as SupportsMixinK).maybeFinishK<T>(g: g);
       }
     }
-    UNSAFE:
-    return get<T>(groupEntity: groupEntity).unwrap();
+    // We just succeeded at `registerDependency` above, so `get<T>` MUST find
+    // the slot we wrote. Pattern-match instead of `.unwrap()` so the
+    // theoretical "should never happen" branch is explicit: if a concurrent
+    // unregister somehow raced and wiped the slot, return an Err Resolvable
+    // instead of throwing — callers awaiting the returned Resolvable then
+    // see a normal Err on their chain.
+    return switch (get<T>(groupEntity: groupEntity)) {
+      Some(value: final r) => r,
+      None() => Sync<T>.err(
+          Err('register<$T>: post-register lookup returned None '
+              '(slot was concurrently removed).'),
+        ),
+    };
   }
 
   /// Invokes [onRegister] (if present) on [value], converting any synchronous
@@ -667,18 +692,34 @@ base class DIBase {
           Async<T>(value: final fut) => Some(
               Async<T>(
                 () => fut.then((e) {
-                  UNSAFE:
-                  final value = e.unwrap();
-                  UNSAFE:
-                  registry.removeDependency<T>(groupEntity: g).unwrap();
-                  UNSAFE:
-                  registerDependency<T>(
+                  // If the async slot resolved to Err, propagate by throwing —
+                  // the surrounding `Async()` constructor absorbs the throw
+                  // into an Err Result on its own value.
+                  final value = switch (e) {
+                    Ok(value: final v) => v,
+                    Err(:final error, :final stackTrace) =>
+                      throw Err<T>(error, stackTrace: stackTrace),
+                  };
+                  // Replace the Async slot with a Sync slot holding the
+                  // resolved value (memoisation). The remove may already
+                  // be a no-op if a concurrent unregister won the race; the
+                  // re-register skips its dup-check by design.
+                  registry.removeDependency<T>(groupEntity: g).end();
+                  switch (registerDependency<T>(
                     dependency: Dependency<T>(
                       Sync<T>.okValue(value),
                       metadata: dep.metadata,
                     ),
                     checkExisting: false,
-                  ).unwrap();
+                  )) {
+                    case Ok():
+                      break;
+                    case Err(:final error):
+                      // Should be unreachable with checkExisting: false; if it
+                      // still fires we surface the cause rather than silently
+                      // returning the resolved value with stale registry state.
+                      throw error;
+                  }
                   return value;
                 }),
               ),
@@ -759,7 +800,6 @@ base class DIBase {
       Some(value: final c) => c,
       None() => _seedCompleter<TSuper>(typeEntity, g, traverse),
     };
-    UNSAFE:
     return completer
         .resolvable()
         .then((_) {
@@ -767,7 +807,18 @@ base class DIBase {
             groupEntity: g,
             traverse: traverse,
           ).end();
-          return get<TSuper>(groupEntity: g, traverse: traverse).unwrap();
+          // The completer was resolved because `_maybeFinish` saw a matching
+          // register — so `get<TSuper>` should find it. If a concurrent
+          // unregister wiped the slot between completion and now, surface an
+          // Err Resolvable instead of throwing — callers chained off the
+          // outer `.flatten().transf()` then see a normal failure.
+          return switch (get<TSuper>(groupEntity: g, traverse: traverse)) {
+            Some(value: final r) => r,
+            None() => Sync<TSuper>.err(
+                Err('until<$TSuper>: completer resolved but post-resolution '
+                    'lookup returned None (raced with unregister).'),
+              ),
+          };
         })
         .flatten()
         .transf();
@@ -820,14 +871,19 @@ base class DIBase {
   }) {
     UNSAFE:
     return Resolvable(() {
-      var resolvables = registry.unsortedDependencies;
+      // Snapshot the registry's unsorted dependencies up front so a
+      // re-entrant register/unregister fired from `wait`'s callback (which
+      // recursively calls `resolveAll`) cannot trigger
+      // `ConcurrentModificationError` while we're still iterating.
+      var resolvables =
+          registry.unsortedDependencies.toList(growable: false).cast<Dependency>();
       if (groupEntity case Some(value: final g)) {
         resolvables = resolvables.where(
           (e) => switch (e.metadata) {
             Some(value: final m) => m.groupEntity == g,
             None() => false,
           },
-        );
+        ).toList(growable: false);
       }
       final values = resolvables.map((e) => e.value);
       if (values.any((e) => e is Async)) {

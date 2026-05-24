@@ -194,6 +194,32 @@ world.removeResource<GameTime>();
 Resources are stored in `DIRegistry` under a reserved group, so anything that
 already works against the registry (snapshots, change listeners) sees them.
 
+**`ServiceMixin` cascade.** A `Resource` (or `Component`) that mixes
+`ServiceMixin` has its `dispose()` fired automatically on `removeResource` /
+`despawn` / `clearEntities` / `World.dispose`. Subscriptions, timers, and
+stream controllers attached via the lifecycle hooks are torn down without
+manual cleanup:
+
+```dart
+class GameLoop extends Resource with ServiceMixin {
+  Timer? _tick;
+  @override
+  TServiceResolvables<Unit> provideInitListeners(void _) => [
+    (_) => Sync(() {
+      _tick = Timer.periodic(/* ... */);
+      return Unit();
+    }),
+  ];
+  @override
+  TServiceResolvables<Unit> provideDisposeListeners(void _) => [
+    (_) => Sync(() { _tick?.cancel(); return Unit(); }),
+  ];
+  // pause/resume listeners as needed
+}
+
+// `world.dispose()` cascades to `gameLoop.dispose()`, which cancels the timer.
+```
+
 ## 5. Events
 
 Events are dispatched synchronously to subscribers and also buffered for the
@@ -218,7 +244,25 @@ class DamageReporter extends System {
 unsubscribe();
 ```
 
-The buffer is cleared at the end of every `World.update`.
+The buffer is cleared at the end of the outermost `World.update`. Re-entrant
+updates (a system calling `world.update` recursively) share the outer tick's
+buffer — events sent before the re-entry remain visible to subsequent
+outer-tick systems.
+
+**Subtype propagation (Liskov).** `sendEvent<Derived>` reaches every
+`onEvent<Base>` listener whose `Base` is a supertype of `Derived`, and
+`readEvents<Base>()` includes derived events sent this tick:
+
+```dart
+class EntityDamaged extends Event { /* ... */ }
+class EntityCrit extends EntityDamaged { /* ... */ }
+
+world.onEvent<EntityDamaged>((e) {
+  // Fires for both EntityDamaged AND EntityCrit instances.
+});
+
+world.sendEvent(EntityCrit(/* ... */));   // Triggers the EntityDamaged listener.
+```
 
 ## 6. Bundles
 
@@ -307,14 +351,27 @@ final groups = world.registry.groupsWithTypeT(Position);
   resources live under a reserved group. Existing DI tooling keeps working.
 - **Fast queries.** `DIRegistry` maintains a reverse `typeEntity → groups`
   index. `withComponent`, `query*`, and `each*` use it — no full-state scan.
-- **Exact-type storage.** A component is keyed by its exact runtime class;
-  storing `Velocity` does not satisfy a lookup for a parent type. Compose,
-  don't subclass.
+- **Exact-type storage for components.** A component is keyed by its exact
+  runtime class; storing `Velocity` does not satisfy a lookup for a parent
+  type. Compose, don't subclass.
 - **One component per type per entity.** `insert` replaces.
 - **Per-world entity ids.** Ids start at 0 and grow within a world; do not
   compare `WorldEntity`s across different `World`s.
 - **Ids are not recycled.** Once despawned, an id is not reused.
-- **Synchronous events.** `sendEvent` invokes listeners immediately and
-  buffers for `readEvents` until the end of the current tick.
+- **Synchronous events with subtype propagation.** `sendEvent` invokes
+  listeners immediately and buffers for `readEvents` until the end of the
+  outermost tick. The flat buffer + `is E` filter means a derived event
+  reaches base-typed listeners and readers.
+- **Re-entrant `update` is safe.** A system calling `world.update`
+  recursively shares the outer tick's event buffer; only the outermost
+  return drains it. Systems and entities mutate the world safely from
+  within a tick.
+- **`ServiceMixin` cascade.** Removing a resource or component (or
+  disposing the world) that mixes `ServiceMixin` fires its `dispose()`
+  fire-and-forget — attached subscriptions / timers don't leak past
+  ECS teardown.
 - **Deterministic schedule.** Systems run in the order they were added; the
   startup phase runs once before the first regular `update`.
+- **`World.dispose` is terminal.** Asserts surface use-after-dispose in
+  debug; in release `update` is a silent no-op and `spawn` / `addSystem` /
+  `insertResource` are best-effort. Construct a fresh `World` to start over.

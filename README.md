@@ -1,5 +1,5 @@
 [![pub](https://img.shields.io/pub/v/df_di.svg)](https://pub.dev/packages/df_di)
-[![tag](https://img.shields.io/badge/Tag-v0.15.10-purple?logo=github)](https://github.com/dev-cetera/df_di/tree/v0.15.10)
+[![tag](https://img.shields.io/badge/Tag-v0.16.0-purple?logo=github)](https://github.com/dev-cetera/df_di/tree/v0.16.0)
 [![buymeacoffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-FFDD00?logo=buy-me-a-coffee&logoColor=black)](https://www.buymeacoffee.com/dev_cetera)
 [![sponsor](https://img.shields.io/badge/Sponsor-grey?logo=github-sponsors&logoColor=pink)](https://github.com/sponsors/dev-cetera)
 [![patreon](https://img.shields.io/badge/Patreon-grey?logo=patreon)](https://www.patreon.com/robelator)
@@ -42,16 +42,27 @@ Use a container to store the `UserService`. Here, we’ll put it in `DI.global` 
 import 'package:df_di/df_di.dart';
 
 void main() {
-  // Register the UserService in the global container
+  // Register the UserService in the global container.
+  // `onUnregister` receives a Result<UserService> — pattern-match so an
+  // Err-resolved registration doesn't crash the unregister chain.
   DI.global.register<UserService>(
     UserService(),
-    onUnregister: (result) => result.unwrap().logOut(),
+    onUnregister: Some((result) {
+      switch (result) {
+        case Ok(value: final svc):
+          svc.logOut();
+        case Err():
+          // Nothing to log out — the registration itself failed.
+          break;
+      }
+    }),
   );
 }
 ```
 
 - **`DI.global`**: A built-in container for app-wide dependencies.
 - **`register<UserService>`**: Stores the `UserService` instance, tagged by its type.
+- **`onUnregister`** is `Option<TOnUnregisterCallback<T>>` — wrap your callback in `Some(...)`. The callback gets the dep's resolved `Result<T>` so you can clean up both successful and failed registrations.
 
 ### Step 3: Access the Service Anywhere
 
@@ -83,21 +94,21 @@ This is the quick way, but it assumes the service exists. Let’s see a safer ap
 
 ## Step 4: Safe Dependency Access
 
-To avoid crashes if a dependency is missing, use `getSyncOrNone`:
+To avoid crashes if a dependency is missing, use `getSyncOrNone` and pattern-match the returned `Option<T>`:
 
 ```dart
 void showUser() {
-  final maybeService = DI.global.getSyncOrNone<UserService>();
-  if (maybeService.isSome()) {
-    print('Service found: ${maybeService.unwrap()}');
-  } else {
-    print('No UserService registered.');
+  switch (DI.global.getSyncOrNone<UserService>()) {
+    case Some(value: final svc):
+      print('Service found: $svc');
+    case None():
+      print('No UserService registered.');
   }
 }
 ```
 
 - **`getSyncOrNone<UserService>()`**: Returns `Some<UserService>` if found, or `None` if not.
-- This prevents errors and lets you handle missing dependencies gracefully.
+- Pattern matching is the recommended style across this stack — it lets the compiler verify you've handled every case and avoids `.unwrap()` calls that could throw on `None`.
 
 ## Step 5: Hierarchical Containers
 
@@ -139,17 +150,21 @@ Need a dependency that’s not ready yet, like user data from an API? Wait for i
 
 ```dart
 Future<void> waitForService() async {
-  // If UserService isn't registered yet, it will just wait until it finds one.
-  // IMPORTANT: When using this function, make sure that XXX in untilSuper<XXX> is the
-  // super-most class or matches the exact type registered. In the case of UserService,
-  // this satisfies the requirement.
-  final service = await DI.global.untilSuper<UserService>().unwrap();
-  print(await service.getUserName()); // Outputs: Alice
+  // If UserService isn't registered yet, this resolves the moment it is.
+  // IMPORTANT: T in untilSuper<T> should be the most general type expected —
+  // see the docstring on `until<TSuper, TSub>` for the subtype rules.
+  final result = await DI.global.untilSuper<UserService>().toAsync().value;
+  switch (result) {
+    case Ok(value: final service):
+      print(await service.getUserName()); // Outputs: Alice
+    case Err(:final error):
+      print('Could not resolve UserService: $error');
+  }
 }
 ```
 
-- **`untilSuper<UserService>()`**: Waits until a `UserService` is registered in the container or its parents.
-- Perfect for Flutter’s `FutureBuilder` to display data once it’s available.
+- **`untilSuper<UserService>()`**: Waits until a `UserService` is registered in the container or its parents. The returned `Resolvable<T>` lets you `.then(...)` chain or `.toAsync().value` await.
+- Perfect for `FutureBuilder` to display data once it’s available — the resolved `Result<T>` distinguishes "loaded" from "failed".
 
 ## Step 7: Lazy Initialization
 
@@ -179,13 +194,15 @@ Remove dependencies when they’re no longer needed:
 DI.session.register<String>('Temporary data');
 DI.session.unregister<String>();
 
-print(DI.session.isRegistered<String>()); // Outputs: true
+print(DI.session.isRegistered<String>()); // Outputs: false
 ```
 
-You can also remove all dependencies all at once, i.e. when you log the user out of a session:
+You can also remove all dependencies at once — i.e. when you log the user out of a session:
 
 ```dart
-// This will unregister all dependencies in the reverse order by which they were registered.
+// Unregisters all dependencies in reverse registration order. Each dep's
+// `onUnregister` fires sequentially; ServiceMixin values have `dispose()`
+// cascaded automatically.
 DI.session.unregisterAll();
 ```
 
@@ -245,13 +262,127 @@ final counter = DI.global<CounterService>();
 counter.increment();
 ```
 
-For Flutter apps that need to respond to app lifecycle events (pause when backgrounded, resume when foregrounded), use the `ObservedService` variants from [df_flutter_services](https://pub.dev/packages/df_flutter_services).
+For Flutter apps that need to respond to app lifecycle events (pause when backgrounded, resume when foregrounded), see the **Flutter integration** section below.
+
+### Flutter integration via `df_flutter_services`
+
+[`df_flutter_services`](https://pub.dev/packages/df_flutter_services) is the companion package that bridges `df_di` services to `WidgetsBindingObserver` and to the reactive `Pod<T>` containers in [`df_pod`](https://pub.dev/packages/df_pod):
+
+| Class | What it adds on top of df_di |
+| --- | --- |
+| `ObservedService` | `Service` + `WidgetsBindingObserver`. Opt-in `handlePausedState() => true` / `handleResumedState() => true` hooks map `AppLifecycleState` changes to `pause()` / `resume()` / `dispose()`. The observer is registered in init listeners (not in the constructor), so constructing before `WidgetsFlutterBinding.ensureInitialized()` is safe. |
+| `ObservedStreamService<T>` | `ObservedService` + `StreamServiceMixin<T>` — broadcast streams that auto-pause with the app lifecycle. |
+| `ObservedDataStreamService<T>` | The most common subclass. Exposes `pData: Pod<Option<Result<T>>>` — a reactive container that mirrors the latest stream emission and is cleared (not disposed) on dispose so consumers can cache the reference across re-init cycles (relogin, etc.). |
+| `ObservedPollingStreamService<T>` | Polling variant that stops the timer when the app backgrounds. |
+| `HandleServiceLifecycleStateMixin` | Reusable mixin that wires the five `AppLifecycleState` hooks for any custom `Service` subclass. |
+
+For the broader architecture (how Pods live on services, how DI scopes hold them, how Flutter lifecycle integrates) see [`doc/state_management_approach.md`](doc/state_management_approach.md).
+
+## Plugin system
+
+`df_di` ships with an app-level `Plugin` API for packaging features as **self-contained bundles** that can be installed and removed at runtime — themes, auth providers, analytics backends, optional integrations, etc.
+
+Each installed plugin owns a fresh child `DI` scope keyed by `plugin.id`. Anything registered into that scope during `install` is torn down automatically on uninstall — including `ServiceMixin` services, whose `dispose()` is cascaded via the standard unregister hook.
+
+```dart
+import 'package:df_di/df_di.dart';
+
+class AnalyticsPlugin extends Plugin {
+  const AnalyticsPlugin();
+
+  // Default id is `TypeEntity(runtimeType)` — only one of each plugin
+  // can be installed per host scope at a time. Override `id` to allow
+  // multiple keyed instances (e.g. `ThemePlugin` named 'dark' vs 'light').
+
+  @override
+  Resolvable<Unit> install(DI scope) {
+    return scope
+        .registerAndInitService(AnalyticsService())
+        .then((_) => Unit());
+  }
+
+  @override
+  Resolvable<Unit> uninstall(DI scope) {
+    // Only cleanup the registry CAN'T do automatically goes here.
+    // ServiceMixin services already have dispose() cascaded.
+    return syncUnit();
+  }
+}
+
+void main() {
+  DI.global.installPlugin(const AnalyticsPlugin()).end();
+
+  // Idempotent: subsequent installs of the same plugin id return the
+  // existing scope without re-running install().
+  if (DI.global.hasPlugin(const AnalyticsPlugin())) {
+    print('analytics is on');
+  }
+
+  // Tears down: invokes uninstall(), then unregisterAll() on the plugin
+  // scope (cascading dispose), then drops the scope itself.
+  DI.global.uninstallPlugin(const AnalyticsPlugin()).end();
+}
+```
+
+> **Note:** This `Plugin` API (owns a DI scope) is distinct from `EcsPlugin` (in `src/ecs/ecs.dart`), which bundles systems and resources into an ECS `World` rather than a DI scope. See [`doc/ecs_example.md`](doc/ecs_example.md) for ECS plugins.
+
+### Lifecycle contract
+
+Lifecycle methods return a `Resolvable<Unit>` whose resolved `Result<Unit>` is the authoritative success/failure signal — invalid transitions return `Err` rather than silently doing nothing:
+
+| Transition | Result |
+| --- | --- |
+| `init()` on a fresh service | `Ok` — listeners run, state → `RUN_SUCCESS` (or `RUN_ERROR`). |
+| `init()` after `init()` | `Err` — services are not re-initializable. |
+| `init()` after `dispose()` | `Err` — disposed is terminal; construct a fresh instance. |
+| `pause()` / `resume()` before `init()` | `Err` — call `init()` first. |
+| `pause()` while paused / `resume()` while running / `dispose()` after `dispose()` | `Ok(None)` — idempotent no-op. |
+| `pause()` / `resume()` / `dispose()` listener throws | `Err` carrying the listener error; state lands on the `_ERROR` variant. |
+
+In debug builds, assertions surface these contract violations early. In release the assertions are stripped but the `Err` return still distinguishes them from successful transitions — mission-critical callers should pattern-match the awaited result.
+
+## Step 10: Working with `Option<T>` / `Result<T>` / `Resolvable<T>`
+
+All public APIs return these sealed types from [df_safer_dart](https://pub.dev/packages/df_safer_dart). The recommended way to consume them is **Dart pattern matching** — `switch` / `if case` — rather than `.isSome()` + `.unwrap()` chains:
+
+```dart
+// Reading a registered dep
+switch (DI.global.get<UserService>()) {
+  case Some(value: final r):
+    // r is Resolvable<UserService>
+  case None():
+    // not registered
+}
+
+// Awaited Result
+switch (await DI.global.untilSuper<UserService>().toAsync().value) {
+  case Ok(value: final svc):
+    // use svc
+  case Err(:final error):
+    // log / surface error
+}
+
+// Type-narrowing pattern (avoids a separate `is T` runtime check)
+final value = switch (resolvable) {
+  Sync(value: Ok(value: final T v)) => v,
+  _ => fallback,
+};
+```
+
+The exhaustive `switch` rules out the "I forgot to handle Err" class of bugs at compile time and removes the need for `UNSAFE` markers in user code.
 
 ## Related Packages
 
-- [df_flutter_services](https://pub.dev/packages/df_flutter_services) - Flutter-specific service classes with app lifecycle integration
-- [df_pod](https://pub.dev/packages/df_pod) - Reactive state containers
-- [df_safer_dart](https://pub.dev/packages/df_safer_dart) - Option, Result, Resolvable types
+`df_di` is one layer of a four-package state-management stack. The packages publish independently but are designed to work together; pick what you need:
+
+| Package | Layer | What it gives you |
+| --- | --- | --- |
+| [df_safer_dart](https://pub.dev/packages/df_safer_dart) | foundation | `Option<T>`, `Result<T>`, `Resolvable<T>`, `Outcome<T>`, `UNSAFE { … }`, `SafeCompleter`, `TaskSequencer` — the sealed value types every other layer is built on. |
+| **df_di** *(this)* | DI + services | Container hierarchy, `Service` / `ServiceMixin`, `StreamService`, `PollingStreamService`, ECS subsystem, `Plugin` system. |
+| [df_pod](https://pub.dev/packages/df_pod) | reactive containers | `Pod<T>`, `ChildPod`, `ReducerPod`, `SharedPod` (persisted to `SharedPreferences`), `WeakChangeNotifier`, `PodBuilder` / `PodListBuilder` / `PodCollectionBuilder`. |
+| [df_flutter_services](https://pub.dev/packages/df_flutter_services) | Flutter glue | `ObservedService`, `ObservedDataStreamService`, `HandleServiceLifecycleStateMixin` — bridges `df_di` services to `WidgetsBindingObserver` and exposes `pData: Pod<Option<Result<T>>>` so streams flow into widgets via `PodBuilder`. |
+
+See [`doc/state_management_approach.md`](doc/state_management_approach.md) for the cross-package architecture and the recommended `G` (global-access) façade pattern.
 
 ---
 

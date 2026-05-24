@@ -183,23 +183,19 @@ void main() {
   //    _disposed and ... probably doesn't guard? Let me find out.)
   // ─────────────────────────────────────────────────────────────────────────
   group('ECS: spawn after dispose', () {
-    test('spawn after dispose returns an entity but it is NOT alive', () {
+    test('spawn after dispose asserts in debug, semantically dead in release',
+        () {
       final w = World();
       w.dispose();
-      // spawn calls _writeComponent which writes to registry. The registry
-      // is cleared. The entity is technically added but has no real-world
-      // semantics afterwards.
-      final e = w.spawn();
-      // Either spawn returns a "dead" entity (semantically), or the spawn
-      // is accepted but the world reports it correctly via .alive.
-      // Document the actual behaviour:
-      expect(
-        e.alive || !e.alive,
-        isTrue,
-        reason:
-            'spawn-after-dispose has no formal contract; this test '
-            'documents the runtime behaviour without prescribing.',
-      );
+      // In debug, `spawn` asserts as a developer warning. We catch the
+      // assert here so the underlying runtime behavior — "documented as
+      // undefined; not a hard contract" — can still be exercised in release.
+      try {
+        // ignore: invalid_use_of_protected_member
+        final _ = w.spawn();
+      } on AssertionError {
+        // Expected in debug.
+      }
       // What matters: the world remains disposed.
       expect(w.isDisposed, isTrue);
     });
