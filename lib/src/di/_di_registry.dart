@@ -38,10 +38,41 @@ final class DIRegistry {
   final Option<TOnChangeRegistry> onChange;
 
   /// A snapshot describing the current state of the dependencies.
+  ///
+  /// Returns a deep, unmodifiable copy so external callers cannot mutate the
+  /// registry through the returned reference. This is the safe accessor for
+  /// public use — the deep copy is intentional.
+  ///
+  /// On hot paths internal to this package, prefer [groupSlots] (no copy of
+  /// the outer map, single snapshot of one group's values).
   @pragma('vm:prefer-inline')
   TRegistryState get state => TRegistryState.unmodifiable(
         _state,
       ).map((k, v) => MapEntry(k, Map.unmodifiable(v)));
+
+  /// Returns a snapshot of the [Dependency] values registered under
+  /// [groupEntity], or `null` if the group has no entries.
+  ///
+  /// Internal fast path used by [`_maybeFinish`] (`DIBase`) on every
+  /// `register` call. Unlike [state], this does NOT deep-copy the entire
+  /// registry — it only takes one shallow snapshot of the requested group's
+  /// values, which is enough to keep the caller safe against re-entrant
+  /// register/unregister mid-iteration while avoiding O(N-groups + N-deps)
+  /// allocation per registration.
+  ///
+  /// The returned view is fully unmodifiable: callers cannot add, remove,
+  /// replace, or reorder entries. That guards against bugs where a future
+  /// internal caller mutates the snapshot and corrupts its own iteration —
+  /// matching the safety contract of [state] for the slice we expose.
+  @internal
+  @pragma('vm:prefer-inline')
+  List<Dependency>? groupSlots(Entity groupEntity) {
+    final group = _state[groupEntity];
+    if (group == null) return null;
+    return UnmodifiableListView<Dependency>(
+      group.values.toList(growable: false),
+    );
+  }
 
   /// Returns an iterable of all dependencies in the registry, unsorted.
   @pragma('vm:prefer-inline')

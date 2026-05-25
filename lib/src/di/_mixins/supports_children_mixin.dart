@@ -34,7 +34,12 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
           return c;
         }(),
     };
+    // `DI` instances are per-isolate by design (mutable registry, completers,
+    // timers). This closure captures `this` intentionally to wire the child's
+    // parent link; the resulting `Lazy<DI>` is never expected to cross isolate
+    // boundaries.
     return container.registerLazy<DI>(
+      // ignore: sendable
       () => Sync.okValue(DI()..parents.add(this as DI)),
       groupEntity: groupEntity,
     );

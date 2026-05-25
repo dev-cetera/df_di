@@ -260,9 +260,17 @@ base class DIBase {
       // We intentionally DON'T filter on `ReservedSafeCompleter<T>` here
       // because dart2js release makes generic-parameter matching
       // unreliable. The completer's own `typeCheck` does the real filter.
-      final groupSlots = di.registry.state[g]?.values;
-      if (groupSlots == null) continue;
-      final completers = groupSlots
+      //
+      // Use the internal `groupSlots` accessor here, NOT `state[g]?.values`.
+      // The public `state` getter deep-copies the entire registry (which is
+      // its documented safety contract for external callers); doing that on
+      // every `register` allocates O(N-groups + N-deps) per call. The
+      // internal accessor still snapshots the ONE group we care about (so
+      // re-entrant register/unregister inside a completer chain cannot
+      // throw `ConcurrentModificationError`), but skips the outer copy.
+      final slots = di.registry.groupSlots(g);
+      if (slots == null) continue;
+      final completers = slots
           .map(
             (e) => switch (e.value) {
               Sync(value: Ok(value: final v)) when v is ReservedSafeCompleter =>

@@ -21,7 +21,7 @@ base mixin SupportsConstructorsMixin on DIBase {
   /// Registers a lazy dependency.
   @pragma('vm:prefer-inline')
   Resolvable<Lazy<T>> registerLazy<T extends Object>(
-    LazyConstructor<T> constructor, {
+    @sendable LazyConstructor<T> constructor, {
     Option<TOnRegisterCallback<Lazy<T>>> onRegister = const None(),
     Option<TOnUnregisterCallback<Lazy<T>>> onUnregister = const None(),
     Entity groupEntity = const DefaultEntity(),
@@ -37,12 +37,17 @@ base mixin SupportsConstructorsMixin on DIBase {
   /// Registers a lazy dependency.
   @pragma('vm:prefer-inline')
   Resolvable<Lazy<T>> registerConstructor<T extends Object>(
-    FutureOr<T> Function() constructor, {
+    @sendable FutureOr<T> Function() constructor, {
     Option<TOnRegisterCallback<Lazy<T>>> onRegister = const None(),
     Option<TOnUnregisterCallback<Lazy<T>>> onUnregister = const None(),
     Entity groupEntity = const DefaultEntity(),
   }) {
+    // One-line adapter closure that only captures `constructor` (itself
+    // `@sendable`). The analyzer cannot verify transitive sendability of
+    // arbitrary closures, but the capture set here is provably sendable
+    // when callers respect the `@sendable` requirement on `constructor`.
     return registerLazy<T>(
+      // ignore: sendable
       () => Resolvable<T>(() => constructor()),
       onRegister: onRegister,
       onUnregister: onUnregister,
