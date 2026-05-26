@@ -577,15 +577,8 @@ base mixin SupportsMixinK on DIBase {
   }
 
   /// Attempts to finish any pending [untilExactlyK] calls for the given
-  /// type and group.
-  ///
-  /// Matching is by `typeEntity` ONLY. An earlier version also OR-ed in
-  /// `e is ReservedSafeCompleter<T>`, but under dart2js release that check
-  /// can falsely match a completer of any type (generic-parameter erasure
-  /// makes `is Foo<T>` collapse to `is Foo<dynamic>`), and as the first arm
-  /// of the OR it would short-circuit `firstWhereOrNull` to the wrong
-  /// completer. `typeEntity` is the canonical, minification-safe identifier
-  /// — it's an integer hash of a string, not a reified generic.
+  /// type and group. Matches on `typeEntity` only — `is Foo<T>` collapses
+  /// to `is Foo<dynamic>` under dart2js release and would mis-match.
   void maybeFinishK<T extends Object>({required Entity g}) {
     assert(T != Object, 'T must be specified and cannot be Object.');
     final typeEntity = TypeEntity(T);

@@ -12,104 +12,79 @@
 //.title~
 
 import 'dart:math' show Random;
+import 'dart:typed_data' show Uint8List;
+
+import 'package:df_log/df_log.dart' show Log;
 
 import 'entity.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
-/// Creates a new [UniqueEntity] with a unique ID.
-///
-/// ## Cross-isolate uniqueness
-///
-/// Static state (including the counter behind `UniqueEntity()`) is per-isolate
-/// in Dart. A naive monotonic counter would mean two isolates each produce the
-/// same id sequence (`-10001, -10002, …`), so a `UniqueEntity` sent across a
-/// `SendPort` could silently collide with one generated locally.
-///
-/// To make `UniqueEntity` safe to send between isolates, each isolate carves
-/// the negative-id space into fixed-size blocks and picks a random one at
-/// first use:
-///
-/// ```
-///   block_size  = 2^20  (~1M ids per block)
-///   block_count = 2^30  (~1B possible blocks)
-///   total range = 2^50  (well within dart2js's 53-bit safe-int range)
-/// ```
-///
-/// Birthday-collision probability when `N` total blocks are picked across all
-/// isolates is `≈ N² / 2^31` — for 1000 picks, ~0.05%; for typical use (a
-/// handful of isolates each issuing far fewer than `2^20` ids), effectively
-/// zero.
-///
-/// ## Within-isolate guarantees
-///
-/// Within a single isolate ids are strictly decreasing and unique. When an
-/// isolate consumes a full `2^20` ids in one block, the next call re-seeds
-/// from the random pool, **excluding every block already used by this
-/// isolate**. So an isolate can never reissue an id it previously issued
-/// (regardless of how many billions of `UniqueEntity()` calls it makes).
-///
-/// ## Failure modes
-///
-/// * `Random.secure()` is preferred for the seed, but if the platform does
-///   not provide a cryptographic RNG the seed falls back to `Random()`.
-///   Cross-isolate uniqueness then degrades to probabilistic uniqueness
-///   based on the non-secure RNG's startup state — still suitable for
-///   single-process use, weaker for adversarial inputs.
-/// * On the highly improbable event that all `2^30` blocks have been
-///   consumed by a single isolate (would require ~10^15 `UniqueEntity()`
-///   calls), the re-seed loop would block forever. In practice this is
-///   precluded by memory limits long before id exhaustion.
-final class UniqueEntity extends Entity {
-  static const _blockSize = 1 << 20;
-  static const _blockCount = 1 << 30;
+/// An [Entity] identified by a 128-bit RFC 4122 v4 [uuid]. Equality always
+/// consults the UUID, so id collisions with other entities (32-bit hash
+/// space) are harmless. Sendable across isolates: the UUID survives a
+/// `SendPort` round trip and the receiving instance compares equal to the
+/// original.
+final class UniqueEntity extends Entity implements StrictEqualityEntity {
+  final String uuid;
 
-  /// Top of the current block (most-positive / first-issued id of the block).
-  /// Lazily seeded on first `UniqueEntity()` call.
-  static int _counter = 0;
+  UniqueEntity._(this.uuid) : super.reserved(_idFromUuid(uuid));
 
-  /// Inclusive floor of the current block (most-negative id of the block).
-  /// When `_counter` would drop below this, the block is exhausted and a
-  /// fresh block must be picked. Sentinel `0` until first seed (any id < 0
-  /// triggers re-seed on first call).
-  static int _floor = 0;
+  factory UniqueEntity() => UniqueEntity._(_generateUuid());
 
-  /// Block indices already consumed by this isolate. Re-seed excludes these
-  /// so an isolate never reissues an id it previously issued. Grows by one
-  /// entry per re-seed, not per `UniqueEntity()` call — typical workloads
-  /// never re-seed, so this set stays at size 0 forever.
-  static final Set<int> _usedBlocks = <int>{};
-
-  UniqueEntity() : super.reserved(_next());
-
-  static int _next() {
-    if (_counter <= _floor) _seedBlock();
-    return _counter--;
+  // The id is derived from the UUID's hashCode so HashMap performance is
+  // preserved. Range sits below the reserved-entity range (-1001..-1008)
+  // and within dart2js's 53-bit safe-integer floor.
+  static int _idFromUuid(String uuid) {
+    final h = uuid.hashCode;
+    return -10001 - (h & 0x3fffffff);
   }
 
-  static void _seedBlock() {
+  static String _generateUuid() {
     final random = _safeRandom();
-    int blockIndex;
-    // Reject any block this isolate has already drawn. _blockCount is far
-    // larger than any realistic re-seed count, so this loop is O(1) in
-    // expectation and bounded by _blockCount in the worst case.
-    do {
-      blockIndex = random.nextInt(_blockCount);
-    } while (!_usedBlocks.add(blockIndex));
-    final top = -10001 - blockIndex * _blockSize;
-    _counter = top;
-    _floor = top - _blockSize + 1;
+    final bytes = Uint8List(16);
+    for (var i = 0; i < 16; i++) {
+      bytes[i] = random.nextInt(256);
+    }
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+    final hex = bytes
+        .map((b) => b.toRadixString(16).padLeft(2, '0'))
+        .join();
+    return '${hex.substring(0, 8)}-'
+        '${hex.substring(8, 12)}-'
+        '${hex.substring(12, 16)}-'
+        '${hex.substring(16, 20)}-'
+        '${hex.substring(20)}';
   }
 
-  /// Prefers `Random.secure()`; falls back to `Random()` on platforms that
-  /// lack a cryptographic RNG. The fallback weakens the random seed source
-  /// but preserves the basic "different isolates pick different blocks with
-  /// high probability" property because each isolate seeds its `Random()`
-  /// independently using whatever entropy the platform provides at startup.
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is UniqueEntity && uuid == other.uuid;
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  int get hashCode => id;
+
+  @override
+  String toString() => 'UniqueEntity($uuid)';
+
+  static bool _loggedFallback = false;
+
   static Random _safeRandom() {
     try {
       return Random.secure();
     } on UnsupportedError {
+      if (!_loggedFallback) {
+        _loggedFallback = true;
+        Log.err(
+          'UniqueEntity: Random.secure() is unsupported on this platform; '
+          'falling back to Random(). UUIDs still carry 128 bits of '
+          'platform entropy but are not cryptographic.',
+        );
+      }
       return Random();
     }
   }

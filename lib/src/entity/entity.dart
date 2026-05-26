@@ -17,6 +17,15 @@ import 'reserved_entities.dart';
 
 // ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
+/// Marker for entities whose equality is stricter than the base id-based
+/// contract (e.g. [UniqueEntity]). [Entity.==] refuses to claim equality
+/// from the loose side when `other` carries this marker, keeping `==`
+/// symmetric — required for HashMap correctness. Subtypes must override
+/// `==` themselves to enforce the stricter rule.
+abstract interface class StrictEqualityEntity {}
+
+// ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
 /// An entity is a uniquely identifiable object that serves as a container or
 /// identifier for components in a Dependency Injection (DI) or
 /// Entity-Component-System (ECS) framework.
@@ -86,6 +95,11 @@ class Entity {
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
+    // Reject `other` from the loose side so `==` stays symmetric — see
+    // [StrictEqualityEntity].
+    if (other is StrictEqualityEntity && this is! StrictEqualityEntity) {
+      return false;
+    }
     if (other is Entity) {
       return other.hashCode == hashCode;
     } else {

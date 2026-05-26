@@ -143,8 +143,18 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
       'registered as Sync lazies — see SupportsChildrenMixin.registerChild.',
     );
     return switch (unregistered) {
-      Sync(value: Ok(value: Some(value: final raw))) =>
-        _eagerLazyDI(raw as Lazy<DI>).map((di) => Some(di)),
+      // Pattern-match instead of `raw as Lazy<DI>` so adversarial misuse
+      // (a non-`Lazy<DI>` written into the children container) surfaces
+      // as Err rather than a thrown TypeError.
+      Sync(value: Ok(value: Some(value: final raw))) => switch (raw) {
+          final Lazy<DI> lazy => _eagerLazyDI(lazy).map((di) => Some(di)),
+          _ => Err<Option<DI>>(
+              'unregisterChildT: registered value under type $type is not a '
+              'Lazy<DI> (got ${raw.runtimeType}). The children container '
+              'appears to hold non-DI entries — use `container.unregister...` '
+              'directly for those.',
+            ),
+        },
       Sync(value: Ok(value: None())) => const Ok(None()),
       Sync(value: Err(:final error, :final stackTrace)) =>
         Err<Option<DI>>(error, stackTrace: stackTrace),
@@ -155,11 +165,8 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     };
   }
 
-  /// Forces a `Lazy<DI>` to its synchronous singleton, returning the DI
-  /// instance as a `Result`. Children are registered as Sync lazies (see
-  /// [registerChild]); an Async resolution or construction failure is
-  /// surfaced as Err so the surrounding `unregisterChild` can propagate it
-  /// through the Result pipeline instead of throwing.
+  /// Forces a `Lazy<DI>` to its Sync singleton or returns Err if it
+  /// resolved Async or construction failed.
   Result<DI> _eagerLazyDI(Lazy<DI> lazy) {
     return switch (lazy.singleton) {
       Sync<DI>(value: final r) => r,

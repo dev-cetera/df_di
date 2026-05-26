@@ -104,15 +104,12 @@ class World {
   final List<System> _systems = [];
   bool _ranStartup = false;
 
-  /// Flat per-tick event buffer. Events are stored in send order; readers
-  /// filter via `is E`. This avoids the subtype-blind keying that occurred
-  /// when buffers were `Map<Type, List<Object>>` indexed by runtime type
-  /// (a `Derived` event would not be visible to a `readEvents<Base>` reader).
+  /// Per-tick event buffer in send order. Readers filter via `is E` so a
+  /// `Derived` event is visible to `readEvents<Base>` (Liskov).
   final List<Event> _eventBuffer = [];
 
-  /// Flat listener list. Each wrapper closes over its registered `E` and
-  /// performs the `is E` check at dispatch time, so subscribing for a base
-  /// type correctly receives events sent as derived types.
+  /// Each wrapper closes over its registered `E` and checks `is E` at
+  /// dispatch time so base-type subscribers receive derived events.
   final List<void Function(Event event)> _eventListeners = [];
 
   /// Re-entrant [update] depth. Drives event-buffer clearing — only the

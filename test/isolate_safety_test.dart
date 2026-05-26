@@ -9,24 +9,9 @@
 //
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 
-// Cross-isolate safety tests for Entity-family value objects.
-//
-// The DI container itself is per-isolate by design (it holds mutable maps,
-// completers, timers — none of which can cross an isolate boundary). But the
-// value-typed keys used to address it — `Entity`, `TypeEntity`,
-// `GenericEntity`, `UniqueEntity`, and the reserved entity singletons — must
-// survive a `SendPort` round trip so caller code can ship entity identifiers
-// between worker isolates and the main one.
-//
-// What we verify:
-//
-//  1. Entity / TypeEntity / GenericEntity / DefaultEntity etc. round-trip
-//     with their `id` (and therefore equality) intact.
-//  2. UniqueEntity ids generated in different isolates do NOT collide. The
-//     monotonic counter is seeded with a random per-isolate block offset
-//     (see `lib/src/entity/unique_entity.dart`), so two isolates each
-//     producing N UniqueEntities will produce 2N distinct ids with
-//     overwhelmingly high probability.
+// Cross-isolate safety tests for Entity-family value objects. The DI
+// container itself is per-isolate, but the keys used to address it must
+// survive a SendPort round trip.
 
 import 'dart:async';
 import 'dart:isolate';
@@ -36,26 +21,17 @@ import 'package:test/test.dart';
 
 // ─── Isolate workers ─────────────────────────────────────────────────────────
 
-/// Returns N freshly-generated `UniqueEntity` ids from this isolate.
 List<int> _generateUniqueIds(int n) {
   return List<int>.generate(n, (_) => UniqueEntity().id);
 }
 
-/// Top-level isolate entrypoint: produces N UniqueEntity ids and sends them
-/// back over [sendPort]. Top-level so `Isolate.spawn` can find it.
 void _uniqueEntityWorker((SendPort, int) args) {
   final (sendPort, n) = args;
   sendPort.send(_generateUniqueIds(n));
 }
 
-/// Top-level isolate entrypoint: round-trips a list of pre-constructed
-/// entities and sends each one's id back, so the parent can verify identity
-/// survives the transfer.
 void _entityRoundTripWorker((SendPort, List<Entity>) args) {
   final (sendPort, entities) = args;
-  // Echo the ids — but read them from the received instances, NOT from the
-  // captured-in-parent values. This is what proves the entity actually made
-  // it across the boundary intact.
   sendPort.send(entities.map((e) => e.id).toList());
 }
 
@@ -63,24 +39,28 @@ void _entityRoundTripWorker((SendPort, List<Entity>) args) {
 
 Future<List<int>> _spawnAndCollectUniqueIds(int count) async {
   final receivePort = ReceivePort();
-  await Isolate.spawn<(SendPort, int)>(
-    _uniqueEntityWorker,
-    (receivePort.sendPort, count),
-  );
-  final result = await receivePort.first as List<int>;
-  receivePort.close();
-  return result;
+  try {
+    await Isolate.spawn<(SendPort, int)>(
+      _uniqueEntityWorker,
+      (receivePort.sendPort, count),
+    );
+    return await receivePort.first as List<int>;
+  } finally {
+    receivePort.close();
+  }
 }
 
 Future<List<int>> _spawnAndEcho(List<Entity> entities) async {
   final receivePort = ReceivePort();
-  await Isolate.spawn<(SendPort, List<Entity>)>(
-    _entityRoundTripWorker,
-    (receivePort.sendPort, entities),
-  );
-  final result = await receivePort.first as List<int>;
-  receivePort.close();
-  return result;
+  try {
+    await Isolate.spawn<(SendPort, List<Entity>)>(
+      _entityRoundTripWorker,
+      (receivePort.sendPort, entities),
+    );
+    return await receivePort.first as List<int>;
+  } finally {
+    receivePort.close();
+  }
 }
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
@@ -129,10 +109,6 @@ void main() {
 
   group('UniqueEntity cross-isolate uniqueness', () {
     test('two isolates generate disjoint id sets', () async {
-      // Each isolate picks a random block offset at first use. With 2^30
-      // possible blocks of 2^20 ids each, two isolates colliding on the
-      // same block is astronomically unlikely — the expected number of
-      // collisions in this test is ~0.
       const perIsolate = 200;
       final futures = <Future<List<int>>>[
         _spawnAndCollectUniqueIds(perIsolate),
@@ -144,8 +120,6 @@ void main() {
         expect(ids, hasLength(perIsolate));
         combined.addAll(ids);
       }
-      // No collisions across the two isolate runs (or within each — the
-      // counter inside an isolate is strictly decreasing).
       expect(combined, hasLength(perIsolate * 2));
     });
 
@@ -153,8 +127,6 @@ void main() {
       'parent-isolate UniqueEntities do not collide with worker-isolate ones',
       () async {
         const perSide = 200;
-        // Parent does its own generation IN PARALLEL with the worker so both
-        // sides have already seeded their counters by the time we compare.
         final parentIds = _generateUniqueIds(perSide);
         final workerIds = await _spawnAndCollectUniqueIds(perSide);
         final union = {...parentIds, ...workerIds};
@@ -182,14 +154,10 @@ void main() {
     );
 
     test('UniqueEntity ids remain in the negative-int reserved range', () {
-      // The Entity.reserved contract requires id < 0. Verify the random
-      // seeding cannot violate that invariant even at the largest block
-      // offset.
       for (var i = 0; i < 100; i++) {
         final e = UniqueEntity();
         expect(e.id, lessThan(0));
-        // And below the reserved-entities range used for DI.global / session
-        // / user / theme / etc. (those occupy -1001..-1008).
+        // Below the reserved-entities range (-1001..-1008).
         expect(e.id, lessThan(-10000));
       }
     });
@@ -197,14 +165,17 @@ void main() {
 
   group('Entity equality survives isolate transfer', () {
     test('TypeEntity from worker equals locally-constructed sibling', () async {
-      // Construct a TypeEntity in a worker, send back its id, then locally
-      // reconstruct an equivalent TypeEntity and verify equality. This
-      // exercises the typical real-world use case: serialise a DI key in
-      // one isolate, address the same registry slot in another.
       final receivePort = ReceivePort();
-      await Isolate.spawn<SendPort>(_typeEntityProducerWorker, receivePort.sendPort);
-      final remote = await receivePort.first as TypeEntity;
-      receivePort.close();
+      final TypeEntity remote;
+      try {
+        await Isolate.spawn<SendPort>(
+          _typeEntityProducerWorker,
+          receivePort.sendPort,
+        );
+        remote = await receivePort.first as TypeEntity;
+      } finally {
+        receivePort.close();
+      }
       final local = TypeEntity(String);
       expect(remote, equals(local));
       expect(remote.id, equals(local.id));

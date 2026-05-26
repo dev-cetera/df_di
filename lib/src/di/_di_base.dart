@@ -37,23 +37,14 @@ base class DIBase {
 
   int _indexIncrementer = 0;
 
-  /// Container for child DI instances.
+  /// Container for child DI instances. Production code should not mutate
+  /// this field directly — `registerChild` is the supported entry point.
   Option<DI> childrenContainer = const None();
 
-  /// Retrieves an iterable of child [DI] instances.
-  ///
-  /// Only returns **already-materialised** children. A `Lazy<DI>` whose
-  /// `singleton` has never been read is skipped — otherwise iterating
-  /// `children()` (called from `_maybeFinish` on every `register`) would
-  /// force-construct every registered child container on every parent
-  /// registration, defeating laziness and running child constructors at
-  /// the wrong time.
-  ///
-  /// The result is **snapshotted** via `.toList()` so callers can safely
-  /// iterate even if a re-entrant register/unregister mutates the underlying
-  /// registry mid-walk. Without the snapshot, `_maybeFinish` (which iterates
-  /// `children()` on every register) would throw `ConcurrentModificationError`
-  /// if any onRegister callback registered another dep on the same container.
+  /// Returns already-materialised children only — an un-read `Lazy<DI>` is
+  /// skipped so iterating `children()` from `_maybeFinish` cannot
+  /// force-construct unrelated children. Snapshotted to survive re-entrant
+  /// register/unregister.
   Option<Iterable<DI>> children() {
     return childrenContainer.map(
       (e) => e.registry.unsortedDependencies
@@ -63,11 +54,8 @@ base class DIBase {
     );
   }
 
-  /// Pattern-matches a single registry entry down to its materialised `DI`
-  /// instance, returning `null` for any branch that should be skipped (async,
-  /// unmaterialised, errored). Pattern matching makes every "skip" path
-  /// explicit and exhaustive — no chance of an accidental `.unwrap()` on an
-  /// Err or async slot.
+  /// Returns the materialised `DI` for a registry entry, or `null` for any
+  /// async / unmaterialised / errored slot.
   DI? _childFromDep(Dependency e) {
     try {
       return switch (e.transf<Lazy<DI>>().value) {
@@ -79,10 +67,8 @@ base class DIBase {
     }
   }
 
-  /// Reads a `Lazy<DI>`'s already-materialised singleton without forcing
-  /// construction. `currentInstance` is `@protected` because Lazy expects
-  /// subclass-only mutation, but a read-only probe is the only safe way to
-  /// honor the C7 contract that registering at a parent must not
+  /// Reads `Lazy<DI>.currentInstance` without forcing construction — needed
+  /// to honor the C7 contract that registering at a parent must not
   /// materialise unrelated children.
   // ignore: invalid_use_of_protected_member
   DI? _materialisedDI(Lazy<DI> lazy) => switch (lazy.currentInstance) {
@@ -110,13 +96,9 @@ base class DIBase {
     );
     final g = groupEntity.preferOverDefault(focusGroup);
 
-    // Existence check FIRST. If a slot for [T] already exists in this
-    // container's [g] group, reject the registration BEFORE constructing
-    // the wrapping Resolvable — building it runs the `onRegister` side
-    // effects (init() etc.), and we must NOT run those for a registration
-    // we'll reject (audit-pass-3 finding: previously a duplicate-register
-    // call fired init() on a service that would never be reachable,
-    // leaking the resource).
+    // Check for existing slot BEFORE building the Resolvable — wrapping it
+    // runs the onRegister side effects (init()), which must not fire for a
+    // registration we'll reject.
     switch (getDependency<T>(groupEntity: g, traverse: false)) {
       case Some():
         return Sync<T>.err(Err('Dependency already registered.'));
@@ -129,12 +111,8 @@ base class DIBase {
       groupEntity: g,
       onUnregister: onUnregister.map((cb) => (e) => cb(e.transf())),
     );
-    // Wrap the onRegister invocation so that a synchronous throw is
-    // captured into the Resolvable instead of escaping out of `register()`.
-    // Without this, a sync-throwing onRegister blows the call stack
-    // mid-`register` and the caller has no Resolvable-shaped handle to the
-    // failure — unacceptable for medical-grade code where every callback
-    // site must be uniformly catchable.
+    // Wrap onRegister so a sync throw lands as Err on the returned
+    // Resolvable instead of escaping out of `register()`.
     final a = Resolvable(
       () => consec(value, (e) {
         return consec(_safeOnRegister<T>(onRegister, e), (_) => e);
@@ -152,23 +130,13 @@ base class DIBase {
         break;
     }
     if (value is! ReservedSafeCompleter<T>) {
-      // Used for until*. Walks ANY pending ReservedSafeCompleter (regardless
-      // of its type parameter) and lets each completer's own captured
-      // type-check decide whether `value` matches — see `_maybeFinish` for
-      // why filtering by `<T>` here is unsafe under dart2js release.
       _maybeFinish<Object>(value: value, g: g);
-
-      // Used for untilT and untilK. Disabled by default to improve performance.
       if (enableUntilExactlyK) {
         (this as SupportsMixinK).maybeFinishK<T>(g: g);
       }
     }
-    // We just succeeded at `registerDependency` above, so `get<T>` MUST find
-    // the slot we wrote. Pattern-match instead of `.unwrap()` so the
-    // theoretical "should never happen" branch is explicit: if a concurrent
-    // unregister somehow raced and wiped the slot, return an Err Resolvable
-    // instead of throwing — callers awaiting the returned Resolvable then
-    // see a normal Err on their chain.
+    // We just wrote the slot — `get<T>` should find it unless a concurrent
+    // unregister raced. Return Err in that case rather than throw.
     return switch (get<T>(groupEntity: groupEntity)) {
       Some(value: final r) => r,
       None() => Sync<T>.err(
@@ -178,34 +146,23 @@ base class DIBase {
     };
   }
 
-  /// Invokes [onRegister] (if present) on [value], converting any synchronous
-  /// throw into a `Future.error` so the surrounding Resolvable/consec chain
-  /// routes it through the standard error path. Extracted from `register()`
-  /// so the FutureOr-assignment plumbing sits outside the `@mustAwaitAllFutures`
-  /// Resolvable callback.
-  ///
-  /// The callback signature is `FutureOr<void> Function(T)`, but it is
-  /// ergonomic in practice to write `(s) => s.init()` where `init()` returns
-  /// a `Resolvable<Unit>`. `Resolvable` is neither a `Future` nor `void` — if
-  /// we treated such a return as sync, the `untilSuper` waiter would resolve
-  /// against a half-initialized service, defeating the C6 contract for the
-  /// ergonomic form. To close that hole we explicitly detect a `Resolvable`
-  /// return and unwrap its `.value`.
+  /// Invokes [onRegister] on [value], converting any sync throw into a
+  /// `Future.error` so the surrounding Resolvable chain routes it through
+  /// the normal error path. Callbacks may return a `Resolvable` (e.g.
+  /// `(s) => s.init()`) — [awaitCallbackResult] unwraps such returns so
+  /// `until*` waiters never observe a half-initialised service.
   FutureOr<void> _safeOnRegister<T extends Object>(
     Option<TOnRegisterCallback<T>> onRegister,
     T value,
   ) {
     try {
-      // Capture the callback's return as `Object?` (NOT `FutureOr<void>`) so
-      // `awaitCallbackResult` can dispatch on the runtime type (a `void`
-      // static type would reject further use).
+      // Capture as `Object?` so `awaitCallbackResult` can dispatch on the
+      // runtime type.
       final Object? result = switch (onRegister) {
         Some(value: final cb) => cb(value),
         None() => null,
       };
-      // For onRegister, ANY failure must surface as Err on the resulting
-      // Resolvable — a half-registered service is unacceptable for
-      // medical-grade callers — so do NOT log-and-swallow sync errors here.
+      // onRegister failures must surface as Err on the returned Resolvable.
       return awaitCallbackResult(
         result,
         logAndSwallowSyncErr: false,
@@ -219,55 +176,24 @@ base class DIBase {
   /// Attempts to finish any pending [until] calls for the given type and
   /// group when a new dependency is registered.
   ///
-  /// Previously this relied on `.whereType<ReservedSafeCompleter<T>>()` and a
-  /// `value as FutureOr<T>` cast to filter to the correct completer. Both of
-  /// those generic-reification-dependent checks are silently weakened in
-  /// dart2js release mode on Flutter Web: a completer of the *wrong* type is
-  /// matched, `.complete(value)` silently succeeds (passing a garbage-typed
-  /// value), `break` exits, and the correct completer is never reached. The
-  /// original `until*` call hangs forever. See
-  /// `ReservedSafeCompleter.typeCheck` for the design trade-off.
-  ///
-  /// The fix: iterate every `ReservedSafeCompleter` regardless of its type
-  /// parameter, then use the completer's `typeCheck` closure (captured when
-  /// the completer was constructed and `T` was lexically in scope) to
-  /// decide whether `value` is assignable to it. That closure is compiled
-  /// into a real type predicate by dart2js and survives release-mode
-  /// optimisation.
+  /// Iterates every pending completer regardless of its type parameter and
+  /// delegates the type test to the completer's captured `typeCheck` closure
+  /// — `.whereType<ReservedSafeCompleter<T>>()` is unreliable under dart2js
+  /// release. See `ReservedSafeCompleter.typeCheck`.
   void _maybeFinish<T extends Object>({
-    required FutureOr<Object> value, // General "Object"
+    required FutureOr<Object> value,
     required Entity g,
   }) {
-    // The typeCheck predicate needs a non-Future Object to evaluate. If the
-    // registered value is itself a Future, we fall back to the original
-    // try/cast dance — that path works correctly on the VM and in debug
-    // web, and it's vanishingly rare in practice (registering a Future as
-    // a dependency value, not wrapping it in a completer).
-    //
-    // NOTE: under dart2js release, this Future-fallback path can mis-match
-    // due to generic erasure of `T`. Callers who register a Future-valued
-    // dependency and rely on `until*` on Web release should wrap the value
-    // in a non-Future container (or use a completer) until this fallback
-    // is replaced with a deferred-resolution scheme.
+    // `typeCheck` needs a non-Future Object. Future-valued registrations
+    // fall back to the try/cast dance — works on VM and debug web, but
+    // generic erasure can mis-match under dart2js release. Callers wanting
+    // `until*` on Web release should not register raw Futures.
     final checkValue = value is Future ? null : value;
 
     for (final di in [this as DI, ...children().unwrapOr([])]) {
-      // Walk this container's deps and pull out every Ok-Sync-resolved
-      // `ReservedSafeCompleter` via pattern matching. The destructuring
-      // means we never call `.unwrap()` on an Err or an Async dep —
-      // those branches are filtered structurally.
-      //
-      // We intentionally DON'T filter on `ReservedSafeCompleter<T>` here
-      // because dart2js release makes generic-parameter matching
-      // unreliable. The completer's own `typeCheck` does the real filter.
-      //
-      // Use the internal `groupSlots` accessor here, NOT `state[g]?.values`.
-      // The public `state` getter deep-copies the entire registry (which is
-      // its documented safety contract for external callers); doing that on
-      // every `register` allocates O(N-groups + N-deps) per call. The
-      // internal accessor still snapshots the ONE group we care about (so
-      // re-entrant register/unregister inside a completer chain cannot
-      // throw `ConcurrentModificationError`), but skips the outer copy.
+      // `groupSlots` snapshots only the target group; the public `state`
+      // getter deep-copies the entire registry and would allocate per
+      // register call.
       final slots = di.registry.groupSlots(g);
       if (slots == null) continue;
       final completers = slots
@@ -282,23 +208,22 @@ base class DIBase {
 
       for (final completer in completers) {
         if (checkValue != null) {
-          // Fast, reliable path: the completer knows its own T.
           if (!completer.typeCheck(checkValue)) continue;
           if (!completer.isCompleted) {
             completer.complete(value).end();
             break;
           }
         } else {
-          // Future value — preserve the original behaviour. See note above.
+          // Future-valued fallback — see method doc.
           try {
             (completer as ReservedSafeCompleter<T>)
                 .complete(value as FutureOr<T>)
                 .end();
             break;
           } on TypeError {
-            // Skip completers whose type T doesn't accept this value.
+            // Wrong T.
           } on StateError {
-            // Skip already-completed completers.
+            // Already completed.
           }
         }
       }
@@ -353,21 +278,14 @@ base class DIBase {
     final g = groupEntity.preferOverDefault(focusGroup);
     final removed = <Dependency>[];
 
-    // Walk the FULL ancestor chain (with cycle detection) — not just direct
-    // parents — so `unregister(traverse: true, removeAll: true)` and
-    // `isRegistered(traverse: true)` agree on which deps exist. Previously
-    // `unregister` only touched `this` and direct parents, so a grandparent
-    // registration that `isRegistered` could see would survive a deep
-    // unregister — a real reliability hole on three-level hierarchies.
+    // Walk the full ancestor chain so `unregister(traverse: true)` and
+    // `isRegistered(traverse: true)` agree on which deps exist.
     final containers = traverse ? _allAncestors() : <DI>[this as DI];
     walk:
     for (final di in containers) {
       switch (di.removeDependency<T>(groupEntity: g)) {
         case Some(value: final dep):
           removed.add(dep);
-          // Clean up any pending untilExactlyK completers for this type.
-          // The cast is guarded because DIBase itself does NOT require
-          // SupportsMixinK — only the concrete `DI` mixes it in.
           (di as SupportsMixinK).cleanupCompleters(
             TypeEntity(T),
             groupEntity: g,
@@ -405,22 +323,15 @@ base class DIBase {
     return result;
   }
 
-  /// Fires `onUnregister` for every entry in [removed] (in order), then
-  /// resolves with the value of the first removed dependency. Medical-grade
-  /// callers cannot afford silently-dropped cleanup callbacks, so every
-  /// removed dep's callback runs — synchronous throws are logged and the
-  /// chain continues.
+  /// Fires `onUnregister` for every entry in [removed] in order, then
+  /// resolves with the value of the first removed dependency. Sync throws
+  /// are logged and the chain continues so no cleanup is silently dropped.
   Resolvable<Option<T>> _runOnUnregisterChain<T extends Object>({
     required List<Dependency> removed,
     required bool triggerOnUnregisterCallbacks,
   }) {
-    // Convert the first removed dep's resolved value to Option<T>: Ok → Some,
-    // Err → None. We CANNOT use `firstResolvable.then(...)` here because
-    // `Async.then` short-circuits on Err — the chain would silently skip
-    // every onUnregister callback whenever the dep's value resolved to Err
-    // (e.g. a Future-valued registration that rejected). Mission-critical
-    // callers register onUnregister precisely to clean up such failures, so
-    // we explicitly walk the Result.
+    // Walk the Result manually — `Async.then` short-circuits on Err and
+    // would skip onUnregister for Err-resolved deps.
     final firstDep = removed.first.transf<T>();
     var chain = _firstResolvedToOption<T>(firstDep);
 
@@ -429,8 +340,6 @@ base class DIBase {
     }
 
     for (final dep in removed) {
-      // Skip deps with no metadata or no onUnregister cb. Pattern matching
-      // makes both "skip" paths structural — no unwraps on a None.
       if (dep.metadata case Some(value: final meta)) {
         if (meta.onUnregister case Some(value: final cb)) {
           chain = _chainOnUnregisterStep<T>(chain, dep, cb);
@@ -440,9 +349,8 @@ base class DIBase {
     return chain;
   }
 
-  /// Resolves a single dep's `Resolvable<T>` to `Option<T>`: `Ok(v)` → `Some(v)`,
-  /// `Err` → `None`. Preserves the Sync fast-path. Exhaustive pattern
-  /// matching makes every Resolvable × Result combination explicit.
+  /// Resolves `Resolvable<T>` to `Option<T>`: `Ok(v)` → `Some(v)`,
+  /// `Err` → `None`. Preserves the Sync fast-path.
   Resolvable<Option<T>> _firstResolvedToOption<T extends Object>(
     Dependency<T> dep,
   ) {
@@ -459,16 +367,14 @@ base class DIBase {
   }
 
   /// Chains an `onUnregister` step onto [chain]. The callback fires with the
-  /// dep's resolved `Result` (Ok or Err) — callers must clean up on both
+  /// dep's resolved `Result` (Ok or Err) so callers can clean up on both
   /// success and failure. Preserves the Sync fast-path.
   Resolvable<Option<T>> _chainOnUnregisterStep<T extends Object>(
     Resolvable<Option<T>> chain,
     Dependency dep,
     TOnUnregisterCallback<Object> cb,
   ) {
-    // Sync fast-path: only fire when BOTH the running chain and the dep's
-    // value are synchronous. Pattern-match both at once so the Err branch
-    // is encoded structurally, not via .isErr/.unwrap.
+    // Sync fast-path only fires when both chain and dep are synchronous.
     if (chain case Sync<Option<T>>(value: final accResult)) {
       if (dep.value case Sync<Object>(value: final depResult)) {
         return switch (accResult) {
@@ -477,7 +383,6 @@ base class DIBase {
         };
       }
     }
-    // Async path — explicit await to get both Results, then fire cb.
     return Async<Option<T>>(() async {
       final acc = switch (await chain.value) {
         Err<Option<T>> err => throw err,
@@ -495,11 +400,6 @@ base class DIBase {
   /// Fires a single `onUnregister` callback and resolves to [acc] regardless
   /// of whether the callback succeeded, failed synchronously (logged), or
   /// errored asynchronously (propagated).
-  ///
-  /// Extracted so the outer chain can stay free of `FutureOr<Outcome>` types
-  /// — the `must_await_all_futures` / `no_future_outcome_type_or_error` lints
-  /// only visit annotated callback bodies, and this helper sits outside any
-  /// such annotation.
   Resolvable<Option<T>> _fireOnUnregister<T extends Object>(
     TOnUnregisterCallback<Object> cb,
     Result<Object> depResult,
@@ -515,9 +415,8 @@ base class DIBase {
       );
       return Sync<Option<T>>.okValue(acc);
     }
-    // For onUnregister we follow the documented contract: sync failures are
-    // logged and the chain continues; async failures propagate. The helper
-    // honours both shapes (Future / Resolvable) and the logSyncErr flag.
+    // Sync failures are logged and the chain continues; async failures
+    // propagate.
     final FutureOr<void> awaited;
     try {
       awaited = awaitCallbackResult(
@@ -526,8 +425,6 @@ base class DIBase {
         logContext: 'onUnregister for ${dep.runtimeType}',
       );
     } catch (e) {
-      // Sync `throw v` from the helper only fires when
-      // logAndSwallowSyncErr=false; for unregister it stays a no-op.
       Log.err('onUnregister for ${dep.runtimeType} surfaced sync error: $e');
       return Sync<Option<T>>.okValue(acc);
     }
@@ -560,30 +457,30 @@ base class DIBase {
   /// [groupEntity]. Strict: a `Lazy<T>` registration does NOT count here —
   /// callers wanting that must check `isRegistered<Lazy<T>>()`. Mirrors the
   /// keying contract of the registry's insert/remove.
+  ///
+  /// Iterative DFS over the parent chain so deep hierarchies cannot blow
+  /// the call stack. Cycle-safe via the internal `seen` set.
   bool isRegistered<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
+    @Deprecated('Cycle detection is internal; this parameter is now ignored.')
     Set<DI>? visited,
   }) {
     assert(T != Object, 'T must be specified and cannot be Object.');
-    // Cycle guard: a misconfigured hierarchy (`a.parents.add(b)` and
-    // `b.parents.add(a)`) would otherwise stack-overflow. The `visited`
-    // parameter is internal — public callers should leave it null.
-    final v = visited ?? <DI>{};
-    if (!v.add(this as DI)) return false;
-    final g = groupEntity.preferOverDefault(focusGroup);
-    if (registry.containsDependency<T>(groupEntity: g)) {
-      return true;
-    }
-    if (traverse) {
-      for (final parent in parents) {
-        if (parent.isRegistered<T>(
-          groupEntity: g,
-          traverse: true,
-          visited: v,
-        )) {
-          return true;
-        }
+    final seen = <DI>{};
+    final stack = <(DI, Entity)>[
+      (this as DI, groupEntity.preferOverDefault(focusGroup)),
+    ];
+    while (stack.isNotEmpty) {
+      final (di, g) = stack.removeLast();
+      if (!seen.add(di)) continue;
+      if (di.registry.containsDependency<T>(groupEntity: g)) return true;
+      if (!traverse) break;
+      // Push in reverse so first parent is popped first (sibling order).
+      final parentList = di.parents.toList(growable: false);
+      for (var i = parentList.length - 1; i >= 0; i--) {
+        final parent = parentList[i];
+        stack.add((parent, g.preferOverDefault(parent.focusGroup)));
       }
     }
     return false;
@@ -663,9 +560,6 @@ base class DIBase {
   }
 
   /// Retrieves a synchronous dependency or `None` if not found or async.
-  /// Single exhaustive pattern collapses the Option × Resolvable × Result
-  /// state space — every "not found / not sync / not ok" branch falls into
-  /// the wildcard, so we can't accidentally return a partial value.
   Option<T> getSyncOrNone<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
@@ -685,9 +579,6 @@ base class DIBase {
     assert(T != Object, 'T must be specified and cannot be Object.');
     final g = groupEntity.preferOverDefault(focusGroup);
     final option = getDependency<T>(groupEntity: g, traverse: traverse);
-    // Outer pattern: collapse the Option<Result<Dependency<T>>>. Each branch
-    // is structural — no .unwrap() on a None or Err sits between us and the
-    // dependency.
     return switch (option) {
       None() => const None(),
       Some(value: Err(:final error, :final stackTrace)) => Some(
@@ -698,33 +589,40 @@ base class DIBase {
           Async<T>(value: final fut) => Some(
               Async<T>(
                 () => fut.then((e) {
-                  // If the async slot resolved to Err, propagate by throwing —
-                  // the surrounding `Async()` constructor absorbs the throw
-                  // into an Err Result on its own value.
+                  // Throw on Err — the surrounding Async() absorbs it.
                   final value = switch (e) {
                     Ok(value: final v) => v,
                     Err(:final error, :final stackTrace) =>
                       throw Err<T>(error, stackTrace: stackTrace),
                   };
-                  // Replace the Async slot with a Sync slot holding the
-                  // resolved value (memoisation). The remove may already
-                  // be a no-op if a concurrent unregister won the race; the
-                  // re-register skips its dup-check by design.
-                  registry.removeDependency<T>(groupEntity: g).end();
-                  switch (registerDependency<T>(
-                    dependency: Dependency<T>(
-                      Sync<T>.okValue(value),
-                      metadata: dep.metadata,
-                    ),
-                    checkExisting: false,
-                  )) {
-                    case Ok():
-                      break;
-                    case Err(:final error):
-                      // Should be unreachable with checkExisting: false; if it
-                      // still fires we surface the cause rather than silently
-                      // returning the resolved value with stale registry state.
-                      throw error;
+                  // Memoise the resolved value as Sync, but ONLY when the
+                  // registry slot still belongs to this Dependency. A
+                  // concurrent `unregister<T>()` (or `unregister` + new
+                  // `register<T>(...)`) between the time we captured `dep`
+                  // and the time the async resolves would otherwise be
+                  // silently undone — we'd remove the user's new
+                  // registration and re-write a stale Sync slot. Identity
+                  // comparison detects both scenarios:
+                  //  * slot is None  → user unregistered. Skip the swap.
+                  //  * slot is Some(other) where other != dep → user
+                  //    re-registered. Skip the swap; their new state wins.
+                  //  * slot is Some(dep) (identical) → safe to memoise.
+                  final current = registry.getDependency<T>(groupEntity: g);
+                  if (current case Some(value: final inSlot)
+                      when identical(inSlot, dep)) {
+                    registry.removeDependency<T>(groupEntity: g).end();
+                    switch (registerDependency<T>(
+                      dependency: Dependency<T>(
+                        Sync<T>.okValue(value),
+                        metadata: dep.metadata,
+                      ),
+                      checkExisting: false,
+                    )) {
+                      case Ok():
+                        break;
+                      case Err(:final error):
+                        throw error;
+                    }
                   }
                   return value;
                 }),
@@ -750,30 +648,32 @@ base class DIBase {
   }
 
   /// Retrieves the underlying `Dependency` object from the registry.
-  ///
-  /// [visited] is for internal cycle-detection — see [isRegistered].
+  /// Iterative DFS — see [isRegistered].
   Option<Result<Dependency<T>>> getDependency<T extends Object>({
     Entity groupEntity = const DefaultEntity(),
     bool traverse = true,
+    @Deprecated('Cycle detection is internal; this parameter is now ignored.')
     Set<DI>? visited,
   }) {
-    final v = visited ?? <DI>{};
-    if (!v.add(this as DI)) return const None();
-    final g = groupEntity.preferOverDefault(focusGroup);
-    final option = registry.getDependency<T>(groupEntity: g);
-    var temp = option.map((e) => Ok(e).transf<Dependency<T>>());
-    if (option case None() when traverse) {
-      for (final parent in parents) {
-        temp = parent.getDependency<T>(
-          groupEntity: g,
-          visited: v,
-        );
-        if (temp case Some()) {
-          break;
-        }
+    final seen = <DI>{};
+    final stack = <(DI, Entity)>[
+      (this as DI, groupEntity.preferOverDefault(focusGroup)),
+    ];
+    while (stack.isNotEmpty) {
+      final (di, g) = stack.removeLast();
+      if (!seen.add(di)) continue;
+      final option = di.registry.getDependency<T>(groupEntity: g);
+      if (option case Some()) {
+        return option.map((e) => Ok(e).transf<Dependency<T>>());
+      }
+      if (!traverse) break;
+      final parentList = di.parents.toList(growable: false);
+      for (var i = parentList.length - 1; i >= 0; i--) {
+        final parent = parentList[i];
+        stack.add((parent, g.preferOverDefault(parent.focusGroup)));
       }
     }
-    return temp;
+    return const None();
   }
 
   /// Waits until a dependency of type `TSuper` is registered. `TSuper` should
@@ -813,11 +713,7 @@ base class DIBase {
             groupEntity: g,
             traverse: traverse,
           ).end();
-          // The completer was resolved because `_maybeFinish` saw a matching
-          // register — so `get<TSuper>` should find it. If a concurrent
-          // unregister wiped the slot between completion and now, surface an
-          // Err Resolvable instead of throwing — callers chained off the
-          // outer `.flatten().transf()` then see a normal failure.
+          // Surface Err on a post-resolution race rather than throw.
           return switch (get<TSuper>(groupEntity: g, traverse: traverse)) {
             Some(value: final r) => r,
             None() => Sync<TSuper>.err(
@@ -830,11 +726,9 @@ base class DIBase {
         .transf();
   }
 
-  /// Constructs a fresh [ReservedSafeCompleter] keyed on [typeEntity] under
-  /// [g], registers it here, and (when [traverse]) seeds the SAME instance
-  /// into every ancestor that doesn't already carry one. Extracted from
-  /// `until` so the caller stays a single `switch` expression — the
-  /// fall-through control flow is what made the previous form hard to audit.
+  /// Constructs a [ReservedSafeCompleter] keyed on [typeEntity] under [g],
+  /// registers it here, and (when [traverse]) seeds the SAME instance into
+  /// every ancestor that doesn't already carry one.
   ReservedSafeCompleter<TSuper> _seedCompleter<TSuper extends Object>(
     Entity typeEntity,
     Entity g,
@@ -843,14 +737,9 @@ base class DIBase {
     final c = ReservedSafeCompleter<TSuper>(typeEntity);
     register(c, groupEntity: g).end();
     if (traverse) {
-      // ALSO seed the same completer into every ancestor that this
-      // container considers a parent. Otherwise an ancestor's
-      // `register<TSuper>(...)` would walk its own registry +
-      // childrenContainer (top-down only) and never see this bottom-up
-      // `parents.add` wire — leaving the waiter to hang even though
-      // `child.getDependency<TSuper>(traverse: true)` would have found
-      // the same registration. We share ONE completer instance so all
-      // sites resolve together.
+      // Ancestors only walk top-down (own registry + childrenContainer),
+      // so a bottom-up `parents.add` wire wouldn't be seen otherwise. The
+      // single shared completer lets every site resolve together.
       for (final ancestor in _allAncestors().skip(1)) {
         if (ancestor.isRegistered<ReservedSafeCompleter<TSuper>>(
           groupEntity: g,
@@ -877,10 +766,9 @@ base class DIBase {
   }) {
     UNSAFE:
     return Resolvable(() {
-      // Snapshot the registry's unsorted dependencies up front so a
-      // re-entrant register/unregister fired from `wait`'s callback (which
-      // recursively calls `resolveAll`) cannot trigger
-      // `ConcurrentModificationError` while we're still iterating.
+      // Snapshot up front: `wait`'s callback recursively calls `resolveAll`,
+      // and a re-entrant register/unregister would otherwise raise
+      // ConcurrentModificationError.
       var resolvables = registry.unsortedDependencies
           .toList(growable: false)
           .cast<Dependency>();
