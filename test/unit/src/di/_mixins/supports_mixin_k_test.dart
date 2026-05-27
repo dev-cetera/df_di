@@ -9,6 +9,8 @@
 //
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 
+// ignore_for_file: sendable
+
 // Tests targeted at `SupportsMixinK`: the `Entity`-keyed lookup / probe /
 // registration-completer API. Covers getK / getSyncK / getSyncOrNoneK /
 // isRegisteredK / unregisterK / removeDependencyK / getDependencyK /

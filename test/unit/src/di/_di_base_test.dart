@@ -9,6 +9,8 @@
 //
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 
+// ignore_for_file: sendable
+
 // Public-API tests for the `DIBase` surface exposed via `DI`. Covers:
 //
 //   * register / get / getOrNull / getSync / getAsync / getSyncOrNone
@@ -587,7 +589,7 @@ void main() {
         switch (di.children()) {
           case Some(value: final list):
             for (final _ in list.toList()) {
-              di.unregisterChild(groupEntity: TypeEntity('a'));
+              di.unregisterChild(groupEntity: TypeEntity('a')).end();
             }
           case None():
         }

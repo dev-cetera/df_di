@@ -49,6 +49,7 @@ void main() {
     });
 
     test('Async carrying Err throws when awaited', () async {
+      UNSAFE:
       final raw = Async<Unit>.err(Err('async bomb'));
       final result = awaitCallbackResult(
         raw,

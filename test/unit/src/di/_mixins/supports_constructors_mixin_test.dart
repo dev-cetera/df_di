@@ -111,7 +111,7 @@ void main() {
       final di = DI();
       di.registerLazy<Repo>(() => Sync.okValue(Repo('s'))).end();
       // Force singleton construction.
-      di.getLazySingleton<Repo>();
+      di.getLazySingleton<Repo>().end();
       UNSAFE:
       final v = di.getLazySingletonSyncOrNone<Repo>().unwrap();
       expect(v.label, 's');

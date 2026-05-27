@@ -9,6 +9,8 @@
 //
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 
+// ignore_for_file: sendable
+
 // Tests for `DIRegistry` — the underlying storage map. Construction,
 // setDependency/getDependency/removeDependency, group operations
 // (setGroup/getGroup/removeGroup/clear), the reverse type-index
@@ -166,7 +168,7 @@ void main() {
       r.setGroup(
         {
           TypeEntity(Sync, [TypeEntity(_C)]):
-              _dep<_C>(const _C(), groupEntity: g)
+              _dep<_C>(const _C(), groupEntity: g),
         },
         groupEntity: g,
       );
@@ -312,7 +314,7 @@ void main() {
       final r = DIRegistry();
       final g = TypeEntity('grp');
       r.setDependency(_dep<_A>(const _A('x'), groupEntity: g));
-      r.removeDependency<_A>(groupEntity: g);
+      r.removeDependency<_A>(groupEntity: g).end();
       expect(
         r.groupsWithTypeK(TypeEntity(Sync, [TypeEntity(_A)])),
         isEmpty,
@@ -438,7 +440,7 @@ void main() {
       final r = DIRegistry(onChange: Some(() => fired++));
       r.setDependency(_dep<_A>(const _A('x')));
       fired = 0;
-      r.removeDependency<_A>();
+      r.removeDependency<_A>().end();
       expect(fired, 1);
     });
 
@@ -467,7 +469,7 @@ void main() {
       final dep = _dep<_A>(const _A('x'));
       r.setDependency(dep);
       fired = 0;
-      r.removeDependencyExact(dep.typeEntity);
+      r.removeDependencyExact(dep.typeEntity).end();
       expect(fired, 1);
     });
   });
