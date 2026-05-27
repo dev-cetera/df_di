@@ -80,7 +80,8 @@ void main() {
       },
     );
 
-    test('HashMap correctness: forged Entity cannot retrieve a UniqueEntity value',
+    test(
+        'HashMap correctness: forged Entity cannot retrieve a UniqueEntity value',
         () {
       final ue = UniqueEntity();
       final map = <Entity, String>{ue: 'secret'};
@@ -145,8 +146,7 @@ void main() {
       },
     );
 
-    test('isRegistered terminates on a cyclic parent chain of length 5000',
-        () {
+    test('isRegistered terminates on a cyclic parent chain of length 5000', () {
       final chain = <DI>[for (var i = 0; i < 5000; i++) DI()];
       for (var i = 0; i < chain.length - 1; i++) {
         chain[i].parents.add(chain[i + 1]);
@@ -166,9 +166,7 @@ void main() {
         final children = parent.childrenContainer.unwrap();
         // Adversarial: bypass registerChild and write a Lazy<_NotDI>
         // directly into the children container.
-        children
-            .registerLazy<_NotDI>(() => Sync.okValue(const _NotDI()))
-            .end();
+        children.registerLazy<_NotDI>(() => Sync.okValue(const _NotDI())).end();
         Result<Option<DI>> result;
         try {
           result = parent.unregisterChildT(_NotDI);

@@ -43,13 +43,15 @@ void main() {
 
     test('getLazySyncOrNoneK returns None when unregistered', () {
       final di = DI();
-      expect(di.getLazySyncOrNoneK<Widget>(TypeEntity(Widget)).isNone(), isTrue);
+      expect(
+          di.getLazySyncOrNoneK<Widget>(TypeEntity(Widget)).isNone(), isTrue);
     });
 
     test('getLazySyncOrNoneK returns Some(Lazy<T>) when registered', () {
       final di = DI();
       di.registerLazy<Widget>(() => Sync.okValue(Widget('w'))).end();
-      expect(di.getLazySyncOrNoneK<Widget>(TypeEntity(Widget)).isSome(), isTrue);
+      expect(
+          di.getLazySyncOrNoneK<Widget>(TypeEntity(Widget)).isSome(), isTrue);
     });
   });
 

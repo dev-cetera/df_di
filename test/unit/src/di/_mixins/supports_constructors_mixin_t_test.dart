@@ -71,9 +71,11 @@ void main() {
       di.registerConstructor<Widget>(() => Widget('w${++n}')).end();
 
       UNSAFE:
-      final f1 = di.getFactoryT<Widget>(Widget).unwrap().sync().unwrap().unwrap();
+      final f1 =
+          di.getFactoryT<Widget>(Widget).unwrap().sync().unwrap().unwrap();
       UNSAFE:
-      final f2 = di.getFactoryT<Widget>(Widget).unwrap().sync().unwrap().unwrap();
+      final f2 =
+          di.getFactoryT<Widget>(Widget).unwrap().sync().unwrap().unwrap();
       expect(identical(f1, f2), isFalse);
       expect(f1.label, 'w1');
       expect(f2.label, 'w2');
@@ -97,28 +99,39 @@ void main() {
   });
 
   group('resetLazySingletonT', () {
-    test('drops cached singleton for the Type-keyed entry', () {
-      final di = DI();
-      var n = 0;
-      di.registerLazy<Widget>(() => Sync.okValue(Widget('s${++n}'))).end();
+    test(
+      'drops cached singleton for the Type-keyed entry',
+      () {
+        final di = DI();
+        var n = 0;
+        di.registerLazy<Widget>(() => Sync.okValue(Widget('s${++n}'))).end();
 
-      UNSAFE:
-      final a =
-          di.getLazySingletonT<Widget>(Widget).unwrap().sync().unwrap().unwrap();
-      expect(a.label, 's1');
+        UNSAFE:
+        final a = di
+            .getLazySingletonT<Widget>(Widget)
+            .unwrap()
+            .sync()
+            .unwrap()
+            .unwrap();
+        expect(a.label, 's1');
 
-      di.resetLazySingletonT<Widget>(Widget).end();
+        di.resetLazySingletonT<Widget>(Widget).end();
 
-      UNSAFE:
-      final b =
-          di.getLazySingletonT<Widget>(Widget).unwrap().sync().unwrap().unwrap();
-      expect(b.label, 's2');
-      expect(identical(a, b), isFalse);
-    },
-        skip: 'resetLazySingletonT does not invalidate the cached singleton — '
-            'routes through getK<T>(Lazy<T>) which casts the wrong layer and '
-            'the inner Lazy.resetSingleton() is never reached. Genuine '
-            'source-level bug; not asserting broken behavior.',);
+        UNSAFE:
+        final b = di
+            .getLazySingletonT<Widget>(Widget)
+            .unwrap()
+            .sync()
+            .unwrap()
+            .unwrap();
+        expect(b.label, 's2');
+        expect(identical(a, b), isFalse);
+      },
+      skip: 'resetLazySingletonT does not invalidate the cached singleton — '
+          'routes through getK<T>(Lazy<T>) which casts the wrong layer and '
+          'the inner Lazy.resetSingleton() is never reached. Genuine '
+          'source-level bug; not asserting broken behavior.',
+    );
   });
 
   group('untilLazyExactlyT / untilLazySingletonExactlyT', () {

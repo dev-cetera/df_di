@@ -197,7 +197,8 @@ void main() {
   });
 
   group('PollingStreamService: producer errors propagate', () {
-    test('Sync.err from onPoll propagates as Err to listeners; service stays up',
+    test(
+        'Sync.err from onPoll propagates as Err to listeners; service stays up',
         () async {
       final s = _FailingPoller();
       (await s.init().value).end();

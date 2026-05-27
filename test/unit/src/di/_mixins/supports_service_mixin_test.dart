@@ -91,7 +91,8 @@ void main() {
       expect(di.isRegistered<TestService>(), isTrue);
     });
 
-    test('the registered service is retrievable as the same instance', () async {
+    test('the registered service is retrievable as the same instance',
+        () async {
       final di = DI();
       final s = TestService();
       (await di.registerAndInitService<TestService>(s).toAsync().value).end();
@@ -182,8 +183,10 @@ void main() {
       () async {
         final di = DI();
         final s = TestService();
-        final waiter =
-            di.untilExactlyK<TestService>(TypeEntity(TestService)).toAsync().value;
+        final waiter = di
+            .untilExactlyK<TestService>(TypeEntity(TestService))
+            .toAsync()
+            .value;
 
         (await di
                 .registerAndInitService<TestService>(

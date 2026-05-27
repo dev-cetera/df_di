@@ -164,7 +164,10 @@ void main() {
 
       // Replace with a different shape.
       r.setGroup(
-        {TypeEntity(Sync, [TypeEntity(_C)]): _dep<_C>(const _C(), groupEntity: g)},
+        {
+          TypeEntity(Sync, [TypeEntity(_C)]):
+              _dep<_C>(const _C(), groupEntity: g)
+        },
         groupEntity: g,
       );
       expect(r.containsDependency<_A>(groupEntity: g), isFalse);
@@ -278,9 +281,8 @@ void main() {
       final r = DIRegistry();
       final g = TypeEntity('grp');
       r.setDependency(_dep<_A>(const _A('x'), groupEntity: g));
-      final groups = r
-          .groupsWithTypeK(TypeEntity(Sync, [TypeEntity(_A)]))
-          .toSet();
+      final groups =
+          r.groupsWithTypeK(TypeEntity(Sync, [TypeEntity(_A)])).toSet();
       expect(groups.contains(g), isTrue);
     });
 

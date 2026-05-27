@@ -101,7 +101,8 @@ void main() {
       expect(result, isNull);
     });
 
-    test('arbitrary object that is none of the recognized shapes '
+    test(
+        'arbitrary object that is none of the recognized shapes '
         'returns null', () {
       final result = awaitCallbackResult(
         Object(),
@@ -110,7 +111,8 @@ void main() {
       expect(result, isNull);
     });
 
-    test('arbitrary object also returns null when '
+    test(
+        'arbitrary object also returns null when '
         'logAndSwallowSyncErr=true', () {
       final result = awaitCallbackResult(
         'a plain string',

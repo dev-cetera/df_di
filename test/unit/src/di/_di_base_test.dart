@@ -329,10 +329,7 @@ void main() {
         parent.register<_A>(const _A('p')).end();
         child.register<_A>(const _A('c')).end();
 
-        (await child
-                .unregister<_A>(removeAll: false)
-                .value)
-            .end();
+        (await child.unregister<_A>(removeAll: false).value).end();
         // Parent still has its registration.
         expect(parent.isRegistered<_A>(), isTrue);
       },

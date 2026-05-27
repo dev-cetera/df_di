@@ -92,10 +92,7 @@ void main() {
       di.register<Alpha>(Alpha('a')).end();
       di.register<Beta>(Beta('b')).end();
 
-      (await di
-              .unregisterAll(condition: Some((_) => false))
-              .toAsync()
-              .value)
+      (await di.unregisterAll(condition: Some((_) => false)).toAsync().value)
           .end();
 
       expect(di.isRegistered<Alpha>(), isTrue);
@@ -170,15 +167,13 @@ void main() {
         final di = DI();
         final order = <String>[];
 
-        di
-            .register<Alpha>(
-              Alpha('a'),
-              onUnregister: Some((_) {
-                order.add('dep.alpha');
-                return null;
-              }),
-            )
-            .end();
+        di.register<Alpha>(
+          Alpha('a'),
+          onUnregister: Some((_) {
+            order.add('dep.alpha');
+            return null;
+          }),
+        ).end();
 
         (await di
                 .unregisterAll(

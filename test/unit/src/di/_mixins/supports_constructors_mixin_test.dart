@@ -107,8 +107,7 @@ void main() {
       expect(di.getLazySingletonSyncOrNone<Repo>().isNone(), isTrue);
     });
 
-    test('getLazySingletonSyncOrNone returns Some after singleton is read',
-        () {
+    test('getLazySingletonSyncOrNone returns Some after singleton is read', () {
       final di = DI();
       di.registerLazy<Repo>(() => Sync.okValue(Repo('s'))).end();
       // Force singleton construction.

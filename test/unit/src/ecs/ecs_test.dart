@@ -485,8 +485,8 @@ void main() {
         );
         world.addSystem(
           FunctionSystem((w, _) {
-            observed += w.readEvents<_BaseEvent>().where((e) => e.id == 99)
-                .length;
+            observed +=
+                w.readEvents<_BaseEvent>().where((e) => e.id == 99).length;
           }),
         );
         world.update(Duration.zero);
