@@ -246,6 +246,22 @@ final class DIRegistry {
     return getDependencyK(TypeEntity(type), groupEntity: groupEntity);
   }
 
+  /// Returns the actually-stored [Dependency] under `[typeEntity]` /
+  /// `[groupEntity]`, by reference identity. Returns `null` if the slot is
+  /// empty.
+  ///
+  /// Use this only when you need a stable identity for the stored slot
+  /// (e.g. "is the slot I captured earlier still mine?"). For typed
+  /// retrieval, use [getDependency], which re-wraps via `.transf<T>()`.
+  @internal
+  @pragma('vm:prefer-inline')
+  Dependency? getSlot(
+    Entity typeEntity, {
+    Entity groupEntity = const DefaultEntity(),
+  }) {
+    return _state[groupEntity]?[typeEntity];
+  }
+
   /// Returns any dependency with the exact [typeEntity] under the specified
   /// [groupEntity]. Unlike [getDependency], this will not include subtypes.
   @pragma('vm:prefer-inline')

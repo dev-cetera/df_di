@@ -586,48 +586,63 @@ base class DIBase {
         ),
       Some(value: Ok(value: final dep)) => switch (dep.value) {
           Sync<T>() => Some(dep.value),
-          Async<T>(value: final fut) => Some(
-              Async<T>(
-                () => fut.then((e) {
-                  // Throw on Err — the surrounding Async() absorbs it.
-                  final value = switch (e) {
-                    Ok(value: final v) => v,
-                    Err(:final error, :final stackTrace) =>
-                      throw Err<T>(error, stackTrace: stackTrace),
-                  };
-                  // Memoise the resolved value as Sync, but ONLY when the
-                  // registry slot still belongs to this Dependency. A
-                  // concurrent `unregister<T>()` (or `unregister` + new
-                  // `register<T>(...)`) between the time we captured `dep`
-                  // and the time the async resolves would otherwise be
-                  // silently undone — we'd remove the user's new
-                  // registration and re-write a stale Sync slot. Identity
-                  // comparison detects both scenarios:
-                  //  * slot is None  → user unregistered. Skip the swap.
-                  //  * slot is Some(other) where other != dep → user
-                  //    re-registered. Skip the swap; their new state wins.
-                  //  * slot is Some(dep) (identical) → safe to memoise.
-                  final current = registry.getDependency<T>(groupEntity: g);
-                  if (current case Some(value: final inSlot)
-                      when identical(inSlot, dep)) {
-                    registry.removeDependency<T>(groupEntity: g).end();
-                    switch (registerDependency<T>(
-                      dependency: Dependency<T>(
-                        Sync<T>.okValue(value),
-                        metadata: dep.metadata,
-                      ),
-                      checkExisting: false,
-                    )) {
-                      case Ok():
-                        break;
-                      case Err(:final error):
-                        throw error;
+          Async<T>(value: final fut) => () {
+              // Capture the actually-stored slot (by identity) at scheduling
+              // time. `dep` is a `.transf<T>()` view returned by
+              // `registry.getDependency<T>()` — a fresh wrapper, never the
+              // stored instance — so we cannot identity-compare against `dep`
+              // directly. The registry slot key is `dep.typeEntity`.
+              final slotKey = dep.typeEntity;
+              final originalSlot = registry.getSlot(
+                slotKey,
+                groupEntity: g,
+              );
+              return Some(
+                Async<T>(
+                  () => fut.then((e) {
+                    // Throw on Err — the surrounding Async() absorbs it.
+                    final value = switch (e) {
+                      Ok(value: final v) => v,
+                      Err(:final error, :final stackTrace) =>
+                        throw Err<T>(error, stackTrace: stackTrace),
+                    };
+                    // Memoise the resolved value as Sync, but ONLY when the
+                    // registry slot still belongs to the original Dependency
+                    // by reference. A concurrent `unregister<T>()` (or
+                    // `unregister` + new `register<T>(...)`) between the time
+                    // we scheduled the then-callback and the time the async
+                    // resolves would otherwise be silently undone — we'd
+                    // remove the user's new registration and re-write a stale
+                    // Sync slot. Identity comparison detects both scenarios:
+                    //  * slot is null  → user unregistered. Skip the swap.
+                    //  * slot is other → user re-registered. Skip; their new
+                    //    state wins.
+                    //  * slot is identical to originalSlot → safe to memoise.
+                    final currentSlot = registry.getSlot(
+                      slotKey,
+                      groupEntity: g,
+                    );
+                    if (originalSlot != null &&
+                        identical(currentSlot, originalSlot)) {
+                      registry.removeDependency<T>(groupEntity: g).end();
+                      switch (registerDependency<T>(
+                        dependency: Dependency<T>(
+                          Sync<T>.okValue(value),
+                          metadata: dep.metadata,
+                        ),
+                        checkExisting: false,
+                      )) {
+                        case Ok():
+                          break;
+                        case Err(:final error):
+                          throw error;
+                      }
                     }
-                  }
-                  return value;
-                }),
-              ),
-            ),
+                    return value;
+                  }),
+                ),
+              );
+            }(),
         },
     };
   }
