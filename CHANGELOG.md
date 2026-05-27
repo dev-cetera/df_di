@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.16.1]
+
+- update
+
+
 ## 0.16.0
 
 - breaking: `ServiceMixin.init` / `pause` / `resume` return `Err` on invalid lifecycle transitions (`init` after `dispose`, second `init`, `pause` / `resume` before `init`) instead of silently resolving Ok. Idempotent calls (pause-when-paused, resume-when-resumed, dispose-when-disposed) still return `Ok(None)`.
