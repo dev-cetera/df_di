@@ -1,9 +1,8 @@
 # Changelog
 
-## [0.16.1]
+## 0.16.2
 
-- update
-
+- Update dependencies
 
 ## 0.16.0
 
