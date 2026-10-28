@@ -39,7 +39,7 @@ base mixin SupportsChildrenMixin on SupportsConstructorsMixin {
     // parent link; the resulting `Lazy<DI>` is never expected to cross isolate
     // boundaries.
     return container.registerLazy<DI>(
-      // ignore: sendable
+      // ignore: df_safer_dart_lints/sendable
       () => Sync.okValue(DI()..parents.add(this as DI)),
       groupEntity: groupEntity,
     );

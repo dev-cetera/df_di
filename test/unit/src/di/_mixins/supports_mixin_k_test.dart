@@ -9,7 +9,7 @@
 //
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 
-// ignore_for_file: sendable
+// ignore_for_file: df_safer_dart_lints/sendable
 
 // Tests targeted at `SupportsMixinK`: the `Entity`-keyed lookup / probe /
 // registration-completer API. Covers getK / getSyncK / getSyncOrNoneK /

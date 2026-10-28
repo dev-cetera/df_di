@@ -9,7 +9,7 @@
 //
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 
-// ignore_for_file: sendable
+// ignore_for_file: df_safer_dart_lints/sendable
 
 // Tests for `DIRegistry` — the underlying storage map. Construction,
 // setDependency/getDependency/removeDependency, group operations

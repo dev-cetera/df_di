@@ -47,7 +47,7 @@ base mixin SupportsConstructorsMixin on DIBase {
     // arbitrary closures, but the capture set here is provably sendable
     // when callers respect the `@sendable` requirement on `constructor`.
     return registerLazy<T>(
-      // ignore: sendable
+      // ignore: df_safer_dart_lints/sendable
       () => Resolvable<T>(() => constructor()),
       onRegister: onRegister,
       onUnregister: onUnregister,

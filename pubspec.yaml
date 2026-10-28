@@ -45,6 +45,4 @@ dependencies:
 dev_dependencies:
   lints: ^6.0.0
   test: ^1.26.2
-  custom_lint: ^0.8.1
-  df_safer_dart_lints: ^0.5.2
 
