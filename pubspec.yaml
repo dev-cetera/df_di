@@ -15,7 +15,7 @@ name: df_di
 homepage: https://dev-cetera.com/
 repository: https://github.com/dev-cetera/df_di
 description: A pragmatic dependency injection (DI) system, coupled with service classes for seamless state management in Dart.
-version: 0.17.3
+version: 0.17.4
 topics:
   - get-it
   - dependency-injection
