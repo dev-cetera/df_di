@@ -1,5 +1,11 @@
 # Changelog
 
+
+## [0.17.0]
+
+- chore: standardize README and CI/CD workflows, remove donation links, update contact info and repository links
+- chore: resolve analyzer issues
+
 ## 0.16.2
 
 - Update dependencies

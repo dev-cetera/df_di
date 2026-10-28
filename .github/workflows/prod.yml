@@ -86,7 +86,10 @@ jobs:
         uses: dart-lang/setup-dart@v1
 
       - name: Install dependencies
-        run: dart pub get
+        # `--no-example` skips auto-resolution of `./example/`, which can be a
+        # Flutter app even when the package itself is pure Dart — Flutter is
+        # not installed on this runner.
+        run: dart pub get --no-example
 
       - name: Verify formatter
         # Scope to this package's own primary source. Avoids walking into
@@ -105,7 +108,19 @@ jobs:
           dart format --output=none --set-exit-if-changed $DIRS
 
       - name: Static analysis
-        run: dart analyze --fatal-infos
+        # Scope to this package's own primary source for the same reason as
+        # the formatter step: `example/` (and friends) may target Flutter
+        # and aren't `pub get`-ed on this Dart-only runner.
+        run: |
+          DIRS=""
+          for d in lib test bin; do
+            [ -d "$d" ] && DIRS="$DIRS $d"
+          done
+          if [ -z "$DIRS" ]; then
+            echo "No primary source directories to analyze."
+            exit 0
+          fi
+          dart analyze --fatal-infos $DIRS
 
       - name: Run tests
         run: dart test
